@@ -1,0 +1,265 @@
+:root {
+    --primary-color: #137fec;
+    --primary-dark: #0f62b5;
+    --secondary-color: #fca311;
+    --background-color: #f4f7f6;
+    --surface-color: #ffffff;
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --danger-color: #e63946;
+    --success-color: #2a9d8f;
+    --border-radius: 12px;
+    --box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    --font-family: 'Lexend', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--background-color);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Header */
+.app-header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--box-shadow);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.status-indicator {
+    font-size: 0.8rem;
+    background: rgba(255,255,255,0.2);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+}
+
+/* Views */
+.view {
+    display: none;
+    padding: 1rem;
+    padding-bottom: 5rem; /* Space for bottom nav or scrolling */
+    min-height: calc(100vh - 60px);
+}
+
+.view.active {
+    display: block;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Home */
+.hero {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 2rem 0;
+}
+
+.hero h1 {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.action-card {
+    background: var(--surface-color);
+    border: none;
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-shadow: var(--box-shadow);
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.action-card:active {
+    transform: scale(0.95);
+}
+
+.action-card .icon {
+    font-size: 2rem;
+}
+
+.action-card.emergency {
+    background-color: #fee;
+    color: var(--danger-color);
+}
+
+/* Buttons */
+.btn-block {
+    width: 100%;
+    padding: 1rem;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    font-weight: 500;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    box-shadow: var(--box-shadow);
+}
+
+.btn-block.outline {
+    background-color: transparent;
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+}
+
+/* Map */
+#map-container {
+    height: calc(100vh - 120px);
+    width: 100%;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.back-fab {
+    position: fixed;
+    bottom: 2rem;
+    left: 1rem;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--surface-color);
+    border: none;
+    box-shadow: var(--box-shadow);
+    font-size: 1.5rem;
+    z-index: 1001;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Lists */
+.list-item {
+    background: var(--surface-color);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.list-item h3 {
+    margin-bottom: 0.25rem;
+    font-size: 1.1rem;
+}
+
+.list-item p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.distance-badge {
+    background: var(--background-color);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+/* Common Header */
+.view-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.back-btn {
+    background: none;
+    border: none;
+    font-size: 1rem;
+    color: var(--primary-color);
+    margin-right: 1rem;
+    cursor: pointer;
+}
+
+/* Detail View */
+.detail-card {
+    background: var(--surface-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--box-shadow);
+}
+
+.detail-map-btn {
+    display: inline-block;
+    background: #34A853; /* Google Maps Green */
+    color: white;
+    text-decoration: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 20px;
+    margin-top: 1rem;
+    font-weight: 500;
+}
+
+.waze-btn {
+    background: #33ccff;
+    margin-left: 0.5rem;
+}
+
+/* Emergency Contacts */
+.contact-row {
+    background: var(--surface-color);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border-radius: var(--border-radius);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 5px solid var(--danger-color);
+}
+
+.call-btn {
+    background: var(--danger-color);
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+/* Loading */
+.loading {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+}
