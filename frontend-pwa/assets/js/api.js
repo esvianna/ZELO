@@ -1,5 +1,5 @@
 const API = {
-    baseUrl: '/wp-json/zelo/v1',
+    baseUrl: 'https://zelo.quadrodeanuncios.com.br/wp-json/zelo/v1',
 
     // Cached data for offline support
     cache: {
@@ -10,16 +10,16 @@ const API = {
     async getLocais(params = {}) {
         const query = new URLSearchParams(params).toString();
         const url = `${this.baseUrl}/locais?${query}`;
-        
+
         try {
             const response = await fetch(url);
             if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
-            
+
             // Update cache
             this.cache.locais = data;
             localStorage.setItem('zelo_locais', JSON.stringify(data));
-            
+
             return data;
         } catch (error) {
             console.warn('Fetch failed, trying cache', error);
@@ -38,10 +38,10 @@ const API = {
             const response = await fetch(url);
             if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
-            
+
             this.cache.evento = data;
             localStorage.setItem('zelo_evento', JSON.stringify(data));
-            
+
             return data;
         } catch (error) {
             console.warn('Fetch failed, trying cache', error);
