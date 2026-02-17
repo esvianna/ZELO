@@ -6,14 +6,19 @@ const MapManager = {
     init(elementId) {
         if (this.map) return; // Already initialized
 
-        // Default center (Sao Paulo generic or event location)
-        this.map = L.map(elementId).setView([-23.5505, -46.6333], 13);
+        // Default center (Event location or generic)
+        let center = [-23.5505, -46.6333];
+        if (app.data.evento && app.data.evento.coordenadas && app.data.evento.coordenadas.lat) {
+            center = [app.data.evento.coordenadas.lat, app.data.evento.coordenadas.lng];
+        }
+
+        this.map = L.map(elementId).setView(center, 14);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(this.map);
 
-        // Try to locate user
+        // Try to locate user (but map starts centered on event)
         this.locateUser();
     },
 
