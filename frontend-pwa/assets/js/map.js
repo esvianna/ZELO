@@ -96,9 +96,14 @@ const MapManager = {
     },
 
     createIcon(color) {
-        // Simple colorful markers using standard Leaflet styling or custom images
-        // For MVP, we use default L.Icon but we could customize color via CSS filters or custom images
-        // Here we just return default for simplicity, but ideally we'd have custom icons
-        return new L.Icon.Default();
+        // Using standard Leaflet colored markers
+        return new L.Icon({
+            iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
     }
 };
