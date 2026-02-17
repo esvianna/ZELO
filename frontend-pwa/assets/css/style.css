@@ -295,12 +295,29 @@ body {
 /* --- Location Details Redesign --- */
 
 /* Text Utilities */
-.text-uppercase { text-transform: uppercase; }
-.text-bold { font-weight: 600; }
-.text-primary { color: var(--primary-color); }
-.text-success { color: var(--success-color); }
-.text-danger { color: var(--danger-color); }
-.text-muted { color: var(--text-secondary); }
+.text-uppercase {
+    text-transform: uppercase;
+}
+
+.text-bold {
+    font-weight: 600;
+}
+
+.text-primary {
+    color: var(--primary-color);
+}
+
+.text-success {
+    color: var(--success-color);
+}
+
+.text-danger {
+    color: var(--danger-color);
+}
+
+.text-muted {
+    color: var(--text-secondary);
+}
 
 /* Header & Breadcrumbs */
 .detail-header-wrapper {
@@ -338,12 +355,31 @@ body {
     text-transform: uppercase;
 }
 
-.badge.category { background: #fee; color: var(--danger-color); } /* Default Red/Hospital */
-.badge.category.farmacia { background: #e6fffa; color: var(--success-color); }
-.badge.category.hospital { background: #fee; color: var(--danger-color); }
+.badge.category {
+    background: #fee;
+    color: var(--danger-color);
+}
 
-.badge.status { background: #e6fffa; color: var(--success-color); }
-.badge.status.closed { background: #f0f0f0; color: var(--text-secondary); }
+/* Default Red/Hospital */
+.badge.category.farmacia {
+    background: #e6fffa;
+    color: var(--success-color);
+}
+
+.badge.category.hospital {
+    background: #fee;
+    color: var(--danger-color);
+}
+
+.badge.status {
+    background: #e6fffa;
+    color: var(--success-color);
+}
+
+.badge.status.closed {
+    background: #f0f0f0;
+    color: var(--text-secondary);
+}
 
 .detail-title {
     font-size: 1.75rem;
@@ -386,7 +422,9 @@ body {
     font-size: 1rem;
 }
 
-.action-btn:active { transform: scale(0.98); }
+.action-btn:active {
+    transform: scale(0.98);
+}
 
 .action-btn.primary {
     background-color: var(--primary-color);
@@ -462,8 +500,14 @@ body {
     border-bottom: 1px solid #f0f0f0;
 }
 
-.schedule-row:last-child { border-bottom: none; }
-.schedule-row.today { font-weight: 600; color: var(--primary-color); }
+.schedule-row:last-child {
+    border-bottom: none;
+}
+
+.schedule-row.today {
+    font-weight: 600;
+    color: var(--primary-color);
+}
 
 /* Visitor Notes */
 .visitor-notes {
@@ -503,14 +547,17 @@ body {
     margin-bottom: 0.2rem;
 }
 
-.info-item span, .info-item a {
+.info-item span,
+.info-item a {
     font-size: 1rem;
     color: var(--text-primary);
     text-decoration: none;
     font-weight: 500;
 }
 
-.info-item a { color: var(--primary-color); }
+.info-item a {
+    color: var(--primary-color);
+}
 
 /* Emergency Bottom Bar */
 .emergency-banner {
@@ -543,12 +590,58 @@ body {
     font-size: 1.2rem;
 }
 
-.emergency-btn {
-    background: white;
-    color: var(--text-primary);
-    padding: 0.75rem 1.5rem;
+/* --- List View Controls --- */
+
+.search-container {
+    padding: 1rem;
+    background: var(--surface-color);
+    margin-bottom: 1rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    display: flex;
+    gap: 0.5rem;
+}
+
+.search-input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
     border-radius: 8px;
+    font-family: var(--font-family);
+    font-size: 1rem;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+.page-btn {
+    background: var(--surface-color);
+    border: 1px solid #ddd;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
     font-weight: 600;
-    text-decoration: none;
-    white-space: nowrap;
+    font-family: var(--font-family);
+}
+
+.page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.page-btn.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.page-info {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
 }

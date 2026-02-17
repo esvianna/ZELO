@@ -2,7 +2,11 @@ const app = {
     data: {
         locais: [],
         evento: null,
-        currentCategory: null
+        currentCategory: null,
+        // Pagination & Filter State
+        listPage: 1,
+        listSearch: '',
+        itemsPerPage: 10
     },
 
     router: {
@@ -37,6 +41,26 @@ const app = {
             }
         },
 
+
+
+        debounceTimer: null,
+        debounceSearch(query, category) {
+            clearTimeout(this.debounceTimer);
+            this.debounceTimer = setTimeout(() => {
+                // When searching, reset to page 1
+                app.renderList(category, 1, query);
+
+                // Focus management hack: refocs input after render
+                setTimeout(() => {
+                    const input = document.querySelector('.search-input');
+                    if (input) {
+                        input.focus();
+                        input.setSelectionRange(input.value.length, input.value.length);
+                    }
+                }, 50);
+            }, 300);
+        },
+
         back() {
             this.navigate('home');
         }
@@ -67,12 +91,23 @@ const app = {
         this.router.navigate('home');
     },
 
-    renderList(category) {
+    renderList(category, page = 1, search = '') {
         const container = document.getElementById('list-container');
         const title = document.getElementById('list-title');
 
+        // Update State
+        if (category !== this.data.currentCategory) {
+            this.data.currentCategory = category;
+            this.data.listPage = 1;
+            this.data.listSearch = '';
+        } else {
+            this.data.listPage = page;
+            this.data.listSearch = search;
+        }
+
         let items = this.data.locais;
 
+        // Filter by Category
         if (category) {
             items = items.filter(i => i.category === category);
             title.textContent = category.charAt(0).toUpperCase() + category.slice(1) + 's';
@@ -80,12 +115,48 @@ const app = {
             title.textContent = 'Todos os Locais';
         }
 
-        if (items.length === 0) {
-            container.innerHTML = '<div class="loading">Nenhum local encontrado.</div>';
+        // Filter by Search
+        if (this.data.listSearch) {
+            const term = this.data.listSearch.toLowerCase();
+            items = items.filter(i =>
+                i.name.toLowerCase().includes(term) ||
+                (i.address && i.address.toLowerCase().includes(term))
+            );
+        }
+
+        // Pagination Logic
+        const totalItems = items.length;
+        const totalPages = Math.ceil(totalItems / this.data.itemsPerPage);
+
+        // Ensure valid page
+        if (this.data.listPage > totalPages) this.data.listPage = totalPages || 1;
+        if (this.data.listPage < 1) this.data.listPage = 1;
+
+        const start = (this.data.listPage - 1) * this.data.itemsPerPage;
+        const end = start + this.data.itemsPerPage;
+        const paginatedItems = items.slice(start, end);
+
+        // --- Render ---
+
+        // 1. Search Bar
+        let html = `
+            <div class="search-container">
+                <input type="text" 
+                       class="search-input" 
+                       placeholder="Buscar ${category || 'local'}..." 
+                       value="${this.data.listSearch}"
+                       oninput="app.router.debounceSearch(this.value, '${category}')">
+            </div>
+        `;
+
+        if (totalItems === 0) {
+            html += '<div class="loading">Nenhum local encontrado.</div>';
+            container.innerHTML = html;
             return;
         }
 
-        container.innerHTML = items.map(item => `
+        // 2. List Items
+        html += paginatedItems.map(item => `
             <div class="list-item" onclick="app.router.navigate('detalhe', {id: ${item.id}})">
                 <div>
                     <h3>${item.name}</h3>
@@ -94,6 +165,35 @@ const app = {
                 ${item.distance ? `<span class="distance-badge">${item.distance} km</span>` : ''}
             </div>
         `).join('');
+
+        // 3. Pagination Controls
+        if (totalPages > 1) {
+            html += `
+                <div class="pagination">
+                    <button class="page-btn" 
+                            ${this.data.listPage === 1 ? 'disabled' : ''} 
+                            onclick="app.renderList('${category}', ${this.data.listPage - 1}, '${this.data.listSearch}')">
+                        Anterior
+                    </button>
+                    
+                    <span class="page-info">Página ${this.data.listPage} de ${totalPages}</span>
+                    
+                    <button class="page-btn active" 
+                            ${this.data.listPage === totalPages ? 'disabled' : ''} 
+                            onclick="app.renderList('${category}', ${this.data.listPage + 1}, '${this.data.listSearch}')">
+                        Próximo
+                    </button>
+                </div>
+            `;
+        }
+
+        container.innerHTML = html;
+
+        // Restore focus if searching (naive approach, better would be to diff DOM or not re-render input)
+        // With simple innerHTML replacement, input loses focus. 
+        // A simple fix for this MVP text search is to NOT re-render the search bar if it already exists, 
+        // OR focus it back. 
+        // Let's rely on debounce for now, which updates after user stops typing.
     },
 
     renderDetail(id) {
