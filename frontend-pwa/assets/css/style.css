@@ -47,14 +47,12 @@ body {
 }
 
 .app-header .logo img {
-    max-height: 80px;
-    /* Increased size per user request */
+    height: 80px;
+    /* Specific height */
     width: auto;
-    max-width: 100%;
-    /* Prevent horizontal overflow */
+    /* Maintain aspect ratio */
     object-fit: contain;
     display: block;
-    /* Remove inline-block spacing */
 }
 
 .status-indicator {
