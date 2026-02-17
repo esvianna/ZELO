@@ -599,7 +599,41 @@ body {
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.filter-row {
+    display: flex;
     gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.filter-select {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-family: var(--font-family);
+    flex: 1;
+    min-width: 120px;
+}
+
+.filter-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    background: #f0f0f0;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    user-select: none;
+}
+
+.filter-toggle.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
 }
 
 .search-input {
