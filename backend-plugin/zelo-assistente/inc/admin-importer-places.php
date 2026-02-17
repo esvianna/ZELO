@@ -102,18 +102,71 @@ function zelo_google_place_details( $place_id ) {
 }
 
 function zelo_import_google_places_run( $lat, $lng, $radius_m, $type ) {
-	$place_ids = zelo_fetch_google_places_nearby( $lat, $lng, $radius_m, $type );
-	if ( is_wp_error( $place_ids ) ) {
-		return $place_ids;
-	}
+    // Determine grid points to maximize coverage beyond 60 results
+    // Strategy: Center + 4 points at 45, 135, 225, 315 degrees at 60% of radius distance
+    // This simple "Quincunx" pattern helps cover more area without too much overlap/cost
+    
+    $points = array(
+        array( 'lat' => $lat, 'lng' => $lng ) // Center
+    );
+
+    // If radius is large (>500m), add more points to try and get more results
+    if ( $radius_m > 500 ) {
+        // Calculate offset (rough approximation: 1 degree lat ~= 111km)
+        $offset_lat = ($radius_m * 0.6) / 111111; 
+        $offset_lng = ($radius_m * 0.6) / (111111 * cos(deg2rad($lat)));
+
+        $points[] = array( 'lat' => $lat + $offset_lat, 'lng' => $lng + $offset_lng ); // NE
+        $points[] = array( 'lat' => $lat - $offset_lat, 'lng' => $lng + $offset_lng ); // SE
+        $points[] = array( 'lat' => $lat - $offset_lat, 'lng' => $lng - $offset_lng ); // SW
+        $points[] = array( 'lat' => $lat + $offset_lat, 'lng' => $lng - $offset_lng ); // NW
+    }
+
+    $all_place_ids = array();
+
+    foreach ( $points as $p ) {
+        if ( count( $all_place_ids ) >= ZELO_PLACES_MAX_DETAILS_PER_RUN ) {
+            break;
+        }
+
+        $place_ids = zelo_fetch_google_places_nearby( $p['lat'], $p['lng'], $radius_m, $type );
+        
+        if ( is_wp_error( $place_ids ) ) {
+            continue; // Skip errors in grid points, try others
+        }
+
+        foreach ( $place_ids as $pid ) {
+            $all_place_ids[ $pid ] = true; // Use key for deduplication
+        }
+        
+        // Safety break to avoid infinite loops if many points added later
+        if ( count( $points ) > 1 ) {
+            sleep(1); // Polite delay between grid points
+        }
+    }
+
+    $unique_place_ids = array_keys( $all_place_ids );
+    
+    // Slice to max limit if we somehow exceeded it (e.g. 5 calls * 60 = 300)
+    if ( count( $unique_place_ids ) > ZELO_PLACES_MAX_DETAILS_PER_RUN ) {
+        $unique_place_ids = array_slice( $unique_place_ids, 0, ZELO_PLACES_MAX_DETAILS_PER_RUN );
+    }
+
+    if ( empty( $unique_place_ids ) ) {
+        return new WP_Error( 'no_results', __( 'Nenhum local encontrado em nenhum dos pontos de busca.', 'zelo-assistente' ) );
+    }
+
+
 	$zelo_type = $type === 'hospital' ? 'hospital' : 'farmacia';
 	$count_new = 0;
 	$count_updated = 0;
-	foreach ( $place_ids as $place_id ) {
+
+	foreach ( $unique_place_ids as $place_id ) {
 		$detail = zelo_google_place_details( $place_id );
 		if ( $detail === null || ( $detail['lat'] === null && $detail['address'] === '' ) ) {
 			continue;
 		}
+
 		$existing = get_posts( array(
 			'post_type'   => 'zelo_local',
 			'meta_key'    => '_zelo_google_place_id',
@@ -121,6 +174,7 @@ function zelo_import_google_places_run( $lat, $lng, $radius_m, $type ) {
 			'post_status' => 'any',
 			'numberposts' => 1,
 		) );
+
 		if ( ! empty( $existing ) ) {
 			$post_id = $existing[0]->ID;
 			$count_updated++;
@@ -131,11 +185,13 @@ function zelo_import_google_places_run( $lat, $lng, $radius_m, $type ) {
 				'post_status'  => 'publish',
 				'post_content' => $detail['website'] !== '' ? 'Site: ' . $detail['website'] : '',
 			) );
+
 			if ( is_wp_error( $post_id ) ) {
 				continue;
 			}
 			$count_new++;
 		}
+
 		update_post_meta( $post_id, '_zelo_google_place_id', $place_id );
 		update_post_meta( $post_id, '_zelo_type', $zelo_type );
 		if ( $detail['lat'] !== null ) {
@@ -148,11 +204,14 @@ function zelo_import_google_places_run( $lat, $lng, $radius_m, $type ) {
 		update_post_meta( $post_id, '_zelo_phone', $detail['phone'] );
 		update_post_meta( $post_id, '_zelo_hours', $detail['hours'] );
 		update_post_meta( $post_id, '_zelo_24h', $detail['is_24h'] );
+
 		if ( $detail['website'] !== '' ) {
 			wp_update_post( array( 'ID' => $post_id, 'post_content' => 'Site: ' . $detail['website'] ) );
 		}
+
 		usleep( 100000 );
 	}
+
 	return array( 'new' => $count_new, 'updated' => $count_updated );
 }
 
