@@ -87,11 +87,11 @@ function zelo_custom_zelo_local_column( $column, $post_id ) {
     }
 }
 
-// Button "Limpar todos os locais" on the list page
-add_action( 'manage_posts_extra_tablenav', 'zelo_render_clear_all_locais_button', 10, 1 );
-function zelo_render_clear_all_locais_button( $which ) {
-	global $typenow;
-	if ( $typenow !== 'zelo_local' || $which !== 'top' ) {
+// Button "Limpar todos os locais" above the list (outside the list table form to avoid nested forms)
+add_action( 'all_admin_notices', 'zelo_render_clear_all_locais_button' );
+function zelo_render_clear_all_locais_button() {
+	$screen = get_current_screen();
+	if ( ! $screen || $screen->id !== 'edit-zelo_local' || $screen->post_type !== 'zelo_local' ) {
 		return;
 	}
 	$count = wp_count_posts( 'zelo_local' );
@@ -100,12 +100,13 @@ function zelo_render_clear_all_locais_button( $which ) {
 		return;
 	}
 	?>
-	<div class="alignleft actions" style="margin-right: 8px;">
+	<div class="notice" style="margin-top: 10px; margin-bottom: 0;">
 		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display: inline;" onsubmit="return confirm('<?php echo esc_js( __( 'Remover TODOS os locais do banco? Esta ação não pode ser desfeita.', 'zelo-assistente' ) ); ?>');">
 			<input type="hidden" name="action" value="zelo_clear_all_locais">
 			<?php wp_nonce_field( 'zelo_clear_all_locais' ); ?>
 			<input type="submit" class="button" value="<?php echo esc_attr( sprintf( __( 'Limpar todos os locais (%d)', 'zelo-assistente' ), $total ) ); ?>" style="color: #b32d2e;">
 		</form>
+		<span style="margin-left: 8px; color: #646970;"><?php esc_html_e( 'Remove todos os locais do banco de dados. Use antes de um novo teste de importação.', 'zelo-assistente' ); ?></span>
 	</div>
 	<?php
 }
