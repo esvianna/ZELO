@@ -27,10 +27,13 @@ function zelo_render_importer_page() {
 		$radius = intval( $_POST['import_radius'] ); // meters
 
 		$results = zelo_fetch_osm_data( $lat, $lng, $radius );
-        
+
         $count_new = 0;
         $count_updated = 0;
-        foreach($results as $place) {
+        foreach ( $results as $place ) {
+            if ( ! zelo_is_valid_coordinates( $place['lat'], $place['lon'] ) ) {
+                continue;
+            }
             $existing = get_posts(array(
                 'post_type' => 'zelo_local',
                 'meta_key' => '_zelo_osm_id',
@@ -208,11 +211,18 @@ function zelo_fetch_osm_data( $lat, $lon, $radius ) {
                 $name = $is_hospital ? __( 'Hospital / Clínica', 'zelo-assistente' ) : __( 'Farmácia', 'zelo-assistente' );
             }
 
+            $place_lat = isset( $element['lat'] ) ? (float) $element['lat'] : ( isset( $element['center']['lat'] ) ? (float) $element['center']['lat'] : null );
+            $place_lon = isset( $element['lon'] ) ? (float) $element['lon'] : ( isset( $element['center']['lon'] ) ? (float) $element['center']['lon'] : null );
+
+            if ( ! zelo_is_valid_coordinates( $place_lat, $place_lon ) ) {
+                continue;
+            }
+
             $places[] = array(
                 'osm_id' => $element['id'],
                 'name'   => $name,
-                'lat'    => isset( $element['lat'] ) ? $element['lat'] : ( isset( $element['center']['lat'] ) ? $element['center']['lat'] : 0 ),
-                'lon'    => isset( $element['lon'] ) ? $element['lon'] : ( isset( $element['center']['lon'] ) ? $element['center']['lon'] : 0 ),
+                'lat'    => $place_lat,
+                'lon'    => $place_lon,
                 'type'   => $is_hospital ? 'hospital' : 'farmacia',
                 'tags'   => $tags,
             );
@@ -220,4 +230,17 @@ function zelo_fetch_osm_data( $lat, $lon, $radius ) {
     }
 
     return $places;
+}
+
+function zelo_is_valid_coordinates( $lat, $lon ) {
+    if ( $lat === null || $lon === null ) {
+        return false;
+    }
+    if ( (float) $lat === 0.0 && (float) $lon === 0.0 ) {
+        return false;
+    }
+    if ( $lat < -90 || $lat > 90 || $lon < -180 || $lon > 180 ) {
+        return false;
+    }
+    return true;
 }
