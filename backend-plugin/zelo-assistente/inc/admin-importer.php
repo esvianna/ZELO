@@ -57,26 +57,33 @@ function zelo_render_importer_page() {
             update_post_meta($post_id, '_zelo_lng', $place['lon']);
             update_post_meta($post_id, '_zelo_osm_id', $place['osm_id']);
             
-            // Improved Address Logic
+            // Improved Address Logic (full address with city, state, postcode, country)
             $addr = '';
-            // Preserver address if manually edited? 
-            // For now, we overwrite if OSM has data, or keep existing if OSM is empty.
-            // Actually, user wants to bring data, so we prioritize OSM new data if available.
-            
-            if(!empty($place['tags']['addr:full'])) {
+            if ( ! empty( $place['tags']['addr:full'] ) ) {
                 $addr = $place['tags']['addr:full'];
-            } elseif(!empty($place['tags']['addr:street'])) {
+            } elseif ( ! empty( $place['tags']['addr:street'] ) ) {
                 $addr = $place['tags']['addr:street'];
-                if(!empty($place['tags']['addr:housenumber'])) {
+                if ( ! empty( $place['tags']['addr:housenumber'] ) ) {
                     $addr .= ', ' . $place['tags']['addr:housenumber'];
                 }
-                if(!empty($place['tags']['addr:suburb'])) {
+                if ( ! empty( $place['tags']['addr:suburb'] ) ) {
                     $addr .= ' - ' . $place['tags']['addr:suburb'];
                 }
+                if ( ! empty( $place['tags']['addr:city'] ) ) {
+                    $addr .= ', ' . $place['tags']['addr:city'];
+                }
+                if ( ! empty( $place['tags']['addr:state'] ) ) {
+                    $addr .= ' - ' . $place['tags']['addr:state'];
+                }
+                if ( ! empty( $place['tags']['addr:postcode'] ) ) {
+                    $addr .= ', ' . $place['tags']['addr:postcode'];
+                }
+                if ( ! empty( $place['tags']['addr:country'] ) ) {
+                    $addr .= ', ' . $place['tags']['addr:country'];
+                }
             }
-            
-            if(!empty($addr)) {
-                update_post_meta($post_id, '_zelo_address', $addr);
+            if ( ! empty( $addr ) ) {
+                update_post_meta( $post_id, '_zelo_address', $addr );
             }
 
             // Improved Phone Logic
@@ -104,8 +111,12 @@ function zelo_render_importer_page() {
             }
 
             // Hours
-            if(!empty($place['tags']['opening_hours'])) {
-                update_post_meta($post_id, '_zelo_hours', $place['tags']['opening_hours']);
+            if ( ! empty( $place['tags']['opening_hours'] ) ) {
+                update_post_meta( $post_id, '_zelo_hours', $place['tags']['opening_hours'] );
+                // Auto-detect 24h (e.g. "24/7", "24 hours")
+                $hours_lower = strtolower( $place['tags']['opening_hours'] );
+                $is_24h = ( strpos( $hours_lower, '24/7' ) !== false || strpos( $hours_lower, '24 hours' ) !== false );
+                update_post_meta( $post_id, '_zelo_24h', $is_24h ? '1' : '0' );
             }
         }
 
@@ -135,48 +146,78 @@ function zelo_render_importer_page() {
 				<input type="submit" name="zelo_run_import" class="button button-primary" value="Buscar e Importar Agora">
 			</p>
 		</form>
+	<?php
+	if ( function_exists( 'zelo_render_importer_places_section' ) ) {
+		zelo_render_importer_places_section();
+	}
+	?>
 	</div>
 	<?php
 }
 
-function zelo_fetch_osm_data($lat, $lon, $radius) {
-    // Overpass API Query
+function zelo_fetch_osm_data( $lat, $lon, $radius ) {
+    // Overpass API Query: amenity + healthcare (pharmacy, hospital, clinic) and amenity=doctors as clinic
     $query = '[out:json];
     (
       node["amenity"="pharmacy"](around:' . $radius . ',' . $lat . ',' . $lon . ');
       way["amenity"="pharmacy"](around:' . $radius . ',' . $lat . ',' . $lon . ');
+      node["healthcare"="pharmacy"](around:' . $radius . ',' . $lat . ',' . $lon . ');
+      way["healthcare"="pharmacy"](around:' . $radius . ',' . $lat . ',' . $lon . ');
       node["amenity"="hospital"](around:' . $radius . ',' . $lat . ',' . $lon . ');
       way["amenity"="hospital"](around:' . $radius . ',' . $lat . ',' . $lon . ');
       node["amenity"="clinic"](around:' . $radius . ',' . $lat . ',' . $lon . ');
+      way["amenity"="clinic"](around:' . $radius . ',' . $lat . ',' . $lon . ');
+      node["healthcare"="hospital"](around:' . $radius . ',' . $lat . ',' . $lon . ');
+      way["healthcare"="hospital"](around:' . $radius . ',' . $lat . ',' . $lon . ');
+      node["healthcare"="clinic"](around:' . $radius . ',' . $lat . ',' . $lon . ');
+      way["healthcare"="clinic"](around:' . $radius . ',' . $lat . ',' . $lon . ');
+      node["amenity"="doctors"](around:' . $radius . ',' . $lat . ',' . $lon . ');
+      way["amenity"="doctors"](around:' . $radius . ',' . $lat . ',' . $lon . ');
     );
     out center;';
 
-    $url = 'https://overpass-api.de/api/interpreter?data=' . urlencode($query);
-    
-    $response = wp_remote_get($url);
-    
-    if (is_wp_error($response)) {
+    $url = 'https://overpass-api.de/api/interpreter?data=' . urlencode( $query );
+
+    $response = wp_remote_get( $url );
+
+    if ( is_wp_error( $response ) ) {
         return array();
     }
 
-    $body = wp_remote_retrieve_body($response);
-    $data = json_decode($body, true);
-    
+    $body = wp_remote_retrieve_body( $response );
+    $data = json_decode( $body, true );
+
     $places = array();
-    if (isset($data['elements'])) {
-        foreach ($data['elements'] as $element) {
-            $is_hospital = isset($element['tags']['amenity']) && in_array($element['tags']['amenity'], ['hospital', 'clinic']);
-            
+    if ( isset( $data['elements'] ) ) {
+        foreach ( $data['elements'] as $element ) {
+            $tags = isset( $element['tags'] ) ? $element['tags'] : array();
+            $amenity = $tags['amenity'] ?? '';
+            $healthcare = $tags['healthcare'] ?? '';
+            $is_hospital = in_array( $amenity, array( 'hospital', 'clinic' ), true )
+                || in_array( $healthcare, array( 'hospital', 'clinic' ), true )
+                || $amenity === 'doctors';
+
+            $name = $tags['name'] ?? '';
+            if ( $name === '' && ! empty( $tags['addr:street'] ) ) {
+                $name = $tags['addr:street'];
+                if ( ! empty( $tags['addr:housenumber'] ) ) {
+                    $name .= ', ' . $tags['addr:housenumber'];
+                }
+            }
+            if ( $name === '' ) {
+                $name = $is_hospital ? __( 'Hospital / Clínica', 'zelo-assistente' ) : __( 'Farmácia', 'zelo-assistente' );
+            }
+
             $places[] = array(
                 'osm_id' => $element['id'],
-                'name' => $element['tags']['name'] ?? 'Local sem nome',
-                'lat' => $element['lat'] ?? $element['center']['lat'],
-                'lon' => $element['lon'] ?? $element['center']['lon'],
-                'type' => $is_hospital ? 'hospital' : 'farmacia',
-                'tags' => $element['tags']
+                'name'   => $name,
+                'lat'    => isset( $element['lat'] ) ? $element['lat'] : ( isset( $element['center']['lat'] ) ? $element['center']['lat'] : 0 ),
+                'lon'    => isset( $element['lon'] ) ? $element['lon'] : ( isset( $element['center']['lon'] ) ? $element['center']['lon'] : 0 ),
+                'type'   => $is_hospital ? 'hospital' : 'farmacia',
+                'tags'   => $tags,
             );
         }
     }
-    
+
     return $places;
 }

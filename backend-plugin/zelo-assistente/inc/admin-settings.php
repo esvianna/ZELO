@@ -41,6 +41,9 @@ function zelo_render_settings_page() {
 		}
 
 		update_option( 'zelo_event_data', $event_data );
+		if ( isset( $_POST['zelo_google_places_api_key'] ) ) {
+			update_option( 'zelo_google_places_api_key', sanitize_text_field( $_POST['zelo_google_places_api_key'] ) );
+		}
 		echo '<div class="notice notice-success is-dismissible"><p>Configurações salvas com sucesso!</p></div>';
 	}
 
@@ -89,6 +92,13 @@ function zelo_render_settings_page() {
                         <input type="url" name="zelo_event_logo" id="zelo_event_logo" value="<?php echo esc_attr( isset($data['logo']) ? $data['logo'] : '' ); ?>" class="regular-text">
                         <p class="description">Cole o link da imagem (ex: da Biblioteca de Mídia do WordPress).</p>
                     </td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="zelo_google_places_api_key"><?php esc_html_e( 'Google Places API Key', 'zelo-assistente' ); ?></label></th>
+					<td>
+						<input type="password" name="zelo_google_places_api_key" id="zelo_google_places_api_key" value="<?php echo esc_attr( get_option( 'zelo_google_places_api_key', '' ) ); ?>" class="regular-text" autocomplete="off">
+						<p class="description"><?php esc_html_e( 'Opcional. Necessário para importar locais via Google Places (Nearby Search e Place Details). A chave não é exibida no frontend.', 'zelo-assistente' ); ?></p>
+					</td>
 				</tr>
 			</table>
 

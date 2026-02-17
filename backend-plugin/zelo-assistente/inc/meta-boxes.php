@@ -63,6 +63,23 @@ function zelo_render_meta_box( $post ) {
 		<label for="zelo_24h"><?php _e( 'Atende 24h?', 'zelo-assistente' ); ?></label>
 	</p>
 	<?php
+	if ( get_option( 'zelo_google_places_api_key', '' ) !== '' ) {
+		$enrich_url = wp_nonce_url( admin_url( 'admin-post.php?action=zelo_enrich_places&post_id=' . (int) $post->ID ), 'zelo_enrich_places_' . $post->ID );
+		?>
+		<p>
+			<a href="<?php echo esc_url( $enrich_url ); ?>" class="button"><?php esc_html_e( 'Enriquecer com Google Places', 'zelo-assistente' ); ?></a>
+			<span class="description"><?php esc_html_e( 'Preenche endereço, telefone, horário e site se estiverem vazios.', 'zelo-assistente' ); ?></span>
+		</p>
+		<?php
+	}
+	if ( isset( $_GET['zelo_enrich_ok'] ) && is_numeric( $_GET['zelo_enrich_ok'] ) ) {
+		echo '<p class="notice notice-success inline"><strong>' . esc_html( sprintf( __( 'Enriquecimento concluído: %d campo(s) atualizado(s).', 'zelo-assistente' ), (int) $_GET['zelo_enrich_ok'] ) ) . '</strong></p>';
+	}
+	if ( isset( $_GET['zelo_enrich_error'] ) && $_GET['zelo_enrich_error'] !== '' ) {
+		echo '<p class="notice notice-error inline"><strong>' . esc_html( __( 'Erro:', 'zelo-assistente' ) . ' ' . urldecode( $_GET['zelo_enrich_error'] ) ) . '</strong></p>';
+	}
+	?>
+	<?php
 }
 
 function zelo_save_meta_box_data( $post_id ) {

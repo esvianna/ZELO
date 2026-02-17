@@ -22,4 +22,7 @@ require_once ZELO_PLUGIN_DIR . 'inc/api-routes.php';
 if ( is_admin() ) {
 	require_once ZELO_PLUGIN_DIR . 'inc/admin-settings.php';
 	require_once ZELO_PLUGIN_DIR . 'inc/admin-importer.php';
+	require_once ZELO_PLUGIN_DIR . 'inc/admin-importer-csv.php';
+	require_once ZELO_PLUGIN_DIR . 'inc/admin-importer-csv-cnes.php';
+	require_once ZELO_PLUGIN_DIR . 'inc/admin-importer-places.php';
 }
