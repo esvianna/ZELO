@@ -220,14 +220,8 @@ const app = {
                         </ul>
                     </div>
 
-                    <div class="map-preview" onclick="window.open('${mapLink}', '_blank')">
-                         <!-- Static map or placeholder -->
-                         <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#eee; color:#666;">
-                            <img src="https://static-maps.yandex.ru/1.x/?lang=en-US&ll=${item.lng},${item.lat}&z=15&l=map&size=600,300&pt=${item.lng},${item.lat},pm2rdm" 
-                                 style="width:100%; height:100%; object-fit:cover;" 
-                                 alt="Mapa"
-                                 onerror="this.style.display='none'; this.parentNode.innerHTML='Visualizar no Mapa Externo'">
-                         </div>
+                    <div class="map-preview" id="detail-map-preview" style="cursor: pointer;">
+                        <!-- Map will be injected here -->
                     </div>
                 </div>
 
@@ -276,6 +270,39 @@ const app = {
                 </button>
             </div>
         `;
+
+        // Initialize Mini Map
+        if (item.lat && item.lng) {
+            setTimeout(() => {
+                const mapEl = document.getElementById('detail-map-preview');
+                if (mapEl) {
+                    const miniMap = L.map('detail-map-preview', {
+                        center: [item.lat, item.lng],
+                        zoom: 15,
+                        zoomControl: false,
+                        dragging: false,
+                        scrollWheelZoom: false,
+                        doubleClickZoom: false,
+                        boxZoom: false,
+                        keyboard: false,
+                        attributionControl: false
+                    });
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: ''
+                    }).addTo(miniMap);
+
+                    // Add colored marker based on category
+                    const icon = MapManager.createIcon(item.category === 'farmacia' ? 'green' : (item.category === 'hospital' ? 'red' : 'blue'));
+                    L.marker([item.lat, item.lng], { icon: icon }).addTo(miniMap);
+
+                    // Click to open Google Maps
+                    mapEl.addEventListener('click', () => {
+                        window.open(mapLink, '_blank');
+                    });
+                }
+            }, 100);
+        }
     },
 
     renderEmergency() {

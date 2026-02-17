@@ -4,7 +4,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ZELO_PLACES_MAX_DETAILS_PER_RUN', 60 );
+define( 'ZELO_PLACES_MAX_DETAILS_PER_RUN', 600 );
 
 function zelo_fetch_google_places_nearby( $lat, $lng, $radius_m, $type ) {
 	$api_key = get_option( 'zelo_google_places_api_key', '' );
