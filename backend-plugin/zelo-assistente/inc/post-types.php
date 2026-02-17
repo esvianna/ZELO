@@ -86,3 +86,63 @@ function zelo_custom_zelo_local_column( $column, $post_id ) {
             break;
     }
 }
+
+// Button "Limpar todos os locais" on the list page
+add_action( 'manage_posts_extra_tablenav', 'zelo_render_clear_all_locais_button', 10, 1 );
+function zelo_render_clear_all_locais_button( $which ) {
+	global $typenow;
+	if ( $typenow !== 'zelo_local' || $which !== 'top' ) {
+		return;
+	}
+	$count = wp_count_posts( 'zelo_local' );
+	$total = (int) $count->publish + (int) $count->draft + (int) $count->trash + (int) $count->private;
+	if ( $total === 0 ) {
+		return;
+	}
+	?>
+	<div class="alignleft actions" style="margin-right: 8px;">
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display: inline;" onsubmit="return confirm('<?php echo esc_js( __( 'Remover TODOS os locais do banco? Esta ação não pode ser desfeita.', 'zelo-assistente' ) ); ?>');">
+			<input type="hidden" name="action" value="zelo_clear_all_locais">
+			<?php wp_nonce_field( 'zelo_clear_all_locais' ); ?>
+			<input type="submit" class="button" value="<?php echo esc_attr( sprintf( __( 'Limpar todos os locais (%d)', 'zelo-assistente' ), $total ) ); ?>" style="color: #b32d2e;">
+		</form>
+	</div>
+	<?php
+}
+
+add_action( 'admin_post_zelo_clear_all_locais', 'zelo_handle_clear_all_locais' );
+function zelo_handle_clear_all_locais() {
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_die( esc_html__( 'Sem permissão.', 'zelo-assistente' ) );
+	}
+	if ( ! isset( $_POST['_wpnonce'] ) || ! wp_verify_nonce( $_POST['_wpnonce'], 'zelo_clear_all_locais' ) ) {
+		wp_die( esc_html__( 'Link de segurança inválido.', 'zelo-assistente' ) );
+	}
+	$posts = get_posts( array(
+		'post_type'      => 'zelo_local',
+		'post_status'    => 'any',
+		'posts_per_page' => -1,
+		'fields'         => 'ids',
+	) );
+	$deleted = 0;
+	foreach ( $posts as $post_id ) {
+		if ( wp_delete_post( (int) $post_id, true ) ) {
+			$deleted++;
+		}
+	}
+	$redirect = add_query_arg( 'zelo_cleared', $deleted, admin_url( 'edit.php?post_type=zelo_local' ) );
+	wp_safe_redirect( $redirect );
+	exit;
+}
+
+add_action( 'admin_notices', 'zelo_clear_all_locais_notice' );
+function zelo_clear_all_locais_notice() {
+	if ( ! isset( $_GET['zelo_cleared'] ) || ! isset( $_GET['post_type'] ) || $_GET['post_type'] !== 'zelo_local' ) {
+		return;
+	}
+	$count = (int) $_GET['zelo_cleared'];
+	if ( $count === 0 ) {
+		return;
+	}
+	echo '<div class="notice notice-success is-dismissible"><p>' . esc_html( sprintf( _n( '%d local removido.', '%d locais removidos.', $count, 'zelo-assistente' ), $count ) ) . '</p></div>';
+}
