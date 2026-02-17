@@ -1,44 +1,49 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Zelo - Assistente do Visitante</title>
-    
+
     <!-- PWA Meta Tags -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#137fec">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Zelo">
-    
+
     <!-- CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <link rel="stylesheet" href="assets/css/style.css">
-    
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600&display=swap" rel="stylesheet">
 </head>
+
 <body>
 
     <!-- App Header -->
     <header class="app-header">
-        <div class="logo">Zelo</div>
+        <a href="#" class="logo" onclick="app.router.navigate('home'); return false;">
+            <img src="images/logo-zelo.png" alt="Zelo">
+        </a>
         <div class="status-indicator" id="network-status">Online</div>
     </header>
 
     <!-- Main Content -->
     <main id="app-content">
-        
+
         <!-- Home View -->
         <section id="view-home" class="view active">
             <div class="hero">
                 <h1>Bem-vindo ao Zelo</h1>
                 <p>Cuidado e atenção para você.</p>
             </div>
-            
+
             <div class="quick-actions">
                 <button class="action-card emergency" onclick="app.router.navigate('emergencia')">
                     <span class="icon">🚑</span>
@@ -84,7 +89,7 @@
 
         <!-- Detail View -->
         <section id="view-detalhe" class="view">
-             <div class="view-header">
+            <div class="view-header">
                 <button class="back-btn" onclick="app.router.back()">Voltar</button>
                 <h2>Detalhes</h2>
             </div>
@@ -121,11 +126,12 @@
     <!-- Keeping it simple: Home is Hub. -->
 
     <!-- Scripts -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="assets/js/api.js"></script>
     <script src="assets/js/map.js"></script>
     <script src="assets/js/app.js"></script>
-    
+
     <script>
         // Register Service Worker
         if ('serviceWorker' in navigator) {
@@ -141,4 +147,5 @@
         }
     </script>
 </body>
+
 </html>

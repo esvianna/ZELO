@@ -40,9 +40,17 @@ body {
     z-index: 1000;
 }
 
-.logo {
-    font-size: 1.5rem;
-    font-weight: 600;
+.app-header .logo {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.app-header .logo img {
+    height: 40px;
+    /* Adjust based on header height */
+    width: auto;
+    object-fit: contain;
 }
 
 .status-indicator {
