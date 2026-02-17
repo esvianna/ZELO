@@ -10,7 +10,46 @@ const app = {
         listBairro: '',
         listCidade: '',
         listOpenNow: false,
-        itemsPerPage: 10
+        itemsPerPage: 10,
+        userLocation: null, // {lat, lng}
+    },
+
+    // --- Helpers ---
+    calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371; // Radius of the earth in km
+        const dLat = this.deg2rad(lat2 - lat1);
+        const dLon = this.deg2rad(lon2 - lon1);
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const d = R * c; // Distance in km
+        return d;
+    },
+
+    deg2rad(deg) {
+        return deg * (Math.PI / 180);
+    },
+
+    getUserLocation() {
+        if (!navigator.geolocation) return;
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                this.data.userLocation = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+                console.log('User location obtained:', this.data.userLocation);
+                // Re-render if current view is list and sorted by distance
+                if (this.router.currentView === 'lista' && this.data.listSort === 'distance') {
+                    this.renderList(this.data.currentCategory);
+                }
+            },
+            (error) => {
+                console.warn('Geolocation error:', error);
+            }
+        );
     },
 
     router: {
@@ -93,6 +132,9 @@ const app = {
 
         // Handle URL hash if we implement deep linking, for now simple init
         this.router.navigate('home');
+
+        // Request location
+        this.getUserLocation();
     },
 
     renderList(category, page = 1, search = '', sort = null, bairro = null, cidade = null, openNow = null) {
@@ -193,9 +235,21 @@ const app = {
         // 3. Sort
         if (this.data.listSort === 'distance') {
             filtered.sort((a, b) => {
-                // Parse "1.2 km" to 1.2
-                const distA = parseFloat((a.distance || '9999').replace(',', '.'));
-                const distB = parseFloat((b.distance || '9999').replace(',', '.'));
+                let distA, distB;
+
+                // Prefer user location if available
+                if (this.data.userLocation && a.lat && a.lng && b.lat && b.lng) {
+                    distA = this.calculateDistance(this.data.userLocation.lat, this.data.userLocation.lng, a.lat, a.lng);
+                    distB = this.calculateDistance(this.data.userLocation.lat, this.data.userLocation.lng, b.lat, b.lng);
+                    // Add temporary property for display (optional, or just rely on sort)
+                    a._userDistance = distA;
+                    b._userDistance = distB;
+                } else {
+                    // Fallback to server distance
+                    distA = parseFloat((a.distance || '9999').replace(',', '.'));
+                    distB = parseFloat((b.distance || '9999').replace(',', '.'));
+                }
+
                 return distA - distB;
             });
         } else if (this.data.listSort === 'alpha') {
@@ -268,15 +322,25 @@ const app = {
         }
 
         // List Items
-        html += paginatedItems.map(item => `
+        html += paginatedItems.map(item => {
+            // Determine distance text
+            let distText = '';
+            if (this.data.userLocation && item._userDistance) {
+                distText = item._userDistance.toFixed(1) + ' km';
+            } else if (item.distance) {
+                distText = item.distance + ' km';
+            }
+
+            return `
             <div class="list-item" onclick="app.router.navigate('detalhe', {id: ${item.id}})">
                 <div>
                     <h3>${item.name}</h3>
                     <p>${item.address}</p>
                 </div>
-                ${item.distance ? `<span class="distance-badge">${item.distance} km</span>` : ''}
+                ${distText ? `<span class="distance-badge">${distText}</span>` : ''}
             </div>
-        `).join('');
+            `;
+        }).join('');
 
         // Pagination Controls
         if (totalPages > 1) {
