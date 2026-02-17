@@ -52,6 +52,30 @@ const MapManager = {
             emergencia: this.createIcon('orange')
         };
 
+        // Add Event Marker (Center)
+        const eventData = app.data.evento;
+        if (eventData && eventData.coordenadas && eventData.coordenadas.lat) {
+            let eventIcon;
+
+            if (eventData.logo) {
+                eventIcon = L.icon({
+                    iconUrl: eventData.logo,
+                    iconSize: [50, 50], // Adjust size as needed
+                    iconAnchor: [25, 25],
+                    popupAnchor: [0, -25],
+                    className: 'event-marker-logo' // For CSS circular styling
+                });
+            } else {
+                eventIcon = this.createIcon('blue');
+            }
+
+            const eventMarker = L.marker([eventData.coordenadas.lat, eventData.coordenadas.lng], { icon: eventIcon })
+                .bindPopup(`<b>${eventData.name_evento || 'Evento'}</b><br>${eventData.endereco || ''}`)
+                .addTo(this.map);
+
+            this.markers.push(eventMarker);
+        }
+
         locations.forEach(loc => {
             if (!loc.lat || !loc.lng) return;
 

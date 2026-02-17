@@ -57,3 +57,32 @@ function zelo_register_post_type_locais() {
 	register_post_type( 'zelo_local', $args );
 }
 add_action( 'init', 'zelo_register_post_type_locais', 0 );
+
+// Add Columns to Admin List
+add_filter( 'manage_zelo_local_posts_columns', 'zelo_set_custom_edit_zelo_local_columns' );
+function zelo_set_custom_edit_zelo_local_columns($columns) {
+    $new_columns = array();
+    $new_columns['cb'] = $columns['cb'];
+    $new_columns['title'] = $columns['title'];
+    $new_columns['zelo_category'] = __( 'Categoria', 'zelo-assistente' );
+    $new_columns['zelo_address'] = __( 'Endereço', 'zelo-assistente' );
+    $new_columns['zelo_phone'] = __( 'Telefone', 'zelo-assistente' );
+    $new_columns['date'] = $columns['date'];
+    return $new_columns;
+}
+
+add_action( 'manage_zelo_local_posts_custom_column', 'zelo_custom_zelo_local_column', 10, 2 );
+function zelo_custom_zelo_local_column( $column, $post_id ) {
+    switch ( $column ) {
+        case 'zelo_category':
+            $type = get_post_meta( $post_id, '_zelo_type', true );
+            echo ucfirst( $type );
+            break;
+        case 'zelo_address':
+            echo get_post_meta( $post_id, '_zelo_address', true );
+            break;
+        case 'zelo_phone':
+            echo get_post_meta( $post_id, '_zelo_phone', true );
+            break;
+    }
+}

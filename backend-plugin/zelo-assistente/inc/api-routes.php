@@ -85,6 +85,7 @@ function zelo_get_evento() {
 	$response = array(
 		'name_evento'        => $data['name'],
 		'endereco'           => $data['address'],
+        'logo'               => isset($data['logo']) ? $data['logo'] : '',
 		'coordenadas'        => array( 'lat' => floatval( $data['lat'] ), 'lng' => floatval( $data['lng'] ) ),
 		'contatos'           => array(
 			'email' => $data['email'],

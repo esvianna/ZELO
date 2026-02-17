@@ -25,6 +25,7 @@ function zelo_render_settings_page() {
 			'lng'     => sanitize_text_field( $_POST['zelo_event_lng'] ),
 			'email'   => sanitize_email( $_POST['zelo_event_email'] ),
 			'site'    => esc_url_raw( $_POST['zelo_event_site'] ),
+            'logo'    => esc_url_raw( $_POST['zelo_event_logo'] ),
 			'phones'  => array(),
 		);
 
@@ -81,6 +82,13 @@ function zelo_render_settings_page() {
 				<tr>
 					<th scope="row"><label for="zelo_event_site">Site Oficial</label></th>
 					<td><input type="url" name="zelo_event_site" id="zelo_event_site" value="<?php echo esc_attr( $data['site'] ); ?>" class="regular-text"></td>
+				</tr>
+                <tr>
+					<th scope="row"><label for="zelo_event_logo">URL do Logo (Marcador)</label></th>
+					<td>
+                        <input type="url" name="zelo_event_logo" id="zelo_event_logo" value="<?php echo esc_attr( isset($data['logo']) ? $data['logo'] : '' ); ?>" class="regular-text">
+                        <p class="description">Cole o link da imagem (ex: da Biblioteca de Mídia do WordPress).</p>
+                    </td>
 				</tr>
 			</table>
 

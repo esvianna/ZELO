@@ -28,43 +28,93 @@ function zelo_render_importer_page() {
 
 		$results = zelo_fetch_osm_data( $lat, $lng, $radius );
         
-        $count = 0;
+        $count_new = 0;
+        $count_updated = 0;
         foreach($results as $place) {
             $existing = get_posts(array(
                 'post_type' => 'zelo_local',
                 'meta_key' => '_zelo_osm_id',
                 'meta_value' => $place['osm_id'],
-                'post_status' => 'any'
+                'post_status' => 'any',
+                'numberposts' => 1
             ));
 
-            if(empty($existing)) {
+            if(!empty($existing)) {
+                $post_id = $existing[0]->ID;
+                $count_updated++;
+            } else {
                 $post_id = wp_insert_post(array(
                     'post_title' => $place['name'],
                     'post_type' => 'zelo_local',
                     'post_status' => 'publish'
                 ));
+                $count_new++;
+            }
 
-                update_post_meta($post_id, '_zelo_type', $place['type']);
-                update_post_meta($post_id, '_zelo_lat', $place['lat']);
-                update_post_meta($post_id, '_zelo_lng', $place['lon']);
-                update_post_meta($post_id, '_zelo_osm_id', $place['osm_id']);
-                
-                // Try to get address/phone if available (OSM data varies)
-                if(!empty($place['tags']['addr:street'])) {
-                    $addr = $place['tags']['addr:street'] . ' ' . ($place['tags']['addr:housenumber'] ?? '');
-                    update_post_meta($post_id, '_zelo_address', $addr);
+            // Always update/set metadata (UPSERT)
+            update_post_meta($post_id, '_zelo_type', $place['type']);
+            update_post_meta($post_id, '_zelo_lat', $place['lat']);
+            update_post_meta($post_id, '_zelo_lng', $place['lon']);
+            update_post_meta($post_id, '_zelo_osm_id', $place['osm_id']);
+            
+            // Improved Address Logic
+            $addr = '';
+            // Preserver address if manually edited? 
+            // For now, we overwrite if OSM has data, or keep existing if OSM is empty.
+            // Actually, user wants to bring data, so we prioritize OSM new data if available.
+            
+            if(!empty($place['tags']['addr:full'])) {
+                $addr = $place['tags']['addr:full'];
+            } elseif(!empty($place['tags']['addr:street'])) {
+                $addr = $place['tags']['addr:street'];
+                if(!empty($place['tags']['addr:housenumber'])) {
+                    $addr .= ', ' . $place['tags']['addr:housenumber'];
                 }
-                
-                $count++;
+                if(!empty($place['tags']['addr:suburb'])) {
+                    $addr .= ' - ' . $place['tags']['addr:suburb'];
+                }
+            }
+            
+            if(!empty($addr)) {
+                update_post_meta($post_id, '_zelo_address', $addr);
+            }
+
+            // Improved Phone Logic
+            $phone = '';
+            if(!empty($place['tags']['phone'])) $phone = $place['tags']['phone'];
+            elseif(!empty($place['tags']['contact:phone'])) $phone = $place['tags']['contact:phone'];
+            elseif(!empty($place['tags']['contact:mobile'])) $phone = $place['tags']['contact:mobile'];
+            
+            if(!empty($phone)) {
+                update_post_meta($post_id, '_zelo_phone', $phone);
+            }
+
+            // Website / Obs
+            $website = '';
+            if(!empty($place['tags']['website'])) $website = $place['tags']['website'];
+            elseif(!empty($place['tags']['contact:website'])) $website = $place['tags']['contact:website'];
+            elseif(!empty($place['tags']['url'])) $website = $place['tags']['url'];
+            
+            if($website) {
+                $updated_post = array(
+                    'ID'           => $post_id,
+                    'post_content' => "Site: " . $website
+                );
+                wp_update_post( $updated_post );
+            }
+
+            // Hours
+            if(!empty($place['tags']['opening_hours'])) {
+                update_post_meta($post_id, '_zelo_hours', $place['tags']['opening_hours']);
             }
         }
 
-		echo '<div class="notice notice-success is-dismissible"><p>' . $count . ' locais importados com sucesso!</p></div>';
+		echo '<div class="notice notice-success is-dismissible"><p>Importação concluída! ' . $count_new . ' novos locais criados e ' . $count_updated . ' atualizados.</p></div>';
 	}
 	?>
 	<div class="wrap">
 		<h1>Importador de Locais (OpenStreetMap)</h1>
-		<p>Essa ferramenta busca Farmácias e Hospitais ao redor de um ponto e cadastra automaticamente.</p>
+		<p>Essa ferramenta busca dados do OSM. <b>Nota:</b> O OSM é uma base colaborativa. Muitos locais podem ter apenas o nome e coordenadas. Nesses casos, o endereço e telefone precisarão ser preenchidos manualmente.</p>
 		
 		<form method="post" action="">
 			<?php wp_nonce_field( 'zelo_import_nonce' ); ?>
