@@ -47,8 +47,8 @@ body {
 }
 
 .app-header .logo img {
-    max-height: 40px;
-    /* Force max height */
+    max-height: 65px;
+    /* Increased size per user request */
     width: auto;
     max-width: 100%;
     /* Prevent horizontal overflow */
