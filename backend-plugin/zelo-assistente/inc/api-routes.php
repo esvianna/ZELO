@@ -71,23 +71,29 @@ function zelo_get_locais( $request ) {
 }
 
 function zelo_get_evento() {
-	// Hardcoded event info for MVP efficiency
-	$data = array(
-		'name_evento'        => 'Grande Evento Internacional',
-		'endereco'           => 'Pavilhão de Exposições, São Paulo, SP',
-		'coordenadas'        => array( 'lat' => -23.5505, 'lng' => -46.6333 ),
+	$data = get_option( 'zelo_event_data', array(
+		'name'    => 'Grande Evento',
+		'address' => '',
+		'lat'     => '-23.5505',
+		'lng'     => '-46.6333',
+		'email'   => '',
+		'site'    => '',
+		'phones'  => array(),
+	) );
+
+	// Map to API format
+	$response = array(
+		'name_evento'        => $data['name'],
+		'endereco'           => $data['address'],
+		'coordenadas'        => array( 'lat' => floatval( $data['lat'] ), 'lng' => floatval( $data['lng'] ) ),
 		'contatos'           => array(
-			'email' => 'suporte@evento.com',
-			'site'  => 'https://evento.com',
+			'email' => $data['email'],
+			'site'  => $data['site'],
 		),
-		'telefones_emergencia' => array(
-			array( 'nome' => 'Polícia', 'numero' => '190' ),
-			array( 'nome' => 'SAMU', 'numero' => '192' ),
-			array( 'nome' => 'Bombeiros', 'numero' => '193' ),
-		),
+		'telefones_emergencia' => $data['phones'],
 	);
 
-	return rest_ensure_response( $data );
+	return rest_ensure_response( $response );
 }
 
 function zelo_calculate_distance( $lat1, $lon1, $lat2, $lon2 ) {
