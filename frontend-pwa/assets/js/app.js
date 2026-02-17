@@ -12,6 +12,7 @@ const app = {
         listOpenNow: false,
         itemsPerPage: 10,
         userLocation: null, // {lat, lng}
+        installPrompt: null // Store PWA install prompt
     },
 
     // --- Helpers ---
@@ -609,4 +610,41 @@ const app = {
 // Start app
 document.addEventListener('DOMContentLoaded', () => {
     app.init();
+
+    // PWA Install Prompt Logic
+    window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent Chrome 67 and earlier from automatically showing the prompt
+        e.preventDefault();
+        // Stash the event so it can be triggered later.
+        app.data.installPrompt = e;
+
+        // Show the install button
+        const installBtn = document.getElementById('install-btn');
+        if (installBtn) {
+            installBtn.style.display = 'block';
+
+            installBtn.addEventListener('click', () => {
+                // Hide the app provided install promotion
+                installBtn.style.display = 'none';
+                // Show the install prompt
+                app.data.installPrompt.prompt();
+                // Wait for the user to respond to the prompt
+                app.data.installPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the A2HS prompt');
+                    } else {
+                        console.log('User dismissed the A2HS prompt');
+                    }
+                    app.data.installPrompt = null;
+                });
+            });
+        }
+    });
+
+    // Optional: Hide button if already installed (handled by browser not firing event, but good to be safe)
+    window.addEventListener('appinstalled', (evt) => {
+        console.log('a2hs installed');
+        const installBtn = document.getElementById('install-btn');
+        if (installBtn) installBtn.style.display = 'none';
+    });
 });
