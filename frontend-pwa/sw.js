@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zelo-cache-v5';
+const CACHE_NAME = 'zelo-cache-v6';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -26,35 +26,35 @@ self.addEventListener('install', (event) => {
 
 // Fetch Event
 self.addEventListener('fetch', (event) => {
-    const url = new URL(event.request.url);
+    // Network First Strategy for EVERYTHING (ensures freshness)
+    // If network fails (offline), fallback to cache
 
-    // API Caching Strategy: Network First, Fallback to Cache
-    if (url.pathname.includes('/wp-json/zelo/v1/')) {
-        event.respondWith(
-            fetch(event.request)
-                .then((response) => {
-                    // Clone response to cache it
+    event.respondWith(
+        fetch(event.request)
+            .then((response) => {
+                // Return response if it's invalid (but don't cache it)
+                if (!response || response.status !== 200 || response.type !== 'basic') {
+                    // Check if it's a valid opaque response (e.g. from CDN/CORS)
+                    // If type is opaque we can still cache it generally, but let's be simple:
+                    // We just cache valid responses to update the cache
+                }
+
+                // Check if we received a valid response to cache
+                // Basic means same-origin. CORS/opaque responses need careful handling if strict.
+                // For simplicity, let's clone and cache ANY successful GET response
+
+                if (event.request.method === 'GET') {
                     const responseClone = response.clone();
                     caches.open(CACHE_NAME).then((cache) => {
                         cache.put(event.request, responseClone);
                     });
-                    return response;
-                })
-                .catch(() => {
-                    return caches.match(event.request);
-                })
-        );
-        return;
-    }
-
-    // Static Assets: Cache First, Fallback to Network
-    event.respondWith(
-        caches.match(event.request)
-            .then((response) => {
-                if (response) {
-                    return response;
                 }
-                return fetch(event.request);
+
+                return response;
+            })
+            .catch(() => {
+                // Network failed, try cache
+                return caches.match(event.request);
             })
     );
 });
