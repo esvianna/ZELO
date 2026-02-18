@@ -116,6 +116,13 @@ function zelo_get_evento() {
                 'title' => isset($data['trans_taxi_title']) ? $data['trans_taxi_title'] : 'Táxi / App',
                 'desc' => isset($data['trans_taxi_desc']) ? $data['trans_taxi_desc'] : '',
             ),
+            // Home Notice
+            'home_notice' => array(
+                'active' => isset($data['home_notice_active']) ? (bool)$data['home_notice_active'] : false,
+                'type' => isset($data['home_notice_type']) ? $data['home_notice_type'] : 'info',
+                'text' => isset($data['home_notice_text']) ? $data['home_notice_text'] : '',
+                'link' => isset($data['home_notice_link']) ? $data['home_notice_link'] : '',
+            ),
         ),
 		'telefones_emergencia' => $data['phones'],
 	);

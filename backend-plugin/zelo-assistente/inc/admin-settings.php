@@ -45,6 +45,11 @@ function zelo_render_settings_page() {
             'trans_taxi_active' => isset($_POST['zelo_trans_taxi_active']) ? 1 : 0,
             'trans_taxi_title' => sanitize_text_field( $_POST['zelo_trans_taxi_title'] ),
             'trans_taxi_desc' => sanitize_text_field( $_POST['zelo_trans_taxi_desc'] ),
+            // Home Notices
+            'home_notice_active' => isset($_POST['zelo_home_notice_active']) ? 1 : 0,
+            'home_notice_type' => sanitize_text_field( $_POST['zelo_home_notice_type'] ),
+            'home_notice_text' => sanitize_textarea_field( $_POST['zelo_home_notice_text'] ),
+            'home_notice_link' => esc_url_raw( $_POST['zelo_home_notice_link'] ),
 			'phones'  => array(),
 		);
 
@@ -209,6 +214,33 @@ function zelo_render_settings_page() {
                             <input type="text" name="zelo_trans_taxi_title" value="<?php echo esc_attr( isset($data['trans_taxi_title']) ? $data['trans_taxi_title'] : 'Táxi / App' ); ?>" class="regular-text" placeholder="Título">
                             <br>
                             <input type="text" name="zelo_trans_taxi_desc" value="<?php echo esc_attr( isset($data['trans_taxi_desc']) ? $data['trans_taxi_desc'] : '' ); ?>" class="regular-text" placeholder="Descrição (Ex: Desembarque no Portão 4)">
+                        </fieldset>
+                    </td>
+                </tr>
+            </table>
+
+            <hr>
+            <h2>Avisos da Home (Bem-vindo)</h2>
+            <table class="form-table">
+                <tr>
+                    <th scope="row">Banner de Aviso</th>
+                    <td>
+                        <fieldset>
+                            <label>
+                                <input type="checkbox" name="zelo_home_notice_active" value="1" <?php checked( isset($data['home_notice_active']) ? $data['home_notice_active'] : 0, 1 ); ?>>
+                                Ativar Aviso na Home
+                            </label>
+                            <br><br>
+                            <label for="zelo_home_notice_type">Tipo de Aviso:</label>
+                            <select name="zelo_home_notice_type" id="zelo_home_notice_type">
+                                <option value="info" <?php selected( isset($data['home_notice_type']) ? $data['home_notice_type'] : 'info', 'info' ); ?>>Informativo (Azul)</option>
+                                <option value="warning" <?php selected( isset($data['home_notice_type']) ? $data['home_notice_type'] : 'info', 'warning' ); ?>>Alerta (Amarelo)</option>
+                                <option value="critical" <?php selected( isset($data['home_notice_type']) ? $data['home_notice_type'] : 'info', 'critical' ); ?>>Crítico (Vermelho)</option>
+                            </select>
+                            <br><br>
+                            <textarea name="zelo_home_notice_text" rows="3" cols="50" class="large-text code" placeholder="Texto do aviso..."><?php echo esc_textarea( isset($data['home_notice_text']) ? $data['home_notice_text'] : '' ); ?></textarea>
+                            <br>
+                            <input type="url" name="zelo_home_notice_link" value="<?php echo esc_attr( isset($data['home_notice_link']) ? $data['home_notice_link'] : '' ); ?>" class="regular-text" placeholder="Link opcional (Saiba mais)">
                         </fieldset>
                     </td>
                 </tr>
