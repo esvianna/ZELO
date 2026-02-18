@@ -257,18 +257,7 @@ const app = {
 
             console.log('✅ DATA LOADED FROM API:', { locais, evento });
 
-            // Add visible version indicator (temproary for debugging)
-            const versionEl = document.createElement('div');
-            versionEl.style.position = 'fixed';
-            versionEl.style.bottom = '5px';
-            versionEl.style.right = '5px';
-            versionEl.style.background = 'rgba(0,0,0,0.5)';
-            versionEl.style.color = 'white';
-            versionEl.style.padding = '2px 5px';
-            versionEl.style.fontSize = '10px';
-            versionEl.style.zIndex = '9999';
-            versionEl.textContent = 'v6.2.0 (Fix)';
-            document.body.appendChild(versionEl);
+
 
         } catch (err) {
             console.error('Failed to load data', err);

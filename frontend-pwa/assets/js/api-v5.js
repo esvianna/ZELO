@@ -15,7 +15,12 @@ const API = {
         const url = `${this.baseUrl}/locais?${query}`;
 
         try {
-            const response = await fetch(url);
+            const response = await fetch(url, {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
             if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
 
@@ -39,7 +44,12 @@ const API = {
     async getEvento() {
         const url = `${this.baseUrl}/evento`;
         try {
-            const response = await fetch(url);
+            const response = await fetch(url, {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
             if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
 
