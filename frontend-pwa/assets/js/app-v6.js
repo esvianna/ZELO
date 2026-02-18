@@ -270,81 +270,18 @@ const app = {
     // --- RENDER FUNCTIONS ---
 
     renderHome() {
-        // 1. Update Header Title
+        // Render CLASSIC Home
+        // Just title and maybe simple welcome, but actions are static in HTML
         const evt = this.data.evento;
         const titleEl = document.getElementById('home-welcome-text');
         const headerTitleEl = document.getElementById('header-event-title');
 
         if (evt && evt.name_evento) {
-            if (titleEl) titleEl.textContent = `Bem-vindo ao ${evt.name_evento}`;
+            // Keep dynamic title feature as it is useful
             if (headerTitleEl) headerTitleEl.textContent = evt.name_evento;
         }
 
-        // 2. Render Notices
-        const noticeContainer = document.getElementById('home-notice-container');
-        if (noticeContainer) {
-            if (evt && evt.info_uteis && evt.info_uteis.home_notice && evt.info_uteis.home_notice.active) {
-                const notice = evt.info_uteis.home_notice;
-                let icon = 'ℹ️';
-                if (notice.type === 'warning') icon = '⚠️';
-                if (notice.type === 'critical') icon = '🚨';
-                // Add text-dark or specific color styles in CSS handled by class
-                noticeContainer.innerHTML = `
-                    <div class="notice-banner ${notice.type || 'info'}" ${notice.link ? `onclick="window.open('${notice.link}', '_blank')"` : ''} style="${notice.link ? 'cursor:pointer' : ''}">
-                        <div style="font-size: 1.2rem;">${icon}</div>
-                        <div>${notice.text}</div>
-                    </div>
-                `;
-            } else {
-                noticeContainer.innerHTML = '';
-            }
-        }
-
-        // 3. Init Home Map
-        if (evt && evt.coordenadas) {
-            setTimeout(() => {
-                const mapEl = document.getElementById('home-map-preview');
-                // Ensure element exists and is visible
-                if (mapEl && mapEl.offsetParent !== null) {
-                    if (this.data.homeMapInstance) {
-                        this.data.homeMapInstance.off();
-                        this.data.homeMapInstance.remove();
-                        this.data.homeMapInstance = null;
-                    }
-
-                    const lat = parseFloat(evt.coordenadas.lat);
-                    const lng = parseFloat(evt.coordenadas.lng);
-
-                    if (!isNaN(lat) && !isNaN(lng)) {
-                        const miniMap = L.map('home-map-preview', {
-                            center: [lat, lng],
-                            zoom: 14,
-                            zoomControl: false,
-                            dragging: false,
-                            scrollWheelZoom: false,
-                            doubleClickZoom: false,
-                            boxZoom: false,
-                            keyboard: false,
-                            attributionControl: false
-                        });
-
-                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '' }).addTo(miniMap);
-
-                        // Custom Marker
-                        const iconHtml = `<div style="background-color: #e63946; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`;
-                        const customIcon = L.divIcon({
-                            html: iconHtml,
-                            className: 'custom-div-icon',
-                            iconSize: [14, 14],
-                            iconAnchor: [7, 7]
-                        });
-
-                        L.marker([lat, lng], { icon: customIcon }).addTo(miniMap);
-                        this.data.homeMapInstance = miniMap;
-                    }
-                }
-            }, 300);
-        }
+        // No Map, No Notices
     },
 
     renderList(category, page = 1) {
