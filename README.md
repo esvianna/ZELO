@@ -8,6 +8,9 @@ O objetivo do **Zelo** é prover uma ferramenta rápida, acessível e resiliente
 
 ## 📜 Regras e Estrutura
 
+### Regras de Desenvolvimento
+> 🚨 **ATENÇÃO:** Para garantir que as atualizações cheguem aos usuários, siga rigorosamente as regras definidas em [DEPLOYMENT_RULES.md](./DEPLOYMENT_RULES.md).
+
 ### Estrutura do Projeto
 O projeto é dividido em dois módulos principais:
 
@@ -23,9 +26,10 @@ O projeto é dividido em dois módulos principais:
     -   **Importador OSM**: Ferramenta integrada que busca dados do OpenStreetMap (via Overpass API) baseada em um raio (ex: 2km) do local do evento e cadastra/atualiza automaticamente os locais no sistema.
 -   **Dados do Evento**:
     -   Configuração centralizada com Nome do Evento, Endereço, Coordenadas, Contatos (E-mail, Site) e Telefones de Emergência (ex: SAMU, Bombeiros, Polícia).
+    -   **Aviso na Home**: Campo para mensagem de destaque na tela inicial do app (Info, Alerta, Crítico).
 -   **API REST (`/wp-json/zelo/v1/`)**:
     -   **GET `/locais`**: Retorna locais próximos. Aceita parâmetros `lat`, `lng` e `radius` para filtrar e ordenar por distância.
-    -   **GET `/evento`**: Retorna as informações gerais do evento e contatos de emergência.
+    -   **GET `/evento`**: Retorna as informações gerais do evento, contatos de emergência e o aviso da home.
 
 #### 2. Frontend (PWA)
 -   **Tecnologias**: HTML5, CSS3, JavaScript (Vanilla), Leaflet.js (Mapas).
@@ -33,7 +37,7 @@ O projeto é dividido em dois módulos principais:
     -   **Assets (CSS, JS, Imagens, Fontes)**: Estratégia *Cache First* (prioriza cache para velocidade).
     -   **API Data**: Estratégia *Network First* (tenta buscar dados novos; se falhar, usa o cache).
 -   **Funcionalidades**:
-    -   **Home**: Acesso rápido a Emergência, Farmácias, Hospitais.
+    -   **Home**: Acesso rápido a Emergência, Farmácias, Hospitais e **Avisos do Evento**.
     -   **Mapa**: Visualização interativa dos locais próximos usando Leaflet.
     -   **Lista**: Listagem de locais filtrada por categoria.
     -   **Emergência**: Lista rápida de telefones úteis.
@@ -51,6 +55,13 @@ O projeto é dividido em dois módulos principais:
 2.  Ajuste a URL da API no arquivo `assets/js/api.js` (se necessário) para apontar para o seu WordPress.
 
 ## 📝 Changelog
+
+### [v43] - Aviso na Home e Melhorias de Cache
+-   **Feature**: Adicionado componente de "Aviso do Evento" na tela inicial (abaixo das ações secundárias).
+    -   Integrado com API `/evento` (campos `home_notice`).
+    -   Suporte a tipos: Info, Warning, Critical.
+-   **Fix**: Correção crítica no sistema de cache (Service Worker). Agora arquivos JS (`app-v5.js`, `api-v5.js`) são versionados explicitamente para garantir atualização imediata no cliente.
+-   **Refactor**: Limpeza de código duplicado na API e logs de debug.
 
 ### [1.0.0] - Versão Inicial
 -   **Lançamento do Projeto**: Estrutura base Backend + Frontend.

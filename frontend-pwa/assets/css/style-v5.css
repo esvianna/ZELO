@@ -799,6 +799,81 @@ body {
     overflow: hidden;
 }
 
+/* Home Notice Card */
+.home-notice-card {
+    background: white;
+    border-radius: 20px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    /* Soft shadow like image */
+    margin-bottom: 1.5rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+    text-decoration: none;
+    color: inherit;
+    border: 1px solid rgba(0, 0, 0, 0.02);
+}
+
+.home-notice-card:active {
+    transform: scale(0.98);
+}
+
+.home-notice-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    /* Squircle shape */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+/* Notice Types Colors */
+.home-notice-icon.info {
+    background-color: #FFF8E1;
+    /* Light Yellow/Cream */
+    color: #FFA000;
+    /* Darker Orange/Yellow */
+}
+
+.home-notice-icon.warning {
+    background-color: #FFF3E0;
+    color: #F57C00;
+}
+
+.home-notice-icon.critical {
+    background-color: #FFEBEE;
+    color: #D32F2F;
+}
+
+.home-notice-content {
+    flex: 1;
+}
+
+.home-notice-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #1a1a2e;
+    /* Dark Navy for text */
+    margin-bottom: 0.25rem;
+}
+
+.home-notice-text {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    line-height: 1.4;
+}
+
+.home-notice-arrow {
+    color: #cbd5e1;
+    font-size: 1.2rem;
+}
+
 .hero-overlay {
     background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
     width: 100%;

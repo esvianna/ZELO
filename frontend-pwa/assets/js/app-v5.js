@@ -90,9 +90,15 @@ const app = {
                 } else if (viewId === 'evento') {
                     app.renderEventInfo();
                 }
+
+                // Render Home Notice if on home
+                if (viewId === 'home') {
+                    app.renderHomeNotice();
+                }
             }
         },
 
+        // Moved to app root
 
 
         debounceTimer: null,
@@ -315,6 +321,55 @@ const app = {
 
         // Request location
         this.getUserLocation();
+    },
+
+    // --- Render Methods ---
+    renderHomeNotice() {
+        const container = document.getElementById('home-notice-container');
+        // The API structure nests this under info_uteis -> home_notice
+        const noticeData = app.data.evento?.info_uteis?.home_notice;
+
+        if (!container) return;
+
+        if (!noticeData) {
+            container.innerHTML = '';
+            return;
+        }
+
+        // Check if active (API returns boolean true/false or 1/0)
+        // Ensure truthy check handles string '1' or int 1 or boolean true
+        const isActive = noticeData.active == 1 || noticeData.active === true || noticeData.active === 'true';
+
+        if (!isActive) {
+            container.innerHTML = '';
+            return;
+        }
+
+        const type = noticeData.type || 'info'; // info, warning, critical
+        const text = noticeData.text || 'Aviso do Evento';
+        const link = noticeData.link || '#';
+
+        // Icon mapping
+        let icon = '📢'; // Default
+        if (type === 'warning') icon = '⚠️';
+        if (type === 'critical') icon = '🚨';
+
+        const html = `
+            <a href="${link}" class="home-notice-card" onclick="${link === '#' ? 'return false;' : ''}">
+                <div class="home-notice-icon ${type}">
+                    ${icon}
+                </div>
+                <div class="home-notice-content">
+                    <div class="home-notice-title">Aviso do Evento</div>
+                    <div class="home-notice-text">${text}</div>
+                </div>
+                <div class="home-notice-arrow">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </div>
+            </a>
+        `;
+
+        container.innerHTML = html;
     },
 
     renderList(category, page = 1, search = '', sort = null, bairro = null, cidade = null, openNow = null) {
