@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zelo-cache-v20';
+const CACHE_NAME = 'zelo-cache-v21';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

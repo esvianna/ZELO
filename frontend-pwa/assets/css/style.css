@@ -138,8 +138,8 @@ body {
 }
 
 .status-indicator.offline {
-    background-color: #dc3545;
-    /* Red for offline */
+    background-color: #f0f0f0;
+    /* Match filter exact style */
 }
 
 /* Views */
