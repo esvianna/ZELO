@@ -94,8 +94,17 @@ const app = {
                 // Render Home Notice if on home
                 if (viewId === 'home') {
                     app.renderHomeNotice();
+                    app.renderHomeHeader();
                 }
             }
+        },
+
+        renderHomeHeader() {
+            const titleEl = document.getElementById('home-event-name');
+            if (!titleEl) return;
+
+            const eventName = app.data.evento?.nome || app.data.evento?.titulo || ''; // Try common fields
+            titleEl.textContent = eventName;
         },
 
         // Moved to app root
@@ -310,6 +319,11 @@ const app = {
             this.data.evento = evento || {};
 
             console.log('Data loaded', this.data);
+
+            // Render header if we are already on home (which we usually are at init)
+            if (this.router.currentView === 'home') {
+                this.router.renderHomeHeader();
+            }
 
         } catch (err) {
             console.error('Failed to load data', err);
