@@ -100,6 +100,22 @@ function zelo_get_evento() {
             'medical_loc' => isset($data['medical_loc']) ? $data['medical_loc'] : '',
             'emergency_phone' => isset($data['emergency_phone']) ? $data['emergency_phone'] : '',
             'support_chat' => isset($data['support_chat']) ? $data['support_chat'] : '',
+            // Transport
+            'trans_shuttle' => array(
+                'active' => isset($data['trans_shuttle_active']) ? (bool)$data['trans_shuttle_active'] : false,
+                'title' => isset($data['trans_shuttle_title']) ? $data['trans_shuttle_title'] : 'Shuttle Oficial',
+                'desc' => isset($data['trans_shuttle_desc']) ? $data['trans_shuttle_desc'] : '',
+            ),
+            'trans_public' => array(
+                'active' => isset($data['trans_public_active']) ? (bool)$data['trans_public_active'] : false,
+                'title' => isset($data['trans_public_title']) ? $data['trans_public_title'] : 'Transporte Público',
+                'desc' => isset($data['trans_public_desc']) ? $data['trans_public_desc'] : '',
+            ),
+            'trans_taxi' => array(
+                'active' => isset($data['trans_taxi_active']) ? (bool)$data['trans_taxi_active'] : false,
+                'title' => isset($data['trans_taxi_title']) ? $data['trans_taxi_title'] : 'Táxi / App',
+                'desc' => isset($data['trans_taxi_desc']) ? $data['trans_taxi_desc'] : '',
+            ),
         ),
 		'telefones_emergencia' => $data['phones'],
 	);

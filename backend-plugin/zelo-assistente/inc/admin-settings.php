@@ -35,6 +35,16 @@ function zelo_render_settings_page() {
             'medical_loc' => sanitize_text_field( $_POST['zelo_medical_loc'] ),
             'emergency_phone' => sanitize_text_field( $_POST['zelo_emergency_phone'] ),
             'support_chat' => esc_url_raw( $_POST['zelo_support_chat'] ),
+            // Transport Fields
+            'trans_shuttle_active' => isset($_POST['zelo_trans_shuttle_active']) ? 1 : 0,
+            'trans_shuttle_title' => sanitize_text_field( $_POST['zelo_trans_shuttle_title'] ),
+            'trans_shuttle_desc' => sanitize_text_field( $_POST['zelo_trans_shuttle_desc'] ),
+            'trans_public_active' => isset($_POST['zelo_trans_public_active']) ? 1 : 0,
+            'trans_public_title' => sanitize_text_field( $_POST['zelo_trans_public_title'] ),
+            'trans_public_desc' => sanitize_text_field( $_POST['zelo_trans_public_desc'] ),
+            'trans_taxi_active' => isset($_POST['zelo_trans_taxi_active']) ? 1 : 0,
+            'trans_taxi_title' => sanitize_text_field( $_POST['zelo_trans_taxi_title'] ),
+            'trans_taxi_desc' => sanitize_text_field( $_POST['zelo_trans_taxi_desc'] ),
 			'phones'  => array(),
 		);
 
@@ -148,6 +158,59 @@ function zelo_render_settings_page() {
                 <tr>
                     <th scope="row"><label for="zelo_support_chat">Link do Chat de Suporte</label></th>
                     <td><input type="url" name="zelo_support_chat" id="zelo_support_chat" value="<?php echo esc_attr( isset($data['support_chat']) ? $data['support_chat'] : '' ); ?>" class="regular-text" placeholder="Ex: https://wa.me/5541999999999"></td>
+                </tr>
+            </table>
+
+            <hr>
+            <h2>Como Chegar (Transporte)</h2>
+            <table class="form-table">
+                <!-- Shuttle -->
+                <tr>
+                    <th scope="row">Shuttle / Transfer</th>
+                    <td>
+                        <fieldset>
+                            <label>
+                                <input type="checkbox" name="zelo_trans_shuttle_active" value="1" <?php checked( isset($data['trans_shuttle_active']) ? $data['trans_shuttle_active'] : 0, 1 ); ?>>
+                                Ativar Cartão de Shuttle
+                            </label>
+                            <br><br>
+                            <input type="text" name="zelo_trans_shuttle_title" value="<?php echo esc_attr( isset($data['trans_shuttle_title']) ? $data['trans_shuttle_title'] : 'Shuttle Oficial' ); ?>" class="regular-text" placeholder="Título (Ex: Shuttle Oficial)">
+                            <br>
+                            <input type="text" name="zelo_trans_shuttle_desc" value="<?php echo esc_attr( isset($data['trans_shuttle_desc']) ? $data['trans_shuttle_desc'] : 'Traslados gratuitos.' ); ?>" class="regular-text" placeholder="Descrição (Ex: Saídas a cada 15 min)">
+                        </fieldset>
+                    </td>
+                </tr>
+                <!-- Public Transport -->
+                <tr>
+                    <th scope="row">Transporte Público</th>
+                    <td>
+                        <fieldset>
+                            <label>
+                                <input type="checkbox" name="zelo_trans_public_active" value="1" <?php checked( isset($data['trans_public_active']) ? $data['trans_public_active'] : 0, 1 ); ?>>
+                                Ativar Cartão de Transp. Público
+                            </label>
+                            <br><br>
+                            <input type="text" name="zelo_trans_public_title" value="<?php echo esc_attr( isset($data['trans_public_title']) ? $data['trans_public_title'] : 'Transporte Público' ); ?>" class="regular-text" placeholder="Título">
+                            <br>
+                            <input type="text" name="zelo_trans_public_desc" value="<?php echo esc_attr( isset($data['trans_public_desc']) ? $data['trans_public_desc'] : '' ); ?>" class="regular-text" placeholder="Descrição (Ex: Metrô Linha 4)">
+                        </fieldset>
+                    </td>
+                </tr>
+                <!-- Taxi/App -->
+                <tr>
+                    <th scope="row">Táxi / Apps</th>
+                    <td>
+                        <fieldset>
+                            <label>
+                                <input type="checkbox" name="zelo_trans_taxi_active" value="1" <?php checked( isset($data['trans_taxi_active']) ? $data['trans_taxi_active'] : 0, 1 ); ?>>
+                                Ativar Cartão de Táxi/App
+                            </label>
+                            <br><br>
+                            <input type="text" name="zelo_trans_taxi_title" value="<?php echo esc_attr( isset($data['trans_taxi_title']) ? $data['trans_taxi_title'] : 'Táxi / App' ); ?>" class="regular-text" placeholder="Título">
+                            <br>
+                            <input type="text" name="zelo_trans_taxi_desc" value="<?php echo esc_attr( isset($data['trans_taxi_desc']) ? $data['trans_taxi_desc'] : '' ); ?>" class="regular-text" placeholder="Descrição (Ex: Desembarque no Portão 4)">
+                        </fieldset>
+                    </td>
                 </tr>
             </table>
 

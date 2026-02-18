@@ -812,21 +812,26 @@ const app = {
                     <div class="info-card">
                         <div class="card-title">🚍 Como chegar</div>
                         <div class="transport-grid">
+                            ${info.trans_shuttle && info.trans_shuttle.active ? `
                             <div class="transport-item">
                                 <div class="icon">🚌</div>
-                                <h4>Shuttle Oficial</h4>
-                                <p>Traslados gratuitos a cada 15 min.</p>
-                            </div>
+                                <h4>${info.trans_shuttle.title}</h4>
+                                <p>${info.trans_shuttle.desc}</p>
+                            </div>` : ''}
+
+                            ${info.trans_public && info.trans_public.active ? `
                             <div class="transport-item">
                                 <div class="icon">🚇</div>
-                                <h4 >Transporte Público</h4>
-                                <p>Linha 4 do Metrô, Estação Central.</p>
-                            </div>
+                                <h4>${info.trans_public.title}</h4>
+                                <p>${info.trans_public.desc}</p>
+                            </div>` : ''}
+
+                            ${info.trans_taxi && info.trans_taxi.active ? `
                             <div class="transport-item">
                                 <div class="icon">🚕</div>
-                                <h4>Táxi / App</h4>
-                                <p>Desembarque no Portão 4.</p>
-                            </div>
+                                <h4>${info.trans_taxi.title}</h4>
+                                <p>${info.trans_taxi.desc}</p>
+                            </div>` : ''}
                         </div>
                     </div>
 
