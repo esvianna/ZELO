@@ -26,6 +26,11 @@ function zelo_render_settings_page() {
 			'email'   => sanitize_email( $_POST['zelo_event_email'] ),
 			'site'    => esc_url_raw( $_POST['zelo_event_site'] ),
             'logo'    => esc_url_raw( $_POST['zelo_event_logo'] ),
+            'wifi_ssid' => sanitize_text_field( $_POST['zelo_wifi_ssid'] ),
+            'wifi_pass' => sanitize_text_field( $_POST['zelo_wifi_pass'] ),
+            'cred_hours' => sanitize_text_field( $_POST['zelo_cred_hours'] ),
+            'cred_docs' => sanitize_text_field( $_POST['zelo_cred_docs'] ),
+            'medical_loc' => sanitize_text_field( $_POST['zelo_medical_loc'] ),
 			'phones'  => array(),
 		);
 
@@ -101,6 +106,31 @@ function zelo_render_settings_page() {
 					</td>
 				</tr>
 			</table>
+
+            <hr>
+            <h2>Informações Úteis (App)</h2>
+            <table class="form-table">
+                <tr>
+                    <th scope="row"><label for="zelo_wifi_ssid">Wi-Fi (SSID)</label></th>
+                    <td><input type="text" name="zelo_wifi_ssid" id="zelo_wifi_ssid" value="<?php echo esc_attr( isset($data['wifi_ssid']) ? $data['wifi_ssid'] : '' ); ?>" class="regular-text"></td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="zelo_wifi_pass">Senha do Wi-Fi</label></th>
+                    <td><input type="text" name="zelo_wifi_pass" id="zelo_wifi_pass" value="<?php echo esc_attr( isset($data['wifi_pass']) ? $data['wifi_pass'] : '' ); ?>" class="regular-text"></td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="zelo_cred_hours">Horário Credenciamento</label></th>
+                    <td><input type="text" name="zelo_cred_hours" id="zelo_cred_hours" value="<?php echo esc_attr( isset($data['cred_hours']) ? $data['cred_hours'] : '' ); ?>" class="regular-text" placeholder="Ex: Seg-Ter: 08:00 - 18:00"></td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="zelo_cred_docs">Documentos Necessários</label></th>
+                    <td><input type="text" name="zelo_cred_docs" id="zelo_cred_docs" value="<?php echo esc_attr( isset($data['cred_docs']) ? $data['cred_docs'] : '' ); ?>" class="regular-text" placeholder="Ex: Documento com foto (RG, CNH)"></td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="zelo_medical_loc">Local Posto Médico</label></th>
+                    <td><input type="text" name="zelo_medical_loc" id="zelo_medical_loc" value="<?php echo esc_attr( isset($data['medical_loc']) ? $data['medical_loc'] : '' ); ?>" class="regular-text" placeholder="Ex: Pavilhão A"></td>
+                </tr>
+            </table>
 
 			<hr>
 			<h2>Telefones de Emergência</h2>

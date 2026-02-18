@@ -749,6 +749,9 @@ const app = {
         // Fallback for image
         const heroImage = evt.foto || 'images/convention-center.jpg'; // Placeholder
 
+        // Helper to safely get nested properties
+        const info = evt.info_uteis || {};
+
         container.innerHTML = `
             <div class="event-hero" style="background-image: url('${heroImage}');">
                 <div class="hero-overlay">
@@ -813,11 +816,11 @@ const app = {
                         <h3 style="color:white; margin-bottom:1rem;">📶 Informações úteis</h3>
                         <div style="margin-bottom: 1rem;">
                             <div style="font-size:0.8rem; opacity:0.8;">WI-FI DO EVENTO (SSID)</div>
-                            <div style="font-weight:bold; font-size:1.1rem;">ZELO_CONF_2026</div>
+                            <div style="font-weight:bold; font-size:1.1rem;">${info.wifi_ssid || 'Não divulgado'}</div>
                         </div>
                         <div>
                             <div style="font-size:0.8rem; opacity:0.8;">SENHA</div>
-                            <div style="font-weight:bold; font-size:1.1rem;">Inovacao2026!</div>
+                            <div style="font-weight:bold; font-size:1.1rem;">${info.wifi_pass || '-'}</div>
                         </div>
                     </div>
 
@@ -825,12 +828,12 @@ const app = {
                     <div class="info-card">
                         <div class="card-title">🆔 Credenciamento</div>
                         <div class="timeline-item">
-                            <div class="time">Retirada</div>
-                            <div class="desc">Seg-Ter: 08:00 - 18:00</div>
+                            <div class="time">Horário</div>
+                            <div class="desc">${info.cred_hours || 'Consulte a programação'}</div>
                         </div>
                         <div class="timeline-item">
                             <div class="time">Documentos</div>
-                            <div class="desc">Documento com foto (RG, CNH)</div>
+                            <div class="desc">${info.cred_docs || 'Documento com foto'}</div>
                         </div>
                     </div>
 
@@ -839,7 +842,7 @@ const app = {
                         <div class="card-title" style="color: #d63384;">⛑️ Segurança</div>
                         <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
                             <span>Posto Médico</span>
-                            <strong>Pavilhão A</strong>
+                            <strong>${info.medical_loc || 'A definir'}</strong>
                         </div>
                         <div style="display:flex; justify-content:space-between;">
                             <span>Emergência</span>

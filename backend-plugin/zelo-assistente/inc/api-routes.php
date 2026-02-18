@@ -91,6 +91,13 @@ function zelo_get_evento() {
 			'email' => $data['email'],
 			'site'  => $data['site'],
 		),
+        'info_uteis' => array(
+            'wifi_ssid' => isset($data['wifi_ssid']) ? $data['wifi_ssid'] : '',
+            'wifi_pass' => isset($data['wifi_pass']) ? $data['wifi_pass'] : '',
+            'cred_hours' => isset($data['cred_hours']) ? $data['cred_hours'] : '',
+            'cred_docs' => isset($data['cred_docs']) ? $data['cred_docs'] : '',
+            'medical_loc' => isset($data['medical_loc']) ? $data['medical_loc'] : '',
+        ),
 		'telefones_emergencia' => $data['phones'],
 	);
 
