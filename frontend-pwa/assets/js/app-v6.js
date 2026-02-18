@@ -255,7 +255,7 @@ const app = {
             this.data.locais = locais || [];
             this.data.evento = evento || {};
 
-            console.log('✅ DATA LOADED FROM API:', { locais, evento });
+            // console.log('✅ DATA LOADED FROM API:', { locais, evento });
 
 
 
