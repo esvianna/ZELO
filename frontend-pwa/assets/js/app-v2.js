@@ -944,4 +944,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial check
     updateNetworkStatus();
+
+    // Update External Links
+    const linkLostPwd = document.getElementById('link-lost-password');
+    const linkEditProfile = document.getElementById('link-edit-profile');
+    if (linkLostPwd && API.siteUrl) {
+        linkLostPwd.href = `${API.siteUrl}/wp-login.php?action=lostpassword`;
+    }
+    if (linkEditProfile && API.siteUrl) {
+        linkEditProfile.href = `${API.siteUrl}/wp-admin/profile.php`;
+    }
 });
