@@ -846,7 +846,7 @@ const app = {
                         </div>
                         <div style="display:flex; justify-content:space-between;">
                             <span>Emergência</span>
-                            <strong style="color:var(--danger-color);">0800 123 4567</strong>
+                            <strong style="color:var(--danger-color);">${info.emergency_phone || '192'}</strong>
                         </div>
                     </div>
 
@@ -854,7 +854,7 @@ const app = {
                     <div class="info-card">
                         <div class="card-title">Suporte ao Visitante</div>
                         <p style="font-size:0.9rem; color:#666; margin-bottom:1rem;">Precisa de ajuda? Fale conosco.</p>
-                        <button class="btn-block outline" onclick="window.location.href='mailto:${evt.contatos.email}'">
+                        <button class="btn-block outline" onclick="window.open('${info.support_chat || '#'}', '_blank')">
                             Chat de Suporte
                         </button>
                         <button class="btn-block" style="background:#f0f0f0; color:#333;" onclick="window.location.href='mailto:${evt.contatos.email}'">
@@ -865,6 +865,42 @@ const app = {
                 </div>
             </div>
         `;
+
+        // Initialize Mini Map
+        if (evt.coordenadas && evt.coordenadas.lat && evt.coordenadas.lng) {
+            setTimeout(() => {
+                const mapEl = document.getElementById('event-map-preview');
+                if (mapEl) {
+                    // Check if map instance already exists on this element to avoid init error
+                    if (mapEl._leaflet_id) return;
+
+                    const miniMap = L.map('event-map-preview', {
+                        center: [evt.coordenadas.lat, evt.coordenadas.lng],
+                        zoom: 15,
+                        zoomControl: false,
+                        dragging: false,
+                        scrollWheelZoom: false,
+                        doubleClickZoom: false,
+                        boxZoom: false,
+                        keyboard: false,
+                        attributionControl: false
+                    });
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: ''
+                    }).addTo(miniMap);
+
+                    L.marker([evt.coordenadas.lat, evt.coordenadas.lng]).addTo(miniMap);
+
+                    // Click to open Google Maps
+                    mapEl.addEventListener('click', () => {
+                        window.open(`https://maps.google.com/?q=${evt.endereco}`, '_blank');
+                    });
+                    // Force resize to ensure tiles load
+                    setTimeout(() => { miniMap.invalidateSize(); }, 200);
+                }
+            }, 500); // Increased timeout to ensure DOM is ready
+        }
 
         // Load map if coordinates exist
         // Note: evt.lat/lng might need to be verified from API response structure. 

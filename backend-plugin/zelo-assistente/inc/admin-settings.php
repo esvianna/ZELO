@@ -31,7 +31,10 @@ function zelo_render_settings_page() {
             'wifi_pass' => sanitize_text_field( $_POST['zelo_wifi_pass'] ),
             'cred_hours' => sanitize_text_field( $_POST['zelo_cred_hours'] ),
             'cred_docs' => sanitize_text_field( $_POST['zelo_cred_docs'] ),
+            'doctor_loc' => sanitize_text_field( $_POST['zelo_medical_loc'] ), // Keeping internal key consistent if used elsewhere or just mapping new one
             'medical_loc' => sanitize_text_field( $_POST['zelo_medical_loc'] ),
+            'emergency_phone' => sanitize_text_field( $_POST['zelo_emergency_phone'] ),
+            'support_chat' => esc_url_raw( $_POST['zelo_support_chat'] ),
 			'phones'  => array(),
 		);
 
@@ -137,6 +140,14 @@ function zelo_render_settings_page() {
                 <tr>
                     <th scope="row"><label for="zelo_medical_loc">Local Posto Médico</label></th>
                     <td><input type="text" name="zelo_medical_loc" id="zelo_medical_loc" value="<?php echo esc_attr( isset($data['medical_loc']) ? $data['medical_loc'] : '' ); ?>" class="regular-text" placeholder="Ex: Pavilhão A"></td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="zelo_emergency_phone">Telefone de Emergência (Destaque)</label></th>
+                    <td><input type="text" name="zelo_emergency_phone" id="zelo_emergency_phone" value="<?php echo esc_attr( isset($data['emergency_phone']) ? $data['emergency_phone'] : '' ); ?>" class="regular-text" placeholder="Ex: 0800 123 4567"></td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="zelo_support_chat">Link do Chat de Suporte</label></th>
+                    <td><input type="url" name="zelo_support_chat" id="zelo_support_chat" value="<?php echo esc_attr( isset($data['support_chat']) ? $data['support_chat'] : '' ); ?>" class="regular-text" placeholder="Ex: https://wa.me/5541999999999"></td>
                 </tr>
             </table>
 

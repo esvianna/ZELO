@@ -98,6 +98,8 @@ function zelo_get_evento() {
             'cred_hours' => isset($data['cred_hours']) ? $data['cred_hours'] : '',
             'cred_docs' => isset($data['cred_docs']) ? $data['cred_docs'] : '',
             'medical_loc' => isset($data['medical_loc']) ? $data['medical_loc'] : '',
+            'emergency_phone' => isset($data['emergency_phone']) ? $data['emergency_phone'] : '',
+            'support_chat' => isset($data['support_chat']) ? $data['support_chat'] : '',
         ),
 		'telefones_emergencia' => $data['phones'],
 	);
