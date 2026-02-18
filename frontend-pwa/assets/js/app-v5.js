@@ -60,6 +60,14 @@ const app = {
             // Hide current view
             document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
 
+            // Update Bottom Nav Active State
+            document.querySelectorAll('.bottom-nav .nav-item').forEach(el => {
+                el.classList.remove('active');
+                if (el.dataset.target === viewId) {
+                    el.classList.add('active');
+                }
+            });
+
             // Show new view
             const view = document.getElementById(`view-${viewId}`);
             if (view) {

@@ -16,7 +16,7 @@
     <!-- CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <link rel="stylesheet" href="assets/css/style-v5.css">
+    <link rel="stylesheet" href="assets/css/style-v5.css?v=36">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -81,7 +81,7 @@
             </div>
 
             <div style="text-align: center; font-size: 0.7rem; color: #999; margin-top: 2rem; padding-bottom: 2rem;">
-                Versão: v33 (Restored)
+                Versão: v36
             </div>
         </section>
 
@@ -201,8 +201,69 @@
 
     </main>
 
-    <!-- Bottom Nav (Optional, maybe just use home as hub) -->
-    <!-- Keeping it simple: Home is Hub. -->
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav">
+        <a href="#" class="nav-item active" onclick="app.router.navigate('home'); return false;" data-target="home">
+            <div class="icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+            </div>
+            <span>INÍCIO</span>
+        </a>
+
+        <a href="#" class="nav-item" onclick="app.router.navigate('mapa'); return false;" data-target="mapa">
+            <div class="icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                    <line x1="8" y1="2" x2="8" y2="18"></line>
+                    <line x1="16" y1="6" x2="16" y2="22"></line>
+                </svg>
+            </div>
+            <span>MAPA</span>
+        </a>
+
+        <a href="#" class="nav-item sos-item" onclick="app.router.navigate('emergencia'); return false;"
+            data-target="emergencia">
+            <div class="sos-button">
+                <!-- Asterisk Icon for SOS -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="32" height="32">
+                    <path
+                        d="M11 2.05v6.288l-5.463-3.13.998-1.734L11 6.556V2.05h2v4.506l4.465-3.082.998 1.734L13 8.338V2.05h-2zm-9 7.45l5.463 3.153-5.463 3.154-.998-1.734L6.465 11l-5.463-3.13.998-1.734zM13 14.662l5.465 3.154-.998 1.734L12 16.416v4.534h-2v-4.534l-5.463 3.13-.998-1.734L9 14.662v-5.324L3.535 6.185l.998-1.734L10 7.604V2.05h4v5.554l5.465-3.153.998 1.734L15 9.338v5.324l5.465 3.154-.998 1.734L14 16.416z"
+                        style="display:none;" />
+                    <path
+                        d="M10.8 13.4L6 16.2l1.4 2.4 4.8-2.8 4.8 2.8 1.4-2.4-4.8-2.8V8h-2.8v5.4zm-1.6-3L5.4 8.6 4 11l4.8 2.8L4 16.6l1.4 2.4 4.8-2.8V21h2.8v-4.8l4.8 2.8 1.4-2.4-4.8-2.8 4.8-2.8-1.4-2.4-4.8 2.8V3H9.2v7.4z" />
+                </svg>
+            </div>
+            <span class="sos-label">S.O.S</span>
+        </a>
+
+        <a href="#" class="nav-item" onclick="app.router.navigate('evento'); return false;" data-target="evento">
+            <div class="icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+            </div>
+            <span>INFO</span>
+        </a>
+
+        <a href="#" class="nav-item" onclick="app.auth.handleIconClick(); return false;" data-target="profile">
+            <div class="icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            </div>
+            <span>PERFIL</span>
+        </a>
+    </nav>
 
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
