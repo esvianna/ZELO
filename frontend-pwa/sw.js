@@ -1,10 +1,10 @@
-const CACHE_NAME = 'zelo-cache-v24';
+const CACHE_NAME = 'zelo-cache-v25';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
     './manifest.json',
-    './assets/css/style.css',
-    './assets/js/app.js',
+    './assets/css/style-v2.css',
+    './assets/js/app-v2.js',
     './assets/js/api.js',
     './assets/js/map.js',
     './images/logo-zelo.png',
