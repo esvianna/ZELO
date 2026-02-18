@@ -142,6 +142,16 @@ const app = {
         const container = document.getElementById('list-container');
         const title = document.getElementById('list-title');
 
+        // Set Title based on category
+        if (category === 'farmacia') {
+            title.textContent = 'Farmácias';
+        } else if (category === 'hospital') {
+            title.textContent = 'Hospitais';
+        } else {
+            title.textContent = 'Locais';
+        }
+
+
         // Update State (if params provided)
         if (category !== this.data.currentCategory) {
             this.data.currentCategory = category;
