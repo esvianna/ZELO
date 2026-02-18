@@ -26,6 +26,7 @@ function zelo_render_settings_page() {
 			'email'   => sanitize_email( $_POST['zelo_event_email'] ),
 			'site'    => esc_url_raw( $_POST['zelo_event_site'] ),
             'logo'    => esc_url_raw( $_POST['zelo_event_logo'] ),
+            'foto'    => esc_url_raw( $_POST['zelo_event_foto'] ),
             'wifi_ssid' => sanitize_text_field( $_POST['zelo_wifi_ssid'] ),
             'wifi_pass' => sanitize_text_field( $_POST['zelo_wifi_pass'] ),
             'cred_hours' => sanitize_text_field( $_POST['zelo_cred_hours'] ),
@@ -98,6 +99,13 @@ function zelo_render_settings_page() {
                         <p class="description">Cole o link da imagem (ex: da Biblioteca de Mídia do WordPress).</p>
                     </td>
 				</tr>
+                <tr>
+                    <th scope="row"><label for="zelo_event_foto">URL do Banner (Topo)</label></th>
+                    <td>
+                        <input type="url" name="zelo_event_foto" id="zelo_event_foto" value="<?php echo esc_attr( isset($data['foto']) ? $data['foto'] : '' ); ?>" class="regular-text">
+                        <p class="description">Imagem de destaque do evento (Cole o link da Mídia).</p>
+                    </td>
+                </tr>
 				<tr>
 					<th scope="row"><label for="zelo_google_places_api_key"><?php esc_html_e( 'Google Places API Key', 'zelo-assistente' ); ?></label></th>
 					<td>

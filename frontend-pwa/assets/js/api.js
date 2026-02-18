@@ -9,6 +9,8 @@ const API = {
     },
 
     async getLocais(params = {}) {
+        // Add timestamp to prevent caching
+        params._t = Date.now();
         const query = new URLSearchParams(params).toString();
         const url = `${this.baseUrl}/locais?${query}`;
 
@@ -18,6 +20,24 @@ const API = {
             const data = await response.json();
 
             // Update cache
+            if ('caches' in self) {
+                // We cache the CLEAN url (without timestamp) so offline works with a "latest known" version if strict matching isn't used, 
+                // OR we accept that offline might use the last cached timestamped URL if Strategy allows.
+                // Better: Cache the data logic in SW handles this. 
+                // However, for explicit cache busting:
+            }
+            this.cache.locais = data;
+            return data;
+        } catch (error) {
+            console.warn('Network failed, trying cache for locais');
+            return null; // Let app handle fallback or use internal cache
+        }
+    },
+
+    async getEvento() {
+        const url = `${this.baseUrl}/evento?_t=${Date.now()}`;
+        try {
+            const response = await fetch(url);
             this.cache.locais = data;
             localStorage.setItem('zelo_locais', JSON.stringify(data));
 
