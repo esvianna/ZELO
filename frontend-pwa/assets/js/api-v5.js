@@ -34,24 +34,7 @@ const API = {
         }
     },
 
-    async getEvento() {
-        const url = `${this.baseUrl}/evento?_t=${Date.now()}`;
-        try {
-            const response = await fetch(url);
-            this.cache.locais = data;
-            localStorage.setItem('zelo_locais', JSON.stringify(data));
 
-            return data;
-        } catch (error) {
-            console.warn('Fetch failed, trying cache', error);
-            // Fallback to local storage
-            const cached = localStorage.getItem('zelo_locais');
-            if (cached) {
-                return JSON.parse(cached);
-            }
-            throw error;
-        }
-    },
 
     async getEvento() {
         const url = `${this.baseUrl}/evento`;
