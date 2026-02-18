@@ -140,15 +140,22 @@ const app = {
                 // Since this is PWA, we need the WP Backend URL. 
                 // Assumption: PWA is hosted on same domain or we have the URL. 
                 // For this task, I'll assume relative path '/wp-json/zelo/v1/auth/login' works if hosted on WP,
-                // OR I need to use the absolute URL if separate.
                 // *CRITICAL*: User mentioned "zelo-assistente" plugin. 
                 // Let's try to infer URL. If index.html is in a folder, we might need absolute.
                 // Let's use specific relative path if on same domain, or absolute if defined.
                 // I will use a config var for API base.
 
-                const apiBase = API.baseUrl || 'https://zelo.art.br/wp-json'; // Fallback/Default
+                // Determine API URL
+                // API.baseUrl typically ends with /zelo/v1. Check to avoid duplication.
+                let url;
+                if (API.baseUrl && API.baseUrl.includes('/zelo/v1')) {
+                    url = `${API.baseUrl}/auth/login`;
+                } else {
+                    const apiRoot = 'https://zelo.art.br/wp-json';
+                    url = `${apiRoot}/zelo/v1/auth/login`;
+                }
 
-                const response = await fetch(`${apiBase}/zelo/v1/auth/login`, {
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
