@@ -746,16 +746,143 @@ const app = {
 
         if (!evt) return;
 
+        // Fallback for image
+        const heroImage = evt.foto || 'images/convention-center.jpg'; // Placeholder
+
         container.innerHTML = `
-            <div class="detail-card">
-                <h1>${evt.name_evento}</h1>
-                <p>${evt.endereco}</p>
-                
-                <h3>Contatos</h3>
-                <p>Email: ${evt.contatos.email}</p>
-                <p>Site: <a href="${evt.contatos.site}" target="_blank">${evt.contatos.site}</a></p>
+            <div class="event-hero" style="background-image: url('${heroImage}');">
+                <div class="hero-overlay">
+                    <h1>${evt.name_evento}</h1>
+                </div>
+            </div>
+
+            <div class="event-grid">
+                <!-- Left Column -->
+                <div class="event-main">
+                    
+                    <!-- Location -->
+                    <div class="info-card">
+                        <div class="card-title text-primary">LOCALIZAÇÃO</div>
+                        <h3>${evt.local || 'Centro de Convenções'}</h3>
+                        <p>${evt.endereco}</p>
+                        
+                        <div style="display: flex; gap: 10px; margin-top: 1rem;">
+                            <button class="action-btn outline small" onclick="navigator.clipboard.writeText('${evt.endereco}')">
+                                📋 Copiar Endereço
+                            </button>
+                            <button class="action-btn primary small" onclick="window.open('https://maps.google.com/?q=${evt.endereco}', '_blank')">
+                                🗺️ Abrir no Mapa
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- How to get there -->
+                    <div class="info-card">
+                        <div class="card-title">🚍 Como chegar</div>
+                        <div class="transport-grid">
+                            <div class="transport-item">
+                                <div class="icon">🚌</div>
+                                <h4>Shuttle Oficial</h4>
+                                <p>Traslados gratuitos a cada 15 min.</p>
+                            </div>
+                            <div class="transport-item">
+                                <div class="icon">🚇</div>
+                                <h4 >Transporte Público</h4>
+                                <p>Linha 4 do Metrô, Estação Central.</p>
+                            </div>
+                            <div class="transport-item">
+                                <div class="icon">🚕</div>
+                                <h4>Táxi / App</h4>
+                                <p>Desembarque no Portão 4.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Map Place -->
+                    <div class="map-preview" id="event-map-preview">
+                        <!-- Mini map will be rendered here -->
+                    </div>
+
+                </div>
+
+                <!-- Right Column (Sidebar) -->
+                <div class="event-sidebar">
+                    
+                    <!-- Useful Info -->
+                    <div class="info-card highlight-blue">
+                        <h3 style="color:white; margin-bottom:1rem;">📶 Informações úteis</h3>
+                        <div style="margin-bottom: 1rem;">
+                            <div style="font-size:0.8rem; opacity:0.8;">WI-FI DO EVENTO (SSID)</div>
+                            <div style="font-weight:bold; font-size:1.1rem;">ZELO_CONF_2026</div>
+                        </div>
+                        <div>
+                            <div style="font-size:0.8rem; opacity:0.8;">SENHA</div>
+                            <div style="font-weight:bold; font-size:1.1rem;">Inovacao2026!</div>
+                        </div>
+                    </div>
+
+                    <!-- Credenciamento -->
+                    <div class="info-card">
+                        <div class="card-title">🆔 Credenciamento</div>
+                        <div class="timeline-item">
+                            <div class="time">Retirada</div>
+                            <div class="desc">Seg-Ter: 08:00 - 18:00</div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="time">Documentos</div>
+                            <div class="desc">Documento com foto (RG, CNH)</div>
+                        </div>
+                    </div>
+
+                    <!-- Safety -->
+                    <div class="info-card highlight-red">
+                        <div class="card-title" style="color: #d63384;">⛑️ Segurança</div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+                            <span>Posto Médico</span>
+                            <strong>Pavilhão A</strong>
+                        </div>
+                        <div style="display:flex; justify-content:space-between;">
+                            <span>Emergência</span>
+                            <strong style="color:var(--danger-color);">0800 123 4567</strong>
+                        </div>
+                    </div>
+
+                    <!-- Support -->
+                    <div class="info-card">
+                        <div class="card-title">Suporte ao Visitante</div>
+                        <p style="font-size:0.9rem; color:#666; margin-bottom:1rem;">Precisa de ajuda? Fale conosco.</p>
+                        <button class="btn-block outline" onclick="window.location.href='mailto:${evt.contatos.email}'">
+                            Chat de Suporte
+                        </button>
+                        <button class="btn-block" style="background:#f0f0f0; color:#333;" onclick="window.location.href='mailto:${evt.contatos.email}'">
+                             📧 Enviar E-mail
+                        </button>
+                    </div>
+
+                </div>
             </div>
         `;
+
+        // Load map if coordinates exist
+        // Note: evt.lat/lng might need to be verified from API response structure. 
+        // Assuming they exist or using defaults for demo.
+        if (evt.lat || (evt.contatos && evt.contatos.lat)) {
+            setTimeout(() => {
+                const lat = evt.lat || -25.4284;
+                const lng = evt.lng || -49.2733;
+                const mapEl = document.getElementById('event-map-preview');
+                if (mapEl) {
+                    const map = L.map('event-map-preview', {
+                        center: [lat, lng],
+                        zoom: 14,
+                        heading: true,
+                        zoomControl: false
+                    });
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+                    L.marker([lat, lng]).addTo(map);
+                }
+            }, 200);
+        }
     }
 };
 
