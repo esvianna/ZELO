@@ -99,13 +99,7 @@ const app = {
             }
         },
 
-        renderHomeHeader() {
-            const titleEl = document.getElementById('home-event-name');
-            if (!titleEl) return;
 
-            const eventName = app.data.evento?.nome || app.data.evento?.titulo || ''; // Try common fields
-            titleEl.textContent = eventName;
-        },
 
         // Moved to app root
 
@@ -322,7 +316,7 @@ const app = {
 
             // Render header if we are already on home (which we usually are at init)
             if (this.router.currentView === 'home') {
-                this.router.renderHomeHeader();
+                this.renderHomeHeader();
             }
 
         } catch (err) {
@@ -384,6 +378,15 @@ const app = {
         `;
 
         container.innerHTML = html;
+    },
+
+    renderHomeHeader() {
+        const titleEl = document.getElementById('home-event-name');
+        if (!titleEl) return;
+
+        // API field is 'name_evento' based on debug logs
+        const eventName = app.data.evento?.name_evento || app.data.evento?.nome || app.data.evento?.titulo || '';
+        titleEl.textContent = eventName;
     },
 
     renderList(category, page = 1, search = '', sort = null, bairro = null, cidade = null, openNow = null) {
