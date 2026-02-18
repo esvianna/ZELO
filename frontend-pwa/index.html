@@ -16,7 +16,7 @@
     <!-- CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <link rel="stylesheet" href="assets/css/style.css?v=12">
+    <link rel="stylesheet" href="assets/css/style.css?v=13">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -33,6 +33,9 @@
                 style="max-height: 80px !important; width: auto; object-fit: contain;">
         </a>
         <div style="display: flex; gap: 10px; align-items: center;">
+            <div id="user-auth-indicator" onclick="app.auth.handleIconClick()">
+                <span class="icon">👤</span>
+            </div>
             <button id="install-btn" class="install-btn" style="display: none;">📲 Instalar</button>
             <div class="status-indicator" id="network-status">Online</div>
         </div>
@@ -126,7 +129,63 @@
             <div id="event-container">
                 <!-- Event info injected here -->
             </div>
-        </section>
+            <!-- Login View -->
+            <section id="view-login" class="view">
+                <div class="view-header">
+                    <button class="back-btn" onclick="app.router.back()">Voltar</button>
+                    <h2>Acesso Restrito</h2>
+                </div>
+                <div class="login-container">
+                    <div class="login-card">
+                        <div style="text-align: center; margin-bottom: 2rem;">
+                            <img src="images/logo-zelo.png" alt="Zelo" style="height: 60px;">
+                            <p class="text-muted" style="margin-top: 1rem;">Entre com sua conta para acessar recursos
+                                exclusivos.</p>
+                        </div>
+
+                        <form onsubmit="app.auth.login(event)">
+                            <div class="form-group">
+                                <label>Usuário ou Email</label>
+                                <input type="text" id="login-username" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Senha</label>
+                                <input type="password" id="login-password" class="form-input" required>
+                            </div>
+
+                            <div id="login-error" class="text-danger"
+                                style="display:none; margin-bottom: 1rem; font-size: 0.9rem;"></div>
+
+                            <button type="submit" class="btn-block" id="login-submit-btn">Entrar</button>
+                        </form>
+
+                        <div style="text-align: center; margin-top: 1.5rem;">
+                            <a href="https://zelo.art.br/wp-login.php?action=lostpassword" target="_blank"
+                                style="font-size: 0.9rem; color: var(--primary-color);">Esqueci minha senha</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Profile View (Simple for now) -->
+            <section id="view-profile" class="view">
+                <div class="view-header">
+                    <button class="back-btn" onclick="app.router.back()">Voltar</button>
+                    <h2>Meu Perfil</h2>
+                </div>
+                <div class="profile-card">
+                    <div class="profile-header">
+                        <img id="profile-avatar" src="" alt="Avatar">
+                        <h2 id="profile-name">Nome do Usuário</h2>
+                        <p id="profile-email">email@exemplo.com</p>
+                        <span id="profile-role" class="badge">Visitante</span>
+                    </div>
+
+                    <div class="profile-actions">
+                        <button class="btn-block outline" onclick="app.auth.logout()">Sair</button>
+                    </div>
+                </div>
+            </section>
 
     </main>
 
@@ -138,7 +197,7 @@
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="assets/js/api.js?v=3"></script>
     <script src="assets/js/map.js?v=3"></script>
-    <script src="assets/js/app.js?v=12"></script>
+    <script src="assets/js/app.js?v=13"></script>
 
     <script>
         // Register Service Worker

@@ -110,11 +110,140 @@ const app = {
         }
     },
 
+    auth: {
+        user: null, // {id, name, email, avatar, roles, token}
+
+        init() {
+            const storedUser = localStorage.getItem('zelo_user');
+            if (storedUser) {
+                this.user = JSON.parse(storedUser);
+                console.log('User restored:', this.user);
+            }
+            this.updateUI();
+        },
+
+        async login(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            const errorEl = document.getElementById('login-error');
+            const submitBtn = document.getElementById('login-submit-btn');
+
+            // Reset UI
+            errorEl.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Entrando...';
+
+            try {
+                // Determine API URL (assuming relative or hardcoded for now based on env)
+                // Since this is PWA, we need the WP Backend URL. 
+                // Assumption: PWA is hosted on same domain or we have the URL. 
+                // For this task, I'll assume relative path '/wp-json/zelo/v1/auth/login' works if hosted on WP,
+                // OR I need to use the absolute URL if separate.
+                // *CRITICAL*: User mentioned "zelo-assistente" plugin. 
+                // Let's try to infer URL. If index.html is in a folder, we might need absolute.
+                // Let's use specific relative path if on same domain, or absolute if defined.
+                // I will use a config var for API base.
+
+                const apiBase = API.baseUrl || 'https://zelo.art.br/wp-json'; // Fallback/Default
+
+                const response = await fetch(`${apiBase}/zelo/v1/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password // *Note*: sending password plain over HTTPS is standard for this simple auth
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Success
+                    this.user = data.user;
+                    this.user.nonce = data.nonce;
+
+                    // Persist
+                    localStorage.setItem('zelo_user', JSON.stringify(this.user));
+
+                    // Update UI
+                    this.updateUI();
+
+                    // Redirect
+                    app.router.navigate('home');
+
+                    // Clear form
+                    document.getElementById('login-username').value = '';
+                    document.getElementById('login-password').value = '';
+
+                } else {
+                    throw new Error(data.message || 'Erro ao fazer login');
+                }
+
+            } catch (err) {
+                console.error('Login error:', err);
+                errorEl.textContent = err.message || 'Erro de conexão. Tente novamente.';
+                errorEl.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Entrar';
+            }
+        },
+
+        logout() {
+            this.user = null;
+            localStorage.removeItem('zelo_user');
+            this.updateUI();
+            app.router.navigate('home');
+        },
+
+        handleIconClick() {
+            if (this.user) {
+                app.router.navigate('profile');
+            } else {
+                app.router.navigate('login');
+            }
+        },
+
+        updateUI() {
+            const iconContainer = document.getElementById('user-auth-indicator');
+            if (!iconContainer) return;
+
+            if (this.user) {
+                // Show Avatar
+                const avatarUrl = this.user.avatar || 'images/default-avatar.png'; // Fallback
+                iconContainer.innerHTML = `<img src="${avatarUrl}" alt="User">`;
+
+                // Update Profile View if active
+                const pName = document.getElementById('profile-name');
+                const pEmail = document.getElementById('profile-email');
+                const pRole = document.getElementById('profile-role');
+                const pAvatar = document.getElementById('profile-avatar');
+
+                if (pName) pName.textContent = this.user.name;
+                if (pEmail) pEmail.textContent = this.user.email;
+                if (pRole) pRole.textContent = this.user.roles[0] || 'Visitante';
+                if (pAvatar) pAvatar.src = avatarUrl;
+
+            } else {
+                // Show Login Icon
+                iconContainer.innerHTML = '<span class="icon">👤</span>';
+            }
+        }
+    },
+
+
     async init() {
         console.log('Zelo App Initializing...');
 
         // Mock data loading or real API
         try {
+            // Init Auth
+            this.auth.init();
+
             // Load initial data
             const [locais, evento] = await Promise.all([
                 API.getLocais(), // Fetch all initially
