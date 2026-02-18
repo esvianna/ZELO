@@ -245,6 +245,35 @@ const app = {
                 iconContainer.removeAttribute('title'); // Remove title or set to 'Login'
                 iconContainer.setAttribute('title', 'Entrar');
             }
+        },
+
+        async forceUpdate() {
+            if (!confirm('Isso irá recarregar o aplicativo e baixar a versão mais recente. Deseja continuar?')) return;
+
+            console.log('Forcing update...');
+
+            // 1. Unregister SW
+            if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (const registration of registrations) {
+                    await registration.unregister();
+                }
+            }
+
+            // 2. Clear Caches
+            if ('caches' in self) {
+                const keys = await caches.keys();
+                for (const key of keys) {
+                    await caches.delete(key);
+                }
+            }
+
+            // 3. Clear Local Storage (Optional, maybe keep user login?)
+            // localStorage.removeItem('zelo_user'); // Keep user logged in if possible
+            // localStorage.removeItem('zelo_locais'); // Clear data cache
+
+            // 4. Reload
+            window.location.reload(true);
         }
     },
 

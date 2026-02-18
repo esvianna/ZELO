@@ -81,7 +81,7 @@
             </div>
 
             <div style="text-align: center; font-size: 0.7rem; color: #999; margin-top: 2rem; padding-bottom: 2rem;">
-                Versão: v27 (Maps & Fields Fixed)
+                Versão: v28 (Hard Reset Feature)
             </div>
         </section>
 
@@ -191,6 +191,9 @@
                 <div class="profile-actions">
                     <a href="#" id="link-edit-profile" target="_blank" class="btn-block outline"
                         style="margin-bottom: 10px; text-decoration: none; display: block;">Alterar Avatar / Dados</a>
+                    <button class="btn-block outline warning" onclick="app.auth.forceUpdate()"
+                        style="margin-bottom: 10px; border-color: orange; color: orange;">↻ Atualizar App / Limpar
+                        Cache</button>
                     <button class="btn-block outline" onclick="app.auth.logout()">Sair</button>
                 </div>
             </div>
