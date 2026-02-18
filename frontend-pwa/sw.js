@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zelo-cache-v12';
+const CACHE_NAME = 'zelo-cache-v13';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -15,6 +15,7 @@ const ASSETS_TO_CACHE = [
 
 // Install Event
 self.addEventListener('install', (event) => {
+    self.skipWaiting(); // Force activation
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then((cache) => {
