@@ -33,8 +33,13 @@
                 style="max-height: 80px !important; width: auto; object-fit: contain;">
         </a>
         <div style="display: flex; gap: 10px; align-items: center;">
-            <div id="user-auth-indicator" onclick="app.auth.handleIconClick()">
-                <span class="icon">👤</span>
+            <div id="user-auth-indicator" onclick="app.auth.handleIconClick()" title="Acessar conta">
+                <!-- Cleaner SVG Icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
             </div>
             <button id="install-btn" class="install-btn" style="display: none;">📲 Instalar</button>
             <div class="status-indicator" id="network-status">Online</div>
@@ -76,7 +81,7 @@
             </div>
 
             <div style="text-align: center; font-size: 0.7rem; color: #999; margin-top: 2rem; padding-bottom: 2rem;">
-                Versão: v17
+                Versão: v18
             </div>
         </section>
 
@@ -184,6 +189,8 @@
                 </div>
 
                 <div class="profile-actions">
+                    <a href="https://zelo.art.br/wp-admin/profile.php" target="_blank" class="btn-block outline"
+                        style="margin-bottom: 10px; text-decoration: none; display: block;">Alterar Avatar / Dados</a>
                     <button class="btn-block outline" onclick="app.auth.logout()">Sair</button>
                 </div>
             </div>
