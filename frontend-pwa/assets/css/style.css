@@ -55,31 +55,58 @@ body {
     display: block;
 }
 
+/* Header Actions */
 .install-btn {
-    background: #fff;
-    color: var(--primary-color);
-    border: 1px solid #fff;
-    padding: 0.3rem 0.8rem;
+    background: linear-gradient(135deg, #137fec, #2a5298);
+    color: white;
+    border: none;
+    padding: 8px 16px;
     border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
+    font-size: 0.9rem;
     cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-weight: 500;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    animation: pulse 2s infinite;
 }
 
 .install-btn:hover {
-    background: var(--surface-color);
-    color: var(--primary-dark);
+    background: linear-gradient(135deg, #0f62b5, #1e3a6a);
     transform: translateY(-1px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+.install-btn:active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(19, 127, 236, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(19, 127, 236, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(19, 127, 236, 0);
+    }
 }
 
 .status-indicator {
     font-size: 0.8rem;
     background: rgba(255, 255, 255, 0.2);
-    padding: 0.2rem 0.5rem;
-    border-radius: 4px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    color: white;
+    transition: background-color 0.3s;
+}
+
+.status-indicator.offline {
+    background-color: #dc3545;
+    /* Red for offline */
 }
 
 /* Views */

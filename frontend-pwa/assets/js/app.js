@@ -657,4 +657,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const installBtn = document.getElementById('install-btn');
         if (installBtn) installBtn.style.display = 'none';
     });
+
+    // Network Status Logic
+    const updateNetworkStatus = () => {
+        const statusEl = document.getElementById('network-status');
+        if (navigator.onLine) {
+            statusEl.textContent = 'Online';
+            statusEl.classList.remove('offline');
+        } else {
+            statusEl.textContent = 'Offline';
+            statusEl.classList.add('offline');
+        }
+    };
+
+    window.addEventListener('online', updateNetworkStatus);
+    window.addEventListener('offline', updateNetworkStatus);
+
+    // Initial check
+    updateNetworkStatus();
 });
