@@ -142,12 +142,16 @@ const app = {
 
             try {
                 let url;
-                if (API.baseUrl && API.baseUrl.includes('/zelo/v1')) {
+                if (typeof API !== 'undefined' && API.baseUrl && API.baseUrl.includes('/zelo/v1')) {
                     url = `${API.baseUrl}/auth/login`;
                 } else {
                     const apiRoot = 'https://zelo.quadrodeanuncios.com.br/wp-json';
                     url = `${apiRoot}/zelo/v1/auth/login`;
                 }
+
+                // Debug Alert
+                // alert(`Tentando login em: ${url}`);
+                console.log('Login request to:', url);
 
                 const response = await fetch(url, {
                     method: 'POST',
@@ -170,6 +174,9 @@ const app = {
                 }
             } catch (err) {
                 console.error('Login error:', err);
+                // Visible Alert for the user
+                alert('Erro de Login:\n' + (err.message || err));
+
                 errorEl.textContent = err.message || 'Erro de conexão.';
                 errorEl.style.display = 'block';
             } finally {
