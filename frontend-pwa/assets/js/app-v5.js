@@ -168,7 +168,7 @@ const app = {
                 if (API.baseUrl && API.baseUrl.includes('/zelo/v1')) {
                     url = `${API.baseUrl}/auth/login`;
                 } else {
-                    const apiRoot = 'https://zelo.art.br/wp-json';
+                    const apiRoot = 'https://tenhazelo.com.br/wp-json';
                     url = `${apiRoot}/zelo/v1/auth/login`;
                 }
 

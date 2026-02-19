@@ -1,6 +1,6 @@
 const API = {
-    baseUrl: 'https://zelo.quadrodeanuncios.com.br/wp-json/zelo/v1',
-    siteUrl: 'https://zelo.quadrodeanuncios.com.br', // Base WP URL for links
+    baseUrl: 'https://tenhazelo.com.br/wp-json/zelo/v1',
+    siteUrl: 'https://tenhazelo.com.br', // Base WP URL for links
 
     // Cached data for offline support
     cache: {
