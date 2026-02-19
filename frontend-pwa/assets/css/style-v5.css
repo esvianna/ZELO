@@ -47,7 +47,7 @@ body {
 }
 
 .app-header .logo img {
-    height: 80px;
+    height: 40px;
     /* Specific height */
     width: auto;
     /* Maintain aspect ratio */
