@@ -150,7 +150,7 @@ const app = {
             // Reset UI
             errorEl.style.display = 'none';
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Entrando...';
+            submitBtn.textContent = i18n.t('loading');
 
             try {
                 // Determine API URL (assuming relative or hardcoded for now based on env)
@@ -213,7 +213,7 @@ const app = {
                 errorEl.style.display = 'block';
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Entrar';
+                submitBtn.textContent = i18n.t('login_btn');
             }
         },
 
@@ -249,7 +249,7 @@ const app = {
 
                 if (pName) pName.textContent = this.user.name;
                 if (pEmail) pEmail.textContent = this.user.email;
-                if (pRole) pRole.textContent = this.user.roles[0] || 'Visitante';
+                if (pRole) pRole.textContent = this.user.roles[0] || i18n.t('visitor_role');
                 if (pAvatar) pAvatar.src = avatarUrl;
 
             } else {
@@ -368,7 +368,7 @@ const app = {
                     ${icon}
                 </div>
                 <div class="home-notice-content">
-                    <div class="home-notice-title">Aviso do Evento</div>
+                    <div class="home-notice-title">${i18n.t('emergency_title')}</div>
                     <div class="home-notice-text">${text}</div>
                 </div>
                 <div class="home-notice-arrow">
@@ -395,11 +395,11 @@ const app = {
 
         // Set Title based on category
         if (category === 'farmacia') {
-            title.textContent = 'Farmácias';
+            title.textContent = i18n.t('pharmacies');
         } else if (category === 'hospital') {
-            title.textContent = 'Hospitais';
+            title.textContent = i18n.t('hospitals');
         } else {
-            title.textContent = 'Locais';
+            title.textContent = i18n.t('places');
         }
 
 
@@ -537,7 +537,7 @@ const app = {
                 <div style="display:flex; width:100%;">
                      <input type="text" 
                         class="search-input" 
-                        placeholder="Buscar por nome..." 
+                        placeholder="${i18n.t('search_placeholder')}" 
                         value="${this.data.listSearch}"
                         oninput="app.router.debounceSearch(this.value, '${category}')">
                 </div>
@@ -546,37 +546,37 @@ const app = {
                 <div class="filter-row">
                     <!-- Sort -->
                     <select class="filter-select" onchange="app.renderList('${category}', 1, null, this.value)">
-                        <option value="distance" ${this.data.listSort === 'distance' ? 'selected' : ''}>Perto de mim</option>
-                        <option value="alpha" ${this.data.listSort === 'alpha' ? 'selected' : ''}>A-Z</option>
+                        <option value="distance" ${this.data.listSort === 'distance' ? 'selected' : ''}>${i18n.t('near_me')}</option>
+                        <option value="alpha" ${this.data.listSort === 'alpha' ? 'selected' : ''}>${i18n.t('az')}</option>
                     </select>
 
                     <!-- Bairro -->
                     <select class="filter-select" onchange="app.renderList('${category}', 1, null, null, this.value)">
-                        <option value="">Bairro</option>
+                        <option value="">${i18n.t('neighborhood')}</option>
                         ${bairros.map(b => `<option value="${b}" ${this.data.listBairro === b ? 'selected' : ''}>${b}</option>`).join('')}
                     </select>
 
                      <!-- Cidade -->
                     <select class="filter-select" onchange="app.renderList('${category}', 1, null, null, null, this.value)">
-                        <option value="">Cidade</option>
+                        <option value="">${i18n.t('city')}</option>
                         ${cidades.map(c => `<option value="${c}" ${this.data.listCidade === c ? 'selected' : ''}>${c}</option>`).join('')}
                     </select>
 
                     <!-- Open Now Toggle -->
                      <div class="filter-toggle ${this.data.listOpenNow ? 'active' : ''}" 
                           onclick="app.renderList('${category}', 1, null, null, null, null, !${this.data.listOpenNow})">
-                        <span>🕒 Aberto Agora</span>
+                        <span>${i18n.t('open_now')}</span>
                      </div>
                 </div>
             </div>
         `;
 
         if (totalItems === 0) {
-            html += '<div class="loading">Nenhum local encontrado com estes filtros.</div>';
+            html += `<div class="loading">${i18n.t('no_places_found')}</div>`;
 
             // Allow clearing filters
             html += `<div style="text-align:center; margin-top:1rem;">
-                        <button class="call-btn" onclick="app.renderList('${category}', 1, '', 'distance', '', '', false)">Limpar Filtros</button>
+                        <button class="call-btn" onclick="app.renderList('${category}', 1, '', 'distance', '', '', false)">${i18n.t('clear_filters')}</button>
                      </div>`;
 
             container.innerHTML = html;
@@ -611,15 +611,15 @@ const app = {
                     <button class="page-btn" 
                             ${this.data.listPage === 1 ? 'disabled' : ''} 
                             onclick="app.renderList('${category}', ${this.data.listPage - 1})">
-                        Anterior
+                        ${i18n.t('previous')}
                     </button>
                     
-                    <span class="page-info">Página ${this.data.listPage} de ${totalPages}</span>
+                    <span class="page-info">${i18n.t('page_of', this.data.listPage, totalPages)}</span>
                     
                     <button class="page-btn active" 
                             ${this.data.listPage === totalPages ? 'disabled' : ''} 
                             onclick="app.renderList('${category}', ${this.data.listPage + 1})">
-                        Próximo
+                        ${i18n.t('next')}
                     </button>
                 </div>
             `;
@@ -633,7 +633,7 @@ const app = {
         const item = this.data.locais.find(i => i.id == id);
 
         if (!item) {
-            container.innerHTML = 'Local não encontrado.';
+            container.innerHTML = i18n.t('no_places_found');
             return;
         }
 
@@ -660,9 +660,9 @@ const app = {
             'Sunday': 'Domingo'
         };
 
-        let hoursHtml = '<div class="text-muted">Horário não disponível</div>';
+        let hoursHtml = `<div class="text-muted">${i18n.t('closed_status')}</div>`;
         let isOpen = false; // logic to determine if open would require complex parsing of time ranges
-        let statusBadge = '<span class="badge status closed">Fechado/Indisponível</span>';
+        let statusBadge = `<span class="badge status closed">${i18n.t('closed_status')}</span>`;
 
         if (item.is_24h) {
             hoursHtml = `
@@ -670,7 +670,7 @@ const app = {
                     <div class="schedule-row"><span class="day">Todos os dias</span><span class="hours">24 Horas</span></div>
                 </div>`;
             isOpen = true;
-            statusBadge = '<span class="badge status">Aberto Agora</span>';
+            statusBadge = `<span class="badge status">${i18n.t('open_status')}</span>`;
         } else if (item.hours) {
             // "Monday: 8:00 AM – 6:00 PM; Tuesday: ..."
             const hoursArr = item.hours.split(';').map(h => h.trim());
@@ -678,7 +678,7 @@ const app = {
             // Simple check for "Open Now" (Approximation based on current day/hour would be better but requires robust parsing)
             // For MVP, if it's not 24h, we default to "Ver Horários" or similar unless we parse fully.
             // Let's rely on the visual table for user to decide.
-            statusBadge = '<span class="badge status closed">Ver Horários</span>';
+            statusBadge = `<span class="badge status closed">${i18n.t('check_hours')}</span>`;
 
             hoursHtml = '<div class="schedule-table">';
             const todayEng = new Date().toLocaleDateString('en-US', { weekday: 'long' });
@@ -711,13 +711,13 @@ const app = {
                 <div class="breadcrumbs">
                     <span onclick="app.router.back()" style="cursor:pointer">Início</span>
                     <span>/</span>
-                    <span onclick="app.router.navigate('lista', {category: '${item.category}'})" style="cursor:pointer; text-transform:capitalize;">${item.category}s</span>
+                    <span onclick="app.router.navigate('lista', {category: '${item.category}'})" style="cursor:pointer; text-transform:capitalize;">${item.category === 'farmacia' ? i18n.t('pharmacies') : i18n.t('hospitals')}</span>
                     <span>/</span>
                     <span>${item.name}</span>
                 </div>
 
                 <div class="badge-container">
-                    <span class="badge category ${item.category}">${item.category === 'farmacia' ? 'Farmácia' : 'Hospital'}</span>
+                    <span class="badge category ${item.category}">${item.category === 'farmacia' ? i18n.t('category_pharmacy') : i18n.t('category_hospital')}</span>
                     ${statusBadge}
                 </div>
 
@@ -731,10 +731,10 @@ const app = {
 
             <div class="action-bar">
                 <a href="${mapLink}" target="_blank" class="action-btn primary">
-                    <span>🗺️</span> Como chegar
+                    <span>🗺️</span> ${i18n.t('directions')}
                 </a>
                 <a href="tel:${item.phone}" class="action-btn outline">
-                    <span>📞</span> Ligar agora
+                    <span>📞</span> ${i18n.t('call_now')}
                 </a>
             </div>
 
@@ -743,7 +743,7 @@ const app = {
                 <div>
                     <div class="info-card">
                         <div class="card-title">
-                            <span>ℹ️</span> Observações para Visitantes
+                            <span>ℹ️</span> ${i18n.t('visitor_notes')}
                         </div>
                         <ul class="visitor-notes">
                             <li><span class="icon">✓</span> Equipe fala português disponível (Verificar)</li>
@@ -761,28 +761,28 @@ const app = {
                 <div>
                     <div class="info-card">
                         <div class="card-title">
-                            <span>🕒</span> Horário de Funcionamento
+                            <span>🕒</span> ${i18n.t('hours_of_operation')}
                         </div>
                         ${hoursHtml}
                     </div>
 
                     <div class="info-card">
                         <div class="card-title">
-                            <span>📋</span> Informações Rápidas
+                            <span>📋</span> ${i18n.t('quick_info')}
                         </div>
                         <div class="info-list">
                             <div class="info-item">
-                                <label>Telefone</label>
+                                <label>${i18n.t('phone')}</label>
                                 <a href="tel:${item.phone}">${item.phone}</a>
                             </div>
                             ${website ? `
                             <div class="info-item">
-                                <label>Website</label>
-                                <a href="${website}" target="_blank">Acessar site oficial</a>
+                                <label>${i18n.t('website')}</label>
+                                <a href="${website}" target="_blank">${i18n.t('visit_website')}</a>
                             </div>` : ''}
                             <div class="info-item">
-                                <label>Estacionamento</label>
-                                <span>Disponível (Consultar local)</span>
+                                <label>${i18n.t('parking')}</label>
+                                <span>${i18n.t('parking_available')}</span>
                             </div>
                         </div>
                     </div>
@@ -793,8 +793,8 @@ const app = {
                 <div class="content">
                     <div class="emergency-icon">🚨</div>
                     <div>
-                        <div class="text-bold">Precisa de ajuda imediata?</div>
-                        <div style="font-size:0.9rem; opacity:0.8;">Entre em contato com a linha de emergência.</div>
+                        <div class="text-bold">${i18n.t('emergency_help_title')}</div>
+                        <div style="font-size:0.9rem; opacity:0.8;">${i18n.t('emergency_help_desc')}</div>
                     </div>
                 </div>
                 <button class="emergency-btn" onclick="app.router.navigate('emergencia')">

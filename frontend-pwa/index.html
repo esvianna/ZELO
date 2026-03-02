@@ -32,6 +32,11 @@
                 style="max-height: 40px !important; width: auto; object-fit: contain;">
         </a>
         <div style="display: flex; gap: 10px; align-items: center;">
+            <select id="lang-selector" onchange="i18n.setLanguage(this.value)" style="background:transparent; border:none; color:inherit; font-weight:bold; cursor:pointer;" aria-label="Selecione o idioma">
+                <option value="pt_br" style="color:#000;">PT</option>
+                <option value="en" style="color:#000;">EN</option>
+                <option value="es" style="color:#000;">ES</option>
+            </select>
             <div id="user-auth-indicator" onclick="app.auth.handleIconClick()" title="Acessar conta">
                 <!-- Cleaner SVG Icon -->
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -51,8 +56,8 @@
         <!-- Home View -->
         <section id="view-home" class="view active">
             <div class="hero">
-                <h1>Bem-vindo ao Zelo</h1>
-                <p>Cuidado e atenção para você.</p>
+                <h1 data-i18n="welcome_title">Bem-vindo ao Zelo</h1>
+                <p data-i18n="welcome_subtitle">Cuidado e atenção para você.</p>
                 <h3 id="home-event-name" style="margin-top: 10px; color: var(--primary-color); font-weight: 600;"></h3>
             </div>
 
@@ -61,23 +66,23 @@
             <div class="quick-actions">
                 <button class="action-card emergency" onclick="app.router.navigate('emergencia')">
                     <span class="icon">🚑</span>
-                    <span>Emergência</span>
+                    <span data-i18n="emergency">Emergência</span>
                 </button>
                 <button class="action-card pharmacy" onclick="app.router.navigate('lista', {category: 'farmacia'})">
                     <span class="icon">💊</span>
-                    <span>Farmácias</span>
+                    <span data-i18n="pharmacies">Farmácias</span>
                 </button>
                 <button class="action-card hospital" onclick="app.router.navigate('lista', {category: 'hospital'})">
                     <span class="icon">🏥</span>
-                    <span>Hospitais</span>
+                    <span data-i18n="hospitals">Hospitais</span>
                 </button>
             </div>
 
             <div class="secondary-actions">
-                <button class="btn-block" onclick="app.router.navigate('mapa')">
+                <button class="btn-block" onclick="app.router.navigate('mapa')" data-i18n="view_map">
                     Ver Mapa Geral
                 </button>
-                <button class="btn-block outline" onclick="app.router.navigate('evento')">
+                <button class="btn-block outline" onclick="app.router.navigate('evento')" data-i18n="event_info">
                     Informações do Evento
                 </button>
             </div>
@@ -99,20 +104,20 @@
         <!-- List View -->
         <section id="view-lista" class="view">
             <div class="view-header">
-                <button class="back-btn" onclick="app.router.back()">Voltar</button>
-                <h2 id="list-title">Locais</h2>
+                <button class="back-btn" onclick="app.router.back()" data-i18n="back">Voltar</button>
+                <h2 id="list-title" data-i18n="places">Locais</h2>
             </div>
             <div id="list-container" class="list-container">
                 <!-- Items injected here -->
-                <div class="loading">Carregando...</div>
+                <div class="loading" data-i18n="loading">Carregando...</div>
             </div>
         </section>
 
         <!-- Detail View -->
         <section id="view-detalhe" class="view">
             <div class="view-header">
-                <button class="back-btn" onclick="app.router.back()">Voltar</button>
-                <h2>Detalhes</h2>
+                <button class="back-btn" onclick="app.router.back()" data-i18n="back">Voltar</button>
+                <h2 data-i18n="details">Detalhes</h2>
             </div>
             <div id="detail-container">
                 <!-- Details injected here -->
@@ -122,8 +127,8 @@
         <!-- Emergency View -->
         <section id="view-emergencia" class="view">
             <div class="view-header">
-                <button class="back-btn" onclick="app.router.back()">Voltar</button>
-                <h2>Emergência</h2>
+                <button class="back-btn" onclick="app.router.back()" data-i18n="back">Voltar</button>
+                <h2 data-i18n="emergency">Emergência</h2>
             </div>
             <div class="emergency-contacts" id="emergency-container">
                 <!-- Contacts injected here -->
@@ -133,8 +138,8 @@
         <!-- Event Info View -->
         <section id="view-evento" class="view">
             <div class="view-header">
-                <button class="back-btn" onclick="app.router.back()">Voltar</button>
-                <h2>Sobre o Evento</h2>
+                <button class="back-btn" onclick="app.router.back()" data-i18n="back">Voltar</button>
+                <h2 data-i18n="event_info">Sobre o Evento</h2>
             </div>
             <div id="event-container">
                 <!-- Event info injected here -->
@@ -144,36 +149,36 @@
         <!-- Login View -->
         <section id="view-login" class="view">
             <div class="view-header">
-                <button class="back-btn" onclick="app.router.back()">Voltar</button>
-                <h2>Acesso Restrito</h2>
+                <button class="back-btn" onclick="app.router.back()" data-i18n="back">Voltar</button>
+                <h2 data-i18n="restricted_access">Acesso Restrito</h2>
             </div>
             <div class="login-container">
                 <div class="login-card">
                     <div style="text-align: center; margin-bottom: 2rem;">
                         <img src="images/logo-zelo.png" alt="Zelo" style="height: 60px;">
-                        <p class="text-muted" style="margin-top: 1rem;">Entre com sua conta para acessar recursos
+                        <p class="text-muted" style="margin-top: 1rem;" data-i18n="login_prompt">Entre com sua conta para acessar recursos
                             exclusivos.</p>
                     </div>
 
                     <form onsubmit="app.auth.login(event)">
                         <div class="form-group">
-                            <label>Usuário ou Email</label>
+                            <label data-i18n="username_email">Usuário ou Email</label>
                             <input type="text" id="login-username" class="form-input" required>
                         </div>
                         <div class="form-group">
-                            <label>Senha</label>
+                            <label data-i18n="password">Senha</label>
                             <input type="password" id="login-password" class="form-input" required>
                         </div>
 
                         <div id="login-error" class="text-danger"
                             style="display:none; margin-bottom: 1rem; font-size: 0.9rem;"></div>
 
-                        <button type="submit" class="btn-block" id="login-submit-btn">Entrar</button>
+                        <button type="submit" class="btn-block" id="login-submit-btn" data-i18n="login_btn">Entrar</button>
                     </form>
 
                     <div style="text-align: center; margin-top: 1.5rem;">
                         <a href="#" id="link-lost-password" target="_blank"
-                            style="font-size: 0.9rem; color: var(--primary-color);">Esqueci minha senha</a>
+                            style="font-size: 0.9rem; color: var(--primary-color);" data-i18n="forgot_password">Esqueci minha senha</a>
                     </div>
                 </div>
             </div>
@@ -182,24 +187,24 @@
         <!-- Profile View (Simple for now) -->
         <section id="view-profile" class="view">
             <div class="view-header">
-                <button class="back-btn" onclick="app.router.back()">Voltar</button>
-                <h2>Meu Perfil</h2>
+                <button class="back-btn" onclick="app.router.back()" data-i18n="back">Voltar</button>
+                <h2 data-i18n="my_profile">Meu Perfil</h2>
             </div>
             <div class="profile-card">
                 <div class="profile-header">
                     <img id="profile-avatar" src="" alt="Avatar">
                     <h2 id="profile-name">Nome do Usuário</h2>
                     <p id="profile-email">email@exemplo.com</p>
-                    <span id="profile-role" class="badge">Visitante</span>
+                    <span id="profile-role" class="badge" data-i18n="visitor_role">Visitante</span>
                 </div>
 
                 <div class="profile-actions">
                     <a href="#" id="link-edit-profile" target="_blank" class="btn-block outline"
-                        style="margin-bottom: 10px; text-decoration: none; display: block;">Alterar Avatar / Dados</a>
+                        style="margin-bottom: 10px; text-decoration: none; display: block;" data-i18n="edit_profile">Alterar Avatar / Dados</a>
                     <button class="btn-block outline warning" onclick="app.auth.forceUpdate()"
-                        style="margin-bottom: 10px; border-color: orange; color: orange;">↻ Atualizar App / Limpar
+                        style="margin-bottom: 10px; border-color: orange; color: orange;" data-i18n="update_app">↻ Atualizar App / Limpar
                         Cache</button>
-                    <button class="btn-block outline" onclick="app.auth.logout()">Sair</button>
+                    <button class="btn-block outline" onclick="app.auth.logout()" data-i18n="logout">Sair</button>
                 </div>
             </div>
         </section>
@@ -216,7 +221,7 @@
                     <polyline points="9 22 9 12 15 12 15 22"></polyline>
                 </svg>
             </div>
-            <span>INÍCIO</span>
+            <span data-i18n="nav_home">INÍCIO</span>
         </a>
 
         <a href="#" class="nav-item" onclick="app.router.navigate('mapa'); return false;" data-target="mapa">
@@ -228,7 +233,7 @@
                     <line x1="16" y1="6" x2="16" y2="22"></line>
                 </svg>
             </div>
-            <span>MAPA</span>
+            <span data-i18n="nav_map">MAPA</span>
         </a>
 
         <a href="#" class="nav-item sos-item" onclick="app.router.navigate('emergencia'); return false;"
@@ -243,7 +248,7 @@
                         d="M10.8 13.4L6 16.2l1.4 2.4 4.8-2.8 4.8 2.8 1.4-2.4-4.8-2.8V8h-2.8v5.4zm-1.6-3L5.4 8.6 4 11l4.8 2.8L4 16.6l1.4 2.4 4.8-2.8V21h2.8v-4.8l4.8 2.8 1.4-2.4-4.8-2.8 4.8-2.8-1.4-2.4-4.8 2.8V3H9.2v7.4z" />
                 </svg>
             </div>
-            <span class="sos-label">S.O.S</span>
+            <span class="sos-label" data-i18n="nav_sos">S.O.S</span>
         </a>
 
         <a href="#" class="nav-item" onclick="app.router.navigate('evento'); return false;" data-target="evento">
@@ -255,7 +260,7 @@
                     <line x1="12" y1="8" x2="12.01" y2="8"></line>
                 </svg>
             </div>
-            <span>INFO</span>
+            <span data-i18n="nav_info">INFO</span>
         </a>
 
         <a href="#" class="nav-item" onclick="app.auth.handleIconClick(); return false;" data-target="profile">
@@ -266,15 +271,16 @@
                     <circle cx="12" cy="7" r="4"></circle>
                 </svg>
             </div>
-            <span>PERFIL</span>
+            <span data-i18n="nav_profile">PERFIL</span>
         </a>
     </nav>
 
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script src="assets/js/api-v5.js?v=47"></script>
+    <script src="assets/js/i18n.js?v=48"></script>
+    <script src="assets/js/api-v5.js?v=48"></script>
     <script src="assets/js/map-manager.js"></script>
-    <script src="assets/js/app-v5.js?v=47"></script>
+    <script src="assets/js/app-v5.js?v=48"></script>
 
     <script>
         // Register Service Worker
