@@ -561,25 +561,35 @@ const app = {
             const cleaned = val.trim();
             // Discard if pure numeric (likely house number or part of CEP)
             if (/^\d+$/.test(cleaned.replace(/[\s.-]/g, ''))) return null;
-            // Discard if too short (likely junk)
+            // Discard if too short or likely junk
             if (cleaned.length < 3) return null;
-            // Discard if it's a known non-neighborhood value
-            if (['PR', 'Brasil', 'Brazil', 'State of Paraná', 'São Paulo', 'SC'].includes(cleaned)) return null;
+            if (['PR', 'Brasil', 'Brazil', 'Brasil', 'SP', 'SC', 'RJ'].includes(cleaned)) return null;
             return cleaned;
         };
 
         items.forEach(item => {
             if (!item._bairro || !item._cidade) {
+                // Address example: "Rua - Bairro, Cidade - UF" or "Rua, Num - Bairro, Cidade - UF"
                 const parts = item.address ? item.address.split(' - ') : [];
-                if (parts.length >= 2) {
-                    const middlePart = parts[1].split(',');
-                    if (middlePart.length >= 2) {
-                        item._bairro = cleanFilterValue(middlePart[0]);
-                        item._cidade = cleanFilterValue(middlePart[1]);
-                    } else {
-                        const val = cleanFilterValue(middlePart[0]);
-                        if (val) item._cidade = val;
+                
+                // Try to find the part that has a comma (usually "Bairro, Cidade")
+                let locationPart = null;
+                for (const part of parts) {
+                    if (part.includes(',') && !part.match(/\d{5}-\d{3}/)) {
+                        locationPart = part;
+                        break;
                     }
+                }
+
+                if (locationPart) {
+                    const fragments = locationPart.split(',');
+                    item._bairro = cleanFilterValue(fragments[0]);
+                    item._cidade = cleanFilterValue(fragments[1]);
+                } else if (parts.length >= 2) {
+                    // Fallback to second part
+                    const fragments = parts[1].split(',');
+                    item._bairro = cleanFilterValue(fragments[0]);
+                    item._cidade = cleanFilterValue(fragments[1] || fragments[0]);
                 }
             }
         });
@@ -779,37 +789,35 @@ const app = {
         if (!item.hours) return false;
 
         const now = new Date();
-        const currentHour = now.getHours();
-        const currentMin = now.getMinutes();
-        const currentTime = currentHour * 60 + currentMin;
+        const dayIdx = now.getDay(); // 0-6 (Sun-Sat)
+        const currentTime = now.getHours() * 60 + now.getMinutes();
 
-        // Days mapping for bilingual search
-        const ptToEng = {
-            'segunda-feira': 'monday', 'terça-feira': 'tuesday', 'quarta-feira': 'wednesday',
-            'quinta-feira': 'thursday', 'sexta-feira': 'friday', 'sábado': 'saturday', 'domingo': 'sunday'
-        };
+        // Map day index to strings the Google data might use
+        const dayMap = [
+            ['domingo', 'sunday'],
+            ['segunda', 'monday'],
+            ['terça', 'tuesday'],
+            ['quarta', 'wednesday'],
+            ['quinta', 'thursday'],
+            ['sexta', 'friday'],
+            ['sábado', 'saturday']
+        ];
         
-        const dayPt = now.toLocaleDateString('pt-BR', { weekday: 'long' }).toLowerCase();
-        const dayEng = ptToEng[dayPt] || now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-
-        // format: "Monday: 08:00 - 18:00; Tuesday: ..."
+        const possibleDays = dayMap[dayIdx];
         const days = item.hours.split(';').map(d => d.trim().toLowerCase());
         
-        // Search for either the Portuguese or English day name in the hours string
-        const dayInfo = days.find(d => d.startsWith(dayPt) || d.startsWith(dayEng));
+        // Find line starting with one of the possible day names
+        const dayInfo = days.find(line => possibleDays.some(d => line.startsWith(d)));
 
         if (!dayInfo) return false;
 
-        // extract time range: "08:00 - 18:00"
+        // extract time range: "08:00 - 18:00" or "7:00 AM - 10:00 PM"
         const timePart = dayInfo.split(':')[1];
         if (!timePart || timePart.includes('fechado') || timePart.includes('closed')) return false;
 
-        const ranges = timePart.split('–').map(t => t.trim()); // Note: using both dash types to be safe
-        if (ranges.length < 2) {
-             const fallbackRanges = timePart.split('-').map(t => t.trim());
-             if (fallbackRanges.length < 2) return false;
-             return this._checkTimeRange(fallbackRanges[0], fallbackRanges[1], currentTime);
-        }
+        // Split by various dashes
+        const ranges = timePart.split(/[–—-]/).map(t => t.trim());
+        if (ranges.length < 2) return false;
 
         return this._checkTimeRange(ranges[0], ranges[1], currentTime);
     },

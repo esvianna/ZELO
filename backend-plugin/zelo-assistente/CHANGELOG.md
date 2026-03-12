@@ -2,6 +2,13 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.4.5] - 2026-03-12
+
+### Correções (PWA)
+- **Universal Open Status Engine**: Implementada identificação de dia da semana via índice numérico (0-6), tornando o filtro "Aberto agora" imune a variações de idioma.
+- **Parser de Tempo Blindado**: O motor agora entende simultaneamente formatos AM/PM e 24h, além de suportar múltiplos tipos de caracteres de traço do Google.
+- **IA de Extração de Endereço**: Nova lógica de busca de fragmentos que identifica automaticamente "Bairro, Cidade" e ignora partes puramente numéricas ou irrelevantes (CEP, N°, Siglas).
+
 ## [2.4.4] - 2026-03-12
 
 ### Correções (PWA)
