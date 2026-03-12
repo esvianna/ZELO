@@ -493,7 +493,7 @@ const app = {
         resultsEl.innerHTML = matches.map(item => {
             const cat = categoryIcons[item.category] || { bg: '#f0f0f0', icon: '\u{1F4CD}' };
             return `
-                <div class="home-search-result-item" onclick="app.router.navigate('detalhe', {id: ${item.id}})">
+                <div class="home-search-result-item" onclick="app.handleSearchResultClick(${item.id})">
                     <div class="home-search-result-icon" style="background:${cat.bg}">${cat.icon}</div>
                     <div class="home-search-result-info">
                         <h4>${item.name}</h4>
@@ -502,6 +502,17 @@ const app = {
                 </div>
             `;
         }).join('');
+    },
+
+    handleSearchResultClick(id) {
+        // Close results
+        const resultsEl = document.getElementById('home-search-results');
+        const inputEl = document.getElementById('home-search-input');
+        if (resultsEl) resultsEl.style.display = 'none';
+        if (inputEl) inputEl.value = '';
+
+        // Navigate
+        this.router.navigate('detalhe', { id: id });
     },
 
     renderList(category, page = 1, search = '', sort = null, bairro = null, cidade = null, openNow = null) {

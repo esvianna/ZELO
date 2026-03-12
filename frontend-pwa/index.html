@@ -16,7 +16,7 @@
     <!-- CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <link rel="stylesheet" href="assets/css/style-v5.css?v=49">
+    <link rel="stylesheet" href="assets/css/style-v5.css?v=51">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -52,6 +52,9 @@
             <div class="home-search-bar">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                 <input type="text" id="home-search-input" data-i18n="home_search_placeholder" placeholder="Buscar serviços ou locais..." oninput="app.handleHomeSearch(this.value)">
+                
+                <!-- Search Results Container -->
+                <div id="home-search-results" class="home-search-results" style="display:none;"></div>
             </div>
 
             <!-- Welcome Text -->
@@ -132,11 +135,10 @@
                 </div>
             </div>
 
-            <!-- Search Results Container (hidden by default) -->
-            <div id="home-search-results" class="home-search-results" style="display:none;"></div>
+
 
             <div style="text-align: center; font-size: 0.7rem; color: #999; margin-top: 2rem; padding-bottom: 2rem;">
-                Versão: v49
+                Versão: v51
             </div>
         </section>
 
@@ -322,10 +324,10 @@
 
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script src="assets/js/i18n.js?v=49"></script>
-    <script src="assets/js/api-v5.js?v=49"></script>
+    <script src="assets/js/i18n.js?v=51"></script>
+    <script src="assets/js/api-v5.js?v=51"></script>
     <script src="assets/js/map-manager.js"></script>
-    <script src="assets/js/app-v5.js?v=49"></script>
+    <script src="assets/js/app-v5.js?v=51"></script>
 
     <script>
         // Register Service Worker
