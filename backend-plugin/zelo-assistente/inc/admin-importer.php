@@ -123,7 +123,7 @@ function zelo_render_importer_page() {
             }
         }
 
-		echo '<div class="notice notice-success is-dismissible"><p>Importação concluída! ' . $count_new . ' novos locais criados e ' . $count_updated . ' atualizados.</p></div>';
+		echo '<div class="notice notice-success is-dismissible"><p>' . esc_html( sprintf( __( 'Importação concluída! %1$d novos locais criados e %2$d atualizados.', 'zelo-assistente' ), $count_new, $count_updated ) ) . '</p></div>';
 	}
 	?>
 	<div class="wrap">

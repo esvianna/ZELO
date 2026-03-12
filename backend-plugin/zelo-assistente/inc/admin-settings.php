@@ -68,7 +68,7 @@ function zelo_render_settings_page() {
 		if ( isset( $_POST['zelo_google_places_api_key'] ) ) {
 			update_option( 'zelo_google_places_api_key', sanitize_text_field( $_POST['zelo_google_places_api_key'] ) );
 		}
-		echo '<div class="notice notice-success is-dismissible"><p>Configurações salvas com sucesso!</p></div>';
+		echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Configurações salvas com sucesso!', 'zelo-assistente' ) . '</p></div>';
 	}
 
 	$data = get_option( 'zelo_event_data', array(
@@ -82,7 +82,7 @@ function zelo_render_settings_page() {
 	) );
 	?>
 	<div class="wrap">
-		<h1><?php _e( 'Configurações do Evento Zelo', 'zelo-assistente' ); ?></h1>
+		<h1><?php esc_html_e( 'Configurações do Evento Zelo', 'zelo-assistente' ); ?></h1>
 		<form method="post" action="">
 			<?php wp_nonce_field( 'zelo_save_settings_nonce' ); ?>
 			<table class="form-table">

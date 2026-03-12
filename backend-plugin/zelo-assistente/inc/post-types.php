@@ -76,13 +76,13 @@ function zelo_custom_zelo_local_column( $column, $post_id ) {
     switch ( $column ) {
         case 'zelo_category':
             $type = get_post_meta( $post_id, '_zelo_type', true );
-            echo ucfirst( $type );
+            echo esc_html( ucfirst( $type ) );
             break;
         case 'zelo_address':
-            echo get_post_meta( $post_id, '_zelo_address', true );
+            echo esc_html( get_post_meta( $post_id, '_zelo_address', true ) );
             break;
         case 'zelo_phone':
-            echo get_post_meta( $post_id, '_zelo_phone', true );
+            echo esc_html( get_post_meta( $post_id, '_zelo_phone', true ) );
             break;
     }
 }
