@@ -63,6 +63,7 @@ add_filter( 'manage_zelo_local_posts_columns', 'zelo_set_custom_edit_zelo_local_
 function zelo_set_custom_edit_zelo_local_columns($columns) {
     $new_columns = array();
     $new_columns['cb'] = $columns['cb'];
+    $new_columns['zelo_thumbnail'] = __( 'Foto', 'zelo-assistente' );
     $new_columns['title'] = $columns['title'];
     $new_columns['zelo_category'] = __( 'Categoria', 'zelo-assistente' );
     $new_columns['zelo_address'] = __( 'Endereço', 'zelo-assistente' );
@@ -74,6 +75,13 @@ function zelo_set_custom_edit_zelo_local_columns($columns) {
 add_action( 'manage_zelo_local_posts_custom_column', 'zelo_custom_zelo_local_column', 10, 2 );
 function zelo_custom_zelo_local_column( $column, $post_id ) {
     switch ( $column ) {
+        case 'zelo_thumbnail':
+            if ( has_post_thumbnail( $post_id ) ) {
+                echo get_the_post_thumbnail( $post_id, array( 50, 50 ), array( 'style' => 'border-radius: 4px; border: 1px solid #ccd0d4;' ) );
+            } else {
+                echo '<div style="width: 50px; height: 50px; background: #f0f0f1; border-radius: 4px; border: 1px dashed #ccd0d4; display: flex; align-items: center; justify-content: center; color: #a7aaad;"><span class="dashicons dashicons-format-image"></span></div>';
+            }
+            break;
         case 'zelo_category':
             $type = get_post_meta( $post_id, '_zelo_type', true );
             echo esc_html( ucfirst( $type ) );
@@ -87,28 +95,72 @@ function zelo_custom_zelo_local_column( $column, $post_id ) {
     }
 }
 
-// Button "Limpar todos os locais" above the list (outside the list table form to avoid nested forms)
-add_action( 'all_admin_notices', 'zelo_render_clear_all_locais_button' );
-function zelo_render_clear_all_locais_button() {
-	$screen = get_current_screen();
-	if ( ! $screen || $screen->id !== 'edit-zelo_local' || $screen->post_type !== 'zelo_local' ) {
-		return;
-	}
-	$count = wp_count_posts( 'zelo_local' );
-	$total = (int) $count->publish + (int) $count->draft + (int) $count->trash + (int) $count->private;
-	if ( $total === 0 ) {
-		return;
-	}
-	?>
-	<div class="notice" style="margin-top: 10px; margin-bottom: 0;">
-		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display: inline;" onsubmit="return confirm('<?php echo esc_js( __( 'Remover TODOS os locais do banco? Esta ação não pode ser desfeita.', 'zelo-assistente' ) ); ?>');">
-			<input type="hidden" name="action" value="zelo_clear_all_locais">
-			<?php wp_nonce_field( 'zelo_clear_all_locais' ); ?>
-			<input type="submit" class="button" value="<?php echo esc_attr( sprintf( __( 'Limpar todos os locais (%d)', 'zelo-assistente' ), $total ) ); ?>" style="color: #b32d2e;">
-		</form>
-		<span style="margin-left: 8px; color: #646970;"><?php esc_html_e( 'Remove todos os locais do banco de dados. Use antes de um novo teste de importação.', 'zelo-assistente' ); ?></span>
-	</div>
-	<?php
+// Filter by Category and Image Status in Admin List
+add_action( 'restrict_manage_posts', 'zelo_admin_locais_filters' );
+function zelo_admin_locais_filters( $post_type ) {
+    if ( 'zelo_local' !== $post_type ) {
+        return;
+    }
+
+    // Category Filter
+    $current_type = isset( $_GET['zelo_type_filter'] ) ? sanitize_key( $_GET['zelo_type_filter'] ) : '';
+    $categories = zelo_get_categories_map();
+
+    echo '<select name="zelo_type_filter">';
+    echo '<option value="">' . esc_html__( 'Todas as categorias', 'zelo-assistente' ) . '</option>';
+    foreach ( $categories as $slug => $cat ) {
+        printf(
+            '<option value="%s" %s>%s</option>',
+            esc_attr( $slug ),
+            selected( $current_type, $slug, false ),
+            esc_html( $cat['label'] )
+        );
+    }
+    echo '</select>';
+
+    // Image Filter
+    $current_img = isset( $_GET['zelo_img_filter'] ) ? sanitize_key( $_GET['zelo_img_filter'] ) : '';
+    echo '<select name="zelo_img_filter">';
+    echo '<option value="">' . esc_html__( 'Imagens: Todas', 'zelo-assistente' ) . '</option>';
+    echo '<option value="with" ' . selected( $current_img, 'with', false ) . '>' . esc_html__( 'Com Imagem', 'zelo-assistente' ) . '</option>';
+    echo '<option value="without" ' . selected( $current_img, 'without', false ) . '>' . esc_html__( 'Sem Imagem', 'zelo-assistente' ) . '</option>';
+    echo '</select>';
+}
+
+add_filter( 'parse_query', 'zelo_admin_locais_filter_query' );
+function zelo_admin_locais_filter_query( $query ) {
+    global $pagenow;
+    if ( is_admin() && 'edit.php' === $pagenow && 'zelo_local' === $query->query['post_type'] ) {
+        
+        $meta_query = array();
+
+        // Type filter
+        if ( isset( $_GET['zelo_type_filter'] ) && ! empty( $_GET['zelo_type_filter'] ) ) {
+            $meta_query[] = array(
+                'key'   => '_zelo_type',
+                'value' => sanitize_key( $_GET['zelo_type_filter'] ),
+            );
+        }
+
+        // Image filter
+        if ( isset( $_GET['zelo_img_filter'] ) && ! empty( $_GET['zelo_img_filter'] ) ) {
+            if ( 'with' === $_GET['zelo_img_filter'] ) {
+                $meta_query[] = array(
+                    'key'     => '_thumbnail_id',
+                    'compare' => 'EXISTS',
+                );
+            } elseif ( 'without' === $_GET['zelo_img_filter'] ) {
+                $meta_query[] = array(
+                    'key'     => '_thumbnail_id',
+                    'compare' => 'NOT EXISTS',
+                );
+            }
+        }
+
+        if ( ! empty( $meta_query ) ) {
+            $query->query_vars['meta_query'] = $meta_query;
+        }
+    }
 }
 
 add_action( 'admin_post_zelo_clear_all_locais', 'zelo_handle_clear_all_locais' );

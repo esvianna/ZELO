@@ -266,6 +266,35 @@ function zelo_render_settings_page() {
 				<input type="submit" name="zelo_save_settings" id="submit" class="button button-primary" value="Salvar Alterações">
 			</p>
 		</form>
+
+        <hr style="margin-top: 50px;">
+        <h2 style="color: #d63638;"><?php esc_html_e( 'Zona de Perigo', 'zelo-assistente' ); ?></h2>
+        <div style="border: 1px solid #d63638; padding: 20px; border-radius: 4px; background: #fff;">
+            <p style="margin-top: 0;"><?php esc_html_e( 'Ações irreversíveis que afetam todo o banco de dados de locais.', 'zelo-assistente' ); ?></p>
+            
+            <?php
+            $count = wp_count_posts( 'zelo_local' );
+            $total = (int) $count->publish + (int) $count->draft + (int) $count->trash + (int) $count->private;
+            ?>
+
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <strong style="display: block; font-size: 14px;"><?php esc_html_e( 'Remover Todos os Locais', 'zelo-assistente' ); ?></strong>
+                    <span style="color: #646970;"><?php echo esc_html( sprintf( __( 'Atualmente existem %d locais cadastrados.', 'zelo-assistente' ), $total ) ); ?></span>
+                </div>
+                <div>
+                    <?php if ( $total > 0 ) : ?>
+                        <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" onsubmit="return confirm('<?php echo esc_js( __( 'Remover TODOS os locais do banco? Esta ação não pode ser desfeita.', 'zelo-assistente' ) ); ?>');">
+                            <input type="hidden" name="action" value="zelo_clear_all_locais">
+                            <?php wp_nonce_field( 'zelo_clear_all_locais' ); ?>
+                            <input type="submit" class="button button-link-delete" value="<?php esc_attr_e( 'Excluir Todos Permanentemente', 'zelo-assistente' ); ?>" style="color: #d63638; border-color: #d63638; padding: 5px 15px; text-decoration: none;">
+                        </form>
+                    <?php else : ?>
+                        <button disabled class="button"><?php esc_html_e( 'Não há locais para remover', 'zelo-assistente' ); ?></button>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
 	</div>
 	<?php
 }

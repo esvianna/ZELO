@@ -2,6 +2,20 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.4.0] - 2026-03-12
+
+### Funcionalidades
+- **Coluna de Miniaturas**: Adicionado campo visual de "Foto" na listagem de Locais para facilitar a identificação rápida.
+- **Filtro de Imagem**: Novo filtro "Com Imagem / Sem Imagem" para localizar rapidamente locais que possuem ou não fotos vinculadas.
+- **Melhoria da UX**: Adicionado ícone de fallback quando um local não possui imagem.
+
+## [2.3.0] - 2026-03-12
+
+### Funcionalidades
+- **Filtros por Categoria**: Adicionado seletor de filtros na listagem de Locais para facilitar a visualização por tipo.
+- **Zona de Perigo**: O botão "Limpar todos os locais" foi movido da listagem geral para uma seção segura dentro das Configurações do Evento.
+- **Prevenção de Cliques Acidentais**: Melhorada a UI e feedback do botão de limpeza global.
+
 ## [2.2.1] - 2026-03-12
 
 ### Correções
