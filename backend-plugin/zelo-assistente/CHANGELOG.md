@@ -2,6 +2,13 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.4.6] - 2026-03-12
+
+### Correções (PWA)
+- **Recuperação de Filtros**: Revertida a lógica de endereço para o padrão estável v54, garantindo que Bairro e Cidade voltem a aparecer corretamente.
+- **Correção Crítica de Horário**: Corrigido bug no `isItemOpen` que falhava ao processar horários com colons (ex: 7:00), fazendo o filtro "Aberto agora" finalmente funcionar.
+- **Sanitização Refinada**: Mantida a limpeza de números e lixo nos dropdowns, mas com fallback mais inteligente.
+
 ## [2.4.5] - 2026-03-12
 
 ### Correções (PWA)

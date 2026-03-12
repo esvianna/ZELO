@@ -569,27 +569,22 @@ const app = {
 
         items.forEach(item => {
             if (!item._bairro || !item._cidade) {
-                // Address example: "Rua - Bairro, Cidade - UF" or "Rua, Num - Bairro, Cidade - UF"
                 const parts = item.address ? item.address.split(' - ') : [];
                 
-                // Try to find the part that has a comma (usually "Bairro, Cidade")
-                let locationPart = null;
-                for (const part of parts) {
-                    if (part.includes(',') && !part.match(/\d{5}-\d{3}/)) {
-                        locationPart = part;
-                        break;
-                    }
+                // Stable logic: Part 1 is usually "Bairro, Cidade"
+                // Extract from parts[1], if invalid try parts[2]
+                let target = parts[1] || '';
+                if (!cleanFilterValue(target.split(',')[0]) && parts[2]) {
+                    target = parts[2];
                 }
 
-                if (locationPart) {
-                    const fragments = locationPart.split(',');
+                const fragments = target.split(',');
+                if (fragments.length >= 2) {
                     item._bairro = cleanFilterValue(fragments[0]);
                     item._cidade = cleanFilterValue(fragments[1]);
-                } else if (parts.length >= 2) {
-                    // Fallback to second part
-                    const fragments = parts[1].split(',');
-                    item._bairro = cleanFilterValue(fragments[0]);
-                    item._cidade = cleanFilterValue(fragments[1] || fragments[0]);
+                } else {
+                    const val = cleanFilterValue(fragments[0]);
+                    if (val) item._cidade = val;
                 }
             }
         });
@@ -812,7 +807,10 @@ const app = {
         if (!dayInfo) return false;
 
         // extract time range: "08:00 - 18:00" or "7:00 AM - 10:00 PM"
-        const timePart = dayInfo.split(':')[1];
+        const firstColon = dayInfo.indexOf(':');
+        if (firstColon === -1) return false;
+        
+        const timePart = dayInfo.substring(firstColon + 1);
         if (!timePart || timePart.includes('fechado') || timePart.includes('closed')) return false;
 
         // Split by various dashes
