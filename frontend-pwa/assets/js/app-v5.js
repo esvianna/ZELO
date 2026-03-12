@@ -556,20 +556,28 @@ const app = {
         let items = this.data.locais;
 
         // 0. Pre-process items to extract metadata (Bairro, Cidade) if not present
+        const cleanFilterValue = (val) => {
+            if (!val) return null;
+            const cleaned = val.trim();
+            // Discard if numeric, too short, or looks like a ZIP/State (naive check)
+            if (/^\d+$/.test(cleaned.replace(/[\s.-]/g, ''))) return null;
+            if (cleaned.length < 2) return null;
+            if (['PR', 'Brasil', 'Brazil'].includes(cleaned)) return null;
+            return cleaned;
+        };
+
         items.forEach(item => {
             if (!item._bairro || !item._cidade) {
-                // Format usually: "R. Olindo Sequinel, 88 - Pinheirinho, Curitiba - PR, 81870-130, Brasil"
                 const parts = item.address ? item.address.split(' - ') : [];
                 if (parts.length >= 2) {
-                    // Part 0: R. Olindo Sequinel, 88
-                    // Part 1: Pinheirinho, Curitiba
-                    // Part 2: PR, 81870-130, Brasil
                     const middlePart = parts[1].split(',');
                     if (middlePart.length >= 2) {
-                        item._bairro = middlePart[0].trim();
-                        item._cidade = middlePart[1].trim();
+                        item._bairro = cleanFilterValue(middlePart[0]);
+                        item._cidade = cleanFilterValue(middlePart[1]);
                     } else {
-                        item._cidade = middlePart[0].trim();
+                        // If only one part, check if it's numeric garbage
+                        const val = cleanFilterValue(middlePart[0]);
+                        if (val) item._cidade = val;
                     }
                 }
             }
@@ -770,20 +778,30 @@ const app = {
         if (!item.hours) return false;
 
         const now = new Date();
-        const currentDay = now.toLocaleDateString('pt-BR', { weekday: 'long' }).toLowerCase();
         const currentHour = now.getHours();
         const currentMin = now.getMinutes();
         const currentTime = currentHour * 60 + currentMin;
 
-        // format: "Segunda-feira: 08:00 - 18:00; Terça-feira: ..."
+        // Days mapping for bilingual search
+        const ptToEng = {
+            'segunda-feira': 'monday', 'terça-feira': 'tuesday', 'quarta-feira': 'wednesday',
+            'quinta-feira': 'thursday', 'sexta-feira': 'friday', 'sábado': 'saturday', 'domingo': 'sunday'
+        };
+        
+        const dayPt = now.toLocaleDateString('pt-BR', { weekday: 'long' }).toLowerCase();
+        const dayEng = ptToEng[dayPt] || now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+
+        // format: "Monday: 08:00 - 18:00; Tuesday: ..."
         const days = item.hours.split(';').map(d => d.trim().toLowerCase());
-        const dayInfo = days.find(d => d.startsWith(currentDay));
+        
+        // Search for either the Portuguese or English day name in the hours string
+        const dayInfo = days.find(d => d.startsWith(dayPt) || d.startsWith(dayEng));
 
         if (!dayInfo) return false;
 
         // extract time range: "08:00 - 18:00"
         const timePart = dayInfo.split(':')[1];
-        if (!timePart || timePart.includes('fechado')) return false;
+        if (!timePart || timePart.includes('fechado') || timePart.includes('closed')) return false;
 
         const ranges = timePart.split('–').map(t => t.trim()); // Note: using both dash types to be safe
         if (ranges.length < 2) {

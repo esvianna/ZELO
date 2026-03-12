@@ -2,6 +2,13 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.4.3] - 2026-03-12
+
+### Correções (PWA)
+- **Sanitização de Filtros**: Implementada lógica para ignorar números de residência, CEPs e siglas isoladas nos dropdowns de Bairro e Cidade.
+- **Correção "Aberto agora"**: Ajustado para reconhecer dias da semana em Inglês e Português simultaneamente, corrigindo a falha no filtro.
+- **Robustez de Endereço**: Melhorada a separação de rua, bairro e cidade em endereços com formatos mistos.
+
 ## [2.4.2] - 2026-03-12
 
 ### Correções (PWA)
