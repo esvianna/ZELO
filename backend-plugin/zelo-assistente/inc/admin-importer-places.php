@@ -4,7 +4,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ZELO_PLACES_MAX_DETAILS_PER_RUN', 600 );
+define( 'ZELO_PLACES_MAX_DETAILS_PER_RUN', 60 );
 
 function zelo_fetch_google_places_nearby( $lat, $lng, $radius_m, $type ) {
 	$api_key = get_option( 'zelo_google_places_api_key', '' );
@@ -172,6 +172,10 @@ function zelo_get_google_types_for_category( $zelo_category ) {
 }
 
 function zelo_import_google_places_run( $lat, $lng, $radius_m, $zelo_category ) {
+	// Prevent timeout during long imports
+	if ( ! ini_get( 'safe_mode' ) ) {
+		@set_time_limit( 300 ); // 5 minutes
+	}
     // Map the zelo category to Google Places API types
     $google_types = zelo_get_google_types_for_category( $zelo_category );
 
@@ -208,10 +212,6 @@ function zelo_import_google_places_run( $lat, $lng, $radius_m, $zelo_category ) 
 
             foreach ( $place_ids as $pid ) {
                 $all_place_ids[ $pid ] = true;
-            }
-            
-            if ( count( $points ) > 1 || count( $google_types ) > 1 ) {
-                sleep(1);
             }
         }
     }
@@ -282,8 +282,6 @@ function zelo_import_google_places_run( $lat, $lng, $radius_m, $zelo_category ) 
 		if ( ! empty( $detail['photo_ref'] ) && ! has_post_thumbnail( $post_id ) ) {
 			zelo_import_google_place_photo( $post_id, $detail['photo_ref'], $detail['name'] );
 		}
-
-		usleep( 100000 );
 	}
 
 	return array( 'new' => $count_new, 'updated' => $count_updated );
@@ -424,7 +422,7 @@ function zelo_render_importer_places_section() {
 	?>
 	<hr style="margin: 30px 0;">
 	<h2><?php esc_html_e( 'Importar do Google Places', 'zelo-assistente' ); ?></h2>
-	<p class="description"><?php esc_html_e( 'A Google Places API é paga (Nearby Search e Place Details). Máximo de 60 locais por execução para evitar custo excessivo.', 'zelo-assistente' ); ?></p>
+	<p class="description"><?php esc_html_e( 'A Google Places API é paga. Esta ferramenta importa até 60 locais por vez para garantir a estabilidade do servidor e evitar custos excessivos.', 'zelo-assistente' ); ?></p>
 	<?php if ( $message ) : ?>
 		<div class="notice notice-success is-dismissible"><p><?php echo esc_html( $message ); ?></p></div>
 	<?php endif; ?>

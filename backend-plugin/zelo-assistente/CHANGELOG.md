@@ -2,6 +2,14 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.1.1] - 2026-03-12
+
+### Correções
+- Corrigido "Erro Crítico" durante importação do Google Places reduzindo o limite de processamento de 600 para 60 itens por execução.
+- Adicionado `set_time_limit(300)` para evitar timeouts do PHP em servidores com limites baixos.
+- Removidos delays artificiais (`sleep`) para acelerar a importação.
+- Atualizado aviso na página do importador para informar o limite estável de 60 locais.
+
 ## [2.1.0] - 2026-03-12
 
 ### Funcionalidades
