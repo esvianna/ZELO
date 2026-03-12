@@ -559,10 +559,12 @@ const app = {
         const cleanFilterValue = (val) => {
             if (!val) return null;
             const cleaned = val.trim();
-            // Discard if numeric, too short, or looks like a ZIP/State (naive check)
+            // Discard if pure numeric (likely house number or part of CEP)
             if (/^\d+$/.test(cleaned.replace(/[\s.-]/g, ''))) return null;
-            if (cleaned.length < 2) return null;
-            if (['PR', 'Brasil', 'Brazil'].includes(cleaned)) return null;
+            // Discard if too short (likely junk)
+            if (cleaned.length < 3) return null;
+            // Discard if it's a known non-neighborhood value
+            if (['PR', 'Brasil', 'Brazil', 'State of Paraná', 'São Paulo', 'SC'].includes(cleaned)) return null;
             return cleaned;
         };
 
@@ -575,7 +577,6 @@ const app = {
                         item._bairro = cleanFilterValue(middlePart[0]);
                         item._cidade = cleanFilterValue(middlePart[1]);
                     } else {
-                        // If only one part, check if it's numeric garbage
                         const val = cleanFilterValue(middlePart[0]);
                         if (val) item._cidade = val;
                     }
@@ -815,13 +816,32 @@ const app = {
 
     _checkTimeRange(startStr, endStr, currentTime) {
         const parse = (s) => {
-            const [h, m] = s.split(':').map(Number);
+            if (!s) return 0;
+            let time = s.trim().toUpperCase();
+            let modifier = null;
+            
+            // Check for AM/PM
+            if (time.includes('AM')) {
+                modifier = 'AM';
+                time = time.replace('AM', '').trim();
+            } else if (time.includes('PM')) {
+                modifier = 'PM';
+                time = time.replace('PM', '').trim();
+            }
+
+            let [h, m] = time.split(':').map(Number);
+            if (isNaN(h)) return 0;
+            if (m === undefined || isNaN(m)) m = 0;
+
+            if (modifier === 'PM' && h < 12) h += 12;
+            if (modifier === 'AM' && h === 12) h = 0;
+
             return h * 60 + m;
         };
         const start = parse(startStr);
         const end = parse(endStr);
 
-        if (end < start) { // Overnights (ex: 22:00 - 06:00)
+        if (end < start) { // Overnights (ex: 10:00 PM - 06:00 AM)
             return currentTime >= start || currentTime <= end;
         }
         return currentTime >= start && currentTime <= end;

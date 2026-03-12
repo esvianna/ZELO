@@ -2,6 +2,13 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.4.4] - 2026-03-12
+
+### Correções (PWA)
+- **Suporte AM/PM no Horário**: O parser agora identifica e converte horários no formato 12h (AM/PM), garantindo que o filtro "Aberto agora" funcione em todos os locais.
+- **Filtro de "Sujeira" Extremo**: Dropdowns de Bairro e Cidade agora ignoram agressivamente números de casa, CEPs isolados e siglas de estado que poluíam a lista.
+- **Sincronização de Status**: A lógica de abertura no detalhe e na pesquisa agora utilizam o mesmo motor de parsing robusto.
+
 ## [2.4.3] - 2026-03-12
 
 ### Correções (PWA)
