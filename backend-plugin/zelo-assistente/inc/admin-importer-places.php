@@ -55,7 +55,7 @@ function zelo_google_place_details( $place_id ) {
 	if ( $api_key === '' ) {
 		return null;
 	}
-	$fields = 'name,formatted_address,geometry,formatted_phone_number,international_phone_number,opening_hours,website';
+	$fields = 'name,formatted_address,geometry,formatted_phone_number,international_phone_number,opening_hours,website,photos';
 	$url = add_query_arg(
 		array(
 			'place_id' => $place_id,
@@ -98,7 +98,65 @@ function zelo_google_place_details( $place_id ) {
 		'hours'      => $hours_str,
 		'is_24h'     => $is_24h ? '1' : '0',
 		'website'    => isset( $r['website'] ) ? $r['website'] : '',
+		'photo_ref'  => ! empty( $r['photos'][0]['photo_reference'] ) ? $r['photos'][0]['photo_reference'] : '',
 	);
+}
+
+/**
+ * Download a photo from Google Places API and set it as the post's featured image.
+ *
+ * @param int    $post_id        WordPress post ID.
+ * @param string $photo_reference Google Places photo_reference string.
+ * @param string $place_name      Name of the place (used as image alt text).
+ * @return bool True on success, false on failure.
+ */
+function zelo_import_google_place_photo( $post_id, $photo_reference, $place_name = '' ) {
+	$api_key = get_option( 'zelo_google_places_api_key', '' );
+	if ( $api_key === '' || empty( $photo_reference ) ) {
+		return false;
+	}
+
+	// Build photo URL (max 800px width for performance)
+	$photo_url = add_query_arg(
+		array(
+			'maxwidth'        => 800,
+			'photo_reference' => $photo_reference,
+			'key'             => $api_key,
+		),
+		'https://maps.googleapis.com/maps/api/place/photo'
+	);
+
+	// Require media handling functions
+	if ( ! function_exists( 'media_handle_sideload' ) ) {
+		require_once ABSPATH . 'wp-admin/includes/media.php';
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+	}
+
+	// Download the image to a temp file
+	$tmp = download_url( $photo_url, 15 );
+	if ( is_wp_error( $tmp ) ) {
+		return false;
+	}
+
+	// Prepare file array for sideloading
+	$file_array = array(
+		'name'     => sanitize_file_name( $place_name ?: 'zelo-place' ) . '.jpg',
+		'tmp_name' => $tmp,
+	);
+
+	// Sideload the image into the media library
+	$attachment_id = media_handle_sideload( $file_array, $post_id, $place_name );
+
+	// Clean up temp file if sideload failed
+	if ( is_wp_error( $attachment_id ) ) {
+		@unlink( $tmp );
+		return false;
+	}
+
+	// Set as featured image
+	set_post_thumbnail( $post_id, $attachment_id );
+	return true;
 }
 
 function zelo_import_google_places_run( $lat, $lng, $radius_m, $type ) {
@@ -209,6 +267,11 @@ function zelo_import_google_places_run( $lat, $lng, $radius_m, $type ) {
 			wp_update_post( array( 'ID' => $post_id, 'post_content' => 'Site: ' . $detail['website'] ) );
 		}
 
+		// Import photo if available and no thumbnail set yet
+		if ( ! empty( $detail['photo_ref'] ) && ! has_post_thumbnail( $post_id ) ) {
+			zelo_import_google_place_photo( $post_id, $detail['photo_ref'], $detail['name'] );
+		}
+
 		usleep( 100000 );
 	}
 
@@ -284,6 +347,14 @@ function zelo_enrich_local_with_places( $post_id ) {
 		wp_update_post( array( 'ID' => $post_id, 'post_content' => $new_content ) );
 		$updated++;
 	}
+
+	// Import photo if available and no thumbnail set yet
+	if ( ! empty( $detail['photo_ref'] ) && ! has_post_thumbnail( $post_id ) ) {
+		if ( zelo_import_google_place_photo( $post_id, $detail['photo_ref'], $post->post_title ) ) {
+			$updated++;
+		}
+	}
+
 	update_post_meta( $post_id, '_zelo_google_place_id', $place_id );
 	return array( 'updated' => $updated );
 }

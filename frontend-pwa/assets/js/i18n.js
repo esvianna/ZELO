@@ -66,7 +66,22 @@ const i18n = {
             "parking_available": "Disponível (Consultar local)",
             "emergency_help_title": "Precisa de ajuda imediata?",
             "emergency_help_desc": "Entre em contato com a linha de emergência.",
-            "emergency_title": "Aviso do Evento"
+            "emergency_title": "Aviso do Evento",
+            
+            // Home Redesign v49
+            "home_search_placeholder": "Buscar serviços ou locais...",
+            "welcome_greeting": "Bem-vindo!",
+            "welcome_subtitle_new": "Como podemos ajudar você hoje?",
+            "emergency_actions_title": "AÇÕES DE EMERGÊNCIA",
+            "discover_city_title": "DESCOBRIR A CIDADE",
+            "location_title": "LOCALIZAÇÃO",
+            "culture": "Cultura",
+            "shopping": "Compras",
+            "leisure": "Lazer",
+            "event_tag": "DESTAQUE",
+            "view_details": "Ver Detalhes",
+            "share": "Compartilhar",
+            "link_copied": "Copiado para a área de transferência!"
         },
         en: {
             "welcome_title": "Welcome to Zelo",
@@ -127,7 +142,22 @@ const i18n = {
             "parking_available": "Available (Check location)",
             "emergency_help_title": "Need immediate help?",
             "emergency_help_desc": "Contact the emergency line.",
-            "emergency_title": "Event Notice"
+            "emergency_title": "Event Notice",
+            
+            // Home Redesign v49
+            "home_search_placeholder": "Search services or places...",
+            "welcome_greeting": "Welcome!",
+            "welcome_subtitle_new": "How can we help you today?",
+            "emergency_actions_title": "EMERGENCY ACTIONS",
+            "discover_city_title": "DISCOVER THE CITY",
+            "location_title": "LOCATION",
+            "culture": "Culture",
+            "shopping": "Shopping",
+            "leisure": "Leisure",
+            "event_tag": "FEATURED",
+            "view_details": "View Details",
+            "share": "Share",
+            "link_copied": "Copied to clipboard!"
         },
         es: {
             "welcome_title": "Bienvenido a Zelo",
@@ -188,7 +218,22 @@ const i18n = {
             "parking_available": "Disponible (Consultar lugar)",
             "emergency_help_title": "¿Necesitas ayuda inmediata?",
             "emergency_help_desc": "Comunícate a la línea de emergencia.",
-            "emergency_title": "Aviso del Evento"
+            "emergency_title": "Aviso del Evento",
+            
+            // Home Redesign v49
+            "home_search_placeholder": "Buscar servicios o lugares...",
+            "welcome_greeting": "¡Bienvenido!",
+            "welcome_subtitle_new": "¿Cómo podemos ayudarte hoy?",
+            "emergency_actions_title": "ACCIONES DE EMERGENCIA",
+            "discover_city_title": "DESCUBRIR LA CIUDAD",
+            "location_title": "UBICACIÓN",
+            "culture": "Cultura",
+            "shopping": "Compras",
+            "leisure": "Ocio",
+            "event_tag": "DESTACADO",
+            "view_details": "Ver Detalles",
+            "share": "Compartir",
+            "link_copied": "¡Copiado al portapapeles!"
         }
     },
 

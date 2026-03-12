@@ -38,7 +38,7 @@ function zelo_register_post_type_locais() {
 		'label'                 => __( 'Local', 'zelo-assistente' ),
 		'description'           => __( 'Locais de interesse para o evento Zelo', 'zelo-assistente' ),
 		'labels'                => $labels,
-		'supports'              => array( 'title', 'editor' ), // editor for 'observacoes'
+		'supports'              => array( 'title', 'editor', 'thumbnail' ), // editor for 'observacoes', thumbnail for photos
 		'taxonomies'            => array(),
 		'hierarchical'          => false,
 		'public'                => false, // Not public on frontend directly

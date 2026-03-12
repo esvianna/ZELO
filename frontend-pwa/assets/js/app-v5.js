@@ -91,10 +91,11 @@ const app = {
                     app.renderEventInfo();
                 }
 
-                // Render Home Notice if on home
+                // Render Home components if on home
                 if (viewId === 'home') {
                     app.renderHomeNotice();
-                    app.renderHomeHeader();
+                    app.renderEventBanner();
+                    app.renderHomeMap();
                 }
             }
         },
@@ -315,9 +316,8 @@ const app = {
             console.log('Data loaded', this.data);
 
             // Render header if we are already on home (which we usually are at init)
-            if (this.router.currentView === 'home') {
-                this.renderHomeHeader();
-            }
+            this.renderEventBanner();
+            this.renderHomeMap();
 
         } catch (err) {
             console.error('Failed to load data', err);
@@ -380,13 +380,128 @@ const app = {
         container.innerHTML = html;
     },
 
-    renderHomeHeader() {
-        const titleEl = document.getElementById('home-event-name');
-        if (!titleEl) return;
+    renderEventBanner() {
+        const container = document.getElementById('home-event-banner');
+        if (!container) return;
 
-        // API field is 'name_evento' based on debug logs
-        const eventName = app.data.evento?.name_evento || app.data.evento?.nome || app.data.evento?.titulo || '';
-        titleEl.textContent = eventName;
+        const evt = this.data.evento;
+        if (!evt || !evt.name_evento) {
+            container.style.display = 'none';
+            return;
+        }
+
+        container.style.display = 'block';
+        const heroImage = evt.foto || '';
+        const bgStyle = heroImage ? `background-image: url('${heroImage}');` : '';
+        const location = evt.local || evt.endereco || '';
+
+        container.innerHTML = `
+            <div class="event-banner-inner" style="${bgStyle}">
+                <div class="event-banner-content">
+                    <div class="event-banner-tag">${i18n.t('event_tag')}</div>
+                    <div class="event-banner-title">${evt.name_evento}</div>
+                    <div class="event-banner-footer">
+                        <span class="event-banner-subtitle">${location}</span>
+                        <span class="event-banner-btn">${i18n.t('view_details')}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    renderHomeMap() {
+        const mapEl = document.getElementById('home-map-preview');
+        const addressEl = document.getElementById('home-event-location-text');
+        if (!mapEl) return;
+
+        const evt = this.data.evento;
+        const coords = evt?.coordenadas || { lat: evt?.lat, lng: evt?.lng };
+
+        // Update address text
+        if (addressEl) {
+            addressEl.textContent = evt?.endereco || evt?.local || i18n.t('view_map');
+        }
+
+        // Skip if no coordinates or map already initialized
+        if (!coords.lat || !coords.lng || mapEl._leaflet_id) return;
+
+        setTimeout(() => {
+            const miniMap = L.map('home-map-preview', {
+                center: [coords.lat, coords.lng],
+                zoom: 14,
+                zoomControl: false,
+                dragging: false,
+                scrollWheelZoom: false,
+                doubleClickZoom: false,
+                boxZoom: false,
+                keyboard: false,
+                attributionControl: false
+            });
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: ''
+            }).addTo(miniMap);
+
+            // Add event marker
+            if (evt.foto) {
+                const icon = L.divIcon({
+                    html: `<img src="${evt.foto}" class="event-marker-logo" style="width:36px;height:36px;">`,
+                    iconSize: [36, 36],
+                    className: ''
+                });
+                L.marker([coords.lat, coords.lng], { icon }).addTo(miniMap);
+            } else {
+                L.marker([coords.lat, coords.lng]).addTo(miniMap);
+            }
+
+            setTimeout(() => miniMap.invalidateSize(), 200);
+        }, 300);
+    },
+
+    handleHomeSearch(query) {
+        const resultsEl = document.getElementById('home-search-results');
+        if (!resultsEl) return;
+
+        if (!query || query.length < 2) {
+            resultsEl.style.display = 'none';
+            resultsEl.innerHTML = '';
+            return;
+        }
+
+        const term = query.toLowerCase();
+        const matches = this.data.locais.filter(i =>
+            i.name.toLowerCase().includes(term) ||
+            (i.address && i.address.toLowerCase().includes(term))
+        ).slice(0, 8);
+
+        if (matches.length === 0) {
+            resultsEl.style.display = 'block';
+            resultsEl.innerHTML = `<div style="padding:1rem;text-align:center;color:#999;">${i18n.t('no_places_found')}</div>`;
+            return;
+        }
+
+        const categoryIcons = {
+            'hospital': { bg: '#dbeafe', icon: '\u{1F3E5}' },
+            'farmacia': { bg: '#d1fae5', icon: '\u{1F48A}' },
+            'emergencia': { bg: '#ffe5e8', icon: '\u{1F691}' },
+            'cultura': { bg: '#fef3c7', icon: '\u{1F3DB}\uFE0F' },
+            'compras': { bg: '#fce7f3', icon: '\u{1F6CD}\uFE0F' },
+            'lazer': { bg: '#d1fae5', icon: '\u{1F333}' }
+        };
+
+        resultsEl.style.display = 'block';
+        resultsEl.innerHTML = matches.map(item => {
+            const cat = categoryIcons[item.category] || { bg: '#f0f0f0', icon: '\u{1F4CD}' };
+            return `
+                <div class="home-search-result-item" onclick="app.router.navigate('detalhe', {id: ${item.id}})">
+                    <div class="home-search-result-icon" style="background:${cat.bg}">${cat.icon}</div>
+                    <div class="home-search-result-info">
+                        <h4>${item.name}</h4>
+                        <p>${item.address || ''}</p>
+                    </div>
+                </div>
+            `;
+        }).join('');
     },
 
     renderList(category, page = 1, search = '', sort = null, bairro = null, cidade = null, openNow = null) {
@@ -398,6 +513,12 @@ const app = {
             title.textContent = i18n.t('pharmacies');
         } else if (category === 'hospital') {
             title.textContent = i18n.t('hospitals');
+        } else if (category === 'cultura') {
+            title.textContent = i18n.t('culture');
+        } else if (category === 'compras') {
+            title.textContent = i18n.t('shopping');
+        } else if (category === 'lazer') {
+            title.textContent = i18n.t('leisure');
         } else {
             title.textContent = i18n.t('places');
         }
@@ -584,6 +705,15 @@ const app = {
         }
 
         // List Items
+        const categoryMeta = {
+            'hospital': { icon: '\u{1F3E5}', bg: '#dbeafe', color: '#3b82f6', label: i18n.t('category_hospital') },
+            'farmacia': { icon: '\u{1F48A}', bg: '#d1fae5', color: '#10b981', label: i18n.t('category_pharmacy') },
+            'emergencia': { icon: '\u{1F691}', bg: '#ffe5e8', color: '#e63946', label: i18n.t('emergency') },
+            'cultura': { icon: '\u{1F3DB}\uFE0F', bg: '#fef3c7', color: '#f59e0b', label: i18n.t('culture') },
+            'compras': { icon: '\u{1F6CD}\uFE0F', bg: '#fce7f3', color: '#ec4899', label: i18n.t('shopping') },
+            'lazer': { icon: '\u{1F333}', bg: '#d1fae5', color: '#059669', label: i18n.t('leisure') }
+        };
+
         html += paginatedItems.map(item => {
             // Determine distance text
             let distText = '';
@@ -593,13 +723,25 @@ const app = {
                 distText = item.distance + ' km';
             }
 
+            const meta = categoryMeta[item.category] || { icon: '\u{1F4CD}', bg: '#f0f4f8', color: '#666', label: '' };
+            const is24h = item.is_24h == '1';
+            const addressShort = item.address ? (item.address.length > 50 ? item.address.substring(0, 50) + '...' : item.address) : '';
+
             return `
-            <div class="list-item" onclick="app.router.navigate('detalhe', {id: ${item.id}})">
-                <div>
-                    <h3>${item.name}</h3>
-                    <p>${item.address}</p>
+            <div class="rich-list-card" onclick="app.router.navigate('detalhe', {id: ${item.id}})">
+                <div class="rich-list-card-icon" style="background:${meta.bg}">
+                    <span>${meta.icon}</span>
                 </div>
-                ${distText ? `<span class="distance-badge">${distText}</span>` : ''}
+                <div class="rich-list-card-body">
+                    <h3 class="rich-list-card-name">${item.name}</h3>
+                    <p class="rich-list-card-address">${addressShort}</p>
+                    <div class="rich-list-card-tags">
+                        <span class="rich-tag" style="background:${meta.bg}; color:${meta.color}">${meta.label}</span>
+                        ${is24h ? `<span class="rich-tag open-tag">${i18n.t('open_status')}</span>` : ''}
+                        ${distText ? `<span class="rich-tag dist-tag">${distText}</span>` : ''}
+                    </div>
+                </div>
+                <svg class="rich-list-card-arrow" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
             </div>
             `;
         }).join('');
@@ -638,8 +780,17 @@ const app = {
         }
 
         // --- Data Parsing ---
+        const categoryMeta = {
+            'hospital': { icon: '\u{1F3E5}', bg: '#dbeafe', color: '#3b82f6', gradient: 'linear-gradient(135deg, #1e40af, #3b82f6)' },
+            'farmacia': { icon: '\u{1F48A}', bg: '#d1fae5', color: '#10b981', gradient: 'linear-gradient(135deg, #047857, #10b981)' },
+            'emergencia': { icon: '\u{1F691}', bg: '#ffe5e8', color: '#e63946', gradient: 'linear-gradient(135deg, #991b1b, #e63946)' },
+            'cultura': { icon: '\u{1F3DB}\uFE0F', bg: '#fef3c7', color: '#f59e0b', gradient: 'linear-gradient(135deg, #b45309, #f59e0b)' },
+            'compras': { icon: '\u{1F6CD}\uFE0F', bg: '#fce7f3', color: '#ec4899', gradient: 'linear-gradient(135deg, #9d174d, #ec4899)' },
+            'lazer': { icon: '\u{1F333}', bg: '#d1fae5', color: '#059669', gradient: 'linear-gradient(135deg, #065f46, #059669)' }
+        };
+        const meta = categoryMeta[item.category] || { icon: '\u{1F4CD}', bg: '#f0f4f8', color: '#666', gradient: 'linear-gradient(135deg, #374151, #6b7280)' };
 
-        // 1. Website extraction
+        // Website extraction
         let website = null;
         let descriptionClean = item.description || '';
         const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -649,36 +800,24 @@ const app = {
             descriptionClean = descriptionClean.replace(urlRegex, '').replace('Site:', '').trim();
         }
 
-        // 2. Hours Parsing
+        // Hours parsing
         const daysMap = {
-            'Monday': 'Segunda-feira',
-            'Tuesday': 'Terça-feira',
-            'Wednesday': 'Quarta-feira',
-            'Thursday': 'Quinta-feira',
-            'Friday': 'Sexta-feira',
-            'Saturday': 'Sábado',
-            'Sunday': 'Domingo'
+            'Monday': 'Segunda', 'Tuesday': 'Terça', 'Wednesday': 'Quarta',
+            'Thursday': 'Quinta', 'Friday': 'Sexta', 'Saturday': 'Sábado', 'Sunday': 'Domingo'
         };
 
-        let hoursHtml = `<div class="text-muted">${i18n.t('closed_status')}</div>`;
-        let isOpen = false; // logic to determine if open would require complex parsing of time ranges
-        let statusBadge = `<span class="badge status closed">${i18n.t('closed_status')}</span>`;
+        let hoursHtml = `<div class="text-muted" style="padding:0.5rem 0;">${i18n.t('closed_status')}</div>`;
+        let statusText = i18n.t('check_hours');
+        let statusClass = 'closed';
 
         if (item.is_24h) {
-            hoursHtml = `
-                <div class="schedule-table">
-                    <div class="schedule-row"><span class="day">Todos os dias</span><span class="hours">24 Horas</span></div>
-                </div>`;
-            isOpen = true;
-            statusBadge = `<span class="badge status">${i18n.t('open_status')}</span>`;
+            hoursHtml = `<div class="schedule-table"><div class="schedule-row"><span class="day">Todos os dias</span><span class="hours">24 Horas</span></div></div>`;
+            statusText = i18n.t('open_status');
+            statusClass = '';
         } else if (item.hours) {
-            // "Monday: 8:00 AM – 6:00 PM; Tuesday: ..."
             const hoursArr = item.hours.split(';').map(h => h.trim());
-
-            // Simple check for "Open Now" (Approximation based on current day/hour would be better but requires robust parsing)
-            // For MVP, if it's not 24h, we default to "Ver Horários" or similar unless we parse fully.
-            // Let's rely on the visual table for user to decide.
-            statusBadge = `<span class="badge status closed">${i18n.t('check_hours')}</span>`;
+            statusText = i18n.t('check_hours');
+            statusClass = 'closed';
 
             hoursHtml = '<div class="schedule-table">';
             const todayEng = new Date().toLocaleDateString('en-US', { weekday: 'long' });
@@ -686,95 +825,110 @@ const app = {
             hoursHtml += hoursArr.map(hStr => {
                 const [dayEng, timeRange] = hStr.split(': ', 2);
                 if (!daysMap[dayEng]) return '';
-
                 const isToday = dayEng === todayEng;
                 const dayPt = daysMap[dayEng];
-                const timeClean = timeRange.replace('Closed', 'Fechado').replace('Open 24 hours', '24 Horas');
-
-                return `
-                    <div class="schedule-row ${isToday ? 'today' : ''}">
-                        <span class="day">${dayPt}</span>
-                        <span class="hours">${timeClean}</span>
-                    </div>
-                `;
+                const timeClean = timeRange ? timeRange.replace('Closed', 'Fechado').replace('Open 24 hours', '24 Horas') : '';
+                return `<div class="schedule-row ${isToday ? 'today' : ''}"><span class="day">${dayPt}</span><span class="hours">${timeClean}</span></div>`;
             }).join('');
             hoursHtml += '</div>';
         }
 
-        // 3. Map Link
-        const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.name + ' ' + item.address)}`;
+        // Map and share links
+        const mapLink = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(item.lat + ',' + item.lng)}&travelmode=driving`;
+        const wazeLink = `https://waze.com/ul?ll=${item.lat},${item.lng}&navigate=yes`;
+        const categoryLabel = {
+            'hospital': i18n.t('category_hospital'), 'farmacia': i18n.t('category_pharmacy'),
+            'cultura': i18n.t('culture'), 'compras': i18n.t('shopping'), 'lazer': i18n.t('leisure')
+        }[item.category] || i18n.t('places');
 
-        // --- Render HTML ---
-
+        // --- Render ---
         container.innerHTML = `
-            <div class="detail-header-wrapper">
-                <div class="breadcrumbs">
-                    <span onclick="app.router.back()" style="cursor:pointer">Início</span>
-                    <span>/</span>
-                    <span onclick="app.router.navigate('lista', {category: '${item.category}'})" style="cursor:pointer; text-transform:capitalize;">${item.category === 'farmacia' ? i18n.t('pharmacies') : i18n.t('hospitals')}</span>
-                    <span>/</span>
-                    <span>${item.name}</span>
+            <!-- Hero Section -->
+            <div class="detail-hero-section" style="background: ${meta.gradient};">
+                <div class="detail-hero-icon">${meta.icon}</div>
+                <div class="detail-hero-badges">
+                    <span class="badge category" style="background:rgba(255,255,255,0.2); color:white;">${categoryLabel}</span>
+                    <span class="badge status ${statusClass}" style="background:rgba(255,255,255,0.2); color:white;">${statusText}</span>
                 </div>
-
-                <div class="badge-container">
-                    <span class="badge category ${item.category}">${item.category === 'farmacia' ? i18n.t('category_pharmacy') : i18n.t('category_hospital')}</span>
-                    ${statusBadge}
-                </div>
-
-                <h1 class="detail-title">${item.name}</h1>
-                
-                <div class="detail-address">
-                    <span class="icon">📍</span>
-                    <span>${item.address}</span>
+                <h1 class="detail-hero-title">${item.name}</h1>
+                <div class="detail-hero-address">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="white" stroke="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                    <span>${item.address || ''}</span>
                 </div>
             </div>
 
-            <div class="action-bar">
-                <a href="${mapLink}" target="_blank" class="action-btn primary">
-                    <span>🗺️</span> ${i18n.t('directions')}
+            <!-- Action Buttons -->
+            <div class="detail-actions-row">
+                <a href="${mapLink}" target="_blank" class="detail-action-btn primary-action">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
+                    <span>${i18n.t('directions')}</span>
                 </a>
-                <a href="tel:${item.phone}" class="action-btn outline">
-                    <span>📞</span> ${i18n.t('call_now')}
-                </a>
+                ${item.phone ? `
+                <a href="tel:${item.phone}" class="detail-action-btn outline-action">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0122 16.92z"></path></svg>
+                    <span>${i18n.t('call_now')}</span>
+                </a>` : ''}
+                <button class="detail-action-btn outline-action" onclick="app.sharePlace('${item.name.replace(/'/g, "\\'")}', '${item.address ? item.address.replace(/'/g, "\\'") : ''}')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                    <span>${i18n.t('share')}</span>
+                </button>
             </div>
 
             <div class="detail-grid">
                 <!-- Left Column -->
                 <div>
+                    <!-- Map -->
                     <div class="info-card">
                         <div class="card-title">
-                            <span>ℹ️</span> ${i18n.t('visitor_notes')}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon></svg>
+                            ${i18n.t('location_title')}
                         </div>
-                        <ul class="visitor-notes">
-                            <li><span class="icon">✓</span> Equipe fala português disponível (Verificar)</li>
-                            <li><span class="icon">✓</span> Pagamento aceito: ${descriptionClean || 'Dinheiro, Cartão'}</li>
-                            <li><span class="icon">⚠️</span> Recomendado ligar antes em caso de emergência grave.</li>
-                        </ul>
+                        <div class="map-preview" id="detail-map-preview" style="cursor: pointer;">
+                            <!-- Map rendered by JS -->
+                        </div>
+                        <div style="display:flex; gap:8px; margin-top:0.75rem;">
+                            <a href="${mapLink}" target="_blank" class="action-btn primary small" style="flex:1; text-align:center; text-decoration:none;">
+                                Google Maps
+                            </a>
+                            <a href="${wazeLink}" target="_blank" class="action-btn outline small" style="flex:1; text-align:center; text-decoration:none; background:#33ccff; color:white; border-color:#33ccff;">
+                                Waze
+                            </a>
+                        </div>
                     </div>
 
-                    <div class="map-preview" id="detail-map-preview" style="cursor: pointer;">
-                        <!-- Map will be injected here -->
-                    </div>
+                    <!-- Info -->
+                    ${descriptionClean ? `
+                    <div class="info-card">
+                        <div class="card-title">
+                            <span>\u{2139}\uFE0F</span> ${i18n.t('quick_info')}
+                        </div>
+                        <p style="font-size:0.95rem; color:var(--text-secondary); line-height:1.5;">${descriptionClean}</p>
+                    </div>` : ''}
                 </div>
 
                 <!-- Right Column -->
                 <div>
+                    <!-- Hours -->
                     <div class="info-card">
                         <div class="card-title">
-                            <span>🕒</span> ${i18n.t('hours_of_operation')}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            ${i18n.t('hours_of_operation')}
                         </div>
                         ${hoursHtml}
                     </div>
 
+                    <!-- Contact Info -->
                     <div class="info-card">
                         <div class="card-title">
-                            <span>📋</span> ${i18n.t('quick_info')}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="M7 15h0M2 9.5h20"></path></svg>
+                            ${i18n.t('quick_info')}
                         </div>
                         <div class="info-list">
+                            ${item.phone ? `
                             <div class="info-item">
                                 <label>${i18n.t('phone')}</label>
                                 <a href="tel:${item.phone}">${item.phone}</a>
-                            </div>
+                            </div>` : ''}
                             ${website ? `
                             <div class="info-item">
                                 <label>${i18n.t('website')}</label>
@@ -787,19 +941,6 @@ const app = {
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="emergency-banner">
-                <div class="content">
-                    <div class="emergency-icon">🚨</div>
-                    <div>
-                        <div class="text-bold">${i18n.t('emergency_help_title')}</div>
-                        <div style="font-size:0.9rem; opacity:0.8;">${i18n.t('emergency_help_desc')}</div>
-                    </div>
-                </div>
-                <button class="emergency-btn" onclick="app.router.navigate('emergencia')">
-                    Central Zelo
-                </button>
             </div>
         `;
 
@@ -824,16 +965,39 @@ const app = {
                         attribution: ''
                     }).addTo(miniMap);
 
-                    // Add colored marker based on category
                     const icon = MapManager.createIcon(item.category === 'farmacia' ? 'green' : (item.category === 'hospital' ? 'red' : 'blue'));
                     L.marker([item.lat, item.lng], { icon: icon }).addTo(miniMap);
 
-                    // Click to open Google Maps
                     mapEl.addEventListener('click', () => {
                         window.open(mapLink, '_blank');
                     });
                 }
             }, 100);
+        }
+    },
+
+    // Share functionality
+    async sharePlace(name, address) {
+        const shareData = {
+            title: name,
+            text: `${name} - ${address}`,
+            url: window.location.href
+        };
+
+        if (navigator.share) {
+            try {
+                await navigator.share(shareData);
+            } catch (err) {
+                console.log('Share cancelled');
+            }
+        } else {
+            // Fallback: copy to clipboard
+            try {
+                await navigator.clipboard.writeText(`${name} - ${address}`);
+                alert(i18n.t('link_copied') || 'Copiado!');
+            } catch (err) {
+                console.error('Copy failed', err);
+            }
         }
     },
 

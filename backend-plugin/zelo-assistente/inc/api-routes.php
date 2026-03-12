@@ -45,6 +45,16 @@ function zelo_get_locais( $request ) {
 			}
 		}
 
+		// Get image URL from featured image (thumbnail)
+		$image_url = '';
+		$thumb_id = get_post_thumbnail_id( $post->ID );
+		if ( $thumb_id ) {
+			$img_src = wp_get_attachment_image_url( $thumb_id, 'medium' );
+			if ( $img_src ) {
+				$image_url = $img_src;
+			}
+		}
+
 		$data[] = array(
 			'id'          => $post->ID,
 			'name'        => $post->post_title,
@@ -57,6 +67,7 @@ function zelo_get_locais( $request ) {
 			'hours'       => get_post_meta( $post->ID, '_zelo_hours', true ),
 			'is_24h'      => get_post_meta( $post->ID, '_zelo_24h', true ) === '1',
 			'distance'    => round( $distance, 2 ), // km
+			'image_url'   => $image_url,
 		);
 	}
 
