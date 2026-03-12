@@ -31,12 +31,12 @@ function zelo_render_meta_box( $post ) {
 	<p>
 		<label for="zelo_type"><?php esc_html_e( 'Categoria', 'zelo-assistente' ); ?></label>
 		<select name="zelo_type" id="zelo_type" class="widefat">
-			<option value="hospital" <?php selected( $type, 'hospital' ); ?>><?php _e( 'Hospital', 'zelo-assistente' ); ?></option>
-			<option value="farmacia" <?php selected( $type, 'farmacia' ); ?>><?php _e( 'Farmácia', 'zelo-assistente' ); ?></option>
-			<option value="emergencia" <?php selected( $type, 'emergencia' ); ?>><?php _e( 'Emergência', 'zelo-assistente' ); ?></option>
-			<option value="cultura" <?php selected( $type, 'cultura' ); ?>><?php _e( 'Cultura', 'zelo-assistente' ); ?></option>
-			<option value="compras" <?php selected( $type, 'compras' ); ?>><?php _e( 'Compras', 'zelo-assistente' ); ?></option>
-			<option value="lazer" <?php selected( $type, 'lazer' ); ?>><?php _e( 'Lazer', 'zelo-assistente' ); ?></option>
+			<?php
+			$categories = function_exists( 'zelo_get_categories_map' ) ? zelo_get_categories_map() : array();
+			foreach ( $categories as $cat_slug => $cat_data ) :
+			?>
+				<option value="<?php echo esc_attr( $cat_slug ); ?>" <?php selected( $type, $cat_slug ); ?>><?php echo esc_html( $cat_data['label'] ); ?></option>
+			<?php endforeach; ?>
 		</select>
 	</p>
 	<p>

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Zelo Assistente
  * Description: Backend plugin for Zelo PWA. Manages Locations and Event Info.
- * Version: 2.0.0
+ * Version: 2.1.0
  * Author: Zelo Team
  * Text Domain: zelo-assistente
  */
@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define( 'ZELO_VERSION', '2.0.0' );
+define( 'ZELO_VERSION', '2.1.0' );
 define( 'ZELO_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 
 // Include required files
@@ -21,6 +21,7 @@ require_once ZELO_PLUGIN_DIR . 'inc/meta-boxes.php';
 require_once ZELO_PLUGIN_DIR . 'inc/api-routes.php';
 require_once ZELO_PLUGIN_DIR . 'inc/zelo-auth-api.php'; // Auth API
 if ( is_admin() ) {
+	require_once ZELO_PLUGIN_DIR . 'inc/admin-categories.php';
 	require_once ZELO_PLUGIN_DIR . 'inc/admin-settings.php';
 	require_once ZELO_PLUGIN_DIR . 'inc/admin-importer.php';
 	require_once ZELO_PLUGIN_DIR . 'inc/admin-importer-csv.php';

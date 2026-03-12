@@ -2,6 +2,18 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.1.0] - 2026-03-12
+
+### Funcionalidades
+- Nova página admin "Categorias de Locais" para gerenciar categorias dinamicamente (CRUD)
+- Cada categoria define um slug, rótulo e tipos Google Places associados
+- Dropdown do meta box e do importador agora leem das categorias cadastradas
+- Botão "Restaurar Padrão" para resetar categorias originais
+- Suporte a categorias ilimitadas (cultura, compras, lazer, restaurante, etc.)
+
+### Melhorias
+- Importador Google Places agora busca múltiplos tipos por categoria automaticamente
+
 ## [2.0.0] - 2026-03-12
 
 ### Segurança

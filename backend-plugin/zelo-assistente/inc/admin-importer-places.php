@@ -11,7 +11,7 @@ function zelo_fetch_google_places_nearby( $lat, $lng, $radius_m, $type ) {
 	if ( $api_key === '' ) {
 		return new WP_Error( 'no_api_key', __( 'Configure a Google Places API Key nas Configurações do Evento.', 'zelo-assistente' ) );
 	}
-	$type = $type === 'hospital' ? 'hospital' : 'pharmacy';
+	// Accept any valid Google Places type (hospital, pharmacy, museum, etc.)
 	$place_ids = array();
 	$url = add_query_arg(
 		array(
@@ -159,18 +159,29 @@ function zelo_import_google_place_photo( $post_id, $photo_reference, $place_name
 	return true;
 }
 
-function zelo_import_google_places_run( $lat, $lng, $radius_m, $type ) {
+/**
+ * Map a Zelo category to one or more Google Places API types.
+ * Reads from the dynamic categories option.
+ */
+function zelo_get_google_types_for_category( $zelo_category ) {
+	$map = zelo_get_categories_map();
+	if ( isset( $map[ $zelo_category ] ) && ! empty( $map[ $zelo_category ]['google_types'] ) ) {
+		return $map[ $zelo_category ]['google_types'];
+	}
+	return array( 'pharmacy' ); // fallback
+}
+
+function zelo_import_google_places_run( $lat, $lng, $radius_m, $zelo_category ) {
+    // Map the zelo category to Google Places API types
+    $google_types = zelo_get_google_types_for_category( $zelo_category );
+
     // Determine grid points to maximize coverage beyond 60 results
-    // Strategy: Center + 4 points at 45, 135, 225, 315 degrees at 60% of radius distance
-    // This simple "Quincunx" pattern helps cover more area without too much overlap/cost
-    
     $points = array(
         array( 'lat' => $lat, 'lng' => $lng ) // Center
     );
 
     // If radius is large (>500m), add more points to try and get more results
     if ( $radius_m > 500 ) {
-        // Calculate offset (rough approximation: 1 degree lat ~= 111km)
         $offset_lat = ($radius_m * 0.6) / 111111; 
         $offset_lng = ($radius_m * 0.6) / (111111 * cos(deg2rad($lat)));
 
@@ -182,30 +193,31 @@ function zelo_import_google_places_run( $lat, $lng, $radius_m, $type ) {
 
     $all_place_ids = array();
 
-    foreach ( $points as $p ) {
-        if ( count( $all_place_ids ) >= ZELO_PLACES_MAX_DETAILS_PER_RUN ) {
-            break;
-        }
+    // For each Google type mapped to this zelo category, search all grid points
+    foreach ( $google_types as $google_type ) {
+        foreach ( $points as $p ) {
+            if ( count( $all_place_ids ) >= ZELO_PLACES_MAX_DETAILS_PER_RUN ) {
+                break 2;
+            }
 
-        $place_ids = zelo_fetch_google_places_nearby( $p['lat'], $p['lng'], $radius_m, $type );
-        
-        if ( is_wp_error( $place_ids ) ) {
-            continue; // Skip errors in grid points, try others
-        }
+            $place_ids = zelo_fetch_google_places_nearby( $p['lat'], $p['lng'], $radius_m, $google_type );
+            
+            if ( is_wp_error( $place_ids ) ) {
+                continue;
+            }
 
-        foreach ( $place_ids as $pid ) {
-            $all_place_ids[ $pid ] = true; // Use key for deduplication
-        }
-        
-        // Safety break to avoid infinite loops if many points added later
-        if ( count( $points ) > 1 ) {
-            sleep(1); // Polite delay between grid points
+            foreach ( $place_ids as $pid ) {
+                $all_place_ids[ $pid ] = true;
+            }
+            
+            if ( count( $points ) > 1 || count( $google_types ) > 1 ) {
+                sleep(1);
+            }
         }
     }
 
     $unique_place_ids = array_keys( $all_place_ids );
     
-    // Slice to max limit if we somehow exceeded it (e.g. 5 calls * 60 = 300)
     if ( count( $unique_place_ids ) > ZELO_PLACES_MAX_DETAILS_PER_RUN ) {
         $unique_place_ids = array_slice( $unique_place_ids, 0, ZELO_PLACES_MAX_DETAILS_PER_RUN );
     }
@@ -214,8 +226,7 @@ function zelo_import_google_places_run( $lat, $lng, $radius_m, $type ) {
         return new WP_Error( 'no_results', __( 'Nenhum local encontrado em nenhum dos pontos de busca.', 'zelo-assistente' ) );
     }
 
-
-	$zelo_type = $type === 'hospital' ? 'hospital' : 'farmacia';
+	$zelo_type = $zelo_category;
 	$count_new = 0;
 	$count_updated = 0;
 
@@ -396,7 +407,8 @@ function zelo_render_importer_places_section() {
 		$lat     = floatval( $_POST['places_lat'] );
 		$lng     = floatval( $_POST['places_lng'] );
 		$radius  = intval( $_POST['places_radius'] );
-		$type    = isset( $_POST['places_type'] ) && $_POST['places_type'] === 'hospital' ? 'hospital' : 'pharmacy';
+		$valid_types = array_keys( zelo_get_categories_map() );
+		$type    = isset( $_POST['places_type'] ) && in_array( $_POST['places_type'], $valid_types, true ) ? $_POST['places_type'] : 'farmacia';
 		$result  = zelo_import_google_places_run( $lat, $lng, $radius, $type );
 		if ( is_wp_error( $result ) ) {
 			$error = $result->get_error_message();
@@ -437,8 +449,9 @@ function zelo_render_importer_places_section() {
 				<th scope="row"><?php esc_html_e( 'Tipo', 'zelo-assistente' ); ?></th>
 				<td>
 					<select name="places_type">
-						<option value="pharmacy"><?php esc_html_e( 'Farmácia', 'zelo-assistente' ); ?></option>
-						<option value="hospital"><?php esc_html_e( 'Hospital', 'zelo-assistente' ); ?></option>
+						<?php foreach ( zelo_get_categories_map() as $cat_slug => $cat_data ) : ?>
+							<option value="<?php echo esc_attr( $cat_slug ); ?>"><?php echo esc_html( $cat_data['label'] ); ?></option>
+						<?php endforeach; ?>
 					</select>
 				</td>
 			</tr>
