@@ -2,6 +2,13 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.4.1] - 2026-03-12
+
+### Correções
+- **Imagens no PWA**: Corrigido problema onde as imagens importadas não eram exibidas nas visualizações do aplicativo.
+- **UI de Detalhes**: Adicionado suporte a imagem de fundo (hero) com overlay de legibilidade no PWA.
+- **Lista de Locais**: Miniaturas agora priorizam a foto real do local em vez do ícone da categoria.
+
 ## [2.4.0] - 2026-03-12
 
 ### Funcionalidades

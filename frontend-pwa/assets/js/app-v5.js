@@ -730,7 +730,10 @@ const app = {
             return `
             <div class="rich-list-card" onclick="app.router.navigate('detalhe', {id: ${item.id}})">
                 <div class="rich-list-card-icon" style="background:${meta.bg}">
-                    <span>${meta.icon}</span>
+                    ${item.image_url ? 
+                        `<img src="${item.image_url}" style="width:100%; height:100%; object-fit:cover; border-radius:14px;">` : 
+                        `<span>${meta.icon}</span>`
+                    }
                 </div>
                 <div class="rich-list-card-body">
                     <h3 class="rich-list-card-name">${item.name}</h3>
@@ -842,10 +845,12 @@ const app = {
         }[item.category] || i18n.t('places');
 
         // --- Render ---
+        const heroBg = item.image_url ? `background-image: url('${item.image_url}');` : `background: ${meta.gradient};`;
+        
         container.innerHTML = `
             <!-- Hero Section -->
-            <div class="detail-hero-section" style="background: ${meta.gradient};">
-                <div class="detail-hero-icon">${meta.icon}</div>
+            <div class="detail-hero-section" style="${heroBg}">
+                ${!item.image_url ? `<div class="detail-hero-icon">${meta.icon}</div>` : ''}
                 <div class="detail-hero-badges">
                     <span class="badge category" style="background:rgba(255,255,255,0.2); color:white;">${categoryLabel}</span>
                     <span class="badge status ${statusClass}" style="background:rgba(255,255,255,0.2); color:white;">${statusText}</span>
