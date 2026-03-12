@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+
+<html lang="pt-br"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Lexend", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
+<div class="relative mx-auto max-w-md bg-white dark:bg-slate-900 min-h-screen flex flex-col shadow-xl">
+<!-- Hero Section -->
+<div class="relative h-72 w-full overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="Modern architecture of Oscar Niemeyer Museum in Curitiba" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAXEmTHq-9p8SsbhqqLmNuvTZzdZRr05wc1EIZAzicrMeVUD6Et50rMQ10C16b4TM7Er9uYSrG517lUVe3d5l0r-d1Z6JWsqvUuc3QA3ECH9ykijwWep8jDMD7g_0J9wHry7WIQ93otQ8jQXKJj8dvrvHE1NzSYkhaKFi5qOz-5yF00eukd9e0w9mFlAPAI2UZaP6HAiPWTzqhqfXIciPshGKuT6_u6LwRPJ92wjnz3edRGcpaAglfdsLcfSK3SD-vJ6XNxUv4XCuQ');">
+</div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+<!-- Top Controls -->
+<div class="absolute top-0 left-0 right-0 flex items-center justify-between p-4">
+<button class="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md text-white">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<div class="flex gap-2">
+<button class="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md text-white">
+<span class="material-symbols-outlined">share</span>
+</button>
+<button class="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md text-white">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Content Area -->
+<div class="flex-1 px-4 py-6 -mt-6 relative bg-white dark:bg-slate-900 rounded-t-3xl overflow-hidden">
+<!-- Title and Status -->
+<div class="flex flex-col gap-2 mb-4">
+<div class="flex items-center justify-between">
+<span class="inline-flex items-center gap-1.5 rounded-full bg-green-100 dark:bg-green-900/30 px-2.5 py-0.5 text-xs font-semibold text-green-700 dark:text-green-400">
+<span class="h-1.5 w-1.5 rounded-full bg-green-600"></span>
+                        ABERTO AGORA
+                    </span>
+<div class="flex items-center gap-1 text-sm font-medium text-slate-600 dark:text-slate-400">
+<span class="material-symbols-outlined text-yellow-500 text-lg">star</span>
+<span>4.8 (2.4k)</span>
+</div>
+</div>
+<h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Museu Oscar Niemeyer (MON)</h1>
+<p class="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">location_on</span>
+                    Curitiba, PR • 2.4 km de você
+                </p>
+</div>
+<!-- Action Buttons -->
+<div class="flex gap-3 mb-8">
+<button class="flex-1 flex items-center justify-center gap-2 bg-primary text-white py-3 rounded-xl font-semibold text-sm transition-transform active:scale-95">
+<span class="material-symbols-outlined text-xl">directions</span>
+                    Como Chegar
+                </button>
+<button class="flex-1 flex items-center justify-center gap-2 bg-primary/10 dark:bg-primary/20 text-primary py-3 rounded-xl font-semibold text-sm transition-transform active:scale-95">
+<span class="material-symbols-outlined text-xl">bookmark</span>
+                    Salvar
+                </button>
+</div>
+<!-- About Section -->
+<section class="mb-8">
+<h3 class="text-lg font-bold mb-3 text-slate-900 dark:text-white">Sobre o museu</h3>
+<p class="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+                    O Museu Oscar Niemeyer, também conhecido como "Museu do Olho", é um dos maiores museus de arte da América Latina. Com foco em artes visuais, arquitetura e design, o complexo é uma obra-prima do renomado arquiteto que lhe dá nome.
+                </p>
+<button class="mt-2 text-primary text-sm font-semibold">Ver mais</button>
+</section>
+<!-- Location Section -->
+<section class="mb-8">
+<h3 class="text-lg font-bold mb-3 text-slate-900 dark:text-white">Localização</h3>
+<div class="rounded-xl overflow-hidden mb-3 border border-slate-200 dark:border-slate-800">
+<div class="h-40 w-full bg-slate-100 dark:bg-slate-800 bg-cover bg-center" data-alt="Map showing the location of MON in Curitiba" data-location="Curitiba, Brazil" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAK8zTio3nxmkd54oivZ-GGNkJLKu5ur0Q1HBYssu9X74iOIfBIqpmSe_d4B7zfUsC_tml9rH3M9ZBIJ2fx0T2BEFHcyb7pdXjB76fSPBBk5-Ist8LbUMdDWlQezy0hXcvMheBLvf_YUF8cj2ROUtkdb33Ioo_DYwTnuqSIZ7SzOOyQJy8Uw62Hgjtpf36BXB4O3oSh01HYeTh2LfUncB0272v5A-5YtEwAZ5TgNEod-f8ld7Ye4jcyq9gOVNBkSe84ZmLjADH4lBY');">
+</div>
+<div class="p-3 bg-slate-50 dark:bg-slate-800/50 flex items-start gap-3">
+<span class="material-symbols-outlined text-primary">pin_drop</span>
+<div>
+<p class="text-sm font-medium text-slate-900 dark:text-white">Rua Marechal Hermes, 999</p>
+<p class="text-xs text-slate-500 dark:text-slate-400">Centro Cívico, Curitiba - PR</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Working Hours Section -->
+<section class="mb-8">
+<h3 class="text-lg font-bold mb-3 text-slate-900 dark:text-white">Horários de Funcionamento</h3>
+<div class="space-y-2">
+<div class="flex justify-between text-sm py-2 border-b border-slate-100 dark:border-slate-800">
+<span class="text-slate-500 dark:text-slate-400">Segunda-feira</span>
+<span class="font-medium text-slate-400 italic">Fechado</span>
+</div>
+<div class="flex justify-between text-sm py-2 border-b border-slate-100 dark:border-slate-800">
+<span class="text-slate-900 dark:text-white font-medium">Terça a Domingo</span>
+<span class="font-medium text-slate-900 dark:text-white">10:00 — 18:00</span>
+</div>
+<div class="flex justify-between text-sm py-2">
+<span class="text-slate-500 dark:text-slate-400">Venda de Ingressos</span>
+<span class="font-medium text-slate-600 dark:text-slate-400">Até 17:30</span>
+</div>
+</div>
+</section>
+</div>
+<!-- Bottom Navigation Bar -->
+<div class="sticky bottom-0 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 px-4 py-2 flex items-center justify-between z-10">
+<a class="flex flex-col items-center gap-1 text-slate-400" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="text-[10px] font-medium uppercase tracking-wider">Início</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-primary" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">explore</span>
+<span class="text-[10px] font-medium uppercase tracking-wider">Explorar</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400" href="#">
+<span class="material-symbols-outlined">favorite</span>
+<span class="text-[10px] font-medium uppercase tracking-wider">Favoritos</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="text-[10px] font-medium uppercase tracking-wider">Reservas</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="text-[10px] font-medium uppercase tracking-wider">Perfil</span>
+</a>
+</div>
+</div>
+</body></html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+
+<html lang="pt-br"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Lexend", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Lexend', sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+<!-- Header -->
+<header class="sticky top-0 z-50 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-2">
+<div class="bg-primary rounded-lg p-1.5 flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-2xl">verified_user</span>
+</div>
+<h1 class="text-xl font-bold tracking-tight text-primary">Zelo</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-1 text-slate-500 dark:text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-xl">translate</span>
+<span class="text-xs font-medium uppercase">PT</span>
+</button>
+<div class="flex items-center gap-1.5 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-full">
+<div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+<span class="text-[10px] font-bold text-green-600 dark:text-green-400 uppercase tracking-wider">Online</span>
+</div>
+</div>
+</header>
+<main class="flex-1 overflow-y-auto pb-24">
+<!-- Search Bar -->
+<div class="px-4 pt-6 pb-2">
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input class="w-full bg-white dark:bg-slate-800 border-none rounded-2xl py-4 pl-12 pr-4 shadow-sm focus:ring-2 focus:ring-primary/20 text-slate-700 dark:text-slate-200 placeholder:text-slate-400 transition-all" placeholder="Buscar serviços ou locais..." type="text"/>
+</div>
+</div>
+<!-- Welcome Section -->
+<div class="px-4 py-4">
+<h2 class="text-2xl font-bold text-slate-900 dark:text-white">Bem-vindo!</h2>
+<p class="text-slate-500 dark:text-slate-400 text-sm">Como podemos ajudar você hoje?</p>
+</div>
+<!-- Event Highlight Banner -->
+<div class="px-4 mb-8">
+<div class="relative overflow-hidden rounded-2xl aspect-[21/9] shadow-lg group">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Modern international conference hall with blue lighting" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDTO3diSRiQhOlU6CyAwlfDZhtO6_Rsqz2UzpdHOZZLE8aQFk5m7FCrgZcnO5UWLysQX2X3jeZBC6q6fotFc5rCkiQ66YyG0iT4Gr1Z-iYW9cByCj1BZDQjWIlNFDCNOeuWqIJXYYDPnjI82uFyz92mJa8zkrbuI8TIsEJL5uwJoCR5FyB-pBZPo2UewxDfC78M4kez4f_zXElHLwtuo3i7UW-qgYDFaswus5t9vUK-6dpURFOxaeO_p5iXRlK3vLRkGYZ7VSU7_so')">
+</div>
+<div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
+<div class="absolute bottom-0 left-0 p-5 w-full">
+<div class="flex items-center gap-2 mb-1">
+<span class="bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Destaque</span>
+<span class="text-slate-300 text-xs font-medium">Evento Oficial</span>
+</div>
+<h3 class="text-white text-xl font-bold leading-tight mb-2">Conferência Internacional 2024</h3>
+<div class="flex items-center justify-between">
+<p class="text-slate-200 text-xs">Programação completa e guias</p>
+<button class="bg-white text-primary px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-primary hover:text-white transition-colors">
+                            Ver Detalhes
+                        </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Quick Action Cards -->
+<div class="px-4 mb-8">
+<h4 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Ações Rápidas</h4>
+<div class="grid grid-cols-3 gap-3">
+<button class="flex flex-col items-center justify-center p-4 rounded-2xl bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 shadow-sm hover:shadow-md transition-all active:scale-95">
+<div class="w-12 h-12 bg-red-500 rounded-2xl flex items-center justify-center text-white mb-2 shadow-lg shadow-red-200 dark:shadow-none">
+<span class="material-symbols-outlined text-2xl">emergency</span>
+</div>
+<span class="text-xs font-bold text-red-600 dark:text-red-400">Emergência</span>
+</button>
+<button class="flex flex-col items-center justify-center p-4 rounded-2xl bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/20 shadow-sm hover:shadow-md transition-all active:scale-95">
+<div class="w-12 h-12 bg-blue-500 rounded-2xl flex items-center justify-center text-white mb-2 shadow-lg shadow-blue-200 dark:shadow-none">
+<span class="material-symbols-outlined text-2xl">medical_services</span>
+</div>
+<span class="text-xs font-bold text-blue-600 dark:text-blue-400">Hospitais</span>
+</button>
+<button class="flex flex-col items-center justify-center p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/20 shadow-sm hover:shadow-md transition-all active:scale-95">
+<div class="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white mb-2 shadow-lg shadow-emerald-200 dark:shadow-none">
+<span class="material-symbols-outlined text-2xl">local_pharmacy</span>
+</div>
+<span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">Farmácias</span>
+</button>
+</div>
+</div>
+<!-- Contextual Map Card -->
+<div class="px-4 mb-6">
+<h4 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Localização</h4>
+<div class="relative rounded-2xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800">
+<div class="h-40 w-full bg-slate-200 dark:bg-slate-700 bg-cover bg-center" data-alt="Abstract map view of a city with navigation pins" data-location="Geneva, Switzerland" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCbpfVBmNrajQkd0vUocnmvx325PZEU6LOv1sb64TovQDHa8XTwkBBvaUvmxgpmBTqhXf65Eur89NzpzgrsHLQlcmaEUOMKzp3rVCrgbMXGZlyN_bgajkXxYY-4D1bCvRUEq-s0dH-gBByX1_EztMTKEth1smRPH-FFk_AXiz5F8Q37HOPMOsC82NN9SCnI1YRZZ4JkuMIIhUUPCLo0Nki2GP3rmLNsgFzvCbXBn0hhJTXzbYzM_hqjFsl-G3XyqAcAZDFdxE8hvPI')">
+</div>
+<div class="absolute inset-0 bg-black/10"></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<button class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm px-6 py-2.5 rounded-full shadow-xl flex items-center gap-2 text-primary font-bold text-sm hover:bg-primary hover:text-white transition-all transform active:scale-95">
+<span class="material-symbols-outlined text-xl">map</span>
+                        Ver Mapa Geral
+                    </button>
+</div>
+<div class="bg-white dark:bg-slate-800 p-3 flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">location_on</span>
+</div>
+<div>
+<p class="text-xs font-bold text-slate-900 dark:text-white leading-none mb-1">Centro de Convenções</p>
+<p class="text-[10px] text-slate-500 dark:text-slate-400">A 200m de sua localização atual</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation -->
+<nav class="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-background-dark/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 px-2 pb-6 pt-3 z-50">
+<div class="flex items-center justify-around max-w-md mx-auto">
+<a class="flex flex-col items-center gap-1 text-primary" href="#">
+<span class="material-symbols-outlined text-[28px] leading-none transition-all" style="font-variation-settings: 'FILL' 1">home</span>
+<span class="text-[10px] font-bold">Início</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-[28px] leading-none">explore</span>
+<span class="text-[10px] font-medium">Mapa</span>
+</a>
+<!-- Highlighted SOS Center Button -->
+<a class="flex flex-col items-center -mt-8" href="#">
+<div class="bg-red-600 w-14 h-14 rounded-2xl shadow-[0_8px_20px_rgba(220,38,38,0.4)] flex items-center justify-center text-white mb-1 active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-3xl font-bold">emergency_share</span>
+</div>
+<span class="text-[10px] font-bold text-red-600">S.O.S</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-[28px] leading-none">info</span>
+<span class="text-[10px] font-medium">Info</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-[28px] leading-none">account_circle</span>
+<span class="text-[10px] font-medium">Perfil</span>
+</a>
+</div>
+</nav>
+</body></html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+
+<html class="light" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Zelo - Compras</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Lexend", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Lexend', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+<!-- Header -->
+<header class="sticky top-0 z-50 bg-background-light dark:bg-background-dark border-b border-slate-200 dark:border-slate-800">
+<div class="flex items-center p-4 gap-4">
+<button class="flex items-center justify-center size-10 rounded-full hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined text-slate-900 dark:text-slate-100">arrow_back</span>
+</button>
+<h1 class="text-xl font-bold tracking-tight">Compras</h1>
+</div>
+</header>
+<main class="flex-1 overflow-y-auto pb-24">
+<!-- Search Bar -->
+<div class="px-4 py-4">
+<div class="relative flex items-center w-full">
+<span class="material-symbols-outlined absolute left-4 text-slate-400">search</span>
+<input class="w-full h-12 pl-12 pr-4 bg-white dark:bg-slate-800 border-none rounded-xl ring-1 ring-slate-200 dark:ring-slate-700 focus:ring-2 focus:ring-primary outline-none text-base transition-all" placeholder="Buscar shoppings, mercados..." type="text"/>
+</div>
+</div>
+<!-- Filter Chips -->
+<div class="flex gap-2 px-4 pb-4 overflow-x-auto no-scrollbar">
+<button class="flex h-10 shrink-0 items-center justify-center px-5 rounded-full bg-primary text-white font-medium text-sm">
+                Todos
+            </button>
+<button class="flex h-10 shrink-0 items-center justify-center px-5 rounded-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 ring-1 ring-slate-200 dark:ring-slate-700 font-medium text-sm hover:bg-primary/5">
+                Shoppings
+            </button>
+<button class="flex h-10 shrink-0 items-center justify-center px-5 rounded-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 ring-1 ring-slate-200 dark:ring-slate-700 font-medium text-sm hover:bg-primary/5">
+                Supermercados
+            </button>
+<button class="flex h-10 shrink-0 items-center justify-center px-5 rounded-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 ring-1 ring-slate-200 dark:ring-slate-700 font-medium text-sm hover:bg-primary/5">
+                Feiras
+            </button>
+</div>
+<!-- Listings -->
+<div class="px-4 space-y-6">
+<!-- Card 1 -->
+<div class="bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
+<div class="relative w-full aspect-[16/9] bg-slate-200 dark:bg-slate-800 bg-cover bg-center" data-alt="Modern architecture of Shopping Curitiba mall interior" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDKSI1wW5ZFBOs9lDSA5pWobP_SCmIlENUHkPYlc7yYvZKZQwBE4sE87Vd9CaU00Hcgl8aGCK6bwYbm64Obfj85aDm2xRsrKlU1_eebP-XuIqQuo-j9MbC5PAZHEOZz2wVOgj6OWPWU3dEGEG3gHO6hrii-5AsPc-JRuii99DkiWq7QuAKR8kvReVqqNh2bFmAPG2zq4tLB8OXYOV-J6lKiPGdGi8jtOBnWd-47AnYnhE3F2LhPQjnNTGQXIOJA8dWXmFZMadP613Y')">
+<div class="absolute top-4 left-4">
+<span class="px-3 py-1 bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-wider rounded-full">Aberto</span>
+</div>
+</div>
+<div class="p-4 space-y-3">
+<div>
+<p class="text-xs font-semibold text-primary uppercase tracking-widest mb-1">Shopping • 1.5 km</p>
+<h3 class="text-lg font-bold">Shopping Curitiba</h3>
+</div>
+<p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                        Um dos shoppings mais tradicionais da cidade com diversas lojas, cinemas e praça de alimentação variada.
+                    </p>
+<div class="flex gap-2 pt-2">
+<button class="flex-1 h-10 bg-primary text-white font-semibold text-sm rounded-lg hover:bg-primary/90 transition-colors">Detalhes</button>
+<button class="flex-1 h-10 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-sm rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-sm">map</span> Ver no Mapa
+                        </button>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
+<div class="relative w-full aspect-[16/9] bg-slate-200 dark:bg-slate-800 bg-cover bg-center" data-alt="Fruit and vegetable stalls at Mercado Municipal" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDH-bk_QW8QjCxZ5qrATRI3sErkhRp5MNCFEdgz2TGKjkeEdT9B-L-V6cnSsF9MMiXzFrt3b5Fo3IdPps4dHU5oTUsR43Lc7qahtgPfMdXLPwliphXo-eOenPUMNvxGQwsV9aBHd2Qp9DUtwbkFbbhmilzc3y6f0mvJmX3lxgqxEWzAlygEV1jSAUyjOaHfYVJVniDowWIT4ZG42lWKaRb16QIqHxfjt1Opl2yCAUwajlRD8u7RrFk-65w1IrQJPaLIaeUBF4wePd8')">
+<div class="absolute top-4 left-4">
+<span class="px-3 py-1 bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-wider rounded-full">Aberto</span>
+</div>
+</div>
+<div class="p-4 space-y-3">
+<div>
+<p class="text-xs font-semibold text-primary uppercase tracking-widest mb-1">Mercado • 2.8 km</p>
+<h3 class="text-lg font-bold">Mercado Municipal</h3>
+</div>
+<p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                        O melhor lugar para encontrar iguarias, queijos, vinhos e produtos frescos de alta qualidade em Curitiba.
+                    </p>
+<div class="flex gap-2 pt-2">
+<button class="flex-1 h-10 bg-primary text-white font-semibold text-sm rounded-lg hover:bg-primary/90 transition-colors">Detalhes</button>
+<button class="flex-1 h-10 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-sm rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-sm">map</span> Ver no Mapa
+                        </button>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
+<div class="relative w-full aspect-[16/9] bg-slate-200 dark:bg-slate-800 bg-cover bg-center" data-alt="Supermarket aisle with organized products" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCYlVAoYlCD0_ls_OQSzMhnGjYpa9-asUlQagL3U8TKZTRYRJ6bd8ikcMzTG_ijRiDkCGGt98riLAuhqt8cNdSjt5eLnwaTgBNZ6xQidrLXs064WDkGA8IZusf5B4o_H8kuDHh0DL3dqElbWxm_w6w_xDSntUKp9StF8X3h0wXsVwzBtYLBFi39avLHwg6a7wC390cMPznEsMJNCNE0hKNb05hb-k-IzNT68CZ07AaVH-in3nXauv_BalUj4SkdBM4fUTwHVniAcqE')">
+<div class="absolute top-4 left-4">
+<span class="px-3 py-1 bg-slate-400 text-white text-[10px] font-bold uppercase tracking-wider rounded-full">Fechado</span>
+</div>
+</div>
+<div class="p-4 space-y-3">
+<div>
+<p class="text-xs font-semibold text-primary uppercase tracking-widest mb-1">Supermercado • 0.5 km</p>
+<h3 class="text-lg font-bold">Supermercado Festval</h3>
+</div>
+<p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                        Rede de supermercados premium conhecida pelo excelente atendimento, padaria artesanal e adega.
+                    </p>
+<div class="flex gap-2 pt-2">
+<button class="flex-1 h-10 bg-primary text-white font-semibold text-sm rounded-lg hover:bg-primary/90 transition-colors">Detalhes</button>
+<button class="flex-1 h-10 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-sm rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-sm">map</span> Ver no Mapa
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Nav Bar -->
+<nav class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-2 pb-6 pt-2">
+<div class="flex justify-around items-center max-w-md mx-auto">
+<a class="flex flex-col items-center gap-1 px-3 py-1 text-slate-500 dark:text-slate-400" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="text-[10px] font-medium">Início</span>
+</a>
+<a class="flex flex-col items-center gap-1 px-3 py-1 text-slate-500 dark:text-slate-400" href="#">
+<span class="material-symbols-outlined">theater_comedy</span>
+<span class="text-[10px] font-medium">Cultura</span>
+</a>
+<a class="flex flex-col items-center gap-1 px-3 py-1 text-primary" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">shopping_bag</span>
+<span class="text-[10px] font-medium">Compras</span>
+</a>
+<a class="flex flex-col items-center gap-1 px-3 py-1 text-slate-500 dark:text-slate-400" href="#">
+<span class="material-symbols-outlined">favorite</span>
+<span class="text-[10px] font-medium">Saúde</span>
+</a>
+<a class="flex flex-col items-center gap-1 px-3 py-1 text-slate-500 dark:text-slate-400" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="text-[10px] font-medium">Perfil</span>
+</a>
+</div>
+</nav>
+</body></html>

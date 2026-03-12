@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Lexend"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Lexend', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .filled-icon { font-variation-settings: 'FILL' 1; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen pb-20">
+<!-- Header / Top Bar -->
+<nav class="sticky top-0 z-50 flex items-center bg-white/80 dark:bg-background-dark/80 backdrop-blur-md p-4 justify-between border-b border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-4">
+<button class="text-slate-900 dark:text-slate-100 flex items-center justify-center p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h2 class="text-lg font-bold leading-tight tracking-tight">Detalhes do Parque</h2>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex items-center justify-center p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
+<span class="material-symbols-outlined">share</span>
+</button>
+<button class="flex items-center justify-center p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-primary">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="max-w-xl mx-auto">
+<!-- Hero Image -->
+<div class="@container">
+<div class="p-0 @[480px]:px-4 @[480px]:pt-4">
+<div class="w-full bg-center bg-no-repeat bg-cover flex flex-col justify-end overflow-hidden h-72 @[480px]:rounded-xl shadow-lg" data-alt="Lush green botanical garden with exotic plants and walking paths" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBjL5XQXzsPp_NQ8E-zPxmoP2sfq4mYAkr89PmNa9Z4S1Omxqe8DCQIV9sUmFcD2Cn1O2E5booSV9XoAnaEPpkYxk3KgKC-bkDton7-DD3lf4BPR6GGDQytI344DxdfOPsHmqNZxX5hQYhQxqdw_dPhupgYDLUoC-nOPWKHsQd8bVhrGKEOdnNyUR8Vn9iOwsFceppGhhkUFa5xoq8usUPdkoedTG6co-aAVozZZfvpuKFORrJLl_XJFkrEgn-1UjVSGRD7Ic8I0yE");'>
+</div>
+</div>
+</div>
+<!-- Park Title & Quick Info -->
+<section class="px-4 pt-6 pb-2">
+<div class="flex justify-between items-start">
+<h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Jardim Botânico</h1>
+<span class="flex items-center gap-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+<span class="size-2 bg-green-500 rounded-full"></span>
+                    Aberto
+                </span>
+</div>
+<div class="flex gap-4 mt-3 text-slate-600 dark:text-slate-400 text-sm">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">distance</span>
+<span>1.2 km de distância</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">star</span>
+<span>4.8 (1.2k avaliações)</span>
+</div>
+</div>
+</section>
+<!-- Action Buttons -->
+<section class="px-4 py-4 flex gap-3">
+<button class="flex-1 bg-primary text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:brightness-110 active:scale-95 transition-all">
+<span class="material-symbols-outlined">directions</span>
+                Como Chegar
+            </button>
+<button class="bg-primary/10 text-primary font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 hover:bg-primary/20 transition-all">
+<span class="material-symbols-outlined">bookmark</span>
+                Salvar
+            </button>
+</section>
+<hr class="mx-4 border-slate-200 dark:border-slate-800 my-2"/>
+<!-- Address & Map -->
+<section class="px-4 py-4">
+<h3 class="text-lg font-bold mb-3 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">location_on</span>
+                Localização
+            </h3>
+<p class="text-slate-600 dark:text-slate-400 mb-4 text-sm leading-relaxed">
+                Rua Engenheiro Ostoja Roguski, s/n - Jardim Botânico, Curitiba - PR, 80210-390
+            </p>
+<div class="w-full h-48 rounded-xl bg-slate-200 dark:bg-slate-800 overflow-hidden relative border border-slate-200 dark:border-slate-700">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="Map showing the location of the botanical garden in the city" data-location="Curitiba, Brazil" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDC7kaDWQpVDgm5VMunsw-3GyPoKFwW_K5YOKzSycvXrUzNAaJcjClTOOGSRgitFMoWubq9lfR7KGosYajoQJoT8tdUhyB80vvk1qStbqVA0hxGGok7BxvCtkKHnFoIfhGpqpDjy0VJcGRgrs9oElMt7As_MRP7iwOI3z9HgXxWTHrQjB-XceC27JTCGIoC8AIXA6Exp5TVGjr8sGAq552GvohsUaypcwCh8dzKOPTz32_X6z72m2TB4sSpqkdTZEQraiSe9U960D4');"></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="bg-primary text-white p-2 rounded-full shadow-xl">
+<span class="material-symbols-outlined text-3xl filled-icon">location_on</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Description -->
+<section class="px-4 py-4">
+<h3 class="text-lg font-bold mb-3">Sobre o parque</h3>
+<p class="text-slate-600 dark:text-slate-400 leading-relaxed">
+                Inaugurado em 1991, o Jardim Botânico de Curitiba é um dos pontos turísticos mais visitados da cidade. Inspirado nos jardins franceses, o local abriga uma famosa estufa de ferro e vidro que protege espécies botânicas da Floresta Atlântica. É o lugar perfeito para caminhadas, piqueniques e contemplação da natureza.
+            </p>
+</section>
+<!-- Opening Hours -->
+<section class="px-4 py-4 mb-6">
+<h3 class="text-lg font-bold mb-3 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">schedule</span>
+                Horário de Funcionamento
+            </h3>
+<div class="bg-white dark:bg-background-dark/50 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-3">
+<div class="flex justify-between items-center text-sm font-medium">
+<span class="text-slate-900 dark:text-slate-100">Segunda - Sexta</span>
+<span class="text-slate-600 dark:text-slate-400">06:00 - 20:00</span>
+</div>
+<div class="flex justify-between items-center text-sm font-medium">
+<span class="text-slate-900 dark:text-slate-100">Sábado - Domingo</span>
+<span class="text-slate-600 dark:text-slate-400">06:00 - 20:00</span>
+</div>
+<div class="flex justify-between items-center text-sm font-medium">
+<span class="text-slate-900 dark:text-slate-100">Feriados</span>
+<span class="text-slate-600 dark:text-slate-400">06:00 - 18:00</span>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar (Fixed) -->
+<div class="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-background-dark border-t border-slate-200 dark:border-slate-800">
+<div class="flex gap-2 px-4 pb-3 pt-2 max-w-xl mx-auto">
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-400 dark:text-slate-500" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">home</span>
+</div>
+<p class="text-[10px] font-medium leading-normal tracking-wide">Início</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-primary" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined filled-icon">explore</span>
+</div>
+<p class="text-[10px] font-medium leading-normal tracking-wide">Explorar</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-400 dark:text-slate-500" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">favorite</span>
+</div>
+<p class="text-[10px] font-medium leading-normal tracking-wide">Favoritos</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-400 dark:text-slate-500" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">calendar_today</span>
+</div>
+<p class="text-[10px] font-medium leading-normal tracking-wide">Reservas</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-400 dark:text-slate-500" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">person</span>
+</div>
+<p class="text-[10px] font-medium leading-normal tracking-wide">Perfil</p>
+</a>
+</div>
+</div>
+</body></html>

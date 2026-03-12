@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+
+<html class="light" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Lexend", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Lexend', sans-serif;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+<!-- Header -->
+<header class="sticky top-0 z-10 bg-white dark:bg-background-dark border-b border-slate-200 dark:border-slate-800 px-4 py-4 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<button class="text-slate-900 dark:text-slate-100">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h1 class="text-xl font-bold tracking-tight">Lazer</h1>
+</div>
+<button class="text-slate-900 dark:text-slate-100">
+<span class="material-symbols-outlined">map</span>
+</button>
+</header>
+<!-- Search and Filters Section -->
+<div class="bg-white dark:bg-background-dark p-4 space-y-4 shadow-sm">
+<!-- Search Bar -->
+<label class="relative block w-full">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+<span class="material-symbols-outlined">search</span>
+</span>
+<input class="form-input block w-full bg-slate-100 dark:bg-slate-800 border-none rounded-xl py-3 pl-11 pr-4 focus:ring-2 focus:ring-primary text-base placeholder-slate-500" placeholder="Buscar locais" type="text"/>
+</label>
+<!-- Filter Chips -->
+<div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+<button class="flex-none px-5 py-2 rounded-full bg-primary text-white text-sm font-medium">Todos</button>
+<button class="flex-none px-5 py-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-medium border border-transparent hover:border-primary/30">Parques</button>
+<button class="flex-none px-5 py-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-medium border border-transparent hover:border-primary/30">Praças</button>
+<button class="flex-none px-5 py-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-medium border border-transparent hover:border-primary/30">Entretenimento</button>
+</div>
+</div>
+<!-- Main List Content -->
+<main class="flex-1 p-4 space-y-6 @container">
+<!-- Card 1: Jardim Botânico -->
+<div class="bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800">
+<div class="w-full aspect-video bg-center bg-cover" data-alt="Famous glass greenhouse in botanical garden Curitiba" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDO-so6IM2vP_GafNVMt-Tx7yab6tDH0cMzhRpERQwxUBU27laiOXrf79rpUc0qY9GHZ2isSX0-vlBEgrZQfPuHpQDXpAqx6XDaT_93_nUH3mgPpbgVJXri38ZshfHi8zV5ZPGdRDTxMX3d078fqfowGvV2fG77VsRBoNRc97IsYhmgfesF_nYz6ph5-1X2CQHWt6dvy1pifm02cPPBEV5zI6UGWMi2qz3h1sfeBjCR4r8j-VyI6EQZKL3zX2DC-kDHWcboRlv77tI');"></div>
+<div class="p-4 space-y-3">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="text-lg font-bold text-slate-900 dark:text-slate-100">Jardim Botânico</h3>
+<p class="text-xs font-semibold text-primary uppercase tracking-wider">PARQUE • 4.2 KM • <span class="text-green-600">ABERTO</span></p>
+</div>
+<button class="text-slate-400">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+</div>
+<p class="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
+                    Um dos cartões postais de Curitiba, com sua estufa icônica inspirada no Palácio de Cristal de Londres e jardins franceses impecáveis.
+                </p>
+<div class="flex gap-2 pt-2">
+<button class="flex-1 bg-primary text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors">Detalhes</button>
+<button class="flex-1 bg-primary/10 text-primary py-2.5 rounded-lg text-sm font-semibold hover:bg-primary/20 transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-sm">location_on</span> Ver no Mapa
+                    </button>
+</div>
+</div>
+</div>
+<!-- Card 2: Parque Barigui -->
+<div class="bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800">
+<div class="w-full aspect-video bg-center bg-cover" data-alt="Large sunny public park with lake and trees" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAfnFbD0xUeulKg-sqWvzvk6j16PjYPdyq4J7Jd_jFUkjHBpCF1a9WDtbPZGo05iJBt7186-QTzOVWSO1tm90fBvMre9qS-th2N309l-XHB6OXn3lzpseR_c4lMSef3pipAlg4M_kP6cVXKVDhxfwWAS6nfO5QxtMlWwsA5BytSp2cTPxqI1ocRa4WIONLbwLrxV0aCxse1wbIWLzNWMdHLXbyhqjF1Kd0iUaveONdQymQE551-PIb7kAxFwUCJIJYhXvJvhhotab0');"></div>
+<div class="p-4 space-y-3">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="text-lg font-bold text-slate-900 dark:text-slate-100">Parque Barigui</h3>
+<p class="text-xs font-semibold text-primary uppercase tracking-wider">PARQUE • 3.5 KM • <span class="text-green-600">ABERTO</span></p>
+</div>
+<button class="text-slate-400">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+</div>
+<p class="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
+                    O parque mais popular da cidade, ideal para caminhadas, piqueniques e observar as famosas capivaras que habitam o local.
+                </p>
+<div class="flex gap-2 pt-2">
+<button class="flex-1 bg-primary text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors">Detalhes</button>
+<button class="flex-1 bg-primary/10 text-primary py-2.5 rounded-lg text-sm font-semibold hover:bg-primary/20 transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-sm">location_on</span> Ver no Mapa
+                    </button>
+</div>
+</div>
+</div>
+<!-- Card 3: Parque Tanguá -->
+<div class="bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800">
+<div class="w-full aspect-video bg-center bg-cover" data-alt="Stunning park with sunset view and waterfall" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDojkLyTeCheicsD5nkYTrkckhLs9uWnkBxaqfi1XLSHGjPD5uIjhcBegJsUkejyVrzlqYHU-Wws97mTbAH_3bjoE48bGVI0pDouShMSYCNsolwAC-pCoXke9tPhbaVU3hzjf3s-jETPCj26BudVz1jIkM3Mlp3oamgh8ijgTNdSYp7DVmdu6J1Lqzu64FQGyYRbsbdILeN6fDpxvnUu2hcCyS8hHoNrFv639rvpX_PUKlZ26-xeKwkgUpXKXm6sjplKo1Mp_KR-1Y');"></div>
+<div class="p-4 space-y-3">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="text-lg font-bold text-slate-900 dark:text-slate-100">Parque Tanguá</h3>
+<p class="text-xs font-semibold text-primary uppercase tracking-wider">PARQUE • 7.1 KM • <span class="text-green-600">ABERTO</span></p>
+</div>
+<button class="text-slate-400">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+</div>
+<p class="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
+                    Conhecido pelo seu pôr do sol espetacular, o parque possui dois lagos, um túnel escavado na rocha e um belo jardim.
+                </p>
+<div class="flex gap-2 pt-2">
+<button class="flex-1 bg-primary text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors">Detalhes</button>
+<button class="flex-1 bg-primary/10 text-primary py-2.5 rounded-lg text-sm font-semibold hover:bg-primary/20 transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-sm">location_on</span> Ver no Mapa
+                    </button>
+</div>
+</div>
+</div>
+<div class="h-10"></div> <!-- Spacer for scrolling -->
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="sticky bottom-0 bg-white dark:bg-background-dark border-t border-slate-200 dark:border-slate-800 px-4 pb-6 pt-2 flex items-center justify-between">
+<a class="flex flex-col items-center gap-1 text-slate-500 dark:text-slate-400" href="#">
+<span class="material-symbols-outlined text-[24px]">home</span>
+<span class="text-[10px] font-medium">Início</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-primary" href="#">
+<span class="material-symbols-outlined text-[24px] fill-current">forest</span>
+<span class="text-[10px] font-medium">Lazer</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-500 dark:text-slate-400" href="#">
+<span class="material-symbols-outlined text-[24px]">favorite</span>
+<span class="text-[10px] font-medium">Saúde</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-500 dark:text-slate-400" href="#">
+<span class="material-symbols-outlined text-[24px]">group</span>
+<span class="text-[10px] font-medium">Social</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-500 dark:text-slate-400" href="#">
+<span class="material-symbols-outlined text-[24px]">person</span>
+<span class="text-[10px] font-medium">Perfil</span>
+</a>
+</nav>
+</body></html>
