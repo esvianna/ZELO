@@ -159,133 +159,129 @@ function zelo_import_google_place_photo( $post_id, $photo_reference, $place_name
 	return true;
 }
 
+// --- AJAX Importer Endpoints ---
+
 /**
- * Map a Zelo category to one or more Google Places API types.
- * Reads from the dynamic categories option.
+ * Step 1: Search for all place IDs based on criteria.
  */
-function zelo_get_google_types_for_category( $zelo_category ) {
-	$map = zelo_get_categories_map();
-	if ( isset( $map[ $zelo_category ] ) && ! empty( $map[ $zelo_category ]['google_types'] ) ) {
-		return $map[ $zelo_category ]['google_types'];
+function zelo_ajax_get_google_places_list() {
+	check_ajax_referer( 'zelo_import_places_nonce', 'nonce' );
+
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_send_json_error( array( 'message' => __( 'Sem permissão.', 'zelo-assistente' ) ) );
 	}
-	return array( 'pharmacy' ); // fallback
-}
 
-function zelo_import_google_places_run( $lat, $lng, $radius_m, $zelo_category ) {
-	// Prevent timeout during long imports
-	if ( ! ini_get( 'safe_mode' ) ) {
-		@set_time_limit( 300 ); // 5 minutes
-	}
-    // Map the zelo category to Google Places API types
-    $google_types = zelo_get_google_types_for_category( $zelo_category );
+	$lat      = floatval( $_POST['lat'] );
+	$lng      = floatval( $_POST['lng'] );
+	$radius_m = intval( $_POST['radius'] );
+	$zelo_cat = sanitize_key( $_POST['type'] );
 
-    // Determine grid points to maximize coverage beyond 60 results
-    $points = array(
-        array( 'lat' => $lat, 'lng' => $lng ) // Center
-    );
+	$google_types = zelo_get_google_types_for_category( $zelo_cat );
 
-    // If radius is large (>500m), add more points to try and get more results
+    $points = array( array( 'lat' => $lat, 'lng' => $lng ) );
     if ( $radius_m > 500 ) {
         $offset_lat = ($radius_m * 0.6) / 111111; 
         $offset_lng = ($radius_m * 0.6) / (111111 * cos(deg2rad($lat)));
-
-        $points[] = array( 'lat' => $lat + $offset_lat, 'lng' => $lng + $offset_lng ); // NE
-        $points[] = array( 'lat' => $lat - $offset_lat, 'lng' => $lng + $offset_lng ); // SE
-        $points[] = array( 'lat' => $lat - $offset_lat, 'lng' => $lng - $offset_lng ); // SW
-        $points[] = array( 'lat' => $lat + $offset_lat, 'lng' => $lng - $offset_lng ); // NW
+        $points[] = array( 'lat' => $lat + $offset_lat, 'lng' => $lng + $offset_lng );
+        $points[] = array( 'lat' => $lat - $offset_lat, 'lng' => $lng + $offset_lng );
+        $points[] = array( 'lat' => $lat - $offset_lat, 'lng' => $lng - $offset_lng );
+        $points[] = array( 'lat' => $lat + $offset_lat, 'lng' => $lng - $offset_lng );
     }
 
     $all_place_ids = array();
-
-    // For each Google type mapped to this zelo category, search all grid points
     foreach ( $google_types as $google_type ) {
         foreach ( $points as $p ) {
-            if ( count( $all_place_ids ) >= ZELO_PLACES_MAX_DETAILS_PER_RUN ) {
-                break 2;
-            }
-
             $place_ids = zelo_fetch_google_places_nearby( $p['lat'], $p['lng'], $radius_m, $google_type );
-            
-            if ( is_wp_error( $place_ids ) ) {
-                continue;
-            }
-
-            foreach ( $place_ids as $pid ) {
-                $all_place_ids[ $pid ] = true;
+            if ( ! is_wp_error( $place_ids ) ) {
+                foreach ( $place_ids as $pid ) {
+                    $all_place_ids[ $pid ] = true;
+                }
             }
         }
     }
 
     $unique_place_ids = array_keys( $all_place_ids );
-    
-    if ( count( $unique_place_ids ) > ZELO_PLACES_MAX_DETAILS_PER_RUN ) {
-        $unique_place_ids = array_slice( $unique_place_ids, 0, ZELO_PLACES_MAX_DETAILS_PER_RUN );
-    }
+	
+	// Limit to 100 per run for stability in the AJAX flow
+	if ( count( $unique_place_ids ) > 100 ) {
+		$unique_place_ids = array_slice( $unique_place_ids, 0, 100 );
+	}
 
-    if ( empty( $unique_place_ids ) ) {
-        return new WP_Error( 'no_results', __( 'Nenhum local encontrado em nenhum dos pontos de busca.', 'zelo-assistente' ) );
-    }
+	if ( empty( $unique_place_ids ) ) {
+		wp_send_json_error( array( 'message' => __( 'Nenhum local encontrado.', 'zelo-assistente' ) ) );
+	}
 
-	$zelo_type = $zelo_category;
-	$count_new = 0;
-	$count_updated = 0;
+	wp_send_json_success( array( 'place_ids' => $unique_place_ids ) );
+}
+add_action( 'wp_ajax_zelo_get_google_places_list', 'zelo_ajax_get_google_places_list' );
 
-	foreach ( $unique_place_ids as $place_id ) {
-		$detail = zelo_google_place_details( $place_id );
-		if ( $detail === null || ( $detail['lat'] === null && $detail['address'] === '' ) ) {
-			continue;
-		}
+/**
+ * Step 2: Import or update a single place by ID.
+ */
+function zelo_ajax_import_single_place() {
+	check_ajax_referer( 'zelo_import_places_nonce', 'nonce' );
 
-		$existing = get_posts( array(
-			'post_type'   => 'zelo_local',
-			'meta_key'    => '_zelo_google_place_id',
-			'meta_value'  => $place_id,
-			'post_status' => 'any',
-			'numberposts' => 1,
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_send_json_error( array( 'message' => __( 'Sem permissão.', 'zelo-assistente' ) ) );
+	}
+
+	$place_id = sanitize_text_field( $_POST['place_id'] );
+	$zelo_type = sanitize_key( $_POST['type'] );
+
+	$detail = zelo_google_place_details( $place_id );
+	if ( $detail === null || ( $detail['lat'] === null && $detail['address'] === '' ) ) {
+		wp_send_json_error( array( 'message' => __( 'Detalhes não encontrados.', 'zelo-assistente' ) ) );
+	}
+
+	$existing = get_posts( array(
+		'post_type'   => 'zelo_local',
+		'meta_key'    => '_zelo_google_place_id',
+		'meta_value'  => $place_id,
+		'post_status' => 'any',
+		'numberposts' => 1,
+	) );
+
+	$is_new = true;
+	if ( ! empty( $existing ) ) {
+		$post_id = $existing[0]->ID;
+		$is_new = false;
+	} else {
+		$post_id = wp_insert_post( array(
+			'post_title'   => $detail['name'] !== '' ? $detail['name'] : $place_id,
+			'post_type'    => 'zelo_local',
+			'post_status'  => 'publish',
+			'post_content' => $detail['website'] !== '' ? 'Site: ' . $detail['website'] : '',
 		) );
 
-		if ( ! empty( $existing ) ) {
-			$post_id = $existing[0]->ID;
-			$count_updated++;
-		} else {
-			$post_id = wp_insert_post( array(
-				'post_title'   => $detail['name'] !== '' ? $detail['name'] : ( $zelo_type === 'hospital' ? __( 'Hospital', 'zelo-assistente' ) : __( 'Farmácia', 'zelo-assistente' ) ),
-				'post_type'    => 'zelo_local',
-				'post_status'  => 'publish',
-				'post_content' => $detail['website'] !== '' ? 'Site: ' . $detail['website'] : '',
-			) );
-
-			if ( is_wp_error( $post_id ) ) {
-				continue;
-			}
-			$count_new++;
-		}
-
-		update_post_meta( $post_id, '_zelo_google_place_id', $place_id );
-		update_post_meta( $post_id, '_zelo_type', $zelo_type );
-		if ( $detail['lat'] !== null ) {
-			update_post_meta( $post_id, '_zelo_lat', $detail['lat'] );
-		}
-		if ( $detail['lng'] !== null ) {
-			update_post_meta( $post_id, '_zelo_lng', $detail['lng'] );
-		}
-		update_post_meta( $post_id, '_zelo_address', $detail['address'] );
-		update_post_meta( $post_id, '_zelo_phone', $detail['phone'] );
-		update_post_meta( $post_id, '_zelo_hours', $detail['hours'] );
-		update_post_meta( $post_id, '_zelo_24h', $detail['is_24h'] );
-
-		if ( $detail['website'] !== '' ) {
-			wp_update_post( array( 'ID' => $post_id, 'post_content' => 'Site: ' . $detail['website'] ) );
-		}
-
-		// Import photo if available and no thumbnail set yet
-		if ( ! empty( $detail['photo_ref'] ) && ! has_post_thumbnail( $post_id ) ) {
-			zelo_import_google_place_photo( $post_id, $detail['photo_ref'], $detail['name'] );
+		if ( is_wp_error( $post_id ) ) {
+			wp_send_json_error( array( 'message' => $post_id->get_error_message() ) );
 		}
 	}
 
-	return array( 'new' => $count_new, 'updated' => $count_updated );
+	update_post_meta( $post_id, '_zelo_google_place_id', $place_id );
+	update_post_meta( $post_id, '_zelo_type', $zelo_type );
+	if ( $detail['lat'] !== null ) update_post_meta( $post_id, '_zelo_lat', $detail['lat'] );
+	if ( $detail['lng'] !== null ) update_post_meta( $post_id, '_zelo_lng', $detail['lng'] );
+	update_post_meta( $post_id, '_zelo_address', $detail['address'] );
+	update_post_meta( $post_id, '_zelo_phone', $detail['phone'] );
+	update_post_meta( $post_id, '_zelo_hours', $detail['hours'] );
+	update_post_meta( $post_id, '_zelo_24h', $detail['is_24h'] );
+
+	if ( $detail['website'] !== '' ) {
+		wp_update_post( array( 'ID' => $post_id, 'post_content' => 'Site: ' . $detail['website'] ) );
+	}
+
+	$photo_saved = false;
+	if ( ! empty( $detail['photo_ref'] ) && ! has_post_thumbnail( $post_id ) ) {
+		$photo_saved = zelo_import_google_place_photo( $post_id, $detail['photo_ref'], $detail['name'] );
+	}
+
+	wp_send_json_success( array(
+		'status' => $is_new ? 'new' : 'updated',
+		'photo'  => $photo_saved
+	) );
 }
+add_action( 'wp_ajax_zelo_import_single_place', 'zelo_ajax_import_single_place' );
 
 function zelo_find_place_from_text( $query, $lat, $lng ) {
 	$api_key = get_option( 'zelo_google_places_api_key', '' );
@@ -397,56 +393,28 @@ function zelo_render_importer_places_section() {
 		return;
 	}
 	$event_data = get_option( 'zelo_event_data', array( 'lat' => '-23.5505', 'lng' => '-46.6333' ) );
-	$center_lat = $event_data['lat'];
-	$center_lng = $event_data['lng'];
-	$message = '';
-	$error   = '';
-	if ( isset( $_POST['zelo_run_import_places'] ) && check_admin_referer( 'zelo_import_places_nonce' ) ) {
-		$lat     = floatval( $_POST['places_lat'] );
-		$lng     = floatval( $_POST['places_lng'] );
-		$radius  = intval( $_POST['places_radius'] );
-		$valid_types = array_keys( zelo_get_categories_map() );
-		$type    = isset( $_POST['places_type'] ) && in_array( $_POST['places_type'], $valid_types, true ) ? $_POST['places_type'] : 'farmacia';
-		$result  = zelo_import_google_places_run( $lat, $lng, $radius, $type );
-		if ( is_wp_error( $result ) ) {
-			$error = $result->get_error_message();
-		} else {
-			$message = sprintf(
-				/* translators: 1: new count, 2: updated count */
-				__( 'Google Places: %1$d novos locais criados e %2$d atualizados.', 'zelo-assistente' ),
-				$result['new'],
-				$result['updated']
-			);
-		}
-	}
 	?>
 	<hr style="margin: 30px 0;">
 	<h2><?php esc_html_e( 'Importar do Google Places', 'zelo-assistente' ); ?></h2>
-	<p class="description"><?php esc_html_e( 'A Google Places API é paga. Esta ferramenta importa até 60 locais por vez para garantir a estabilidade do servidor e evitar custos excessivos.', 'zelo-assistente' ); ?></p>
-	<?php if ( $message ) : ?>
-		<div class="notice notice-success is-dismissible"><p><?php echo esc_html( $message ); ?></p></div>
-	<?php endif; ?>
-	<?php if ( $error ) : ?>
-		<div class="notice notice-error"><p><?php echo esc_html( $error ); ?></p></div>
-	<?php endif; ?>
-	<form method="post" action="">
-		<?php wp_nonce_field( 'zelo_import_places_nonce' ); ?>
+	<p class="description"><?php esc_html_e( 'A Google Places API é paga. Esta ferramenta importa até 100 locais por vez com barra de progresso em tempo real.', 'zelo-assistente' ); ?></p>
+	
+	<div id="zelo-places-importer" style="margin-top: 20px; background: #fff; border: 1px solid #ccd0d4; padding: 20px;">
 		<table class="form-table">
 			<tr>
 				<th scope="row"><?php esc_html_e( 'Centro da Busca', 'zelo-assistente' ); ?></th>
 				<td>
-					<input type="text" name="places_lat" value="<?php echo esc_attr( $center_lat ); ?>" placeholder="Latitude">
-					<input type="text" name="places_lng" value="<?php echo esc_attr( $center_lng ); ?>" placeholder="Longitude">
+					<input type="text" id="places_lat" value="<?php echo esc_attr( $event_data['lat'] ); ?>" placeholder="Latitude">
+					<input type="text" id="places_lng" value="<?php echo esc_attr( $event_data['lng'] ); ?>" placeholder="Longitude">
 				</td>
 			</tr>
 			<tr>
 				<th scope="row"><?php esc_html_e( 'Raio (metros)', 'zelo-assistente' ); ?></th>
-				<td><input type="number" name="places_radius" value="2000" step="100"> (Ex: 2000 = 2km)</td>
+				<td><input type="number" id="places_radius" value="2000" step="100"> (Ex: 2000 = 2km)</td>
 			</tr>
 			<tr>
 				<th scope="row"><?php esc_html_e( 'Tipo', 'zelo-assistente' ); ?></th>
 				<td>
-					<select name="places_type">
+					<select id="places_type">
 						<?php foreach ( zelo_get_categories_map() as $cat_slug => $cat_data ) : ?>
 							<option value="<?php echo esc_attr( $cat_slug ); ?>"><?php echo esc_html( $cat_data['label'] ); ?></option>
 						<?php endforeach; ?>
@@ -454,9 +422,123 @@ function zelo_render_importer_places_section() {
 				</td>
 			</tr>
 		</table>
+		
 		<p class="submit">
-			<input type="submit" name="zelo_run_import_places" class="button button-primary" value="<?php esc_attr_e( 'Buscar e Importar (Google Places)', 'zelo-assistente' ); ?>">
+			<button type="button" id="zelo-run-import-ajax" class="button button-primary"><?php esc_html_e( 'Buscar e Importar (Google Places)', 'zelo-assistente' ); ?></button>
 		</p>
-	</form>
+
+		<!-- Progress Area -->
+		<div id="zelo-progress-area" style="display:none; margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px;">
+			<div id="zelo-status-text" style="font-weight: 600; margin-bottom: 10px;">Buscando locais...</div>
+			<div style="background: #f0f0f1; border: 1px solid #ccd0d4; height: 25px; border-radius: 3px; overflow: hidden; position: relative;">
+				<div id="zelo-progress-bar" style="background: #2271b1; height: 100%; width: 0%; transition: width 0.3s ease;"></div>
+			</div>
+			<div id="zelo-count-progress" style="margin-top: 5px; font-size: 13px; color: #646970;">Aguarde...</div>
+		</div>
+
+		<!-- Final Report -->
+		<div id="zelo-report-area" style="display:none; margin-top: 20px; padding: 15px; background: #edfaef; border: 1px solid #46b450; border-radius: 3px;">
+			<h3 style="margin-top:0; color: #255b29;">✅ Importação Concluída</h3>
+			<ul style="margin: 0; padding-left: 20px;">
+				<li id="rep-total"></li>
+				<li id="rep-new"></li>
+				<li id="rep-updated"></li>
+				<li id="rep-photo"></li>
+			</ul>
+			<p style="margin-bottom: 0; margin-top: 10px;"><button type="button" class="button" onclick="location.reload();">Fechar e Recarregar</button></p>
+		</div>
+	</div>
+
+	<script>
+	(function($) {
+		$('#zelo-run-import-ajax').on('click', function(e) {
+			e.preventDefault();
+			
+			const $btn = $(this);
+			const $progressRow = $('#zelo-progress-area');
+			const $bar = $('#zelo-progress-bar');
+			const $status = $('#zelo-status-text');
+			const $count = $('#zelo-count-progress');
+			const $report = $('#zelo-report-area');
+
+			const data = {
+				action: 'zelo_get_google_places_list',
+				nonce: '<?php echo wp_create_nonce( 'zelo_import_places_nonce' ); ?>',
+				lat: $('#places_lat').val(),
+				lng: $('#places_lng').val(),
+				radius: $('#places_radius').val(),
+				type: $('#places_type').val()
+			};
+
+			$btn.prop('disabled', true);
+			$progressRow.show();
+			$report.hide();
+			$status.text('Buscando locais no Google...');
+			$bar.css('width', '5%');
+
+			$.post(ajaxurl, data, function(res) {
+				if (!res.success) {
+					alert(res.data.message || 'Erro ao buscar locais.');
+					$btn.prop('disabled', false);
+					$progressRow.hide();
+					return;
+				}
+
+				const placeIds = res.data.place_ids;
+				const total = placeIds.length;
+				let current = 0;
+				let countNew = 0;
+				let countUpdated = 0;
+				let countPhotos = 0;
+
+				$status.text('Importando locais...');
+				
+				function processNext() {
+					if (current >= total) {
+						$status.text('Concluído!');
+						$count.text('Todos os ' + total + ' locais foram processados.');
+						$('#rep-total').text('Total processado: ' + total);
+						$('#rep-new').text('Novos locais: ' + countNew);
+						$('#rep-updated').text('Locais atualizados: ' + countUpdated);
+						$('#rep-photo').text('Fotos importadas: ' + countPhotos);
+						$report.fadeIn();
+						return;
+					}
+
+					const pid = placeIds[current];
+					const pct = Math.floor( ((current + 1) / total) * 100 );
+					
+					$count.text('Processando ' + (current + 1) + ' de ' + total + '...');
+					$bar.css('width', pct + '%');
+
+					$.post(ajaxurl, {
+						action: 'zelo_import_single_place',
+						nonce: data.nonce,
+						place_id: pid,
+						type: data.type
+					}, function(importRes) {
+						if (importRes.success) {
+							if (importRes.data.status === 'new') countNew++;
+							else countUpdated++;
+							if (importRes.data.photo) countPhotos++;
+						}
+						current++;
+						processNext();
+					}).fail(function() {
+						// Continue even on failure of a single item
+						current++;
+						processNext();
+					});
+				}
+
+				processNext();
+
+			}).fail(function() {
+				alert('Erro crítico na comunicação com o servidor.');
+				$btn.prop('disabled', false);
+			});
+		});
+	})(jQuery);
+	</script>
 	<?php
 }

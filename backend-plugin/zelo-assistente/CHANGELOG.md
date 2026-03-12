@@ -2,6 +2,14 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.2.0] - 2026-03-12
+
+### Funcionalidades
+- **Importador AJAX com Barra de Progresso**: O importador do Google Places agora processa os locais um a um, evitando timeouts no servidor.
+- **Feedback Visual**: Barra de progresso em tempo real durante o processo de importação.
+- **Relatório Detalhado**: Resumo ao final da importação mostrando total processado, novos locais, locais atualizados e fotos importadas.
+- **Estabilidade**: Limite de importação ajustado para 100 itens por rodada via processamento assíncrono.
+
 ## [2.1.1] - 2026-03-12
 
 ### Correções
