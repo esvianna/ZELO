@@ -159,6 +159,18 @@ function zelo_import_google_place_photo( $post_id, $photo_reference, $place_name
 	return true;
 }
 
+/**
+ * Map a Zelo category to one or more Google Places API types.
+ * Reads from the dynamic categories option.
+ */
+function zelo_get_google_types_for_category( $zelo_category ) {
+	$map = zelo_get_categories_map();
+	if ( isset( $map[ $zelo_category ] ) && ! empty( $map[ $zelo_category ]['google_types'] ) ) {
+		return $map[ $zelo_category ]['google_types'];
+	}
+	return array( 'pharmacy' ); // fallback
+}
+
 // --- AJAX Importer Endpoints ---
 
 /**

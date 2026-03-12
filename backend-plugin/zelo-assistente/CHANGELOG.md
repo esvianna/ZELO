@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.2.1] - 2026-03-12
+
+### Correções
+- Corrigido erro fatal no novo importador AJAX causado por uma função faltante (`zelo_get_google_types_for_category`) que foi removida acidentalmente durante a refatoração.
+
 ## [2.2.0] - 2026-03-12
 
 ### Funcionalidades
