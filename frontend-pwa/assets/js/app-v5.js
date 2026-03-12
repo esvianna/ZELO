@@ -556,18 +556,20 @@ const app = {
         let items = this.data.locais;
 
         // 0. Pre-process items to extract metadata (Bairro, Cidade) if not present
-        // This is a naive extraction based on typical "Address - Bairro, Cidade - UF" format
         items.forEach(item => {
             if (!item._bairro || !item._cidade) {
-                const parts = item.address ? item.address.split('-') : [];
-                if (parts.length >= 3) {
-                    item._bairro = parts[parts.length - 3].trim();
-                    item._cidade = parts[parts.length - 2].trim().split(',')[0].trim();
-                } else if (parts.length === 2) {
-                    // Fallback for simpler addresses
-                    const subParts = parts[1].split(',');
-                    if (subParts.length >= 2) {
-                        item._cidade = subParts[0].trim();
+                // Format usually: "R. Olindo Sequinel, 88 - Pinheirinho, Curitiba - PR, 81870-130, Brasil"
+                const parts = item.address ? item.address.split(' - ') : [];
+                if (parts.length >= 2) {
+                    // Part 0: R. Olindo Sequinel, 88
+                    // Part 1: Pinheirinho, Curitiba
+                    // Part 2: PR, 81870-130, Brasil
+                    const middlePart = parts[1].split(',');
+                    if (middlePart.length >= 2) {
+                        item._bairro = middlePart[0].trim();
+                        item._cidade = middlePart[1].trim();
+                    } else {
+                        item._cidade = middlePart[0].trim();
                     }
                 }
             }
@@ -602,28 +604,7 @@ const app = {
 
         // Open Now
         if (this.data.listOpenNow) {
-            filtered = filtered.filter(i => {
-                const now = new Date();
-                const currentDay = now.toLocaleDateString('pt-BR', { weekday: 'long' }).toLowerCase();
-                const currentHour = now.getHours();
-                const currentMin = now.getMinutes();
-                const currentTime = currentHour * 60 + currentMin;
-
-                // Simple check: is_24h or basic parsing (reuse parsing logic from renderDetail conceptually)
-                if (i.is_24h == '1') return true;
-                if (!i.hours) return false; // Assume closed if no hours data
-
-                // Parsing simplified logic here or strictly reuse logic if extracted
-                // For MVP, checking is_24h is the most reliable signal we added. 
-                // Parsing text hours "Segunda-feira: 08:00 - 18:00" is complex to do accurately without the structured parser.
-                // Let's assume for now "Aberto Agora" relies strongly on 24h OR if we implement the parser here.
-                // Given user request "Abertas Agora" (plural), let's try to be smart.
-
-                // If we want to support non-24h, we need the parser. 
-                // For safety in this step, let's filter by 24h explicitly as it's 100% sure, 
-                // and maybe todo: extract parseHours to a helper to use here.
-                return i.is_24h == '1';
-            });
+            filtered = filtered.filter(i => this.isItemOpen(i));
         }
 
         // 3. Sort
@@ -784,6 +765,50 @@ const app = {
         container.innerHTML = html;
     },
 
+    isItemOpen(item) {
+        if (item.is_24h == '1') return true;
+        if (!item.hours) return false;
+
+        const now = new Date();
+        const currentDay = now.toLocaleDateString('pt-BR', { weekday: 'long' }).toLowerCase();
+        const currentHour = now.getHours();
+        const currentMin = now.getMinutes();
+        const currentTime = currentHour * 60 + currentMin;
+
+        // format: "Segunda-feira: 08:00 - 18:00; Terça-feira: ..."
+        const days = item.hours.split(';').map(d => d.trim().toLowerCase());
+        const dayInfo = days.find(d => d.startsWith(currentDay));
+
+        if (!dayInfo) return false;
+
+        // extract time range: "08:00 - 18:00"
+        const timePart = dayInfo.split(':')[1];
+        if (!timePart || timePart.includes('fechado')) return false;
+
+        const ranges = timePart.split('–').map(t => t.trim()); // Note: using both dash types to be safe
+        if (ranges.length < 2) {
+             const fallbackRanges = timePart.split('-').map(t => t.trim());
+             if (fallbackRanges.length < 2) return false;
+             return this._checkTimeRange(fallbackRanges[0], fallbackRanges[1], currentTime);
+        }
+
+        return this._checkTimeRange(ranges[0], ranges[1], currentTime);
+    },
+
+    _checkTimeRange(startStr, endStr, currentTime) {
+        const parse = (s) => {
+            const [h, m] = s.split(':').map(Number);
+            return h * 60 + m;
+        };
+        const start = parse(startStr);
+        const end = parse(endStr);
+
+        if (end < start) { // Overnights (ex: 22:00 - 06:00)
+            return currentTime >= start || currentTime <= end;
+        }
+        return currentTime >= start && currentTime <= end;
+    },
+
     renderDetail(id) {
         const container = document.getElementById('detail-container');
         const item = this.data.locais.find(i => i.id == id);
@@ -821,10 +846,11 @@ const app = {
         };
 
         let hoursHtml = `<div class="text-muted" style="padding:0.5rem 0;">${i18n.t('closed_status')}</div>`;
-        let statusText = i18n.t('check_hours');
-        let statusClass = 'closed';
+        const isOpen = this.isItemOpen(item);
+        let statusText = isOpen ? i18n.t('open_status') : i18n.t('closed_status');
+        let statusClass = isOpen ? 'open-tag' : 'closed-tag';
 
-        if (item.is_24h) {
+        if (item.is_24h == '1') {
             hoursHtml = `<div class="schedule-table"><div class="schedule-row"><span class="day">Todos os dias</span><span class="hours">24 Horas</span></div></div>`;
             statusText = i18n.t('open_status');
             statusClass = '';

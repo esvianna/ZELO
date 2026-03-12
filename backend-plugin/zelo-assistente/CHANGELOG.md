@@ -2,6 +2,13 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.4.2] - 2026-03-12
+
+### Correções (PWA)
+- **Filtro "Aberto agora"**: Implementado parser de horários inteligente que valida a abertura em tempo real, além de locais 24h.
+- **Filtros de Localidade**: Refinada a extração de Bairro e Cidade do endereço para evitar dados duplicados ou incorretos nos dropdowns.
+- **Status de Funcionamento**: Novo distintivo visual de "Aberto" ou "Fechado" nos detalhes baseado no horário real.
+
 ## [2.4.1] - 2026-03-12
 
 ### Correções
