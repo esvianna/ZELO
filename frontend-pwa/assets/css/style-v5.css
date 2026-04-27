@@ -17,7 +17,7 @@
     background: #ffffff;
     border-radius: 10px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-    min-width: 170px;
+    min-width: 220px;
     overflow: hidden;
 }
 
@@ -35,8 +35,8 @@
 
 .zelo-map-legend-body {
     padding: 8px 10px;
-    max-height: 180px;
-    overflow-y: auto;
+    max-height: 320px;
+    overflow-y: hidden;
 }
 
 .zelo-map-legend.is-collapsed .zelo-map-legend-body {
