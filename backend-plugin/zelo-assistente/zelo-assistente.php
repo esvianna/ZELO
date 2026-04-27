@@ -19,6 +19,7 @@ define( 'ZELO_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 require_once ZELO_PLUGIN_DIR . 'inc/categories.php';
 require_once ZELO_PLUGIN_DIR . 'inc/post-types.php';
 require_once ZELO_PLUGIN_DIR . 'inc/meta-boxes.php';
+require_once ZELO_PLUGIN_DIR . 'inc/volunteer-ops.php';
 require_once ZELO_PLUGIN_DIR . 'inc/api-routes.php';
 require_once ZELO_PLUGIN_DIR . 'inc/zelo-auth-api.php'; // Auth API
 if ( is_admin() ) {

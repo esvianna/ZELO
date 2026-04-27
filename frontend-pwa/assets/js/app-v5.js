@@ -3,6 +3,7 @@ const app = {
         locais: [],
         evento: null,
         categoriesMeta: {},
+        volunteerOps: null,
         currentCategory: null,
         // Pagination & Filter State
         listPage: 1,
@@ -148,6 +149,8 @@ const app = {
                     app.renderEmergency();
                 } else if (viewId === 'evento') {
                     app.renderEventInfo();
+                } else if (viewId === 'escala') {
+                    app.renderVolunteerOps();
                 }
 
                 // Render Home components if on home
@@ -256,6 +259,12 @@ const app = {
                     // Update UI
                     this.updateUI();
 
+                    if (this.user.caps && this.user.caps.view_ops) {
+                        app.data.volunteerOps = await API.getVolunteerOps();
+                    } else {
+                        app.data.volunteerOps = null;
+                    }
+
                     // Redirect
                     app.router.navigate('home');
 
@@ -280,6 +289,7 @@ const app = {
         logout() {
             this.user = null;
             localStorage.removeItem('zelo_user');
+            app.data.volunteerOps = null;
             this.updateUI();
             app.router.navigate('home');
         },
@@ -373,6 +383,10 @@ const app = {
             this.data.locais = locais || [];
             this.data.evento = evento || {};
             this.data.categoriesMeta = this.buildCategoryMeta(categorias || []);
+
+            if (this.auth.user && this.auth.user.caps && this.auth.user.caps.view_ops) {
+                this.data.volunteerOps = await API.getVolunteerOps();
+            }
 
             console.log('Data loaded', this.data);
 
@@ -1105,6 +1119,159 @@ const app = {
                 console.error('Copy failed', err);
             }
         }
+    },
+
+    canViewOps() {
+        return !!(this.auth.user && this.auth.user.caps && this.auth.user.caps.view_ops);
+    },
+
+    canReallocateOps() {
+        return !!(this.auth.user && this.auth.user.caps && this.auth.user.caps.reallocate_ops);
+    },
+
+    async openVolunteerOps() {
+        if (!this.auth.user) {
+            this.router.navigate('login');
+            return;
+        }
+        if (!this.canViewOps()) {
+            alert('Seu perfil não possui acesso à escala operacional.');
+            return;
+        }
+        if (!this.data.volunteerOps) {
+            this.data.volunteerOps = await API.getVolunteerOps();
+        }
+        this.router.navigate('escala');
+    },
+
+    getOpsDayLabel(day) {
+        const map = { sexta: 'Sexta', sabado: 'Sábado', domingo: 'Domingo' };
+        return map[day] || day;
+    },
+
+    getCheckinStatus(assignmentId) {
+        const checkins = this.data.volunteerOps?.checkins || {};
+        return checkins[assignmentId] || { status: 'pending' };
+    },
+
+    async doCheckin(assignmentId) {
+        try {
+            const result = await API.checkinVolunteer(assignmentId);
+            if (this.data.volunteerOps) this.data.volunteerOps.checkins = result.checkins || {};
+            this.renderVolunteerOps();
+        } catch (err) {
+            alert('Não foi possível confirmar chegada.');
+        }
+    },
+
+    async doCheckout(assignmentId) {
+        try {
+            const result = await API.checkoutVolunteer(assignmentId);
+            if (this.data.volunteerOps) this.data.volunteerOps.checkins = result.checkins || {};
+            this.renderVolunteerOps();
+        } catch (err) {
+            alert('Não foi possível confirmar saída.');
+        }
+    },
+
+    async doReallocate(assignmentId) {
+        if (!this.canReallocateOps()) return;
+        const newLocation = prompt('Informe o novo local de atuação:');
+        if (!newLocation) return;
+        try {
+            const result = await API.reallocateVolunteer(assignmentId, newLocation);
+            this.data.volunteerOps = result.data || this.data.volunteerOps;
+            this.renderVolunteerOps();
+        } catch (err) {
+            alert('Falha na realocação.');
+        }
+    },
+
+    renderVolunteerOps() {
+        const container = document.getElementById('volunteer-ops-container');
+        if (!container) return;
+
+        if (!this.auth.user) {
+            container.innerHTML = '<div class="loading">Faça login para acessar a escala operacional.</div>';
+            return;
+        }
+        if (!this.canViewOps()) {
+            container.innerHTML = '<div class="loading">Seu perfil não possui permissão para visualizar a escala.</div>';
+            return;
+        }
+
+        const ops = this.data.volunteerOps;
+        if (!ops || !Array.isArray(ops.schedule)) {
+            container.innerHTML = '<div class="loading">Carregando escala operacional...</div>';
+            return;
+        }
+
+        const selectedDay = document.getElementById('ops-day-filter')?.value || '';
+        const selectedShift = document.getElementById('ops-shift-filter')?.value || '';
+        const selectedLanguage = (document.getElementById('ops-language-filter')?.value || '').toLowerCase();
+
+        let items = ops.schedule.slice();
+        if (selectedDay) items = items.filter(i => i.day === selectedDay);
+        if (selectedShift) items = items.filter(i => i.shift === selectedShift);
+        if (selectedLanguage) {
+            items = items.filter(i => (i.languages || []).some(lang => String(lang).toLowerCase().includes(selectedLanguage)));
+        }
+
+        const governance = ops.governance || {};
+        const governanceHtml = Object.entries(governance).map(([day, data]) => `
+            <div class="ops-governance-card">
+                <h4>${this.getOpsDayLabel(day)}</h4>
+                <p><strong>Grupo A:</strong> ${data.group_a_supervisor || '-'}</p>
+                <p><strong>Grupo B:</strong> ${data.group_b_supervisor || '-'}</p>
+                <p><strong>Supervisor App:</strong> ${data.app_supervisor || '-'}</p>
+                <p><strong>Homens-chave:</strong> ${data.keymen ? Object.entries(data.keymen).map(([shift, person]) => `${shift}: ${person}`).join(' | ') : '-'}</p>
+            </div>
+        `).join('');
+
+        const scheduleHtml = items.map(item => {
+            const status = this.getCheckinStatus(item.id);
+            const isCheckedIn = status.status === 'checked_in';
+            const isCheckedOut = status.status === 'checked_out';
+            return `
+                <div class="ops-schedule-card">
+                    <div class="ops-card-head">
+                        <h4>${item.volunteer_name || 'Voluntário'}</h4>
+                        <span class="ops-tag">${this.getOpsDayLabel(item.day)} • ${item.shift}</span>
+                    </div>
+                    <p><strong>Local:</strong> ${item.location || '-'}</p>
+                    <p><strong>Horário:</strong> ${item.start || '-'} às ${item.end || '-'}</p>
+                    <p><strong>Idiomas:</strong> ${(item.languages || []).join(', ') || '-'}</p>
+                    <div class="ops-actions">
+                        <button class="button ${isCheckedIn ? 'button-primary' : ''}" onclick="app.doCheckin('${item.id}')">Check-in</button>
+                        <button class="button ${isCheckedOut ? 'button-primary' : ''}" onclick="app.doCheckout('${item.id}')">Check-out</button>
+                        ${this.canReallocateOps() ? `<button class="button" onclick="app.doReallocate('${item.id}')">Realocar</button>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        container.innerHTML = `
+            <div class="ops-filters">
+                <select id="ops-day-filter" onchange="app.renderVolunteerOps()">
+                    <option value="">Todos os dias</option>
+                    <option value="sexta" ${selectedDay === 'sexta' ? 'selected' : ''}>Sexta</option>
+                    <option value="sabado" ${selectedDay === 'sabado' ? 'selected' : ''}>Sábado</option>
+                    <option value="domingo" ${selectedDay === 'domingo' ? 'selected' : ''}>Domingo</option>
+                </select>
+                <select id="ops-shift-filter" onchange="app.renderVolunteerOps()">
+                    <option value="">Todos os turnos</option>
+                    <option value="A1" ${selectedShift === 'A1' ? 'selected' : ''}>A1</option>
+                    <option value="B1" ${selectedShift === 'B1' ? 'selected' : ''}>B1</option>
+                    <option value="A2" ${selectedShift === 'A2' ? 'selected' : ''}>A2</option>
+                    <option value="B2" ${selectedShift === 'B2' ? 'selected' : ''}>B2</option>
+                </select>
+                <input id="ops-language-filter" value="${selectedLanguage}" oninput="app.renderVolunteerOps()" placeholder="Filtrar idioma">
+            </div>
+            <h3>Responsáveis por dia</h3>
+            <div class="ops-governance-grid">${governanceHtml || '<p class="text-muted">Sem dados de governança.</p>'}</div>
+            <h3 style="margin-top:1rem;">Escala detalhada</h3>
+            <div class="ops-schedule-grid">${scheduleHtml || '<div class="loading">Nenhuma designação encontrada para os filtros selecionados.</div>'}</div>
+        `;
     },
 
     renderEmergency() {

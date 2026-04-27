@@ -45,6 +45,12 @@ function zelo_api_login($request) {
             'email' => $user->user_email,
             'avatar' => $avatar_url,
             'roles' => $roles,
+            'caps' => [
+                'view_ops' => user_can( $user, 'zelo_view_ops' ),
+                'checkin_ops' => user_can( $user, 'zelo_checkin_ops' ),
+                'reallocate_ops' => user_can( $user, 'zelo_reallocate_volunteer' ),
+                'manage_ops' => user_can( $user, 'zelo_manage_ops' ),
+            ],
         ],
         'nonce' => wp_create_nonce('wp_rest'), // For future authorized requests
     ]);

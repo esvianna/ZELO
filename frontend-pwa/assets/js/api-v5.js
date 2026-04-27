@@ -6,7 +6,22 @@ const API = {
     cache: {
         locais: null,
         evento: null,
-        categorias: null
+        categorias: null,
+        volunteerOps: null
+    },
+
+    getAuthHeaders() {
+        const storedUser = localStorage.getItem('zelo_user');
+        if (!storedUser) return {};
+        try {
+            const user = JSON.parse(storedUser);
+            if (user && user.nonce) {
+                return { 'X-WP-Nonce': user.nonce };
+            }
+        } catch (err) {
+            console.warn('Falha ao ler usuário para nonce', err);
+        }
+        return {};
     },
 
     async getLocais(params = {}) {
@@ -75,5 +90,71 @@ const API = {
             }
             return [];
         }
+    },
+
+    async getVolunteerOps() {
+        const url = `${this.baseUrl}/ops/voluntarios?_t=${Date.now()}`;
+        try {
+            const response = await fetch(url, {
+                headers: this.getAuthHeaders(),
+                credentials: 'same-origin'
+            });
+            if (!response.ok) throw new Error('Ops API unavailable');
+            const data = await response.json();
+            this.cache.volunteerOps = data;
+            return data;
+        } catch (error) {
+            console.warn('Falha ao carregar operação de voluntários', error);
+            return null;
+        }
+    },
+
+    async checkinVolunteer(assignmentId) {
+        const url = `${this.baseUrl}/ops/checkin`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...this.getAuthHeaders()
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ assignment_id: assignmentId })
+        });
+        if (!response.ok) throw new Error('Falha no check-in');
+        return response.json();
+    },
+
+    async checkoutVolunteer(assignmentId) {
+        const url = `${this.baseUrl}/ops/checkout`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...this.getAuthHeaders()
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ assignment_id: assignmentId })
+        });
+        if (!response.ok) throw new Error('Falha no check-out');
+        return response.json();
+    },
+
+    async reallocateVolunteer(assignmentId, newLocation, newShift = '') {
+        const url = `${this.baseUrl}/ops/reallocate`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...this.getAuthHeaders()
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+                assignment_id: assignmentId,
+                new_location: newLocation,
+                new_shift: newShift
+            })
+        });
+        if (!response.ok) throw new Error('Falha na realocação');
+        return response.json();
     }
 };

@@ -22,8 +22,44 @@ function zelo_register_api_routes() {
 		'callback' => 'zelo_get_categorias',
 		'permission_callback' => '__return_true',
 	) );
+
+	register_rest_route( 'zelo/v1', '/ops/voluntarios', array(
+		'methods'  => 'GET',
+		'callback' => 'zelo_get_ops_voluntarios',
+		'permission_callback' => 'zelo_rest_can_view_ops',
+	) );
+
+	register_rest_route( 'zelo/v1', '/ops/checkin', array(
+		'methods'  => 'POST',
+		'callback' => 'zelo_ops_checkin',
+		'permission_callback' => 'zelo_rest_can_checkin_ops',
+	) );
+
+	register_rest_route( 'zelo/v1', '/ops/checkout', array(
+		'methods'  => 'POST',
+		'callback' => 'zelo_ops_checkout',
+		'permission_callback' => 'zelo_rest_can_checkin_ops',
+	) );
+
+	register_rest_route( 'zelo/v1', '/ops/reallocate', array(
+		'methods'  => 'POST',
+		'callback' => 'zelo_ops_reallocate',
+		'permission_callback' => 'zelo_rest_can_reallocate_ops',
+	) );
 }
 add_action( 'rest_api_init', 'zelo_register_api_routes' );
+
+function zelo_rest_can_view_ops() {
+	return is_user_logged_in() && zelo_can_view_ops();
+}
+
+function zelo_rest_can_checkin_ops() {
+	return is_user_logged_in() && current_user_can( 'zelo_checkin_ops' );
+}
+
+function zelo_rest_can_reallocate_ops() {
+	return is_user_logged_in() && zelo_is_reallocator();
+}
 
 function zelo_get_locais( $request ) {
 	$lat = $request->get_param( 'lat' );
@@ -167,6 +203,94 @@ function zelo_get_evento() {
 	);
 
 	return rest_ensure_response( $response );
+}
+
+function zelo_get_ops_voluntarios() {
+	return rest_ensure_response( zelo_get_volunteer_ops_payload() );
+}
+
+function zelo_ops_checkin( $request ) {
+	$assignment_id = sanitize_text_field( $request->get_param( 'assignment_id' ) );
+	if ( $assignment_id === '' ) {
+		return new WP_Error( 'zelo_missing_assignment', __( 'assignment_id é obrigatório.', 'zelo-assistente' ), array( 'status' => 400 ) );
+	}
+
+	$checkins                     = zelo_get_volunteer_checkins();
+	$checkins[ $assignment_id ]   = array(
+		'status'     => 'checked_in',
+		'check_in_at'=> current_time( 'mysql' ),
+		'check_out_at' => isset( $checkins[ $assignment_id ]['check_out_at'] ) ? $checkins[ $assignment_id ]['check_out_at'] : '',
+		'updated_by' => get_current_user_id(),
+	);
+	update_option( 'zelo_volunteer_checkins', $checkins );
+
+	return rest_ensure_response( array( 'success' => true, 'checkins' => $checkins ) );
+}
+
+function zelo_ops_checkout( $request ) {
+	$assignment_id = sanitize_text_field( $request->get_param( 'assignment_id' ) );
+	if ( $assignment_id === '' ) {
+		return new WP_Error( 'zelo_missing_assignment', __( 'assignment_id é obrigatório.', 'zelo-assistente' ), array( 'status' => 400 ) );
+	}
+
+	$checkins                   = zelo_get_volunteer_checkins();
+	$current                    = isset( $checkins[ $assignment_id ] ) ? $checkins[ $assignment_id ] : array();
+	$checkins[ $assignment_id ] = array(
+		'status'       => 'checked_out',
+		'check_in_at'  => isset( $current['check_in_at'] ) ? $current['check_in_at'] : '',
+		'check_out_at' => current_time( 'mysql' ),
+		'updated_by'   => get_current_user_id(),
+	);
+	update_option( 'zelo_volunteer_checkins', $checkins );
+
+	return rest_ensure_response( array( 'success' => true, 'checkins' => $checkins ) );
+}
+
+function zelo_ops_reallocate( $request ) {
+	$assignment_id = sanitize_text_field( $request->get_param( 'assignment_id' ) );
+	$new_location  = sanitize_text_field( $request->get_param( 'new_location' ) );
+	$new_shift     = sanitize_text_field( $request->get_param( 'new_shift' ) );
+
+	if ( $assignment_id === '' ) {
+		return new WP_Error( 'zelo_missing_assignment', __( 'assignment_id é obrigatório.', 'zelo-assistente' ), array( 'status' => 400 ) );
+	}
+
+	$data      = zelo_get_volunteer_ops_data();
+	$updated   = false;
+	$history_i = 'history';
+	if ( ! isset( $data[ $history_i ] ) || ! is_array( $data[ $history_i ] ) ) {
+		$data[ $history_i ] = array();
+	}
+
+	foreach ( $data['schedule'] as &$item ) {
+		if ( ! isset( $item['id'] ) || $item['id'] !== $assignment_id ) {
+			continue;
+		}
+		if ( $new_location !== '' ) {
+			$item['location'] = $new_location;
+		}
+		if ( $new_shift !== '' ) {
+			$item['shift'] = $new_shift;
+		}
+		$updated = true;
+		$data['history'][] = array(
+			'type'          => 'reallocation',
+			'assignment_id' => $assignment_id,
+			'new_location'  => $new_location,
+			'new_shift'     => $new_shift,
+			'user_id'       => get_current_user_id(),
+			'at'            => current_time( 'mysql' ),
+		);
+		break;
+	}
+	unset( $item );
+
+	if ( ! $updated ) {
+		return new WP_Error( 'zelo_assignment_not_found', __( 'Designação não encontrada.', 'zelo-assistente' ), array( 'status' => 404 ) );
+	}
+
+	update_option( 'zelo_volunteer_ops_data', $data );
+	return rest_ensure_response( array( 'success' => true, 'data' => zelo_get_volunteer_ops_payload() ) );
 }
 
 function zelo_calculate_distance( $lat1, $lon1, $lat2, $lon2 ) {

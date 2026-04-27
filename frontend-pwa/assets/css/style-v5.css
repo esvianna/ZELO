@@ -1351,6 +1351,66 @@ body {
     color: var(--text-secondary);
 }
 
+.ops-filters {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.ops-filters select,
+.ops-filters input {
+    width: 100%;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 8px;
+    font-family: var(--font-family);
+}
+
+.ops-governance-grid,
+.ops-schedule-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+.ops-governance-card,
+.ops-schedule-card {
+    background: var(--surface-color);
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 12px;
+}
+
+.ops-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.ops-card-head h4 {
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.ops-tag {
+    background: #eef2ff;
+    color: #4338ca;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    padding: 3px 8px;
+    font-weight: 600;
+}
+
+.ops-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
 /* Auth Forms */
 .form-input {
     width: 100%;
