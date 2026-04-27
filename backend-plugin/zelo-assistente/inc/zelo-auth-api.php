@@ -33,6 +33,14 @@ function zelo_api_login($request) {
         );
     }
 
+    if ( function_exists( 'zelo_user_email_verified' ) && ! zelo_user_email_verified( $user->ID ) ) {
+        return new WP_Error(
+            'zelo_email_not_verified',
+            __( 'Confirme seu e-mail antes de entrar. Verifique a caixa de entrada.', 'zelo-assistente' ),
+            array( 'status' => 403 )
+        );
+    }
+
     // Get User Data
     $avatar_url = get_avatar_url($user->ID);
     $roles = $user->roles;

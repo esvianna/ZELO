@@ -79,9 +79,15 @@ function zelo_get_volunteer_ops_default_data() {
 		),
 		'schedule'   => array(),
 		'indoor_map' => array(),
+		'history'    => array(),
 		'settings'   => array(
-			'notify_24h'      => true,
+			'notify_24h'        => true,
 			'notify_before_min' => 30,
+			'event_dates'       => array(
+				'sexta'   => '',
+				'sabado'  => '',
+				'domingo' => '',
+			),
 		),
 	);
 }
@@ -95,7 +101,18 @@ function zelo_get_volunteer_ops_data() {
 	$data['governance'] = isset( $data['governance'] ) && is_array( $data['governance'] ) ? $data['governance'] : array();
 	$data['schedule']   = isset( $data['schedule'] ) && is_array( $data['schedule'] ) ? $data['schedule'] : array();
 	$data['indoor_map'] = isset( $data['indoor_map'] ) && is_array( $data['indoor_map'] ) ? $data['indoor_map'] : array();
-	$data['settings']   = isset( $data['settings'] ) && is_array( $data['settings'] ) ? $data['settings'] : array();
+	$data['history']    = isset( $data['history'] ) && is_array( $data['history'] ) ? $data['history'] : array();
+	$data['settings'] = isset( $data['settings'] ) && is_array( $data['settings'] ) ? $data['settings'] : array();
+	$def               = zelo_get_volunteer_ops_default_data();
+	if ( ! isset( $data['settings']['event_dates'] ) || ! is_array( $data['settings']['event_dates'] ) ) {
+		$data['settings']['event_dates'] = isset( $def['settings']['event_dates'] ) ? $def['settings']['event_dates'] : array();
+	} elseif ( isset( $def['settings']['event_dates'] ) && is_array( $def['settings']['event_dates'] ) ) {
+		foreach ( $def['settings']['event_dates'] as $dk => $dv ) {
+			if ( ! array_key_exists( $dk, $data['settings']['event_dates'] ) ) {
+				$data['settings']['event_dates'][ $dk ] = $dv;
+			}
+		}
+	}
 	return $data;
 }
 
@@ -119,60 +136,68 @@ function zelo_is_reallocator( $user_id = 0 ) {
 	return $user && $user->exists() && user_can( $user, 'zelo_reallocate_volunteer' );
 }
 
-function zelo_get_volunteer_ops_payload() {
+/**
+ * Resposta da API de operações (escala, governança, extras).
+ *
+ * @param array $args {
+ *   @type int  $user_id             Utilizador para filtrar swaps e permissão de history.
+ *   @type bool $mine_schedule_only  Se true, devolve só linhas da escala com wp_user_id = user_id.
+ * }
+ * @return array
+ */
+function zelo_get_volunteer_ops_payload( $args = array() ) {
+	$args = wp_parse_args(
+		$args,
+		array(
+			'user_id'             => 0,
+			'mine_schedule_only'  => false,
+		)
+	);
+	$uid = (int) $args['user_id'];
+
 	$data     = zelo_get_volunteer_ops_data();
 	$checkins = zelo_get_volunteer_checkins();
 
-	return array(
-		'governance' => $data['governance'],
-		'schedule'   => $data['schedule'],
-		'indoor_map' => $data['indoor_map'],
-		'settings'   => $data['settings'],
-		'checkins'   => $checkins,
-	);
-}
+	$schedule = $data['schedule'];
+	if ( ! empty( $args['mine_schedule_only'] ) && $uid > 0 ) {
+		$schedule = array_values(
+			array_filter(
+				$schedule,
+				function ( $row ) use ( $uid ) {
+					return isset( $row['wp_user_id'] ) && (int) $row['wp_user_id'] === $uid;
+				}
+			)
+		);
+	}
 
-function zelo_register_volunteer_ops_admin_page() {
-	add_submenu_page(
-		'edit.php?post_type=zelo_local',
-		__( 'Operação de Voluntários', 'zelo-assistente' ),
-		__( 'Operação Voluntários', 'zelo-assistente' ),
-		'manage_options',
-		'zelo-volunteer-ops',
-		'zelo_render_volunteer_ops_admin_page'
-	);
-}
-add_action( 'admin_menu', 'zelo_register_volunteer_ops_admin_page' );
+	$include_history = $uid > 0 && zelo_is_ops_manager( $uid );
+	$history_out     = array();
+	if ( $include_history && ! empty( $data['history'] ) && is_array( $data['history'] ) ) {
+		$rev = array_reverse( $data['history'] );
+		$history_out = array_slice( $rev, 0, 200 );
+	}
 
-function zelo_render_volunteer_ops_admin_page() {
-	$message = '';
-	if ( isset( $_POST['zelo_save_ops_data'] ) && check_admin_referer( 'zelo_save_ops_data_nonce' ) ) {
-		$raw_json = isset( $_POST['zelo_ops_json'] ) ? wp_unslash( $_POST['zelo_ops_json'] ) : '';
-		$decoded  = json_decode( $raw_json, true );
-		if ( is_array( $decoded ) ) {
-			update_option( 'zelo_volunteer_ops_data', $decoded );
-			$message = __( 'Dados operacionais salvos com sucesso.', 'zelo-assistente' );
-		} else {
-			$message = __( 'JSON inválido. Revise o conteúdo antes de salvar.', 'zelo-assistente' );
+	$swap_requests = array();
+	if ( function_exists( 'zelo_get_swap_requests' ) ) {
+		$all_sw = zelo_get_swap_requests();
+		if ( $uid > 0 && ( zelo_is_ops_manager( $uid ) || zelo_is_reallocator( $uid ) ) ) {
+			$swap_requests = $all_sw;
+		} elseif ( $uid > 0 ) {
+			foreach ( $all_sw as $s ) {
+				if ( isset( $s['requester_id'] ) && (int) $s['requester_id'] === $uid ) {
+					$swap_requests[] = $s;
+				}
+			}
 		}
 	}
 
-	$data_json = wp_json_encode( zelo_get_volunteer_ops_data(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE );
-	?>
-	<div class="wrap">
-		<h1><?php esc_html_e( 'Operação de Voluntários', 'zelo-assistente' ); ?></h1>
-		<p class="description"><?php esc_html_e( 'Configure escala, governança, mapa interno e parâmetros operacionais em formato JSON.', 'zelo-assistente' ); ?></p>
-		<?php if ( $message ) : ?>
-			<div class="notice notice-info is-dismissible"><p><?php echo esc_html( $message ); ?></p></div>
-		<?php endif; ?>
-		<form method="post" action="">
-			<?php wp_nonce_field( 'zelo_save_ops_data_nonce' ); ?>
-			<textarea name="zelo_ops_json" rows="28" style="width:100%; font-family: monospace;"><?php echo esc_textarea( $data_json ); ?></textarea>
-			<p class="submit">
-				<input type="submit" name="zelo_save_ops_data" class="button button-primary" value="<?php esc_attr_e( 'Salvar Dados Operacionais', 'zelo-assistente' ); ?>">
-			</p>
-		</form>
-	</div>
-	<?php
+	return array(
+		'governance'     => $data['governance'],
+		'schedule'       => $schedule,
+		'indoor_map'     => $data['indoor_map'],
+		'settings'       => $data['settings'],
+		'checkins'       => $checkins,
+		'history'        => $history_out,
+		'swap_requests'  => $swap_requests,
+	);
 }
-

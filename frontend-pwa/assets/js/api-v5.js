@@ -92,8 +92,9 @@ const API = {
         }
     },
 
-    async getVolunteerOps() {
-        const url = `${this.baseUrl}/ops/voluntarios?_t=${Date.now()}`;
+    async getVolunteerOps(mine = false) {
+        const mineParam = mine ? '&mine=1' : '';
+        const url = `${this.baseUrl}/ops/voluntarios?_t=${Date.now()}${mineParam}`;
         try {
             const response = await fetch(url, {
                 headers: this.getAuthHeaders(),
@@ -101,12 +102,64 @@ const API = {
             });
             if (!response.ok) throw new Error('Ops API unavailable');
             const data = await response.json();
-            this.cache.volunteerOps = data;
+            if (!mine) this.cache.volunteerOps = data;
             return data;
         } catch (error) {
             console.warn('Falha ao carregar operação de voluntários', error);
             return null;
         }
+    },
+
+    async getIndoorMap() {
+        const url = `${this.baseUrl}/indoor-map?_t=${Date.now()}`;
+        try {
+            const r = await fetch(url);
+            if (!r.ok) return {};
+            return await r.json();
+        } catch (e) {
+            return {};
+        }
+    },
+
+    async registerVolunteer(payload) {
+        const url = `${this.baseUrl}/auth/register`;
+        const r = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) {
+            const msg = data.message || data.code || 'Cadastro falhou';
+            throw new Error(msg);
+        }
+        return data;
+    },
+
+    async patchSwapRequest(id, status, extra = {}) {
+        const url = `${this.baseUrl}/ops/swap-requests/${encodeURIComponent(id)}`;
+        const r = await fetch(url, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', ...this.getAuthHeaders() },
+            credentials: 'same-origin',
+            body: JSON.stringify({ status, ...extra })
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(data.message || 'Falha ao atualizar pedido');
+        return data;
+    },
+
+    async createSwapRequest(assignmentId, reason) {
+        const url = `${this.baseUrl}/ops/swap-requests`;
+        const r = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...this.getAuthHeaders() },
+            credentials: 'same-origin',
+            body: JSON.stringify({ assignment_id: assignmentId, reason: reason || '' })
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(data.message || 'Falha ao criar pedido');
+        return data;
     },
 
     async checkinVolunteer(assignmentId) {

@@ -4,6 +4,7 @@ const app = {
         evento: null,
         categoriesMeta: {},
         volunteerOps: null,
+        indoorMap: null,
         currentCategory: null,
         // Pagination & Filter State
         listPage: 1,
@@ -151,6 +152,10 @@ const app = {
                     app.renderEventInfo();
                 } else if (viewId === 'escala') {
                     app.renderVolunteerOps();
+                } else if (viewId === 'mapa-evento') {
+                    app.renderIndoorEventMap();
+                } else if (viewId === 'register') {
+                    /* static form */
                 }
 
                 // Render Home components if on home
@@ -248,6 +253,11 @@ const app = {
 
                 const data = await response.json();
 
+                if (!response.ok) {
+                    const msg = data.message || data.code || 'Erro ao fazer login';
+                    throw new Error(msg);
+                }
+
                 if (data.success) {
                     // Success
                     this.user = data.user;
@@ -283,6 +293,38 @@ const app = {
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.textContent = i18n.t('login_btn');
+            }
+        },
+
+        async register(event) {
+            event.preventDefault();
+            const errEl = document.getElementById('register-error');
+            const btn = document.getElementById('register-submit-btn');
+            const name = document.getElementById('register-name').value.trim();
+            const email = document.getElementById('register-email').value.trim();
+            const phone = document.getElementById('register-phone').value.trim();
+            const pass = document.getElementById('register-password').value;
+            errEl.style.display = 'none';
+            btn.disabled = true;
+            btn.textContent = i18n.t('loading');
+            try {
+                await API.registerVolunteer({
+                    display_name: name,
+                    email,
+                    phone,
+                    password: pass
+                });
+                errEl.className = 'text-success';
+                errEl.style.display = 'block';
+                errEl.textContent = 'Cadastro criado. Verifique seu e-mail para o link de confirmação.';
+                document.getElementById('register-password').value = '';
+            } catch (e) {
+                errEl.className = 'text-danger';
+                errEl.textContent = e.message || 'Erro';
+                errEl.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Criar conta';
             }
         },
 
@@ -1129,6 +1171,66 @@ const app = {
         return !!(this.auth.user && this.auth.user.caps && this.auth.user.caps.reallocate_ops);
     },
 
+    canManageOps() {
+        return !!(this.auth.user && this.auth.user.caps && this.auth.user.caps.manage_ops);
+    },
+
+    async renderIndoorEventMap() {
+        const el = document.getElementById('indoor-map-container');
+        if (!el) return;
+        el.innerHTML = '<div class="loading">Carregando mapa interno...</div>';
+        const cfg = await API.getIndoorMap();
+        this.data.indoorMap = cfg;
+        if (!cfg || !cfg.image_url) {
+            el.innerHTML = '<p class="text-muted" style="padding:1rem;">Mapa interno ainda não configurado (admin: JSON avançado ou campo indoor_map).</p>';
+            return;
+        }
+        const pts = Array.isArray(cfg.points) ? cfg.points : [];
+        const w = cfg.width || 1000;
+        const h = cfg.height || 700;
+        let html = `<div class="indoor-map-wrap" style="position:relative;width:100%;max-width:100%;">`;
+        html += `<img src="${cfg.image_url}" alt="Mapa" style="width:100%;height:auto;display:block;border-radius:8px;" />`;
+        pts.forEach((p) => {
+            const x = typeof p.x === 'number' ? p.x : parseFloat(p.x) || 0;
+            const y = typeof p.y === 'number' ? p.y : parseFloat(p.y) || 0;
+            const label = (p.label || p.type || '').replace(/</g, '');
+            html += `<button type="button" class="indoor-dot" title="${label}" style="position:absolute;left:${x * 100}%;top:${y * 100}%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;background:#137fec;border:2px solid #fff;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.3);" onclick="alert('${label.replace(/'/g, "\\'")}')"></button>`;
+        });
+        html += `</div><p class="text-muted" style="font-size:0.8rem;margin-top:0.5rem;">${w}×${h}px · ${pts.length} pontos</p>`;
+        el.innerHTML = html;
+    },
+
+    async requestSwap(assignmentId) {
+        const reason = prompt('Motivo (opcional):') || '';
+        try {
+            await API.createSwapRequest(assignmentId, reason);
+            alert('Pedido de substituição enviado.');
+            this.data.volunteerOps = await API.getVolunteerOps();
+            this.renderVolunteerOps();
+        } catch (e) {
+            alert(e.message || 'Falha ao enviar pedido.');
+        }
+    },
+
+    async resolveSwap(id, status, replacementName, replacementUid) {
+        try {
+            const res = await API.patchSwapRequest(id, status, {
+                replacement_volunteer_name: replacementName || '',
+                replacement_user_id: replacementUid || 0
+            });
+            if (res.data) this.data.volunteerOps = res.data;
+            this.renderVolunteerOps();
+        } catch (e) {
+            alert(e.message || 'Falha.');
+        }
+    },
+
+    resolveSwapPrompt(id) {
+        const name = prompt('Nome do substituto (opcional):') || '';
+        const rid = parseInt(prompt('ID WordPress do substituto (0 se não aplicar):') || '0', 10) || 0;
+        this.resolveSwap(id, 'approved', name, rid);
+    },
+
     async openVolunteerOps() {
         if (!this.auth.user) {
             this.router.navigate('login');
@@ -1138,9 +1240,7 @@ const app = {
             alert('Seu perfil não possui acesso à escala operacional.');
             return;
         }
-        if (!this.data.volunteerOps) {
-            this.data.volunteerOps = await API.getVolunteerOps();
-        }
+        this.data.volunteerOps = await API.getVolunteerOps();
         this.router.navigate('escala');
     },
 
@@ -1210,6 +1310,27 @@ const app = {
         const selectedShift = document.getElementById('ops-shift-filter')?.value || '';
         const selectedLanguage = (document.getElementById('ops-language-filter')?.value || '').toLowerCase();
 
+        const uid = this.auth.user.id;
+        const myRows = ops.schedule.filter((i) => Number(i.wp_user_id) === uid);
+        let myHtml = '';
+        if (myRows.length) {
+            myHtml = `<div class="ops-mine-block" style="margin-bottom:1rem;padding:0.75rem;background:#f0f9ff;border-radius:8px;border:1px solid #bae6fd;"><h3 style="margin:0 0 0.5rem;">Minhas designações</h3><ul style="margin:0;padding-left:1.2rem;">${myRows.map((i) => `<li><strong>${this.getOpsDayLabel(i.day)}</strong> ${i.shift} — ${i.volunteer_name || ''} @ ${i.location || '-'}</li>`).join('')}</ul></div>`;
+        } else {
+            myHtml = `<div class="ops-mine-block text-muted" style="margin-bottom:1rem;">Nenhuma linha da escala vinculada ao seu utilizador (wp_user_id).</div>`;
+        }
+
+        let swapPanel = '';
+        const swaps = ops.swap_requests || [];
+        if (this.canManageOps() || this.canReallocateOps()) {
+            const pend = swaps.filter((s) => s.status === 'pending');
+            swapPanel = `<div class="ops-swap-panel" style="margin-bottom:1rem;"><h3>Pedidos de substituição</h3>${pend.length ? pend.map((s) => `<div class="ops-schedule-card" style="padding:0.75rem;"><code>${s.id}</code> — designação <strong>${s.assignment_id}</strong> (solicitante ${s.requester_id})<br/><button type="button" class="button button-small" onclick="app.resolveSwapPrompt('${s.id}')">Aprovar</button> <button type="button" class="button button-small" onclick="app.resolveSwap('${s.id}','rejected','',0)">Recusar</button></div>`).join('') : '<p class="text-muted">Nenhum pedido pendente.</p>'}</div>`;
+        }
+
+        let histBlock = '';
+        if (this.canManageOps() && Array.isArray(ops.history) && ops.history.length) {
+            histBlock = `<div style="margin-bottom:1rem;"><h3>Últimas alterações</h3><ul style="font-size:0.85rem;">${ops.history.slice(0, 15).map((h) => `<li><code>${h.type || ''}</code> ${h.at || ''} — assignment ${h.assignment_id || ''}</li>`).join('')}</ul></div>`;
+        }
+
         let items = ops.schedule.slice();
         if (selectedDay) items = items.filter(i => i.day === selectedDay);
         if (selectedShift) items = items.filter(i => i.shift === selectedShift);
@@ -1232,6 +1353,8 @@ const app = {
             const status = this.getCheckinStatus(item.id);
             const isCheckedIn = status.status === 'checked_in';
             const isCheckedOut = status.status === 'checked_out';
+            const mineRow = Number(item.wp_user_id) === uid;
+            const swapBtn = mineRow ? `<button type="button" class="button" onclick="app.requestSwap('${String(item.id).replace(/'/g, "\\'")}')">Pedir substituição</button>` : '';
             return `
                 <div class="ops-schedule-card">
                     <div class="ops-card-head">
@@ -1242,15 +1365,19 @@ const app = {
                     <p><strong>Horário:</strong> ${item.start || '-'} às ${item.end || '-'}</p>
                     <p><strong>Idiomas:</strong> ${(item.languages || []).join(', ') || '-'}</p>
                     <div class="ops-actions">
-                        <button class="button ${isCheckedIn ? 'button-primary' : ''}" onclick="app.doCheckin('${item.id}')">Check-in</button>
-                        <button class="button ${isCheckedOut ? 'button-primary' : ''}" onclick="app.doCheckout('${item.id}')">Check-out</button>
-                        ${this.canReallocateOps() ? `<button class="button" onclick="app.doReallocate('${item.id}')">Realocar</button>` : ''}
+                        <button class="button ${isCheckedIn ? 'button-primary' : ''}" onclick="app.doCheckin('${String(item.id).replace(/'/g, "\\'")}')">Check-in</button>
+                        <button class="button ${isCheckedOut ? 'button-primary' : ''}" onclick="app.doCheckout('${String(item.id).replace(/'/g, "\\'")}')">Check-out</button>
+                        ${this.canReallocateOps() ? `<button class="button" onclick="app.doReallocate('${String(item.id).replace(/'/g, "\\'")}')">Realocar</button>` : ''}
+                        ${swapBtn}
                     </div>
                 </div>
             `;
         }).join('');
 
         container.innerHTML = `
+            ${myHtml}
+            ${swapPanel}
+            ${histBlock}
             <div class="ops-filters">
                 <select id="ops-day-filter" onchange="app.renderVolunteerOps()">
                     <option value="">Todos os dias</option>

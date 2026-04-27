@@ -23,11 +23,39 @@ function zelo_register_api_routes() {
 		'permission_callback' => '__return_true',
 	) );
 
+	register_rest_route(
+		'zelo/v1',
+		'/indoor-map',
+		array(
+			'methods'             => 'GET',
+			'callback'            => 'zelo_get_indoor_map_public',
+			'permission_callback' => '__return_true',
+		)
+	);
+
 	register_rest_route( 'zelo/v1', '/ops/voluntarios', array(
 		'methods'  => 'GET',
 		'callback' => 'zelo_get_ops_voluntarios',
 		'permission_callback' => 'zelo_rest_can_view_ops',
+		'args'     => array(
+			'mine' => array(
+				'type'    => 'string',
+				'default' => '',
+			),
+		),
 	) );
+
+	register_rest_route(
+		'zelo/v1',
+		'/ops/export',
+		array(
+			'methods'             => 'GET',
+			'callback'            => 'zelo_ops_export_stub',
+			'permission_callback' => function () {
+				return is_user_logged_in() && current_user_can( 'manage_options' );
+			},
+		)
+	);
 
 	register_rest_route( 'zelo/v1', '/ops/checkin', array(
 		'methods'  => 'POST',
@@ -48,6 +76,35 @@ function zelo_register_api_routes() {
 	) );
 }
 add_action( 'rest_api_init', 'zelo_register_api_routes' );
+
+/**
+ * Exportação CSV/PDF: pós-MVP (stub).
+ *
+ * @param WP_REST_Request $request Request.
+ */
+function zelo_ops_export_stub( $request ) {
+	return new WP_Error(
+		'zelo_export_not_implemented',
+		__( 'Exportação ainda não implementada (pós-MVP).', 'zelo-assistente' ),
+		array( 'status' => 501 )
+	);
+}
+
+/**
+ * @param WP_REST_Request $request Request.
+ */
+function zelo_get_ops_voluntarios( $request ) {
+	$mine = $request->get_param( 'mine' );
+	$uid   = get_current_user_id();
+	return rest_ensure_response(
+		zelo_get_volunteer_ops_payload(
+			array(
+				'user_id'            => $uid,
+				'mine_schedule_only' => (string) $mine === '1',
+			)
+		)
+	);
+}
 
 function zelo_rest_can_view_ops() {
 	return is_user_logged_in() && zelo_can_view_ops();
@@ -130,6 +187,12 @@ function zelo_get_locais( $request ) {
 	return rest_ensure_response( $data );
 }
 
+function zelo_get_indoor_map_public() {
+	$data = zelo_get_volunteer_ops_data();
+	$map   = isset( $data['indoor_map'] ) && is_array( $data['indoor_map'] ) ? $data['indoor_map'] : array();
+	return rest_ensure_response( $map );
+}
+
 function zelo_get_categorias() {
 	$map  = function_exists( 'zelo_get_categories_map' ) ? zelo_get_categories_map() : array();
 	$data = array();
@@ -203,10 +266,6 @@ function zelo_get_evento() {
 	);
 
 	return rest_ensure_response( $response );
-}
-
-function zelo_get_ops_voluntarios() {
-	return rest_ensure_response( zelo_get_volunteer_ops_payload() );
 }
 
 function zelo_ops_checkin( $request ) {
@@ -302,7 +361,12 @@ function zelo_ops_reallocate( $request ) {
 	}
 
 	update_option( 'zelo_volunteer_ops_data', $data );
-	return rest_ensure_response( array( 'success' => true, 'data' => zelo_get_volunteer_ops_payload() ) );
+	return rest_ensure_response(
+		array(
+			'success' => true,
+			'data'    => zelo_get_volunteer_ops_payload( array( 'user_id' => get_current_user_id() ) ),
+		)
+	);
 }
 
 function zelo_calculate_distance( $lat1, $lon1, $lat2, $lon2 ) {

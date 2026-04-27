@@ -16,7 +16,7 @@
     <!-- CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <link rel="stylesheet" href="assets/css/style-v5.css?v=58">
+    <link rel="stylesheet" href="assets/css/style-v5.css?v=59">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -130,6 +130,12 @@
                     </span>
                     <span>Escala Voluntários</span>
                 </button>
+                <button class="action-card" onclick="app.router.navigate('mapa-evento')">
+                    <span class="action-icon" style="background:#fef3c7; color:#b45309;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>
+                    </span>
+                    <span>Mapa do evento</span>
+                </button>
             </div>
 
             <!-- Map Preview Card -->
@@ -153,7 +159,7 @@
 
 
             <div style="text-align: center; font-size: 0.7rem; color: #999; margin-top: 2rem; padding-bottom: 2rem;">
-                Versão: v58
+                Versão: v59
             </div>
         </section>
 
@@ -242,8 +248,51 @@
                         <a href="#" id="link-lost-password" target="_blank"
                             style="font-size: 0.9rem; color: var(--primary-color);" data-i18n="forgot_password">Esqueci minha senha</a>
                     </div>
+                    <div style="text-align: center; margin-top: 0.75rem;">
+                        <a href="#" onclick="app.router.navigate('register'); return false;"
+                            style="font-size: 0.9rem; color: var(--primary-color);">Criar conta de voluntário</a>
+                    </div>
                 </div>
             </div>
+        </section>
+
+        <section id="view-register" class="view">
+            <div class="view-header">
+                <button class="back-btn" onclick="app.router.navigate('login')">Voltar</button>
+                <h2>Cadastro de voluntário</h2>
+            </div>
+            <div class="login-container">
+                <div class="login-card">
+                    <form onsubmit="app.auth.register(event)">
+                        <div class="form-group">
+                            <label>Nome completo</label>
+                            <input type="text" id="register-name" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label>E-mail</label>
+                            <input type="email" id="register-email" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Telefone (opcional)</label>
+                            <input type="text" id="register-phone" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label>Senha (mín. 8 caracteres)</label>
+                            <input type="password" id="register-password" class="form-input" required minlength="8">
+                        </div>
+                        <div id="register-error" class="text-danger" style="display:none; margin-bottom: 1rem; font-size: 0.9rem;"></div>
+                        <button type="submit" class="btn-block" id="register-submit-btn">Criar conta</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-mapa-evento" class="view">
+            <div class="view-header">
+                <button class="back-btn" onclick="app.router.back()">Voltar</button>
+                <h2>Mapa do evento</h2>
+            </div>
+            <div id="indoor-map-container" style="padding:1rem;"></div>
         </section>
 
         <!-- Profile View (Simple for now) -->
@@ -350,10 +399,10 @@
 
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script src="assets/js/i18n.js?v=58"></script>
-    <script src="assets/js/api-v5.js?v=58"></script>
-    <script src="assets/js/map-manager.js?v=58"></script>
-    <script src="assets/js/app-v5.js?v=58"></script>
+    <script src="assets/js/i18n.js?v=59"></script>
+    <script src="assets/js/api-v5.js?v=59"></script>
+    <script src="assets/js/map-manager.js?v=59"></script>
+    <script src="assets/js/app-v5.js?v=59"></script>
 
     <script>
         // Register Service Worker
