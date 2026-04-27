@@ -36,7 +36,7 @@ function zelo_register_api_routes() {
 	register_rest_route( 'zelo/v1', '/ops/voluntarios', array(
 		'methods'  => 'GET',
 		'callback' => 'zelo_get_ops_voluntarios',
-		'permission_callback' => 'zelo_rest_can_view_ops',
+		'permission_callback' => 'zelo_rest_can_view_ops_or_public',
 		'args'     => array(
 			'mine' => array(
 				'type'    => 'string',
@@ -108,6 +108,21 @@ function zelo_get_ops_voluntarios( $request ) {
 
 function zelo_rest_can_view_ops() {
 	return is_user_logged_in() && zelo_can_view_ops();
+}
+
+/**
+ * Permissão para GET /ops/voluntarios: utilizadores autenticados com zelo_view_ops,
+ * ou leitura pública quando o filtro zelo_ops_voluntarios_public_read devolver true.
+ *
+ * ATENÇÃO: leitura pública expõe escala, governança e metadados da payload.
+ *
+ * @return bool
+ */
+function zelo_rest_can_view_ops_or_public() {
+	if ( (bool) apply_filters( 'zelo_ops_voluntarios_public_read', false ) ) {
+		return true;
+	}
+	return zelo_rest_can_view_ops();
 }
 
 function zelo_rest_can_checkin_ops() {

@@ -22,6 +22,8 @@ require_once ZELO_PLUGIN_DIR . 'inc/meta-boxes.php';
 require_once ZELO_PLUGIN_DIR . 'inc/volunteer-ops.php';
 require_once ZELO_PLUGIN_DIR . 'inc/zelo-volunteer-registration.php';
 require_once ZELO_PLUGIN_DIR . 'inc/api-routes.php';
+// TEMPORÁRIO (apresentação): payload de /ops/voluntarios acessível sem login. Remover estas 2 linhas após a apresentação.
+add_filter( 'zelo_ops_voluntarios_public_read', '__return_true', 1 );
 require_once ZELO_PLUGIN_DIR . 'inc/zelo-auth-api.php'; // Auth API
 require_once ZELO_PLUGIN_DIR . 'inc/zelo-volunteer-notifications.php';
 require_once ZELO_PLUGIN_DIR . 'inc/zelo-volunteer-swaps.php';
