@@ -66,6 +66,39 @@
 .zelo-map-legend-count {
     color: #6b7280;
     font-weight: 600;
+    min-width: 42px;
+    text-align: right;
+}
+
+.zelo-map-legend-visibility {
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 1;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.zelo-map-legend-visibility.is-off {
+    opacity: 0.55;
+}
+
+.zelo-map-legend-show-all {
+    width: 100%;
+    border: 1px solid #d1d5db;
+    background: #f8fafc;
+    color: #0f172a;
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 6px;
 }
 
 .zelo-map-legend-empty {

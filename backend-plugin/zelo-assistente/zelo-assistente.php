@@ -16,6 +16,7 @@ define( 'ZELO_VERSION', '2.4.6' );
 define( 'ZELO_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 
 // Include required files
+require_once ZELO_PLUGIN_DIR . 'inc/categories.php';
 require_once ZELO_PLUGIN_DIR . 'inc/post-types.php';
 require_once ZELO_PLUGIN_DIR . 'inc/meta-boxes.php';
 require_once ZELO_PLUGIN_DIR . 'inc/api-routes.php';

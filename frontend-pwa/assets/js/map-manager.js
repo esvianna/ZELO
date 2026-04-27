@@ -4,6 +4,8 @@ const MapManager = {
     userMarker: null,
     categoryMeta: {},
     legendControl: null,
+    allLocations: [],
+    activeCategories: null,
 
     init(elementId) {
         if (this.map) return; // Already initialized
@@ -61,8 +63,57 @@ const MapManager = {
     },
 
     addMarkers(locations) {
+        this.allLocations = Array.isArray(locations) ? locations : [];
+        this.ensureCategoryFilters();
+        this.refreshMarkers();
+    },
+
+    ensureCategoryFilters() {
+        const categories = {};
+        this.allLocations.forEach(loc => {
+            if (!loc || !loc.lat || !loc.lng) return;
+            const slug = loc.category || 'hospital';
+            categories[slug] = true;
+        });
+
+        if (!this.activeCategories) {
+            this.activeCategories = {};
+            Object.keys(categories).forEach(slug => {
+                this.activeCategories[slug] = true;
+            });
+            return;
+        }
+
+        const next = {};
+        Object.keys(categories).forEach(slug => {
+            next[slug] = this.activeCategories[slug] !== false;
+        });
+        this.activeCategories = next;
+    },
+
+    isCategoryVisible(slug) {
+        if (!this.activeCategories) return true;
+        return this.activeCategories[slug] !== false;
+    },
+
+    toggleCategory(slug) {
+        if (!this.activeCategories || !Object.prototype.hasOwnProperty.call(this.activeCategories, slug)) return;
+        this.activeCategories[slug] = !this.activeCategories[slug];
+        this.refreshMarkers();
+    },
+
+    showAllCategories() {
+        if (!this.activeCategories) return;
+        Object.keys(this.activeCategories).forEach(slug => {
+            this.activeCategories[slug] = true;
+        });
+        this.refreshMarkers();
+    },
+
+    refreshMarkers() {
         this.clearMarkers();
-        const legendCount = {};
+        const legendTotalCount = {};
+        const legendVisibleCount = {};
 
         // Add Event Marker (Center)
         const eventData = app.data.evento;
@@ -88,14 +139,17 @@ const MapManager = {
             this.markers.push(eventMarker);
         }
 
-        locations.forEach(loc => {
+        this.allLocations.forEach(loc => {
             if (!loc.lat || !loc.lng) return;
 
             const type = loc.category || 'hospital';
+            legendTotalCount[type] = (legendTotalCount[type] || 0) + 1;
+            if (!this.isCategoryVisible(type)) return;
+
             const meta = this.categoryMeta[type] || this.categoryMeta.default || {};
             const color = this.normalizeHexColor(meta.color, '#3B82F6');
             const icon = this.createIcon(color);
-            legendCount[type] = (legendCount[type] || 0) + 1;
+            legendVisibleCount[type] = (legendVisibleCount[type] || 0) + 1;
 
             const marker = L.marker([loc.lat, loc.lng], { icon: icon })
                 .bindPopup(`<b>${loc.name}</b><br>${loc.address}<br><button onclick="app.router.navigate('detalhe', {id: ${loc.id}})">Ver Detalhes</button>`);
@@ -104,7 +158,7 @@ const MapManager = {
             this.markers.push(marker);
         });
 
-        this.renderLegend(legendCount);
+        this.renderLegend(legendTotalCount, legendVisibleCount);
     },
 
     createIcon(color) {
@@ -118,7 +172,7 @@ const MapManager = {
         });
     },
 
-    renderLegend(legendCount) {
+    renderLegend(legendTotalCount, legendVisibleCount) {
         if (!this.map) return;
 
         if (this.legendControl) {
@@ -129,26 +183,43 @@ const MapManager = {
         this.legendControl = L.control({ position: 'topright' });
         this.legendControl.onAdd = () => {
             const container = L.DomUtil.create('div', 'zelo-map-legend');
-            const entries = Object.entries(legendCount || {}).sort((a, b) => b[1] - a[1]);
+            const entries = Object.entries(legendTotalCount || {}).sort((a, b) => b[1] - a[1]);
             const bodyHtml = entries.map(([slug, count]) => {
                 const meta = this.categoryMeta[slug] || this.categoryMeta.default || {};
                 const label = meta.label || slug;
                 const color = this.normalizeHexColor(meta.color, '#3B82F6');
+                const visible = this.isCategoryVisible(slug);
+                const shownCount = legendVisibleCount[slug] || 0;
                 return `<div class="zelo-map-legend-item">
                     <span class="zelo-map-legend-dot" style="background:${color};"></span>
                     <span class="zelo-map-legend-label">${label}</span>
-                    <span class="zelo-map-legend-count">${count}</span>
+                    <span class="zelo-map-legend-count">${shownCount}/${count}</span>
+                    <button type="button" class="zelo-map-legend-visibility ${visible ? '' : 'is-off'}" data-slug="${slug}" title="${visible ? 'Ocultar categoria' : 'Mostrar categoria'}">${visible ? '👁' : '🚫'}</button>
                 </div>`;
             }).join('');
 
             container.innerHTML = `
                 <button type="button" class="zelo-map-legend-toggle">Legenda</button>
-                <div class="zelo-map-legend-body">${bodyHtml || '<div class="zelo-map-legend-empty">Sem locais</div>'}</div>
+                <div class="zelo-map-legend-body">
+                    <button type="button" class="zelo-map-legend-show-all">Mostrar todas</button>
+                    ${bodyHtml || '<div class="zelo-map-legend-empty">Sem locais</div>'}
+                </div>
             `;
 
             const toggle = container.querySelector('.zelo-map-legend-toggle');
             toggle.addEventListener('click', () => {
                 container.classList.toggle('is-collapsed');
+            });
+            const showAll = container.querySelector('.zelo-map-legend-show-all');
+            if (showAll) {
+                showAll.addEventListener('click', () => this.showAllCategories());
+            }
+            container.querySelectorAll('.zelo-map-legend-visibility').forEach(button => {
+                button.addEventListener('click', () => {
+                    const slug = button.getAttribute('data-slug');
+                    if (!slug) return;
+                    this.toggleCategory(slug);
+                });
             });
             container.classList.add('is-collapsed');
             L.DomEvent.disableClickPropagation(container);
