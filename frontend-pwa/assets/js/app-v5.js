@@ -441,8 +441,16 @@ const app = {
             // Show offline message if needed
         }
 
-        // Handle URL hash if we implement deep linking, for now simple init
-        this.router.navigate('home');
+        const verifyParams = new URLSearchParams(window.location.search);
+        if (verifyParams.get('zelo_verified') === '1') {
+            verifyParams.delete('zelo_verified');
+            const qs = verifyParams.toString();
+            const cleanUrl = window.location.pathname + (qs ? `?${qs}` : '') + window.location.hash;
+            history.replaceState({}, '', cleanUrl);
+            this.router.navigate('email-verified');
+        } else {
+            this.router.navigate('home');
+        }
 
         // Request location
         this.getUserLocation();

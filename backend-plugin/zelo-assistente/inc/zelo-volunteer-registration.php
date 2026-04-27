@@ -115,10 +115,11 @@ function zelo_rest_auth_register( $request ) {
 		update_user_meta( $user_id, 'zelo_phone', $phone );
 	}
 
+	// Não usar rawurlencode aqui: add_query_arg já codifica; dupla codificação quebrava o link.
 	$verify_url = add_query_arg(
 		array(
 			'user_id' => $user_id,
-			'token'   => rawurlencode( $token ),
+			'token'   => $token,
 		),
 		rest_url( 'zelo/v1/auth/verify-email' )
 	);
@@ -160,7 +161,8 @@ function zelo_rest_auth_verify_email( $request ) {
 	delete_user_meta( $user_id, 'zelo_email_verify_token' );
 	delete_user_meta( $user_id, 'zelo_email_verify_expires' );
 
-	$redirect = apply_filters( 'zelo_email_verify_redirect', home_url( '/' ) );
+	// Destino pós-confirmação: PWA em /zelo/ (filtro zelo_email_verify_redirect para personalizar).
+	$redirect = apply_filters( 'zelo_email_verify_redirect', trailingslashit( home_url( '/zelo' ) ) );
 	wp_safe_redirect( $redirect . ( strpos( $redirect, '?' ) !== false ? '&' : '?' ) . 'zelo_verified=1' );
 	exit;
 }
