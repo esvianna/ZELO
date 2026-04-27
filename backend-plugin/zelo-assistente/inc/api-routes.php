@@ -217,10 +217,10 @@ function zelo_ops_checkin( $request ) {
 
 	$checkins                     = zelo_get_volunteer_checkins();
 	$checkins[ $assignment_id ]   = array(
-		'status'     => 'checked_in',
-		'check_in_at'=> current_time( 'mysql' ),
-		'check_out_at' => isset( $checkins[ $assignment_id ]['check_out_at'] ) ? $checkins[ $assignment_id ]['check_out_at'] : '',
-		'updated_by' => get_current_user_id(),
+		'status'       => 'checked_in',
+		'check_in_at'  => current_time( 'mysql' ),
+		'check_out_at' => '',
+		'updated_by'   => get_current_user_id(),
 	);
 	update_option( 'zelo_volunteer_checkins', $checkins );
 
@@ -255,6 +255,10 @@ function zelo_ops_reallocate( $request ) {
 		return new WP_Error( 'zelo_missing_assignment', __( 'assignment_id é obrigatório.', 'zelo-assistente' ), array( 'status' => 400 ) );
 	}
 
+	if ( $new_location === '' && $new_shift === '' ) {
+		return new WP_Error( 'zelo_reallocate_missing_fields', __( 'Informe pelo menos new_location ou new_shift.', 'zelo-assistente' ), array( 'status' => 400 ) );
+	}
+
 	$data      = zelo_get_volunteer_ops_data();
 	$updated   = false;
 	$history_i = 'history';
@@ -266,18 +270,25 @@ function zelo_ops_reallocate( $request ) {
 		if ( ! isset( $item['id'] ) || $item['id'] !== $assignment_id ) {
 			continue;
 		}
-		if ( $new_location !== '' ) {
+		$old_location     = isset( $item['location'] ) ? $item['location'] : '';
+		$old_shift        = isset( $item['shift'] ) ? $item['shift'] : '';
+		$location_changes = $new_location !== '' && $new_location !== $old_location;
+		$shift_changes    = $new_shift !== '' && $new_shift !== $old_shift;
+		if ( ! $location_changes && ! $shift_changes ) {
+			return new WP_Error( 'zelo_reallocate_no_change', __( 'Nenhuma alteração em relação aos valores atuais.', 'zelo-assistente' ), array( 'status' => 400 ) );
+		}
+		if ( $location_changes ) {
 			$item['location'] = $new_location;
 		}
-		if ( $new_shift !== '' ) {
+		if ( $shift_changes ) {
 			$item['shift'] = $new_shift;
 		}
 		$updated = true;
 		$data['history'][] = array(
 			'type'          => 'reallocation',
 			'assignment_id' => $assignment_id,
-			'new_location'  => $new_location,
-			'new_shift'     => $new_shift,
+			'new_location'  => $location_changes ? $new_location : '',
+			'new_shift'     => $shift_changes ? $new_shift : '',
 			'user_id'       => get_current_user_id(),
 			'at'            => current_time( 'mysql' ),
 		);
