@@ -410,6 +410,11 @@ const app = {
     async init() {
         console.log('Zelo App Initializing...');
 
+        const buildEl = document.getElementById('app-build-version');
+        if (buildEl && typeof window.ZELO_APP_BUILD !== 'undefined') {
+            buildEl.textContent = 'v' + String(window.ZELO_APP_BUILD);
+        }
+
         // Mock data loading or real API
         try {
             // Init Auth
