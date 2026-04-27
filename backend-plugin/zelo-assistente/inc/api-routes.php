@@ -215,11 +215,12 @@ function zelo_ops_checkin( $request ) {
 		return new WP_Error( 'zelo_missing_assignment', __( 'assignment_id é obrigatório.', 'zelo-assistente' ), array( 'status' => 400 ) );
 	}
 
-	$checkins                     = zelo_get_volunteer_checkins();
-	$checkins[ $assignment_id ]   = array(
+	$checkins                   = zelo_get_volunteer_checkins();
+	$current                    = isset( $checkins[ $assignment_id ] ) ? $checkins[ $assignment_id ] : array();
+	$checkins[ $assignment_id ] = array(
 		'status'       => 'checked_in',
 		'check_in_at'  => current_time( 'mysql' ),
-		'check_out_at' => '',
+		'check_out_at' => isset( $current['check_out_at'] ) ? $current['check_out_at'] : '',
 		'updated_by'   => get_current_user_id(),
 	);
 	update_option( 'zelo_volunteer_checkins', $checkins );
