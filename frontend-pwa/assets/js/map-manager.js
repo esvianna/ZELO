@@ -2,6 +2,8 @@ const MapManager = {
     map: null,
     markers: [],
     userMarker: null,
+    categoryMeta: {},
+    legendControl: null,
 
     init(elementId) {
         if (this.map) return; // Already initialized
@@ -20,6 +22,16 @@ const MapManager = {
 
         // Try to locate user (but map starts centered on event)
         this.locateUser();
+    },
+
+    setCategoryMeta(categoryMeta) {
+        this.categoryMeta = categoryMeta || {};
+    },
+
+    normalizeHexColor(color, fallback = '#3B82F6') {
+        if (typeof color !== 'string') return fallback;
+        const value = color.trim();
+        return /^#[0-9A-Fa-f]{6}$/.test(value) ? value.toUpperCase() : fallback;
     },
 
     locateUser() {
@@ -50,12 +62,7 @@ const MapManager = {
 
     addMarkers(locations) {
         this.clearMarkers();
-
-        const icons = {
-            hospital: this.createIcon('red'),
-            farmacia: this.createIcon('green'),
-            emergencia: this.createIcon('orange')
-        };
+        const legendCount = {};
 
         // Add Event Marker (Center)
         const eventData = app.data.evento;
@@ -71,7 +78,7 @@ const MapManager = {
                     className: 'event-marker-logo' // For CSS circular styling
                 });
             } else {
-                eventIcon = this.createIcon('blue');
+                eventIcon = this.createIcon('#2563EB');
             }
 
             const eventMarker = L.marker([eventData.coordenadas.lat, eventData.coordenadas.lng], { icon: eventIcon })
@@ -85,7 +92,10 @@ const MapManager = {
             if (!loc.lat || !loc.lng) return;
 
             const type = loc.category || 'hospital';
-            const icon = icons[type] || icons.hospital;
+            const meta = this.categoryMeta[type] || this.categoryMeta.default || {};
+            const color = this.normalizeHexColor(meta.color, '#3B82F6');
+            const icon = this.createIcon(color);
+            legendCount[type] = (legendCount[type] || 0) + 1;
 
             const marker = L.marker([loc.lat, loc.lng], { icon: icon })
                 .bindPopup(`<b>${loc.name}</b><br>${loc.address}<br><button onclick="app.router.navigate('detalhe', {id: ${loc.id}})">Ver Detalhes</button>`);
@@ -93,17 +103,59 @@ const MapManager = {
             marker.addTo(this.map);
             this.markers.push(marker);
         });
+
+        this.renderLegend(legendCount);
     },
 
     createIcon(color) {
-        // Using standard Leaflet colored markers
-        return new L.Icon({
-            iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
-            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41]
+        const safeColor = this.normalizeHexColor(color, '#3B82F6');
+        return L.divIcon({
+            className: 'zelo-map-marker-wrap',
+            html: `<span class="zelo-map-marker-pin" style="background:${safeColor};"></span>`,
+            iconSize: [20, 20],
+            iconAnchor: [10, 20],
+            popupAnchor: [0, -18]
         });
+    },
+
+    renderLegend(legendCount) {
+        if (!this.map) return;
+
+        if (this.legendControl) {
+            this.map.removeControl(this.legendControl);
+            this.legendControl = null;
+        }
+
+        this.legendControl = L.control({ position: 'topright' });
+        this.legendControl.onAdd = () => {
+            const container = L.DomUtil.create('div', 'zelo-map-legend');
+            const entries = Object.entries(legendCount || {}).sort((a, b) => b[1] - a[1]);
+            const bodyHtml = entries.map(([slug, count]) => {
+                const meta = this.categoryMeta[slug] || this.categoryMeta.default || {};
+                const label = meta.label || slug;
+                const color = this.normalizeHexColor(meta.color, '#3B82F6');
+                return `<div class="zelo-map-legend-item">
+                    <span class="zelo-map-legend-dot" style="background:${color};"></span>
+                    <span class="zelo-map-legend-label">${label}</span>
+                    <span class="zelo-map-legend-count">${count}</span>
+                </div>`;
+            }).join('');
+
+            container.innerHTML = `
+                <button type="button" class="zelo-map-legend-toggle">Legenda</button>
+                <div class="zelo-map-legend-body">${bodyHtml || '<div class="zelo-map-legend-empty">Sem locais</div>'}</div>
+            `;
+
+            const toggle = container.querySelector('.zelo-map-legend-toggle');
+            toggle.addEventListener('click', () => {
+                container.classList.toggle('is-collapsed');
+            });
+            container.classList.add('is-collapsed');
+            L.DomEvent.disableClickPropagation(container);
+            L.DomEvent.disableScrollPropagation(container);
+            return container;
+        };
+
+        this.legendControl.addTo(this.map);
     }
 };

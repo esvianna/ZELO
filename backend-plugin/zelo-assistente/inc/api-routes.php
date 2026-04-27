@@ -16,6 +16,12 @@ function zelo_register_api_routes() {
 		'callback' => 'zelo_get_evento',
 		'permission_callback' => '__return_true',
 	) );
+
+	register_rest_route( 'zelo/v1', '/categorias', array(
+		'methods'  => 'GET',
+		'callback' => 'zelo_get_categorias',
+		'permission_callback' => '__return_true',
+	) );
 }
 add_action( 'rest_api_init', 'zelo_register_api_routes' );
 
@@ -24,7 +30,8 @@ function zelo_get_locais( $request ) {
 	$lng = $request->get_param( 'lng' );
 	$radius = $request->get_param( 'radius' ) ? floatval( $request->get_param( 'radius' ) ) : 20; // Default 20km
 
-	$args = array(
+	$category_map = function_exists( 'zelo_get_categories_map' ) ? zelo_get_categories_map() : array();
+	$args         = array(
 		'post_type'      => 'zelo_local',
 		'posts_per_page' => -1,
 		'post_status'    => 'publish',
@@ -55,11 +62,17 @@ function zelo_get_locais( $request ) {
 			}
 		}
 
-		$data[] = array(
+		$category_slug = get_post_meta( $post->ID, '_zelo_type', true );
+		$category_meta = isset( $category_map[ $category_slug ] ) ? $category_map[ $category_slug ] : null;
+		$data[]        = array(
 			'id'          => $post->ID,
 			'name'        => $post->post_title,
 			'description' => wp_strip_all_tags( $post->post_content ),
-			'category'    => get_post_meta( $post->ID, '_zelo_type', true ),
+			'category'    => $category_slug,
+			'category_meta' => array(
+				'label' => $category_meta ? $category_meta['label'] : '',
+				'color' => $category_meta && isset( $category_meta['color'] ) ? $category_meta['color'] : '#3B82F6',
+			),
 			'address'     => get_post_meta( $post->ID, '_zelo_address', true ),
 			'lat'         => $post_lat,
 			'lng'         => $post_lng,
@@ -76,6 +89,21 @@ function zelo_get_locais( $request ) {
 		usort( $data, function( $a, $b ) {
 			return $a['distance'] <=> $b['distance'];
 		} );
+	}
+
+	return rest_ensure_response( $data );
+}
+
+function zelo_get_categorias() {
+	$map  = function_exists( 'zelo_get_categories_map' ) ? zelo_get_categories_map() : array();
+	$data = array();
+
+	foreach ( $map as $slug => $category ) {
+		$data[] = array(
+			'slug'  => $slug,
+			'label' => isset( $category['label'] ) ? $category['label'] : $slug,
+			'color' => isset( $category['color'] ) ? $category['color'] : '#3B82F6',
+		);
 	}
 
 	return rest_ensure_response( $data );

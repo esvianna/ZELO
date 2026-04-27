@@ -2,6 +2,7 @@ const app = {
     data: {
         locais: [],
         evento: null,
+        categoriesMeta: {},
         currentCategory: null,
         // Pagination & Filter State
         listPage: 1,
@@ -31,6 +32,63 @@ const app = {
 
     deg2rad(deg) {
         return deg * (Math.PI / 180);
+    },
+
+    normalizeHexColor(color, fallback = '#3B82F6') {
+        if (typeof color !== 'string') return fallback;
+        const value = color.trim();
+        return /^#[0-9A-Fa-f]{6}$/.test(value) ? value.toUpperCase() : fallback;
+    },
+
+    hexToRgba(hex, alpha = 0.15) {
+        const safeHex = this.normalizeHexColor(hex);
+        const r = parseInt(safeHex.slice(1, 3), 16);
+        const g = parseInt(safeHex.slice(3, 5), 16);
+        const b = parseInt(safeHex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    },
+
+    buildCategoryMeta(categories) {
+        const fallback = {
+            label: i18n.t('places'),
+            color: '#3B82F6',
+            icon: '\u{1F4CD}'
+        };
+        const iconBySlug = {
+            hospital: '\u{1F3E5}',
+            farmacia: '\u{1F48A}',
+            emergencia: '\u{1F691}',
+            cultura: '\u{1F3DB}\uFE0F',
+            compras: '\u{1F6CD}\uFE0F',
+            lazer: '\u{1F333}'
+        };
+
+        const map = {};
+        (categories || []).forEach(item => {
+            if (!item || !item.slug) return;
+            map[item.slug] = {
+                label: item.label || item.slug,
+                color: this.normalizeHexColor(item.color, fallback.color),
+                icon: iconBySlug[item.slug] || fallback.icon
+            };
+        });
+        map.default = fallback;
+        return map;
+    },
+
+    getCategoryMeta(slug) {
+        const base = this.data.categoriesMeta[slug] || this.data.categoriesMeta.default || {
+            label: i18n.t('places'),
+            color: '#3B82F6',
+            icon: '\u{1F4CD}'
+        };
+        return {
+            icon: base.icon,
+            label: base.label,
+            color: base.color,
+            bg: this.hexToRgba(base.color, 0.15),
+            gradient: `linear-gradient(135deg, ${this.hexToRgba(base.color, 0.95)}, ${base.color})`
+        };
     },
 
     getUserLocation() {
@@ -79,6 +137,7 @@ const app = {
                     setTimeout(() => {
                         MapManager.init('map-container');
                         MapManager.map.invalidateSize(); // Fix leafleft rendering issue in hidden divs
+                        MapManager.setCategoryMeta(app.data.categoriesMeta);
                         MapManager.addMarkers(app.data.locais);
                     }, 100);
                 } else if (viewId === 'lista') {
@@ -305,13 +364,15 @@ const app = {
             this.auth.init();
 
             // Load initial data
-            const [locais, evento] = await Promise.all([
+            const [locais, evento, categorias] = await Promise.all([
                 API.getLocais(), // Fetch all initially
-                API.getEvento()
+                API.getEvento(),
+                API.getCategorias()
             ]);
 
             this.data.locais = locais || [];
             this.data.evento = evento || {};
+            this.data.categoriesMeta = this.buildCategoryMeta(categorias || []);
 
             console.log('Data loaded', this.data);
 
@@ -480,18 +541,9 @@ const app = {
             return;
         }
 
-        const categoryIcons = {
-            'hospital': { bg: '#dbeafe', icon: '\u{1F3E5}' },
-            'farmacia': { bg: '#d1fae5', icon: '\u{1F48A}' },
-            'emergencia': { bg: '#ffe5e8', icon: '\u{1F691}' },
-            'cultura': { bg: '#fef3c7', icon: '\u{1F3DB}\uFE0F' },
-            'compras': { bg: '#fce7f3', icon: '\u{1F6CD}\uFE0F' },
-            'lazer': { bg: '#d1fae5', icon: '\u{1F333}' }
-        };
-
         resultsEl.style.display = 'block';
         resultsEl.innerHTML = matches.map(item => {
-            const cat = categoryIcons[item.category] || { bg: '#f0f0f0', icon: '\u{1F4CD}' };
+            const cat = this.getCategoryMeta(item.category);
             return `
                 <div class="home-search-result-item" onclick="app.handleSearchResultClick(${item.id})">
                     <div class="home-search-result-icon" style="background:${cat.bg}">${cat.icon}</div>
@@ -519,20 +571,8 @@ const app = {
         const container = document.getElementById('list-container');
         const title = document.getElementById('list-title');
 
-        // Set Title based on category
-        if (category === 'farmacia') {
-            title.textContent = i18n.t('pharmacies');
-        } else if (category === 'hospital') {
-            title.textContent = i18n.t('hospitals');
-        } else if (category === 'cultura') {
-            title.textContent = i18n.t('culture');
-        } else if (category === 'compras') {
-            title.textContent = i18n.t('shopping');
-        } else if (category === 'lazer') {
-            title.textContent = i18n.t('leisure');
-        } else {
-            title.textContent = i18n.t('places');
-        }
+        const selectedCategoryMeta = this.getCategoryMeta(category);
+        title.textContent = category ? selectedCategoryMeta.label : i18n.t('places');
 
 
         // Update State (if params provided)
@@ -711,15 +751,6 @@ const app = {
         }
 
         // List Items
-        const categoryMeta = {
-            'hospital': { icon: '\u{1F3E5}', bg: '#dbeafe', color: '#3b82f6', label: i18n.t('category_hospital') },
-            'farmacia': { icon: '\u{1F48A}', bg: '#d1fae5', color: '#10b981', label: i18n.t('category_pharmacy') },
-            'emergencia': { icon: '\u{1F691}', bg: '#ffe5e8', color: '#e63946', label: i18n.t('emergency') },
-            'cultura': { icon: '\u{1F3DB}\uFE0F', bg: '#fef3c7', color: '#f59e0b', label: i18n.t('culture') },
-            'compras': { icon: '\u{1F6CD}\uFE0F', bg: '#fce7f3', color: '#ec4899', label: i18n.t('shopping') },
-            'lazer': { icon: '\u{1F333}', bg: '#d1fae5', color: '#059669', label: i18n.t('leisure') }
-        };
-
         html += paginatedItems.map(item => {
             // Determine distance text
             let distText = '';
@@ -729,7 +760,7 @@ const app = {
                 distText = item.distance + ' km';
             }
 
-            const meta = categoryMeta[item.category] || { icon: '\u{1F4CD}', bg: '#f0f4f8', color: '#666', label: '' };
+            const meta = this.getCategoryMeta(item.category);
             const is24h = item.is_24h == '1';
             const addressShort = item.address ? (item.address.length > 50 ? item.address.substring(0, 50) + '...' : item.address) : '';
 
@@ -863,15 +894,7 @@ const app = {
         }
 
         // --- Data Parsing ---
-        const categoryMeta = {
-            'hospital': { icon: '\u{1F3E5}', bg: '#dbeafe', color: '#3b82f6', gradient: 'linear-gradient(135deg, #1e40af, #3b82f6)' },
-            'farmacia': { icon: '\u{1F48A}', bg: '#d1fae5', color: '#10b981', gradient: 'linear-gradient(135deg, #047857, #10b981)' },
-            'emergencia': { icon: '\u{1F691}', bg: '#ffe5e8', color: '#e63946', gradient: 'linear-gradient(135deg, #991b1b, #e63946)' },
-            'cultura': { icon: '\u{1F3DB}\uFE0F', bg: '#fef3c7', color: '#f59e0b', gradient: 'linear-gradient(135deg, #b45309, #f59e0b)' },
-            'compras': { icon: '\u{1F6CD}\uFE0F', bg: '#fce7f3', color: '#ec4899', gradient: 'linear-gradient(135deg, #9d174d, #ec4899)' },
-            'lazer': { icon: '\u{1F333}', bg: '#d1fae5', color: '#059669', gradient: 'linear-gradient(135deg, #065f46, #059669)' }
-        };
-        const meta = categoryMeta[item.category] || { icon: '\u{1F4CD}', bg: '#f0f4f8', color: '#666', gradient: 'linear-gradient(135deg, #374151, #6b7280)' };
+        const meta = this.getCategoryMeta(item.category);
 
         // Website extraction
         let website = null;
@@ -920,10 +943,7 @@ const app = {
         // Map and share links
         const mapLink = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(item.lat + ',' + item.lng)}&travelmode=driving`;
         const wazeLink = `https://waze.com/ul?ll=${item.lat},${item.lng}&navigate=yes`;
-        const categoryLabel = {
-            'hospital': i18n.t('category_hospital'), 'farmacia': i18n.t('category_pharmacy'),
-            'cultura': i18n.t('culture'), 'compras': i18n.t('shopping'), 'lazer': i18n.t('leisure')
-        }[item.category] || i18n.t('places');
+        const categoryLabel = meta.label || i18n.t('places');
 
         // --- Render ---
         const heroBg = item.image_url ? `background-image: url('${item.image_url}');` : `background: ${meta.gradient};`;
@@ -1051,7 +1071,7 @@ const app = {
                         attribution: ''
                     }).addTo(miniMap);
 
-                    const icon = MapManager.createIcon(item.category === 'farmacia' ? 'green' : (item.category === 'hospital' ? 'red' : 'blue'));
+                    const icon = MapManager.createIcon(this.getCategoryMeta(item.category).color);
                     L.marker([item.lat, item.lng], { icon: icon }).addTo(miniMap);
 
                     mapEl.addEventListener('click', () => {

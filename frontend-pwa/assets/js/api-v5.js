@@ -5,7 +5,8 @@ const API = {
     // Cached data for offline support
     cache: {
         locais: null,
-        evento: null
+        evento: null,
+        categorias: null
     },
 
     async getLocais(params = {}) {
@@ -52,6 +53,27 @@ const API = {
                 return JSON.parse(cached);
             }
             throw error;
+        }
+    },
+
+    async getCategorias() {
+        const url = `${this.baseUrl}/categorias?_t=${Date.now()}`;
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const data = await response.json();
+
+            this.cache.categorias = data;
+            localStorage.setItem('zelo_categorias', JSON.stringify(data));
+
+            return data;
+        } catch (error) {
+            console.warn('Fetch categorias falhou, tentando cache', error);
+            const cached = localStorage.getItem('zelo_categorias');
+            if (cached) {
+                return JSON.parse(cached);
+            }
+            return [];
         }
     }
 };
