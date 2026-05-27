@@ -16,7 +16,7 @@
     <!-- CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <link rel="stylesheet" href="assets/css/style-v5.css?v=67">
+    <link rel="stylesheet" href="assets/css/style-v5.css?v=68">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -235,11 +235,11 @@
                     <form onsubmit="app.auth.login(event)">
                         <div class="form-group">
                             <label data-i18n="username_email">Usuário ou Email</label>
-                            <input type="text" id="login-username" class="form-input" required>
+                            <input type="text" id="login-username" class="form-input" autocomplete="username" required>
                         </div>
                         <div class="form-group">
                             <label data-i18n="password">Senha</label>
-                            <input type="password" id="login-password" class="form-input" required>
+                            <input type="password" id="login-password" class="form-input" autocomplete="current-password" required>
                         </div>
 
                         <div id="login-error" class="text-danger"
@@ -282,7 +282,7 @@
                         </div>
                         <div class="form-group">
                             <label>Senha (mín. 8 caracteres)</label>
-                            <input type="password" id="register-password" class="form-input" required minlength="8">
+                            <input type="password" id="register-password" class="form-input" autocomplete="new-password" required minlength="8">
                         </div>
                         <div id="register-error" class="text-danger" style="display:none; margin-bottom: 1rem; font-size: 0.9rem;"></div>
                         <button type="submit" class="btn-block" id="register-submit-btn">Criar conta</button>
@@ -419,11 +419,11 @@
 
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script src="assets/js/zelo-build.js?v=67"></script>
-    <script src="assets/js/i18n.js?v=67"></script>
-    <script src="assets/js/api-v5.js?v=67"></script>
-    <script src="assets/js/map-manager.js?v=67"></script>
-    <script src="assets/js/app-v5.js?v=67"></script>
+    <script src="assets/js/zelo-build.js?v=68"></script>
+    <script src="assets/js/i18n.js?v=68"></script>
+    <script src="assets/js/api-v5.js?v=68"></script>
+    <script src="assets/js/map-manager.js?v=68"></script>
+    <script src="assets/js/app-v5.js?v=68"></script>
 
     <script>
         // Register Service Worker

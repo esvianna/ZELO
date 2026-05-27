@@ -206,7 +206,20 @@ const app = {
                 this.user = JSON.parse(storedUser);
                 console.log('User restored:', this.user);
             }
-            this.updateUI();
+        },
+
+        handleOpsAuthFailure() {
+            app.data.volunteerOps = null;
+            app._opsAuthFailed = true;
+            if (!app._opsAuthFailureLogged) {
+                console.info('Sessão WordPress expirada ou nonce inválido — faça login novamente para ver a escala.');
+                app._opsAuthFailureLogged = true;
+            }
+        },
+
+        clearOpsAuthFailure() {
+            app._opsAuthFailed = false;
+            app._opsAuthFailureLogged = false;
         },
 
         async login(event) {
@@ -247,6 +260,7 @@ const app = {
                     headers: {
                         'Content-Type': 'application/json'
                     },
+                    credentials: 'same-origin',
                     body: JSON.stringify({
                         username: username,
                         password: password // *Note*: sending password plain over HTTPS is standard for this simple auth
@@ -264,6 +278,7 @@ const app = {
                     // Success
                     this.user = data.user;
                     this.user.nonce = data.nonce;
+                    this.clearOpsAuthFailure();
 
                     // Persist
                     localStorage.setItem('zelo_user', JSON.stringify(this.user));
@@ -334,6 +349,7 @@ const app = {
             this.user = null;
             localStorage.removeItem('zelo_user');
             app.data.volunteerOps = null;
+            this.clearOpsAuthFailure();
             this.updateUI();
             app.router.navigate('home');
             app.toggleHomeVisitorExtrasCollapse();
@@ -563,9 +579,18 @@ const app = {
         }
 
         // Skip if no coordinates or map already initialized
-        if (!coords.lat || !coords.lng || mapEl._leaflet_id) return;
+        if (!coords.lat || !coords.lng) return;
+        if (this._homeMiniMap || mapEl._leaflet_id) return;
 
-        setTimeout(() => {
+        if (this._homeMapInitTimer) {
+            clearTimeout(this._homeMapInitTimer);
+        }
+
+        this._homeMapInitTimer = setTimeout(() => {
+            this._homeMapInitTimer = null;
+            const el = document.getElementById('home-map-preview');
+            if (!el || el._leaflet_id || this._homeMiniMap) return;
+
             const miniMap = L.map('home-map-preview', {
                 center: [coords.lat, coords.lng],
                 zoom: 14,
@@ -594,6 +619,7 @@ const app = {
                 L.marker([coords.lat, coords.lng]).addTo(miniMap);
             }
 
+            this._homeMiniMap = miniMap;
             setTimeout(() => miniMap.invalidateSize(), 200);
         }, 300);
     },
@@ -1202,16 +1228,32 @@ const app = {
         return this.canViewOps() && !this.canReallocateOps() && !this.canManageOps();
     },
 
-    async loadVolunteerOps() {
+    async loadVolunteerOps(force = false) {
         if (!this.canViewOps()) {
             return null;
         }
-        const mineOnly = this.usesMineOnlyOps();
-        const data = await API.getVolunteerOps(mineOnly);
-        if (data) {
-            this.data.volunteerOps = data;
+        if (this._opsAuthFailed && !force) {
+            return null;
         }
-        return data;
+        if (this._volunteerOpsPromise && !force) {
+            return this._volunteerOpsPromise;
+        }
+        const mineOnly = this.usesMineOnlyOps();
+        this._volunteerOpsPromise = (async () => {
+            const data = await API.getVolunteerOps(mineOnly);
+            if (data && data.__authError) {
+                this.auth.handleOpsAuthFailure();
+                return null;
+            }
+            if (data) {
+                this.data.volunteerOps = data;
+                this._opsAuthFailed = false;
+            }
+            return data;
+        })().finally(() => {
+            this._volunteerOpsPromise = null;
+        });
+        return this._volunteerOpsPromise;
     },
 
     getOpsRoleLabel() {
@@ -1305,9 +1347,19 @@ const app = {
         const name = this.escapeHtml(this.auth.user.name || '');
         const roleLabel = this.escapeHtml(this.getOpsRoleLabel());
 
+        if (this._opsAuthFailed) {
+            container.innerHTML = `
+                <h2>${i18n.t('ops_dashboard_title')}, ${name}</h2>
+                <p class="volunteer-role-label">${roleLabel}</p>
+                <p class="text-muted" style="margin:0.75rem 0;">${i18n.t('ops_session_expired')}</p>
+                <button type="button" class="btn-block" onclick="app.router.navigate('login')">${i18n.t('login_btn')}</button>
+            `;
+            return;
+        }
+
         if (!this.data.volunteerOps) {
             container.innerHTML = `<div class="loading">${i18n.t('loading')}</div>`;
-            this.data.volunteerOps = await this.loadVolunteerOps();
+            await this.loadVolunteerOps();
         }
 
         const ops = this.data.volunteerOps;
@@ -1414,6 +1466,10 @@ const app = {
         }
         if (!this.canViewOps()) {
             alert('Seu perfil não possui acesso à escala operacional.');
+            return;
+        }
+        if (this._opsAuthFailed) {
+            this.router.navigate('login');
             return;
         }
         await this.loadVolunteerOps();

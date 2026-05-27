@@ -101,16 +101,16 @@ const API = {
                 credentials: 'same-origin'
             });
             if (response.status === 401 || response.status === 403) {
-                const err = new Error('Ops API auth required');
-                err.status = response.status;
-                throw err;
+                return { __authError: true, status: response.status };
             }
             if (!response.ok) throw new Error('Ops API unavailable');
             const data = await response.json();
             this.cache.volunteerOps = data;
             return data;
         } catch (error) {
-            console.warn('Falha ao carregar operação de voluntários', error);
+            if (!error || !error.__authError) {
+                console.warn('Falha ao carregar operação de voluntários', error);
+            }
             return null;
         }
     },

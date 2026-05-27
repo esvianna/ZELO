@@ -55,6 +55,7 @@ const i18n = {
             "ops_status_checked_in": "No posto",
             "ops_status_checked_out": "Saiu",
             "home_visitor_extras_summary": "Mais opções (cidade e mapas)",
+            "ops_session_expired": "Sua sessão expirou ou o acesso à escala não está válido. Entre novamente para atualizar.",
             
             // Map/List Filters
             "near_me": "Perto de mim",
@@ -153,6 +154,7 @@ const i18n = {
             "ops_status_checked_in": "On site",
             "ops_status_checked_out": "Checked out",
             "home_visitor_extras_summary": "More options (city and maps)",
+            "ops_session_expired": "Your session expired or schedule access is invalid. Please sign in again.",
             
             "near_me": "Near me",
             "az": "A-Z",
@@ -249,6 +251,7 @@ const i18n = {
             "ops_status_checked_in": "En el puesto",
             "ops_status_checked_out": "Salió",
             "home_visitor_extras_summary": "Más opciones (ciudad y mapas)",
+            "ops_session_expired": "Su sesión expiró o el acceso a la escala no es válido. Inicie sesión de nuevo.",
             
             "near_me": "Cerca de mí",
             "az": "A-Z",
