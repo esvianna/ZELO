@@ -1283,7 +1283,15 @@ const app = {
         }
     },
 
+    toggleHomeWelcome() {
+        const el = document.querySelector('.home-welcome');
+        if (!el) return;
+        el.hidden = !!(this.auth.user && this.canViewOps());
+    },
+
     async renderHomeVolunteerDashboard() {
+        this.toggleHomeWelcome();
+
         const container = document.getElementById('home-volunteer-dashboard');
         if (!container) return;
 
