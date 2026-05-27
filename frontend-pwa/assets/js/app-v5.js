@@ -354,10 +354,8 @@ const app = {
             localStorage.removeItem('zelo_user');
             app.data.volunteerOps = null;
             this.clearOpsAuthFailure();
-            this.updateUI();
+            this.refreshAuthChrome();
             app.router.navigate('home');
-            app.toggleHomeVisitorExtrasCollapse();
-            app.renderHomeVolunteerDashboard();
         },
 
         handleIconClick() {
@@ -402,10 +400,6 @@ const app = {
 
         updateUI() {
             this.refreshAuthChrome();
-            if (app.router.currentView === 'home') {
-                app.renderHomeVolunteerDashboard();
-                app.toggleHomeVisitorExtrasCollapse();
-            }
         },
 
         async forceUpdate() {
