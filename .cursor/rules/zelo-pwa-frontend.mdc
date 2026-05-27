@@ -12,6 +12,7 @@ alwaysApply: false
 - Evitar `innerHTML` com dados não confiáveis; preferir escape ou DOM seguro.
 - Novas views: seguir padrão `app.router.navigate` + `<section id="view-*">`.
 - Traduções: chaves em `i18n.js` (pt_br, en, es).
+- **Botões:** usar `btn-block` / `btn-block outline` (`style-v5.css`). Não usar `class="button"` — não existe no CSS e renderiza estilo nativo do navegador. Chips/pills em cards: `event-banner-btn`.
 
 Após mudar assets: ver regra de deploy (`DEPLOYMENT_RULES.md` + `zelo-build.js`).
 

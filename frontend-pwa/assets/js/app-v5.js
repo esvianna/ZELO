@@ -1315,7 +1315,7 @@ const app = {
                 const status = this.getCheckinStatus(item.id);
                 const idEsc = String(item.id).replace(/'/g, "\\'");
                 const checkinBtn = status.status === 'pending'
-                    ? `<button type="button" class="button button-primary" onclick="app.doCheckin('${idEsc}')">${i18n.t('ops_quick_checkin')}</button>`
+                    ? `<button type="button" class="btn-block btn-block--compact" onclick="app.doCheckin('${idEsc}')">${i18n.t('ops_quick_checkin')}</button>`
                     : '';
                 return `
                     <div class="home-volunteer-assignment">
@@ -1337,7 +1337,7 @@ const app = {
             <h3 style="font-size:0.95rem;margin:0 0 0.5rem;">${i18n.t('ops_my_assignments')}</h3>
             ${assignmentsHtml}
             <div class="home-volunteer-dashboard-actions">
-                <button type="button" class="button button-primary" onclick="app.openVolunteerOps()">${i18n.t('ops_view_full_schedule')}</button>
+                <button type="button" class="btn-block" onclick="app.openVolunteerOps()">${i18n.t('ops_view_full_schedule')}</button>
             </div>
             <a href="#" class="profile-link" onclick="app.router.navigate('profile'); return false;">${i18n.t('my_profile')}</a>
         `;
