@@ -206,6 +206,7 @@ const app = {
                 this.user = JSON.parse(storedUser);
                 console.log('User restored:', this.user);
             }
+            this.refreshAuthChrome();
         },
 
         handleOpsAuthFailure() {
@@ -260,7 +261,7 @@ const app = {
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    credentials: 'same-origin',
+                    credentials: 'include',
                     body: JSON.stringify({
                         username: username,
                         password: password // *Note*: sending password plain over HTTPS is standard for this simple auth
@@ -275,24 +276,27 @@ const app = {
                 }
 
                 if (data.success) {
-                    // Success
-                    this.user = data.user;
-                    this.user.nonce = data.nonce;
-                    this.clearOpsAuthFailure();
+                    API.persistAuthUser(data.user, data.nonce);
+                    this.user = JSON.parse(localStorage.getItem('zelo_user'));
 
-                    // Persist
-                    localStorage.setItem('zelo_user', JSON.stringify(this.user));
+                    const synced = await API.refreshSession();
+                    if (synced) {
+                        this.user = synced;
+                        this.clearOpsAuthFailure();
+                    } else if (this.user.caps && this.user.caps.view_ops) {
+                        throw new Error(
+                            'Login aceito, mas a sessão não foi validada no servidor. Confirme que a PWA está no mesmo domínio do WordPress e tente novamente.'
+                        );
+                    }
 
-                    // Update UI
                     this.updateUI();
 
-                    if (this.user.caps && this.user.caps.view_ops) {
-                        app.data.volunteerOps = await app.loadVolunteerOps();
+                    if (this.user.caps && this.user.caps.view_ops && !app._opsAuthFailed) {
+                        app.data.volunteerOps = await app.loadVolunteerOps(true);
                     } else {
                         app.data.volunteerOps = null;
                     }
 
-                    // Redirect
                     app.router.navigate('home');
 
                     // Clear form
@@ -364,12 +368,13 @@ const app = {
             }
         },
 
-        updateUI() {
+        refreshAuthChrome() {
             const iconContainer = document.getElementById('user-auth-indicator');
 
             if (this.user && iconContainer) {
                 const avatarUrl = this.user.avatar || 'images/default-avatar.png';
-                iconContainer.innerHTML = `<img src="${avatarUrl}" alt="User">`;
+                iconContainer.innerHTML = `<img src="${avatarUrl}" alt="">`;
+                iconContainer.setAttribute('title', this.user.name || i18n.t('my_profile'));
             } else if (iconContainer) {
                 iconContainer.innerHTML = `
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -393,6 +398,10 @@ const app = {
             }
 
             app.updateBottomNavForVolunteer();
+        },
+
+        updateUI() {
+            this.refreshAuthChrome();
             if (app.router.currentView === 'home') {
                 app.renderHomeVolunteerDashboard();
                 app.toggleHomeVisitorExtrasCollapse();
@@ -455,15 +464,22 @@ const app = {
             this.data.categoriesMeta = this.buildCategoryMeta(categorias || []);
 
             if (this.auth.user && this.auth.user.caps && this.auth.user.caps.view_ops) {
-                this.data.volunteerOps = await this.loadVolunteerOps();
+                const synced = await API.refreshSession();
+                if (synced) {
+                    this.auth.user = synced;
+                    this.auth.clearOpsAuthFailure();
+                    this.data.volunteerOps = await this.loadVolunteerOps();
+                } else {
+                    this.auth.handleOpsAuthFailure();
+                }
             }
 
             console.log('Data loaded', this.data);
 
-            // Render header if we are already on home (which we usually are at init)
+            this.auth.refreshAuthChrome();
+
             this.renderEventBanner();
             this.renderHomeMap();
-            this.updateBottomNavForVolunteer();
             this.renderHomeVolunteerDashboard();
             this.toggleHomeVisitorExtrasCollapse();
 

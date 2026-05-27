@@ -24,6 +24,37 @@ const API = {
         return {};
     },
 
+    persistAuthUser(user, nonce) {
+        if (!user) return;
+        const merged = { ...user, nonce: nonce || user.nonce };
+        localStorage.setItem('zelo_user', JSON.stringify(merged));
+        return merged;
+    },
+
+    /**
+     * Valida cookie WP e renova nonce (essencial para PWA em /zelo/).
+     */
+    async refreshSession() {
+        const url = `${this.baseUrl}/auth/session?_t=${Date.now()}`;
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                credentials: 'include',
+                headers: this.getAuthHeaders()
+            });
+            if (!response.ok) {
+                return null;
+            }
+            const data = await response.json();
+            if (data && data.success && data.user && data.nonce) {
+                return this.persistAuthUser(data.user, data.nonce);
+            }
+        } catch (err) {
+            console.warn('Falha ao renovar sessão', err);
+        }
+        return null;
+    },
+
     async getLocais(params = {}) {
         // Add timestamp to prevent caching
         params._t = Date.now();
@@ -98,7 +129,7 @@ const API = {
         try {
             const response = await fetch(url, {
                 headers: this.getAuthHeaders(),
-                credentials: 'same-origin'
+                credentials: 'include'
             });
             if (response.status === 401 || response.status === 403) {
                 return { __authError: true, status: response.status };
@@ -146,7 +177,7 @@ const API = {
         const r = await fetch(url, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json', ...this.getAuthHeaders() },
-            credentials: 'same-origin',
+            credentials: 'include',
             body: JSON.stringify({ status, ...extra })
         });
         const data = await r.json().catch(() => ({}));
@@ -159,7 +190,7 @@ const API = {
         const r = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ...this.getAuthHeaders() },
-            credentials: 'same-origin',
+            credentials: 'include',
             body: JSON.stringify({ assignment_id: assignmentId, reason: reason || '' })
         });
         const data = await r.json().catch(() => ({}));
@@ -175,7 +206,7 @@ const API = {
                 'Content-Type': 'application/json',
                 ...this.getAuthHeaders()
             },
-            credentials: 'same-origin',
+            credentials: 'include',
             body: JSON.stringify({ assignment_id: assignmentId })
         });
         if (!response.ok) throw new Error('Falha no check-in');
@@ -190,7 +221,7 @@ const API = {
                 'Content-Type': 'application/json',
                 ...this.getAuthHeaders()
             },
-            credentials: 'same-origin',
+            credentials: 'include',
             body: JSON.stringify({ assignment_id: assignmentId })
         });
         if (!response.ok) throw new Error('Falha no check-out');
@@ -205,7 +236,7 @@ const API = {
                 'Content-Type': 'application/json',
                 ...this.getAuthHeaders()
             },
-            credentials: 'same-origin',
+            credentials: 'include',
             body: JSON.stringify({
                 assignment_id: assignmentId,
                 new_location: newLocation,

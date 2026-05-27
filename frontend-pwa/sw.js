@@ -1,14 +1,14 @@
-const CACHE_NAME = 'zelo-cache-v68';
+const CACHE_NAME = 'zelo-cache-v70';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
     './manifest.json',
-    './assets/js/zelo-build.js?v=68',
-    './assets/css/style-v5.css?v=68',
-    './assets/js/i18n.js?v=68',
-    './assets/js/app-v5.js?v=68',
-    './assets/js/api-v5.js?v=68',
-    './assets/js/map-manager.js?v=68',
+    './assets/js/zelo-build.js?v=70',
+    './assets/css/style-v5.css?v=70',
+    './assets/js/i18n.js?v=70',
+    './assets/js/app-v5.js?v=70',
+    './assets/js/api-v5.js?v=70',
+    './assets/js/map-manager.js?v=70',
     './images/logo-zelo.png',
     'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
     'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
@@ -29,6 +29,16 @@ self.addEventListener('install', (event) => {
 
 // Fetch Event
 self.addEventListener('fetch', (event) => {
+    // API WordPress: não interceptar — cookies de sessão e nonce devem ir direto ao browser.
+    try {
+        const url = new URL(event.request.url);
+        if (url.pathname.indexOf('/wp-json/') !== -1) {
+            return;
+        }
+    } catch (e) {
+        /* ignore */
+    }
+
     // Network First Strategy for EVERYTHING (ensures freshness)
     // If network fails (offline), fallback to cache
 

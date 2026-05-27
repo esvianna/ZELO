@@ -2,6 +2,12 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.5.2] - 2026-05-27
+
+### Autenticação
+- Novo endpoint `GET /zelo/v1/auth/session` para validar cookie WP e renovar nonce (PWA em `/zelo/`).
+- Login reforça `wp_set_current_user` e cookies em HTTPS.
+
 ## [2.5.1] - 2026-05-27
 
 ### Segurança
