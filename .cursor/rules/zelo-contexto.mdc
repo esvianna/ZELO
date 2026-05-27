@@ -1,0 +1,18 @@
+---
+description: Contexto ZELO — ler documentação antes de alterar código
+alwaysApply: true
+---
+
+# Antes de alterar código (ZELO)
+
+1. Leia `PROJECT_STATUS.md` (onde paramos, pendências, riscos).
+2. Leia `AGENTS.md` e `DECISIONS.md` para decisões já tomadas.
+3. Para deploy PWA: `DEPLOYMENT_RULES.md`; para auth/ops: `docs/DEPLOY-ZELO-PWA.md`.
+4. Avalie impacto em API REST, cache offline, roles WP e dados em `wp_options`.
+5. **Preserve** comportamento existente; não refatore arquivos grandes (`app-v5.js`) sem pedido explícito.
+6. **Não** altere `api-v5.js` URLs de produção sem confirmação do usuário.
+7. Responda e documente em **português (PT-BR)**.
+
+Arquivos críticos:
+- Backend: `backend-plugin/zelo-assistente/zelo-assistente.php`, `inc/api-routes.php`, `inc/volunteer-ops.php`
+- Frontend: `frontend-pwa/assets/js/app-v5.js`, `api-v5.js`, `index.html`, `sw.js`, `zelo-build.js`

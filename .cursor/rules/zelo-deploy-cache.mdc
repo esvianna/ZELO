@@ -1,0 +1,18 @@
+---
+description: Versionamento de cache PWA — obrigatório ao publicar frontend
+globs: frontend-pwa/{index.html,sw.js,assets/js/zelo-build.js}
+alwaysApply: false
+---
+
+# Deploy e cache (PWA)
+
+Ao modificar CSS, JS ou HTML:
+
+1. Incremente `window.ZELO_APP_BUILD` em `assets/js/zelo-build.js`.
+2. Atualize **todos** os `?v=` correspondentes em `index.html`.
+3. Em `sw.js`: incremente `CACHE_NAME` e alinhe paths em `ASSETS_TO_CACHE` com os mesmos `?v=`.
+4. Verifique consistência: build, query strings e CACHE_NAME devem refletir o mesmo release.
+
+Detalhes completos: `DEPLOYMENT_RULES.md`.
+
+Falha comum: CACHE_NAME v64 com scripts `?v=59` — usuários ficam em versão antiga.

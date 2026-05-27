@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.5.1] - 2026-05-27
+
+### Segurança
+- Removido filtro temporário `zelo_ops_voluntarios_public_read` — `/ops/voluntarios` exige autenticação novamente.
+
 ## [2.4.6] - 2026-03-12
 
 ### Correções (PWA)

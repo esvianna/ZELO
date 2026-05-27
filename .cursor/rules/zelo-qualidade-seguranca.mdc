@@ -1,0 +1,14 @@
+---
+description: Qualidade de código e segurança (ZELO)
+alwaysApply: true
+---
+
+# Qualidade e segurança (ZELO)
+
+**Código:** simplicidade, legibilidade, baixo acoplamento, funções pequenas, nomes claros, reutilizar helpers existentes (`zelo_*`), tratar erros com mensagens úteis.
+
+**Segurança:** validar/sanitizar entradas; escapar saídas HTML; SQL via APIs WP; REST com permissões; proteger tokens/senhas; logs sem PII desnecessária.
+
+**Testes:** após mudanças, indicar passos de `TESTING.md` (smoke + regressão + casos de erro).
+
+Consulte `SECURITY.md` para checklist de deploy.

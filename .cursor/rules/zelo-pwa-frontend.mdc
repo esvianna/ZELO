@@ -1,0 +1,18 @@
+---
+description: Padrões da PWA vanilla (JS/CSS/HTML)
+globs: frontend-pwa/**/*
+alwaysApply: false
+---
+
+# Frontend ZELO (PWA)
+
+- Stack: HTML/CSS/JS vanilla — **sem** bundler/npm salvo pedido explícito.
+- API centralizada em `assets/js/api-v5.js`; app em `app-v5.js`; i18n em `i18n.js`.
+- Auth: nonce `X-WP-Nonce` de `localStorage.zelo_user`; same-origin com WordPress.
+- Evitar `innerHTML` com dados não confiáveis; preferir escape ou DOM seguro.
+- Novas views: seguir padrão `app.router.navigate` + `<section id="view-*">`.
+- Traduções: chaves em `i18n.js` (pt_br, en, es).
+
+Após mudar assets: ver regra de deploy (`DEPLOYMENT_RULES.md` + `zelo-build.js`).
+
+Não inflar `app-v5.js` com refatoração não solicitada — diff mínimo na área tocada.

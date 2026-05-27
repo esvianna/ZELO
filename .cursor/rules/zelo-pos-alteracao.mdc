@@ -1,0 +1,18 @@
+---
+description: Após mudanças no ZELO — atualizar docs e indicar testes
+alwaysApply: true
+---
+
+# Depois de alterar código (ZELO)
+
+1. Atualize `PROJECT_STATUS.md` (seção Última sessão + pendências se mudou).
+2. Registre em `CHANGELOG.md` (raiz); plugin PHP relevante → também `backend-plugin/zelo-assistente/CHANGELOG.md`.
+3. Decisão técnica nova → entrada em `DECISIONS.md` (ADR curto).
+4. Impacto de segurança → `SECURITY.md` ou nota em PROJECT_STATUS.
+5. Descreva **como testar** (itens de `TESTING.md` aplicáveis).
+6. Indique **próximo passo lógico** em PROJECT_STATUS ou ROADMAP.
+
+Se alterou frontend (CSS/JS/HTML):
+- Siga `DEPLOYMENT_RULES.md`: alinhar `zelo-build.js`, `?v=` em `index.html`, `ASSETS_TO_CACHE` e `CACHE_NAME` em `sw.js`.
+
+Não commitar a menos que o usuário peça explicitamente.

@@ -1,0 +1,17 @@
+---
+description: Padrões PHP/WordPress do plugin zelo-assistente
+globs: backend-plugin/**/*.php
+alwaysApply: false
+---
+
+# Backend ZELO (PHP / WordPress)
+
+- Guard `ABSPATH` no topo; prefixo `zelo_` em funções.
+- REST: namespace `zelo/v1`; **sempre** `permission_callback` explícito (evitar `__return_true` em dados sensíveis).
+- Sanitizar params REST; escapar saída no admin (`esc_html`, `esc_html_e`).
+- Capabilities: `zelo_view_ops`, `zelo_checkin_ops`, `zelo_reallocate_volunteer`, `zelo_manage_ops`.
+- Não reintroduzir leitura pública de `/ops/voluntarios` sem ADR em `DECISIONS.md`.
+- Dados ops em `wp_options` — mudanças de schema JSON exigem migração/backward compatibility.
+- Ao subir versão do plugin: atualizar `ZELO_VERSION` em `zelo-assistente.php` + changelog do plugin.
+
+Qualidade: funções pequenas, nomes claros, early return, `WP_Error` com status HTTP adequado.

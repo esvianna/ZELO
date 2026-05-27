@@ -163,6 +163,8 @@ const app = {
                     app.renderHomeNotice();
                     app.renderEventBanner();
                     app.renderHomeMap();
+                    app.renderHomeVolunteerDashboard();
+                    app.toggleHomeVisitorExtrasCollapse();
                 }
             }
         },
@@ -270,7 +272,7 @@ const app = {
                     this.updateUI();
 
                     if (this.user.caps && this.user.caps.view_ops) {
-                        app.data.volunteerOps = await API.getVolunteerOps();
+                        app.data.volunteerOps = await app.loadVolunteerOps();
                     } else {
                         app.data.volunteerOps = null;
                     }
@@ -334,6 +336,8 @@ const app = {
             app.data.volunteerOps = null;
             this.updateUI();
             app.router.navigate('home');
+            app.toggleHomeVisitorExtrasCollapse();
+            app.renderHomeVolunteerDashboard();
         },
 
         handleIconClick() {
@@ -346,33 +350,36 @@ const app = {
 
         updateUI() {
             const iconContainer = document.getElementById('user-auth-indicator');
-            if (!iconContainer) return;
 
-            if (this.user) {
-                // Show Avatar
-                const avatarUrl = this.user.avatar || 'images/default-avatar.png'; // Fallback
+            if (this.user && iconContainer) {
+                const avatarUrl = this.user.avatar || 'images/default-avatar.png';
                 iconContainer.innerHTML = `<img src="${avatarUrl}" alt="User">`;
-
-                // Update Profile View if active
-                const pName = document.getElementById('profile-name');
-                const pEmail = document.getElementById('profile-email');
-                const pRole = document.getElementById('profile-role');
-                const pAvatar = document.getElementById('profile-avatar');
-
-                if (pName) pName.textContent = this.user.name;
-                if (pEmail) pEmail.textContent = this.user.email;
-                if (pRole) pRole.textContent = this.user.roles[0] || i18n.t('visitor_role');
-                if (pAvatar) pAvatar.src = avatarUrl;
-
-            } else {
-                // Show Login Icon (SVG)
+            } else if (iconContainer) {
                 iconContainer.innerHTML = `
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                             <circle cx="12" cy="7" r="4"></circle>
                         </svg>`;
-                iconContainer.removeAttribute('title'); // Remove title or set to 'Login'
                 iconContainer.setAttribute('title', 'Entrar');
+            }
+
+            const pName = document.getElementById('profile-name');
+            const pEmail = document.getElementById('profile-email');
+            const pRole = document.getElementById('profile-role');
+            const pAvatar = document.getElementById('profile-avatar');
+
+            if (this.user) {
+                const avatarUrl = this.user.avatar || 'images/default-avatar.png';
+                if (pName) pName.textContent = this.user.name;
+                if (pEmail) pEmail.textContent = this.user.email;
+                if (pRole) pRole.textContent = app.getOpsRoleLabel() || this.user.roles[0] || i18n.t('visitor_role');
+                if (pAvatar) pAvatar.src = avatarUrl;
+            }
+
+            app.updateBottomNavForVolunteer();
+            if (app.router.currentView === 'home') {
+                app.renderHomeVolunteerDashboard();
+                app.toggleHomeVisitorExtrasCollapse();
             }
         },
 
@@ -432,7 +439,7 @@ const app = {
             this.data.categoriesMeta = this.buildCategoryMeta(categorias || []);
 
             if (this.auth.user && this.auth.user.caps && this.auth.user.caps.view_ops) {
-                this.data.volunteerOps = await API.getVolunteerOps();
+                this.data.volunteerOps = await this.loadVolunteerOps();
             }
 
             console.log('Data loaded', this.data);
@@ -440,6 +447,9 @@ const app = {
             // Render header if we are already on home (which we usually are at init)
             this.renderEventBanner();
             this.renderHomeMap();
+            this.updateBottomNavForVolunteer();
+            this.renderHomeVolunteerDashboard();
+            this.toggleHomeVisitorExtrasCollapse();
 
         } catch (err) {
             console.error('Failed to load data', err);
@@ -1188,6 +1198,151 @@ const app = {
         return !!(this.auth.user && this.auth.user.caps && this.auth.user.caps.manage_ops);
     },
 
+    usesMineOnlyOps() {
+        return this.canViewOps() && !this.canReallocateOps() && !this.canManageOps();
+    },
+
+    async loadVolunteerOps() {
+        if (!this.canViewOps()) {
+            return null;
+        }
+        const mineOnly = this.usesMineOnlyOps();
+        const data = await API.getVolunteerOps(mineOnly);
+        if (data) {
+            this.data.volunteerOps = data;
+        }
+        return data;
+    },
+
+    getOpsRoleLabel() {
+        if (!this.auth.user || !this.auth.user.roles || !this.auth.user.roles.length) {
+            return '';
+        }
+        const role = this.auth.user.roles[0];
+        const map = {
+            zelo_voluntario: i18n.t('role_volunteer'),
+            zelo_homem_chave: i18n.t('role_keyman'),
+            zelo_supervisor_grupo: i18n.t('role_group_supervisor'),
+            zelo_supervisor_app: i18n.t('role_app_supervisor'),
+            administrator: i18n.t('role_admin')
+        };
+        return map[role] || role;
+    },
+
+    escapeHtml(str) {
+        if (str == null) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    },
+
+    getOpsStatusLabel(status) {
+        const s = status || 'pending';
+        if (s === 'checked_in') return i18n.t('ops_status_checked_in');
+        if (s === 'checked_out') return i18n.t('ops_status_checked_out');
+        return i18n.t('ops_status_pending');
+    },
+
+    getOpsStatusBadge(assignmentId) {
+        const status = this.getCheckinStatus(assignmentId).status || 'pending';
+        const cls = status === 'checked_in' ? 'ops-status-checked_in'
+            : status === 'checked_out' ? 'ops-status-checked_out'
+            : 'ops-status-pending';
+        return `<span class="ops-status-badge ${cls}">${this.escapeHtml(this.getOpsStatusLabel(status))}</span>`;
+    },
+
+    updateBottomNavForVolunteer() {
+        const nav = document.getElementById('nav-profile-or-ops');
+        if (!nav) return;
+        const opsMode = this.canViewOps();
+        nav.classList.toggle('nav-item--ops-mode', opsMode);
+        nav.dataset.target = opsMode ? 'escala' : 'profile';
+        const labelProfile = nav.querySelector('.nav-label-profile');
+        const labelOps = nav.querySelector('.nav-label-ops');
+        if (labelProfile) labelProfile.hidden = opsMode;
+        if (labelOps) labelOps.hidden = !opsMode;
+    },
+
+    navToProfileOrOps() {
+        if (this.canViewOps()) {
+            this.openVolunteerOps();
+        } else {
+            this.auth.handleIconClick();
+        }
+    },
+
+    toggleHomeVisitorExtrasCollapse() {
+        const el = document.getElementById('home-visitor-extras');
+        if (!el) return;
+        if (this.canViewOps() && this.auth.user) {
+            el.removeAttribute('open');
+        } else {
+            el.setAttribute('open', '');
+        }
+    },
+
+    async renderHomeVolunteerDashboard() {
+        const container = document.getElementById('home-volunteer-dashboard');
+        if (!container) return;
+
+        if (!this.auth.user || !this.canViewOps()) {
+            container.hidden = true;
+            container.innerHTML = '';
+            return;
+        }
+
+        container.hidden = false;
+        const name = this.escapeHtml(this.auth.user.name || '');
+        const roleLabel = this.escapeHtml(this.getOpsRoleLabel());
+
+        if (!this.data.volunteerOps) {
+            container.innerHTML = `<div class="loading">${i18n.t('loading')}</div>`;
+            this.data.volunteerOps = await this.loadVolunteerOps();
+        }
+
+        const ops = this.data.volunteerOps;
+        const uid = this.auth.user.id;
+        const schedule = (ops && Array.isArray(ops.schedule)) ? ops.schedule : [];
+        const myRows = schedule.filter((i) => Number(i.wp_user_id) === uid);
+
+        let assignmentsHtml = '';
+        if (!myRows.length) {
+            assignmentsHtml = `<p class="text-muted">${i18n.t('ops_no_assignments')}</p>`;
+        } else {
+            assignmentsHtml = myRows.map((item) => {
+                const status = this.getCheckinStatus(item.id);
+                const idEsc = String(item.id).replace(/'/g, "\\'");
+                const checkinBtn = status.status === 'pending'
+                    ? `<button type="button" class="button button-primary" onclick="app.doCheckin('${idEsc}')">${i18n.t('ops_quick_checkin')}</button>`
+                    : '';
+                return `
+                    <div class="home-volunteer-assignment">
+                        <div class="home-volunteer-assignment-head">
+                            <strong>${this.escapeHtml(this.getOpsDayLabel(item.day))} · ${this.escapeHtml(item.shift || '')}</strong>
+                            ${this.getOpsStatusBadge(item.id)}
+                        </div>
+                        <p style="margin:0.25rem 0;font-size:0.9rem;"><strong>${i18n.t('ops_location')}:</strong> ${this.escapeHtml(item.location || '-')}</p>
+                        <p style="margin:0;font-size:0.85rem;color:#64748b;">${this.escapeHtml(item.start || '')}${item.end ? ' – ' + this.escapeHtml(item.end) : ''}</p>
+                        ${checkinBtn}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        container.innerHTML = `
+            <h2>${i18n.t('ops_dashboard_title')}, ${name}</h2>
+            <p class="volunteer-role-label">${roleLabel}</p>
+            <h3 style="font-size:0.95rem;margin:0 0 0.5rem;">${i18n.t('ops_my_assignments')}</h3>
+            ${assignmentsHtml}
+            <div class="home-volunteer-dashboard-actions">
+                <button type="button" class="button button-primary" onclick="app.openVolunteerOps()">${i18n.t('ops_view_full_schedule')}</button>
+            </div>
+            <a href="#" class="profile-link" onclick="app.router.navigate('profile'); return false;">${i18n.t('my_profile')}</a>
+        `;
+    },
+
     async renderIndoorEventMap() {
         const el = document.getElementById('indoor-map-container');
         if (!el) return;
@@ -1218,7 +1373,7 @@ const app = {
         try {
             await API.createSwapRequest(assignmentId, reason);
             alert('Pedido de substituição enviado.');
-            this.data.volunteerOps = await API.getVolunteerOps();
+            await this.loadVolunteerOps();
             this.renderVolunteerOps();
         } catch (e) {
             alert(e.message || 'Falha ao enviar pedido.');
@@ -1253,7 +1408,7 @@ const app = {
             alert('Seu perfil não possui acesso à escala operacional.');
             return;
         }
-        this.data.volunteerOps = await API.getVolunteerOps();
+        await this.loadVolunteerOps();
         this.router.navigate('escala');
     },
 
@@ -1272,6 +1427,9 @@ const app = {
             const result = await API.checkinVolunteer(assignmentId);
             if (this.data.volunteerOps) this.data.volunteerOps.checkins = result.checkins || {};
             this.renderVolunteerOps();
+            if (this.router.currentView === 'home') {
+                this.renderHomeVolunteerDashboard();
+            }
         } catch (err) {
             alert('Não foi possível confirmar chegada.');
         }
@@ -1282,6 +1440,9 @@ const app = {
             const result = await API.checkoutVolunteer(assignmentId);
             if (this.data.volunteerOps) this.data.volunteerOps.checkins = result.checkins || {};
             this.renderVolunteerOps();
+            if (this.router.currentView === 'home') {
+                this.renderHomeVolunteerDashboard();
+            }
         } catch (err) {
             alert('Não foi possível confirmar saída.');
         }
@@ -1319,6 +1480,7 @@ const app = {
             return;
         }
 
+        const mineOnly = this.usesMineOnlyOps();
         const selectedDay = document.getElementById('ops-day-filter')?.value || '';
         const selectedShift = document.getElementById('ops-shift-filter')?.value || '';
         const selectedLanguage = (document.getElementById('ops-language-filter')?.value || '').toLowerCase();
@@ -1326,10 +1488,12 @@ const app = {
         const uid = this.auth.user.id;
         const myRows = ops.schedule.filter((i) => Number(i.wp_user_id) === uid);
         let myHtml = '';
-        if (myRows.length) {
-            myHtml = `<div class="ops-mine-block" style="margin-bottom:1rem;padding:0.75rem;background:#f0f9ff;border-radius:8px;border:1px solid #bae6fd;"><h3 style="margin:0 0 0.5rem;">Minhas designações</h3><ul style="margin:0;padding-left:1.2rem;">${myRows.map((i) => `<li><strong>${this.getOpsDayLabel(i.day)}</strong> ${i.shift} — ${i.volunteer_name || ''} @ ${i.location || '-'}</li>`).join('')}</ul></div>`;
-        } else {
-            myHtml = `<div class="ops-mine-block text-muted" style="margin-bottom:1rem;">Nenhuma linha da escala vinculada ao seu utilizador (wp_user_id).</div>`;
+        if (!mineOnly) {
+            if (myRows.length) {
+                myHtml = `<div class="ops-mine-block" style="margin-bottom:1rem;padding:0.75rem;background:#f0f9ff;border-radius:8px;border:1px solid #bae6fd;"><h3 style="margin:0 0 0.5rem;">${i18n.t('ops_my_assignments')}</h3><ul style="margin:0;padding-left:1.2rem;">${myRows.map((i) => `<li><strong>${this.getOpsDayLabel(i.day)}</strong> ${i.shift} — ${i.volunteer_name || ''} @ ${i.location || '-'}</li>`).join('')}</ul></div>`;
+            } else {
+                myHtml = `<div class="ops-mine-block text-muted" style="margin-bottom:1rem;">${i18n.t('ops_no_wp_user')}</div>`;
+            }
         }
 
         let swapPanel = '';
@@ -1352,7 +1516,7 @@ const app = {
         }
 
         const governance = ops.governance || {};
-        const governanceHtml = Object.entries(governance).map(([day, data]) => `
+        const governanceHtml = !mineOnly ? Object.entries(governance).map(([day, data]) => `
             <div class="ops-governance-card">
                 <h4>${this.getOpsDayLabel(day)}</h4>
                 <p><strong>Grupo A:</strong> ${data.group_a_supervisor || '-'}</p>
@@ -1360,7 +1524,7 @@ const app = {
                 <p><strong>Supervisor App:</strong> ${data.app_supervisor || '-'}</p>
                 <p><strong>Homens-chave:</strong> ${data.keymen ? Object.entries(data.keymen).map(([shift, person]) => `${shift}: ${person}`).join(' | ') : '-'}</p>
             </div>
-        `).join('');
+        `).join('') : '';
 
         const scheduleHtml = items.map(item => {
             const status = this.getCheckinStatus(item.id);
@@ -1373,6 +1537,7 @@ const app = {
                     <div class="ops-card-head">
                         <h4>${item.volunteer_name || 'Voluntário'}</h4>
                         <span class="ops-tag">${this.getOpsDayLabel(item.day)} • ${item.shift}</span>
+                        ${this.getOpsStatusBadge(item.id)}
                     </div>
                     <p><strong>Local:</strong> ${item.location || '-'}</p>
                     <p><strong>Horário:</strong> ${item.start || '-'} às ${item.end || '-'}</p>
@@ -1407,9 +1572,9 @@ const app = {
                 </select>
                 <input id="ops-language-filter" value="${selectedLanguage}" oninput="app.renderVolunteerOps()" placeholder="Filtrar idioma">
             </div>
-            <h3>Responsáveis por dia</h3>
-            <div class="ops-governance-grid">${governanceHtml || '<p class="text-muted">Sem dados de governança.</p>'}</div>
-            <h3 style="margin-top:1rem;">Escala detalhada</h3>
+            ${!mineOnly ? `<h3>${i18n.t('ops_governance_title')}</h3>
+            <div class="ops-governance-grid">${governanceHtml || '<p class="text-muted">Sem dados de governança.</p>'}</div>` : ''}
+            <h3 style="margin-top:1rem;">${mineOnly ? i18n.t('ops_my_schedule') : i18n.t('ops_detailed_schedule')}</h3>
             <div class="ops-schedule-grid">${scheduleHtml || '<div class="loading">Nenhuma designação encontrada para os filtros selecionados.</div>'}</div>
         `;
     },

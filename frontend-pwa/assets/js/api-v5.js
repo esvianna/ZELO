@@ -96,21 +96,18 @@ const API = {
         const mineParam = mine ? '&mine=1' : '';
         const url = `${this.baseUrl}/ops/voluntarios?_t=${Date.now()}${mineParam}`;
         try {
-            let response = await fetch(url, {
+            const response = await fetch(url, {
                 headers: this.getAuthHeaders(),
                 credentials: 'same-origin'
             });
-            // Cookie de sessão + X-WP-Nonce inválido → WP devolve 403 (rest_cookie_invalid_nonce)
-            // antes do permission_callback. Repetir sem cookies permite leitura pública no servidor.
-            if (!response.ok) {
-                response = await fetch(url, {
-                    headers: {},
-                    credentials: 'omit'
-                });
+            if (response.status === 401 || response.status === 403) {
+                const err = new Error('Ops API auth required');
+                err.status = response.status;
+                throw err;
             }
             if (!response.ok) throw new Error('Ops API unavailable');
             const data = await response.json();
-            if (!mine) this.cache.volunteerOps = data;
+            this.cache.volunteerOps = data;
             return data;
         } catch (error) {
             console.warn('Falha ao carregar operação de voluntários', error);
