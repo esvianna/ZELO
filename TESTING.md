@@ -161,7 +161,7 @@ Até lá, **checklist manual acima é a fonte de verdade**.
 | 3 | Menu header | Instalar (se disponível), atualizar cache |
 | 4 | Aviso warning/critical na home | Faixa compacta + link para avisos |
 | 5 | Aviso info | Só no hub (não card grande na home) |
-| 6 | Voluntário logado | Secção «Para você» com turno/check-in |
+| 6 | Voluntário logado | Secção «Para você» com check-in pendente em qualquer dia da escala |
 
 ---
 

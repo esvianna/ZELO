@@ -604,6 +604,19 @@ const app = {
             const myRows = (ops.schedule || []).filter((i) => Number(i.wp_user_id) === Number(uid));
 
             myRows.forEach((item) => {
+                const st = this.getCheckinStatus(item.id).status || 'pending';
+                if (st === 'pending') {
+                    items.push({
+                        id: `checkin-${item.id}`,
+                        category: 'personal',
+                        icon: '✅',
+                        title: i18n.t('avisos_checkin_pending'),
+                        summary: `${this.getOpsDayLabel(item.day)} · ${item.shift || ''} — ${item.location || ''} (${item.start || ''}${item.end ? ' – ' + item.end : ''})`,
+                        time: item.start || '',
+                        action: 'escala'
+                    });
+                    return;
+                }
                 const startMs = this.getAssignmentStartMs(item);
                 if (startMs != null && startMs >= now && startMs <= in24h) {
                     items.push({
@@ -615,20 +628,6 @@ const app = {
                         time: item.start || '',
                         action: 'escala'
                     });
-                }
-                if (this.isAssignmentToday(item)) {
-                    const st = this.getCheckinStatus(item.id).status || 'pending';
-                    if (st === 'pending') {
-                        items.push({
-                            id: `checkin-${item.id}`,
-                            category: 'personal',
-                            icon: '✅',
-                            title: i18n.t('avisos_checkin_pending'),
-                            summary: `${this.getOpsDayLabel(item.day)} · ${item.location || ''} — ${item.start || ''}`,
-                            time: item.start || '',
-                            action: 'escala'
-                        });
-                    }
                 }
             });
 
@@ -1824,6 +1823,10 @@ const app = {
             const result = await API.reallocateVolunteer(assignmentId, newLocation);
             this.data.volunteerOps = result.data || this.data.volunteerOps;
             this.renderVolunteerOps();
+            if (this.router.currentView === 'home') {
+                this.renderHomeVolunteerDashboard();
+            }
+            this.updateNotificationsBadge();
         } catch (err) {
             alert('Falha na realocação.');
         }

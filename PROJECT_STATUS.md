@@ -76,7 +76,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 |-------|--------|
 | Data | 2026-05-28 |
 | Feito | UX nav: 5 itens + S.O.S. central; header sino/menu; widget tempo home; hub avisos MVP |
-| Build PWA | 78 |
+| Build PWA | 80 |
 | Plugin | **2.6.5** |
 | Próximo passo | Deploy PWA build 78; smoke `TESTING.md` §7; Fase 2 carrossel destaques |
 

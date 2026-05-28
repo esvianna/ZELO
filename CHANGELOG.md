@@ -13,7 +13,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 - Plugin **2.6.5**: endpoint público `GET /zelo/v1/clima` (proxy Open-Meteo, cache 30 min, coordenadas do evento).
 - PWA build **77**: view Previsão do tempo, cache `localStorage` (`zelo_clima`).
 
+### Corrigido
+- PWA build **80**: `doReallocate()` atualiza badge de avisos e painel home após realocação.
+
 ### Alterado
+- PWA build **79**: hub avisos — check-in pendente para **qualquer** designação sua (não só “hoje”).
 - PWA build **78**: removido **TEMPO** do bottom nav; previsão acessível pelo widget na home.
 
 ### Alterado
