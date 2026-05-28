@@ -75,10 +75,10 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | Campo | Valor |
 |-------|--------|
 | Data | 2026-05-28 |
-| Feito | PWA build 74: fix `_opsAuthFailed` após login; mensagem plugin 2.5.3+ |
-| Build PWA | 74 |
-| Plugin | 2.5.3 (branch local) |
-| Próximo passo | Publicar `index.html` + `sw.js` + `zelo-build.js`; hard refresh / limpar cache SW |
+| Feito | Plugin **2.6.0**: catálogos escala (turnos/locais/idiomas/roster), admin UX com selects, validação duplicados |
+| Build PWA | 75 |
+| Plugin | **2.6.0** |
+| Próximo passo | Deploy plugin 2.6.0; smoke `TESTING.md` §3 Admin + §4 PWA |
 
 ---
 

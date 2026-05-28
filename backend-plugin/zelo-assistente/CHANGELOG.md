@@ -2,6 +2,17 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.6.0] - 2026-05-28
+
+### Adicionado
+- Catálogos operacionais em `zelo_volunteer_ops_data.catalogs`: turnos (código + horários), locais, idiomas, voluntários roster (nome + telefone).
+- Abas admin: Turnos, Locais, Idiomas, Voluntários (CRUD).
+- Escala: selects (dia, turno, local, idiomas múltiplos), vínculo unificado WordPress ou roster; `id` oculto.
+- Campo `roster_volunteer_id` nas linhas da escala; migração automática de nomes sem `wp_user_id`.
+
+### Alterado
+- Validação ao salvar: exclusividade WP/roster; sem duplicar mesma pessoa no mesmo dia e turno.
+
 ## [2.5.3] - 2026-05-27
 
 ### Autenticação

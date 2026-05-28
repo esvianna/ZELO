@@ -78,6 +78,7 @@ function zelo_get_volunteer_ops_default_data() {
 			),
 		),
 		'schedule'   => array(),
+		'catalogs'   => zelo_ops_empty_catalogs(),
 		'indoor_map' => array(),
 		'history'    => array(),
 		'settings'   => array(
@@ -112,6 +113,13 @@ function zelo_get_volunteer_ops_data() {
 				$data['settings']['event_dates'][ $dk ] = $dv;
 			}
 		}
+	}
+	$data = zelo_get_ops_catalogs( $data );
+	$data = zelo_migrate_ops_catalogs_from_schedule( $data );
+	$migrated = get_option( 'zelo_ops_catalogs_migrated', '' );
+	if ( $migrated !== ZELO_VERSION ) {
+		update_option( 'zelo_volunteer_ops_data', $data );
+		update_option( 'zelo_ops_catalogs_migrated', ZELO_VERSION );
 	}
 	return $data;
 }

@@ -20,22 +20,12 @@ function zelo_parse_languages_csv( $s ) {
 	return $out;
 }
 
-function zelo_normalize_schedule_row( $row ) {
-	$id = isset( $row['id'] ) ? sanitize_text_field( $row['id'] ) : '';
-	if ( $id === '' ) {
-		$id = 'asg_' . wp_generate_password( 8, false, false );
+function zelo_normalize_schedule_row( $row, $catalogs = null ) {
+	if ( null === $catalogs ) {
+		$data     = zelo_get_volunteer_ops_data();
+		$catalogs = $data['catalogs'];
 	}
-	return array(
-		'id'              => $id,
-		'day'             => sanitize_key( isset( $row['day'] ) ? $row['day'] : '' ),
-		'shift'           => sanitize_text_field( isset( $row['shift'] ) ? $row['shift'] : '' ),
-		'volunteer_name'  => sanitize_text_field( isset( $row['volunteer_name'] ) ? $row['volunteer_name'] : '' ),
-		'location'        => sanitize_text_field( isset( $row['location'] ) ? $row['location'] : '' ),
-		'start'           => sanitize_text_field( isset( $row['start'] ) ? $row['start'] : '' ),
-		'end'             => sanitize_text_field( isset( $row['end'] ) ? $row['end'] : '' ),
-		'languages'       => ( isset( $row['languages'] ) && is_array( $row['languages'] ) ) ? array_map( 'sanitize_text_field', $row['languages'] ) : zelo_parse_languages_csv( isset( $row['languages_csv'] ) ? $row['languages_csv'] : '' ),
-		'wp_user_id'      => isset( $row['wp_user_id'] ) ? max( 0, (int) $row['wp_user_id'] ) : 0,
-	);
+	return zelo_normalize_schedule_row_with_catalogs( $row, $catalogs );
 }
 
 function zelo_ops_save_from_post_tabs() {
@@ -47,28 +37,46 @@ function zelo_ops_save_from_post_tabs() {
 	}
 	$data = zelo_get_volunteer_ops_data();
 
+	$catalogs = array(
+		'shifts'            => zelo_ops_parse_catalog_shifts_from_post(),
+		'locations'         => zelo_ops_parse_catalog_locations_from_post(),
+		'languages'         => zelo_ops_parse_catalog_languages_from_post(),
+		'roster_volunteers' => zelo_ops_parse_catalog_roster_from_post(),
+	);
+	$data['catalogs'] = $catalogs;
+
 	// Schedule rows.
 	$schedule = array();
 	if ( isset( $_POST['sched_id'] ) && is_array( $_POST['sched_id'] ) ) {
 		$n = count( $_POST['sched_id'] );
 		for ( $i = 0; $i < $n; $i++ ) {
+			$lang_ids = array();
+			if ( isset( $_POST['sched_lang_ids'][ $i ] ) && is_array( $_POST['sched_lang_ids'][ $i ] ) ) {
+				$lang_ids = array_map( 'sanitize_text_field', wp_unslash( $_POST['sched_lang_ids'][ $i ] ) );
+			}
 			$row = array(
 				'id'             => isset( $_POST['sched_id'][ $i ] ) ? sanitize_text_field( wp_unslash( $_POST['sched_id'][ $i ] ) ) : '',
 				'day'            => isset( $_POST['sched_day'][ $i ] ) ? sanitize_key( wp_unslash( $_POST['sched_day'][ $i ] ) ) : '',
 				'shift'          => isset( $_POST['sched_shift'][ $i ] ) ? sanitize_text_field( wp_unslash( $_POST['sched_shift'][ $i ] ) ) : '',
+				'volunteer_ref'  => isset( $_POST['sched_volunteer_ref'][ $i ] ) ? sanitize_text_field( wp_unslash( $_POST['sched_volunteer_ref'][ $i ] ) ) : '',
 				'volunteer_name' => isset( $_POST['sched_name'][ $i ] ) ? sanitize_text_field( wp_unslash( $_POST['sched_name'][ $i ] ) ) : '',
-				'location'       => isset( $_POST['sched_loc'][ $i ] ) ? sanitize_text_field( wp_unslash( $_POST['sched_loc'][ $i ] ) ) : '',
+				'location_id'    => isset( $_POST['sched_loc_id'][ $i ] ) ? sanitize_text_field( wp_unslash( $_POST['sched_loc_id'][ $i ] ) ) : '',
 				'start'          => isset( $_POST['sched_start'][ $i ] ) ? sanitize_text_field( wp_unslash( $_POST['sched_start'][ $i ] ) ) : '',
 				'end'            => isset( $_POST['sched_end'][ $i ] ) ? sanitize_text_field( wp_unslash( $_POST['sched_end'][ $i ] ) ) : '',
-				'languages_csv'  => isset( $_POST['sched_lang'][ $i ] ) ? wp_unslash( $_POST['sched_lang'][ $i ] ) : '',
-				'wp_user_id'     => isset( $_POST['sched_uid'][ $i ] ) ? (int) $_POST['sched_uid'][ $i ] : 0,
+				'language_ids'   => $lang_ids,
 			);
 			if ( $row['volunteer_name'] === '' && $row['day'] === '' && $row['shift'] === '' ) {
 				continue;
 			}
-			$schedule[] = zelo_normalize_schedule_row( $row );
+			$schedule[] = zelo_normalize_schedule_row_with_catalogs( $row, $catalogs );
 		}
 	}
+
+	$valid = zelo_validate_schedule_rows( $schedule );
+	if ( is_wp_error( $valid ) ) {
+		return $valid->get_error_message();
+	}
+
 	$data['schedule'] = $schedule;
 
 	// Governance per day keys posted as gov_{day}_field.
@@ -186,20 +194,34 @@ function zelo_render_volunteer_ops_admin_tabs() {
 	if ( $msg2 ) {
 		$msg = $msg ? $msg . ' ' . $msg2 : $msg2;
 	}
-	$data = zelo_get_volunteer_ops_data();
-	$sched = $data['schedule'];
-	$gov   = $data['governance'];
-	$set   = $data['settings'];
-	$dates = isset( $set['event_dates'] ) && is_array( $set['event_dates'] ) ? $set['event_dates'] : array();
+	$data     = zelo_get_volunteer_ops_data();
+	$sched    = $data['schedule'];
+	$gov      = $data['governance'];
+	$set      = $data['settings'];
+	$catalogs = $data['catalogs'];
+	$dates    = isset( $set['event_dates'] ) && is_array( $set['event_dates'] ) ? $set['event_dates'] : array();
+	$wp_users = zelo_get_zelo_volunteer_users();
+	$ctx      = array(
+		'catalogs' => $catalogs,
+		'users'    => $wp_users,
+	);
+	$notice_class = 'notice-success';
+	if ( $msg && ( strpos( $msg, 'Linha' ) !== false || strpos( $msg, 'utilizador' ) !== false || strpos( $msg, 'voluntário' ) !== false ) ) {
+		$notice_class = 'notice-error';
+	}
 	?>
 	<div class="wrap">
 		<h1><?php esc_html_e( 'Operação de Voluntários', 'zelo-assistente' ); ?></h1>
 		<?php if ( $msg ) : ?>
-			<div class="notice notice-success is-dismissible"><p><?php echo esc_html( $msg ); ?></p></div>
+			<div class="notice <?php echo esc_attr( $notice_class ); ?> is-dismissible"><p><?php echo esc_html( $msg ); ?></p></div>
 		<?php endif; ?>
 
 		<h2 class="nav-tab-wrapper">
 			<a href="#tab-escala" class="nav-tab nav-tab-active" onclick="zeloOpsTab(event,'tab-escala')"><?php esc_html_e( 'Escala', 'zelo-assistente' ); ?></a>
+			<a href="#tab-turnos" class="nav-tab" onclick="zeloOpsTab(event,'tab-turnos')"><?php esc_html_e( 'Turnos', 'zelo-assistente' ); ?></a>
+			<a href="#tab-locais" class="nav-tab" onclick="zeloOpsTab(event,'tab-locais')"><?php esc_html_e( 'Locais', 'zelo-assistente' ); ?></a>
+			<a href="#tab-idiomas" class="nav-tab" onclick="zeloOpsTab(event,'tab-idiomas')"><?php esc_html_e( 'Idiomas', 'zelo-assistente' ); ?></a>
+			<a href="#tab-voluntarios" class="nav-tab" onclick="zeloOpsTab(event,'tab-voluntarios')"><?php esc_html_e( 'Voluntários', 'zelo-assistente' ); ?></a>
 			<a href="#tab-gov" class="nav-tab" onclick="zeloOpsTab(event,'tab-gov')"><?php esc_html_e( 'Governança', 'zelo-assistente' ); ?></a>
 			<a href="#tab-config" class="nav-tab" onclick="zeloOpsTab(event,'tab-config')"><?php esc_html_e( 'Config', 'zelo-assistente' ); ?></a>
 			<a href="#tab-json" class="nav-tab" onclick="zeloOpsTab(event,'tab-json')"><?php esc_html_e( 'JSON avançado', 'zelo-assistente' ); ?></a>
@@ -210,14 +232,19 @@ function zelo_render_volunteer_ops_admin_tabs() {
 			<input type="hidden" name="zelo_ops_tabs_save" value="1" />
 
 			<div id="tab-escala" class="zelo-ops-tab" style="display:block;">
-				<p class="description"><?php esc_html_e( 'Idiomas: separar por vírgulas (ex.: PT, EN). wp_user_id: ID WordPress do voluntário (opcional).', 'zelo-assistente' ); ?></p>
-				<table class="widefat striped">
+				<p class="description"><?php esc_html_e( 'Escolha o voluntário (conta WordPress ou cadastro sem conta). O nome pode ser ajustado manualmente. Não é permitido repetir a mesma pessoa no mesmo dia e turno.', 'zelo-assistente' ); ?></p>
+				<table class="widefat striped zelo-sched-table">
 					<thead>
 						<tr>
-							<th>id</th><th><?php esc_html_e( 'Dia', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'Turno', 'zelo-assistente' ); ?></th>
-							<th><?php esc_html_e( 'Nome', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'Local', 'zelo-assistente' ); ?></th>
-							<th><?php esc_html_e( 'Início', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'Fim', 'zelo-assistente' ); ?></th>
-							<th><?php esc_html_e( 'Idiomas', 'zelo-assistente' ); ?></th><th>wp_user_id</th>
+							<th><?php esc_html_e( 'Dia', 'zelo-assistente' ); ?></th>
+							<th><?php esc_html_e( 'Turno', 'zelo-assistente' ); ?></th>
+							<th><?php esc_html_e( 'Voluntário', 'zelo-assistente' ); ?></th>
+							<th><?php esc_html_e( 'Nome', 'zelo-assistente' ); ?></th>
+							<th><?php esc_html_e( 'Local', 'zelo-assistente' ); ?></th>
+							<th><?php esc_html_e( 'Início', 'zelo-assistente' ); ?></th>
+							<th><?php esc_html_e( 'Fim', 'zelo-assistente' ); ?></th>
+							<th><?php esc_html_e( 'Idiomas', 'zelo-assistente' ); ?></th>
+							<th></th>
 						</tr>
 					</thead>
 					<tbody id="zelo-sched-body">
@@ -227,12 +254,34 @@ function zelo_render_volunteer_ops_admin_tabs() {
 							$rows = array( array() );
 						}
 						foreach ( $rows as $r ) {
-							echo zelo_ops_schedule_row_html( $r ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+							echo zelo_ops_schedule_row_html( $r, $ctx ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 						}
 						?>
 					</tbody>
 				</table>
 				<p><button type="button" class="button" onclick="zeloAddSchedRow()"><?php esc_html_e( 'Adicionar linha', 'zelo-assistente' ); ?></button></p>
+			</div>
+
+			<div id="tab-turnos" class="zelo-ops-tab" style="display:none;">
+				<p class="description"><?php esc_html_e( 'Códigos de turno (ex.: A1) são usados na escala e na governança.', 'zelo-assistente' ); ?></p>
+				<?php echo zelo_ops_catalog_shifts_table_html( $catalogs['shifts'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				<p><button type="button" class="button" onclick="zeloAddCatalogRow('zelo-cat-shifts-body','shift')"><?php esc_html_e( 'Adicionar turno', 'zelo-assistente' ); ?></button></p>
+			</div>
+
+			<div id="tab-locais" class="zelo-ops-tab" style="display:none;">
+				<?php echo zelo_ops_catalog_locations_table_html( $catalogs['locations'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				<p><button type="button" class="button" onclick="zeloAddCatalogRow('zelo-cat-locs-body','loc')"><?php esc_html_e( 'Adicionar local', 'zelo-assistente' ); ?></button></p>
+			</div>
+
+			<div id="tab-idiomas" class="zelo-ops-tab" style="display:none;">
+				<?php echo zelo_ops_catalog_languages_table_html( $catalogs['languages'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				<p><button type="button" class="button" onclick="zeloAddCatalogRow('zelo-cat-langs-body','lang')"><?php esc_html_e( 'Adicionar idioma', 'zelo-assistente' ); ?></button></p>
+			</div>
+
+			<div id="tab-voluntarios" class="zelo-ops-tab" style="display:none;">
+				<p class="description"><?php esc_html_e( 'Voluntários sem conta WordPress (nome e telefone para contacto).', 'zelo-assistente' ); ?></p>
+				<?php echo zelo_ops_catalog_roster_table_html( $catalogs['roster_volunteers'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				<p><button type="button" class="button" onclick="zeloAddCatalogRow('zelo-cat-vols-body','vol')"><?php esc_html_e( 'Adicionar voluntário', 'zelo-assistente' ); ?></button></p>
 			</div>
 
 			<div id="tab-gov" class="zelo-ops-tab" style="display:none;">
@@ -290,42 +339,341 @@ function zelo_render_volunteer_ops_admin_tabs() {
 		</div>
 	</div>
 	<?php
-	$sched_row_tpl = zelo_ops_schedule_row_html( array() );
+	$sched_row_tpl       = zelo_ops_schedule_row_html( array(), $ctx );
+	$cat_shift_tpl       = zelo_ops_catalog_shift_row_html( array(), '__IDX__' );
+	$cat_loc_tpl         = zelo_ops_catalog_location_row_html( array(), '__IDX__' );
+	$cat_lang_tpl        = zelo_ops_catalog_language_row_html( array(), '__IDX__' );
+	$cat_vol_tpl         = zelo_ops_catalog_roster_row_html( array(), '__IDX__' );
+	$zelo_wp_names       = zelo_ops_wp_user_name_map( $wp_users );
+	$zelo_roster_names   = zelo_ops_roster_name_map( $catalogs );
 	?>
 	<script>
 	var ZELO_SCHED_ROW_TPL=<?php echo wp_json_encode( $sched_row_tpl ); ?>;
+	var ZELO_CAT_SHIFT_TPL=<?php echo wp_json_encode( $cat_shift_tpl ); ?>;
+	var ZELO_CAT_LOC_TPL=<?php echo wp_json_encode( $cat_loc_tpl ); ?>;
+	var ZELO_CAT_LANG_TPL=<?php echo wp_json_encode( $cat_lang_tpl ); ?>;
+	var ZELO_CAT_VOL_TPL=<?php echo wp_json_encode( $cat_vol_tpl ); ?>;
+	var ZELO_WP_USER_NAMES=<?php echo wp_json_encode( $zelo_wp_names ); ?>;
+	var ZELO_ROSTER_NAMES=<?php echo wp_json_encode( $zelo_roster_names ); ?>;
 	function zeloOpsTab(e,id){e.preventDefault();document.querySelectorAll('.zelo-ops-tab').forEach(function(el){el.style.display='none';});document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('nav-tab-active');});e.target.classList.add('nav-tab-active');document.getElementById(id).style.display='block';var sb=document.getElementById('zelo-ops-submit-tabs');if(sb)sb.style.display=(id==='tab-json')?'none':'block';}
-	function zeloAddSchedRow(){var tb=document.getElementById('zelo-sched-body');var tr=document.createElement('tr');tr.innerHTML=ZELO_SCHED_ROW_TPL;tb.appendChild(tr);}
+	function zeloAddSchedRow(){var tb=document.getElementById('zelo-sched-body');var tr=document.createElement('tr');tr.innerHTML=ZELO_SCHED_ROW_TPL;tb.appendChild(tr);zeloBindSchedRow(tr);}
+	function zeloAddCatalogRow(bodyId,type){var tb=document.getElementById(bodyId);var tr=document.createElement('tr');var tpl='';var idx=String(tb.querySelectorAll('tr').length);if(type==='shift')tpl=ZELO_CAT_SHIFT_TPL;else if(type==='loc')tpl=ZELO_CAT_LOC_TPL;else if(type==='lang')tpl=ZELO_CAT_LANG_TPL;else if(type==='vol')tpl=ZELO_CAT_VOL_TPL;tr.innerHTML=tpl.split('__IDX__').join(idx);tb.appendChild(tr);}
+	function zeloOnShiftChange(sel){var tr=sel.closest('tr');if(!tr)return;var opt=sel.options[sel.selectedIndex];var st=opt?opt.getAttribute('data-start'):'';var en=opt?opt.getAttribute('data-end'):'';var si=tr.querySelector('.sched-start');var ei=tr.querySelector('.sched-end');if(si&&st){si.value=st;}if(ei&&en){ei.value=en;}}
+	function zeloOnVolunteerRefChange(sel){var tr=sel.closest('tr');if(!tr)return;var v=sel.value;var ni=tr.querySelector('.sched-name');if(!ni)return;var nm='';if(v.indexOf('wp:')===0){var id=v.slice(3);nm=ZELO_WP_USER_NAMES[id]||'';}else if(v.indexOf('rv:')===0){var rid=v.slice(3);nm=ZELO_ROSTER_NAMES[rid]||'';}if(nm&&(ni.value===''||sel.dataset.zeloPrev!==v)){ni.value=nm;}sel.dataset.zeloPrev=v;}
+	function zeloBindSchedRow(tr){var sh=tr.querySelector('.sched-shift');var vr=tr.querySelector('.sched-volunteer-ref');if(sh){sh.addEventListener('change',function(){zeloOnShiftChange(sh);});}if(vr){vr.addEventListener('change',function(){zeloOnVolunteerRefChange(vr);});vr.dataset.zeloPrev=vr.value;}}
+	document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('#zelo-sched-body tr').forEach(zeloBindSchedRow);});
+	function zeloRemoveSchedRow(btn){var tr=btn.closest('tr');if(tr)tr.remove();}
 	</script>
 	<?php
 }
 
 /**
- * Uma linha da tabela de escala (HTML).
+ * Opções HTML de turnos.
  *
- * @param array $r Row.
+ * @param array  $shifts   Shifts catalog.
+ * @param string $selected Selected code.
  * @return string
  */
-function zelo_ops_schedule_row_html( $r ) {
-	$idv   = isset( $r['id'] ) ? esc_attr( $r['id'] ) : '';
-	$day   = isset( $r['day'] ) ? esc_attr( $r['day'] ) : '';
-	$shift = isset( $r['shift'] ) ? esc_attr( $r['shift'] ) : '';
-	$name  = isset( $r['volunteer_name'] ) ? esc_attr( $r['volunteer_name'] ) : '';
-	$loc   = isset( $r['location'] ) ? esc_attr( $r['location'] ) : '';
-	$st    = isset( $r['start'] ) ? esc_attr( $r['start'] ) : '';
-	$en    = isset( $r['end'] ) ? esc_attr( $r['end'] ) : '';
-	$langs = isset( $r['languages'] ) && is_array( $r['languages'] ) ? esc_attr( implode( ', ', $r['languages'] ) ) : '';
-	$uid   = isset( $r['wp_user_id'] ) ? (int) $r['wp_user_id'] : 0;
+function zelo_ops_shift_options_html( $shifts, $selected = '' ) {
+	$html = '<option value="">' . esc_html__( '—', 'zelo-assistente' ) . '</option>';
+	foreach ( $shifts as $sh ) {
+		if ( empty( $sh['code'] ) ) {
+			continue;
+		}
+		$active = ! isset( $sh['active'] ) || $sh['active'];
+		if ( ! $active && $sh['code'] !== $selected ) {
+			continue;
+		}
+		$code = esc_attr( $sh['code'] );
+		$label = ! empty( $sh['label'] ) ? $sh['label'] : $sh['code'];
+		if ( ! $active && $sh['code'] === $selected ) {
+			$label .= ' (' . __( 'inativo', 'zelo-assistente' ) . ')';
+		}
+		$st = isset( $sh['start'] ) ? esc_attr( $sh['start'] ) : '';
+		$en = isset( $sh['end'] ) ? esc_attr( $sh['end'] ) : '';
+		$html .= '<option value="' . $code . '" data-start="' . $st . '" data-end="' . $en . '"' . selected( $selected, $sh['code'], false ) . '>' . esc_html( $label ) . '</option>';
+	}
+	return $html;
+}
+
+/**
+ * Opções HTML de locais.
+ *
+ * @param array  $locations Locations.
+ * @param string $selected_name Selected location name on row.
+ * @return string
+ */
+function zelo_ops_location_options_html( $locations, $selected_name = '' ) {
+	$html = '<option value="">' . esc_html__( '—', 'zelo-assistente' ) . '</option>';
+	$sel_id = '';
+	foreach ( $locations as $loc ) {
+		if ( ! empty( $loc['name'] ) && $loc['name'] === $selected_name ) {
+			$sel_id = isset( $loc['id'] ) ? $loc['id'] : '';
+			break;
+		}
+	}
+	foreach ( $locations as $loc ) {
+		if ( empty( $loc['name'] ) || empty( $loc['id'] ) ) {
+			continue;
+		}
+		$active = ! isset( $loc['active'] ) || $loc['active'];
+		if ( ! $active && $loc['id'] !== $sel_id ) {
+			continue;
+		}
+		$label = $loc['name'];
+		if ( ! $active ) {
+			$label .= ' (' . __( 'inativo', 'zelo-assistente' ) . ')';
+		}
+		$html .= '<option value="' . esc_attr( $loc['id'] ) . '"' . selected( $sel_id, $loc['id'], false ) . '>' . esc_html( $label ) . '</option>';
+	}
+	return $html;
+}
+
+/**
+ * Multi-select idiomas.
+ *
+ * @param array $languages Catalog.
+ * @param array $selected_names Names on row.
+ * @return string
+ */
+function zelo_ops_languages_multiselect_html( $languages, $selected_names = array() ) {
+	$selected_ids = array();
+	foreach ( $languages as $lang ) {
+		if ( ! empty( $lang['name'] ) && in_array( $lang['name'], $selected_names, true ) && ! empty( $lang['id'] ) ) {
+			$selected_ids[] = $lang['id'];
+		}
+	}
+	$html = '<select name="sched_lang_ids[][__INDEX__]" class="sched-langs" multiple style="min-width:120px;min-height:52px;">';
+	foreach ( $languages as $lang ) {
+		if ( empty( $lang['id'] ) || empty( $lang['name'] ) ) {
+			continue;
+		}
+		$active = ! isset( $lang['active'] ) || $lang['active'];
+		$sel    = in_array( $lang['id'], $selected_ids, true );
+		if ( ! $active && ! $sel ) {
+			continue;
+		}
+		$label = $lang['name'];
+		if ( ! $active ) {
+			$label .= ' (' . __( 'inativo', 'zelo-assistente' ) . ')';
+		}
+		$html .= '<option value="' . esc_attr( $lang['id'] ) . '"' . selected( $sel, true, false ) . '>' . esc_html( $label ) . '</option>';
+	}
+	$html .= '</select>';
+	return $html;
+}
+
+/**
+ * Select voluntário unificado.
+ *
+ * @param array  $ctx      catalogs + users.
+ * @param string $selected Ref wp: / rv:.
+ * @return string
+ */
+function zelo_ops_volunteer_ref_select_html( $ctx, $selected = '' ) {
+	$catalogs = $ctx['catalogs'];
+	$users    = $ctx['users'];
+	$html     = '<select name="sched_volunteer_ref[]" class="sched-volunteer-ref" style="min-width:160px;">';
+	$html    .= '<option value="">' . esc_html__( '— sem vínculo —', 'zelo-assistente' ) . '</option>';
+	$html    .= '<optgroup label="' . esc_attr__( 'Contas WordPress', 'zelo-assistente' ) . '">';
+	foreach ( $users as $u ) {
+		$ref = 'wp:' . (int) $u->ID;
+		$html .= '<option value="' . esc_attr( $ref ) . '"' . selected( $selected, $ref, false ) . '>' . esc_html( $u->display_name . ' (' . $u->user_email . ')' ) . '</option>';
+	}
+	$html .= '</optgroup>';
+	$html .= '<optgroup label="' . esc_attr__( 'Voluntários cadastrados', 'zelo-assistente' ) . '">';
+	foreach ( $catalogs['roster_volunteers'] as $rv ) {
+		if ( empty( $rv['id'] ) || empty( $rv['name'] ) ) {
+			continue;
+		}
+		$active = ! isset( $rv['active'] ) || $rv['active'];
+		$ref    = 'rv:' . $rv['id'];
+		if ( ! $active && $ref !== $selected ) {
+			continue;
+		}
+		$label = $rv['name'];
+		if ( ! empty( $rv['phone'] ) ) {
+			$label .= ' · ' . $rv['phone'];
+		}
+		if ( ! $active ) {
+			$label .= ' (' . __( 'inativo', 'zelo-assistente' ) . ')';
+		}
+		$html .= '<option value="' . esc_attr( $ref ) . '"' . selected( $selected, $ref, false ) . '>' . esc_html( $label ) . '</option>';
+	}
+	$html .= '</optgroup></select>';
+	return $html;
+}
+
+/**
+ * Uma linha da tabela de escala (HTML).
+ *
+ * @param array $r   Row.
+ * @param array $ctx Context.
+ * @return string
+ */
+function zelo_ops_schedule_row_html( $r, $ctx = array() ) {
+	if ( empty( $ctx['catalogs'] ) ) {
+		$data          = zelo_get_volunteer_ops_data();
+		$ctx['catalogs'] = $data['catalogs'];
+		$ctx['users']    = zelo_get_zelo_volunteer_users();
+	}
+	$catalogs = $ctx['catalogs'];
+	$idv      = isset( $r['id'] ) ? esc_attr( $r['id'] ) : '';
+	$day      = isset( $r['day'] ) ? esc_attr( $r['day'] ) : '';
+	$shift    = isset( $r['shift'] ) ? esc_attr( $r['shift'] ) : '';
+	$name     = isset( $r['volunteer_name'] ) ? esc_attr( $r['volunteer_name'] ) : '';
+	$loc_name = isset( $r['location'] ) ? $r['location'] : '';
+	$st       = isset( $r['start'] ) ? esc_attr( $r['start'] ) : '';
+	$en       = isset( $r['end'] ) ? esc_attr( $r['end'] ) : '';
+	$langs    = isset( $r['languages'] ) && is_array( $r['languages'] ) ? $r['languages'] : array();
+	$vref     = zelo_ops_volunteer_ref_from_row( $r );
+
+	$day_html = '<select name="sched_day[]" class="sched-day" style="min-width:110px;">';
+	$day_html .= '<option value="">' . esc_html__( '—', 'zelo-assistente' ) . '</option>';
+	foreach ( zelo_ops_day_choices() as $slug => $label ) {
+		$day_html .= '<option value="' . esc_attr( $slug ) . '"' . selected( $day, $slug, false ) . '>' . esc_html( $label ) . '</option>';
+	}
+	$day_html .= '</select>';
+
+	$lang_html = zelo_ops_languages_multiselect_html( $catalogs['languages'], $langs );
+	$lang_html = str_replace( '[__INDEX__]', '', $lang_html );
+
 	return '<tr>'
-		. '<td><input style="width:100px" name="sched_id[]" value="' . $idv . '" /></td>'
-		. '<td><input style="width:80px" name="sched_day[]" value="' . $day . '" placeholder="sexta" /></td>'
-		. '<td><input style="width:60px" name="sched_shift[]" value="' . $shift . '" /></td>'
-		. '<td><input style="width:140px" name="sched_name[]" value="' . $name . '" /></td>'
-		. '<td><input style="width:140px" name="sched_loc[]" value="' . $loc . '" /></td>'
-		. '<td><input style="width:70px" name="sched_start[]" value="' . $st . '" placeholder="09:00" /></td>'
-		. '<td><input style="width:70px" name="sched_end[]" value="' . $en . '" /></td>'
-		. '<td><input style="width:120px" name="sched_lang[]" value="' . $langs . '" /></td>'
-		. '<td><input style="width:70px" type="number" min="0" name="sched_uid[]" value="' . ( $uid ? (int) $uid : '' ) . '" /></td>'
+		. '<td style="display:none;"><input type="hidden" name="sched_id[]" value="' . $idv . '" /></td>'
+		. '<td>' . $day_html . '</td>'
+		. '<td><select name="sched_shift[]" class="sched-shift" style="min-width:90px;" onchange="zeloOnShiftChange(this)">' . zelo_ops_shift_options_html( $catalogs['shifts'], $shift ) . '</select></td>'
+		. '<td>' . zelo_ops_volunteer_ref_select_html( $ctx, $vref ) . '</td>'
+		. '<td><input class="sched-name regular-text" style="min-width:140px;" name="sched_name[]" value="' . $name . '" /></td>'
+		. '<td><select name="sched_loc_id[]" class="sched-loc" style="min-width:120px;">' . zelo_ops_location_options_html( $catalogs['locations'], $loc_name ) . '</select></td>'
+		. '<td><input type="time" class="sched-start" name="sched_start[]" value="' . esc_attr( zelo_ops_time_input_value( $st ) ) . '" style="width:95px;" /></td>'
+		. '<td><input type="time" class="sched-end" name="sched_end[]" value="' . esc_attr( zelo_ops_time_input_value( $en ) ) . '" style="width:95px;" /></td>'
+		. '<td>' . $lang_html . '</td>'
+		. '<td><button type="button" class="button button-link-delete" onclick="zeloRemoveSchedRow(this)" aria-label="' . esc_attr__( 'Remover', 'zelo-assistente' ) . '">&times;</button></td>'
+		. '</tr>';
+}
+
+/**
+ * Converte HH:MM para input type=time.
+ *
+ * @param string $time Time.
+ * @return string
+ */
+function zelo_ops_time_input_value( $time ) {
+	$time = zelo_ops_normalize_time( $time );
+	if ( preg_match( '/^\d{2}:\d{2}$/', $time ) ) {
+		return $time;
+	}
+	return '';
+}
+
+function zelo_ops_catalog_shifts_table_html( $rows ) {
+	if ( empty( $rows ) ) {
+		$rows = zelo_ops_default_shifts();
+	}
+	$body = '';
+	foreach ( $rows as $idx => $r ) {
+		$body .= zelo_ops_catalog_shift_row_html( $r, $idx );
+	}
+	return '<table class="widefat striped"><thead><tr>'
+		. '<th>' . esc_html__( 'Código', 'zelo-assistente' ) . '</th>'
+		. '<th>' . esc_html__( 'Rótulo', 'zelo-assistente' ) . '</th>'
+		. '<th>' . esc_html__( 'Início', 'zelo-assistente' ) . '</th>'
+		. '<th>' . esc_html__( 'Fim', 'zelo-assistente' ) . '</th>'
+		. '<th>' . esc_html__( 'Ativo', 'zelo-assistente' ) . '</th><th></th></tr></thead>'
+		. '<tbody id="zelo-cat-shifts-body">' . $body . '</tbody></table>';
+}
+
+function zelo_ops_catalog_shift_row_html( $r, $idx = 0 ) {
+	$id     = isset( $r['id'] ) ? esc_attr( $r['id'] ) : '';
+	$code   = isset( $r['code'] ) ? esc_attr( $r['code'] ) : '';
+	$label  = isset( $r['label'] ) ? esc_attr( $r['label'] ) : '';
+	$start  = isset( $r['start'] ) ? esc_attr( zelo_ops_time_input_value( $r['start'] ) ) : '';
+	$end    = isset( $r['end'] ) ? esc_attr( zelo_ops_time_input_value( $r['end'] ) ) : '';
+	$active = ! isset( $r['active'] ) || $r['active'];
+	$ix     = esc_attr( (string) $idx );
+	return '<tr>'
+		. '<input type="hidden" name="cat_shift_id[]" value="' . $id . '" />'
+		. '<td><input name="cat_shift_code[]" value="' . $code . '" style="width:70px;" required /></td>'
+		. '<td><input name="cat_shift_label[]" value="' . $label . '" class="regular-text" /></td>'
+		. '<td><input type="time" name="cat_shift_start[]" value="' . $start . '" /></td>'
+		. '<td><input type="time" name="cat_shift_end[]" value="' . $end . '" /></td>'
+		. '<td><input type="checkbox" name="cat_shift_active[' . $ix . ']" value="1"' . ( $active ? ' checked' : '' ) . ' /></td>'
+		. '<td><button type="button" class="button-link-delete" onclick="this.closest(\'tr\').remove()">&times;</button></td>'
+		. '</tr>';
+}
+
+function zelo_ops_catalog_locations_table_html( $rows ) {
+	$body = '';
+	foreach ( $rows as $idx => $r ) {
+		$body .= zelo_ops_catalog_location_row_html( $r, $idx );
+	}
+	return '<table class="widefat striped"><thead><tr>'
+		. '<th>' . esc_html__( 'Nome', 'zelo-assistente' ) . '</th>'
+		. '<th>' . esc_html__( 'Ativo', 'zelo-assistente' ) . '</th><th></th></tr></thead>'
+		. '<tbody id="zelo-cat-locs-body">' . $body . '</tbody></table>';
+}
+
+function zelo_ops_catalog_location_row_html( $r, $idx = 0 ) {
+	$id     = isset( $r['id'] ) ? esc_attr( $r['id'] ) : '';
+	$name   = isset( $r['name'] ) ? esc_attr( $r['name'] ) : '';
+	$active = ! isset( $r['active'] ) || $r['active'];
+	$ix     = esc_attr( (string) $idx );
+	return '<tr>'
+		. '<input type="hidden" name="cat_loc_id[]" value="' . $id . '" />'
+		. '<td><input name="cat_loc_name[]" value="' . $name . '" class="regular-text" required /></td>'
+		. '<td><input type="checkbox" name="cat_loc_active[' . $ix . ']" value="1"' . ( $active ? ' checked' : '' ) . ' /></td>'
+		. '<td><button type="button" class="button-link-delete" onclick="this.closest(\'tr\').remove()">&times;</button></td>'
+		. '</tr>';
+}
+
+function zelo_ops_catalog_languages_table_html( $rows ) {
+	$body = '';
+	foreach ( $rows as $idx => $r ) {
+		$body .= zelo_ops_catalog_language_row_html( $r, $idx );
+	}
+	return '<table class="widefat striped"><thead><tr>'
+		. '<th>' . esc_html__( 'Nome', 'zelo-assistente' ) . '</th>'
+		. '<th>' . esc_html__( 'Ativo', 'zelo-assistente' ) . '</th><th></th></tr></thead>'
+		. '<tbody id="zelo-cat-langs-body">' . $body . '</tbody></table>';
+}
+
+function zelo_ops_catalog_language_row_html( $r, $idx = 0 ) {
+	$id     = isset( $r['id'] ) ? esc_attr( $r['id'] ) : '';
+	$name   = isset( $r['name'] ) ? esc_attr( $r['name'] ) : '';
+	$active = ! isset( $r['active'] ) || $r['active'];
+	$ix     = esc_attr( (string) $idx );
+	return '<tr>'
+		. '<input type="hidden" name="cat_lang_id[]" value="' . $id . '" />'
+		. '<td><input name="cat_lang_name[]" value="' . $name . '" class="regular-text" required /></td>'
+		. '<td><input type="checkbox" name="cat_lang_active[' . $ix . ']" value="1"' . ( $active ? ' checked' : '' ) . ' /></td>'
+		. '<td><button type="button" class="button-link-delete" onclick="this.closest(\'tr\').remove()">&times;</button></td>'
+		. '</tr>';
+}
+
+function zelo_ops_catalog_roster_table_html( $rows ) {
+	$body = '';
+	foreach ( $rows as $idx => $r ) {
+		$body .= zelo_ops_catalog_roster_row_html( $r, $idx );
+	}
+	return '<table class="widefat striped"><thead><tr>'
+		. '<th>' . esc_html__( 'Nome', 'zelo-assistente' ) . '</th>'
+		. '<th>' . esc_html__( 'Telefone', 'zelo-assistente' ) . '</th>'
+		. '<th>' . esc_html__( 'Ativo', 'zelo-assistente' ) . '</th><th></th></tr></thead>'
+		. '<tbody id="zelo-cat-vols-body">' . $body . '</tbody></table>';
+}
+
+function zelo_ops_catalog_roster_row_html( $r, $idx = 0 ) {
+	$id     = isset( $r['id'] ) ? esc_attr( $r['id'] ) : '';
+	$name   = isset( $r['name'] ) ? esc_attr( $r['name'] ) : '';
+	$phone  = isset( $r['phone'] ) ? esc_attr( $r['phone'] ) : '';
+	$active = ! isset( $r['active'] ) || $r['active'];
+	$ix     = esc_attr( (string) $idx );
+	return '<tr>'
+		. '<input type="hidden" name="cat_vol_id[]" value="' . $id . '" />'
+		. '<td><input name="cat_vol_name[]" value="' . $name . '" class="regular-text" required /></td>'
+		. '<td><input name="cat_vol_phone[]" value="' . $phone . '" class="regular-text" type="tel" /></td>'
+		. '<td><input type="checkbox" name="cat_vol_active[' . $ix . ']" value="1"' . ( $active ? ' checked' : '' ) . ' /></td>'
+		. '<td><button type="button" class="button-link-delete" onclick="this.closest(\'tr\').remove()">&times;</button></td>'
 		. '</tr>';
 }
 

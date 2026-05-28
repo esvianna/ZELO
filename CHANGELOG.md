@@ -12,6 +12,13 @@ _Nada pendente._
 
 ---
 
+## [2026-05-28] — Plugin 2.6.0 (UX escala admin)
+
+### Adicionado
+- Backend `zelo-assistente` **2.6.0**: catálogos de escala, abas CRUD, voluntários sem conta WP (roster), validação de duplicados.
+
+---
+
 ## [2026-05-28] — PWA build 75 (init ops retry)
 
 ### Corrigido

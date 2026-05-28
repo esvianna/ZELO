@@ -6,6 +6,16 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 ---
 
+## ADR-010 — Catálogos de escala em `wp_options` (2026-05-28)
+
+**Contexto:** Admin da escala usava campos texto livres (dia, turno, local, idiomas, `wp_user_id` manual); voluntários sem conta WP precisam constar na escala.
+
+**Decisão:** Estender `zelo_volunteer_ops_data` com `catalogs` (`shifts`, `locations`, `languages`, `roster_volunteers`) e `roster_volunteer_id` nas linhas de `schedule`. Admin com abas CRUD + select na escala (WP `wp:{id}` ou roster `rv:{id}`). Validação servidor: duplicado dia+turno por pessoa. Sem CPT/MySQL extra.
+
+**Consequências:** Migração idempotente a partir da escala existente; PWA inalterada (consome mesmos campos string). Plugin **2.6.0**.
+
+---
+
 ## ADR-008 — Governança e documentação viva (2026-05-27)
 
 **Contexto:** Retomada do projeto após pausas; código gerado por IA sem memória persistente.

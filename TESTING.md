@@ -51,9 +51,25 @@ Configurar `baseUrl` / `siteUrl` em `frontend-pwa/assets/js/api-v5.js` para o am
 
 ---
 
-## 3. Smoke test — Operação voluntários
+## 3. Admin — Operação de Voluntários (plugin 2.6.0+)
 
-**Pré-requisito:** escala preenchida em **Zelo → Operação Voluntários**; `wp_user_id` vinculado na escala.
+| # | Passo | Esperado |
+|---|-------|----------|
+| 1 | Abrir **Locais Zelo → Operação Voluntários** após atualizar plugin | Abas: Escala, Turnos, Locais, Idiomas, Voluntários, Governança, Config, JSON |
+| 2 | Aba **Turnos** | Códigos A1–B2 (ou migrados); início/fim; ativo |
+| 3 | Aba **Voluntários** | Cadastrar nome + telefone sem conta WP |
+| 4 | Aba **Escala** | Dia (select), turno, voluntário (WP ou cadastrado), local, idiomas (multi); sem coluna `id` visível |
+| 5 | Selecionar turno | Início/fim preenchidos do catálogo (editáveis) |
+| 6 | Selecionar voluntário | Nome preenchido (editável) |
+| 7 | Duplicar mesma pessoa em sexta+A1 | Erro ao salvar; escala não gravada |
+| 8 | Salvar abas | Notice de sucesso; PWA lista escala normalmente |
+| 9 | JSON avançado | `catalogs` e `roster_volunteer_id` presentes após save |
+
+---
+
+## 4. Smoke test — Operação voluntários (PWA)
+
+**Pré-requisito:** escala preenchida em **Zelo → Operação Voluntários**; `wp_user_id` ou nome na linha para roster.
 
 | # | Passo | Perfil | Esperado |
 |---|-------|--------|----------|
@@ -67,7 +83,7 @@ Configurar `baseUrl` / `siteUrl` em `frontend-pwa/assets/js/api-v5.js` para o am
 
 ---
 
-## 4. Regressão — Filtros e listagem
+## 5. Regressão — Filtros e listagem
 
 | # | Cenário | Esperado |
 |---|---------|----------|
@@ -78,7 +94,7 @@ Configurar `baseUrl` / `siteUrl` em `frontend-pwa/assets/js/api-v5.js` para o am
 
 ---
 
-## 5. Regressão — Cache / deploy
+## 6. Regressão — Cache / deploy
 
 | # | Passo | Esperado |
 |---|-------|----------|
@@ -88,7 +104,7 @@ Configurar `baseUrl` / `siteUrl` em `frontend-pwa/assets/js/api-v5.js` para o am
 
 ---
 
-## 6. Casos de erro
+## 7. Casos de erro
 
 | Cenário | Esperado |
 |---------|----------|
@@ -99,7 +115,7 @@ Configurar `baseUrl` / `siteUrl` em `frontend-pwa/assets/js/api-v5.js` para o am
 
 ---
 
-## 7. Backend admin (amostra)
+## 8. Backend admin (amostra)
 
 | # | Área | Esperado |
 |---|------|----------|
