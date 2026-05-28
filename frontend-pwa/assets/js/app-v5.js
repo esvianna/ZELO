@@ -463,7 +463,8 @@ const app = {
                 const synced = await API.refreshSession();
                 if (synced) {
                     this.auth.user = synced;
-                    this.data.volunteerOps = await this.loadVolunteerOps();
+                    // force=true: após refreshSession ok, ignorar _opsAuthFailed de tentativa anterior
+                    this.data.volunteerOps = await this.loadVolunteerOps(true);
                     if (!this._opsAuthFailed) {
                         this.auth.clearOpsAuthFailure();
                     }

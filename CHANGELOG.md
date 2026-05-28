@@ -12,6 +12,13 @@ _Nada pendente._
 
 ---
 
+## [2026-05-28] — PWA build 75 (init ops retry)
+
+### Corrigido
+- `app.init`: após `refreshSession` ok, `loadVolunteerOps(true)` para não ficar preso em `_opsAuthFailed` de tentativa anterior.
+
+---
+
 ## [2026-05-28] — PWA build 74 (auth ops pós-login)
 
 ### Corrigido
