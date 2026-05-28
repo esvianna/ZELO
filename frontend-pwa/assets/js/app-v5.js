@@ -1639,7 +1639,8 @@ const app = {
         const mine = Number(item.wp_user_id) === Number(uid);
         if (!mine && !this.canSuperviseOps()) return false;
         const startMs = this.getAssignmentStartMs(item);
-        const endMs = startMs != null && item.end ? this.getAssignmentEndMs(item, startMs) : null;
+        if (startMs == null) return false;
+        const endMs = item.end ? this.getAssignmentEndMs(item, startMs) : startMs + 4 * 3600000;
         const presence = this.data.volunteerOps?.settings?.presence || {};
         const from = this._parsePresenceRuleMs(presence.checkin_from || 'shift_start', startMs, endMs);
         const until = presence.checkin_until === 'shift_end' && endMs != null ? endMs : this._parsePresenceRuleMs(presence.checkin_until || 'shift_end', startMs, endMs);
@@ -1648,8 +1649,9 @@ const app = {
     },
 
     getAssignmentEndMs(item, startMs) {
+        if (startMs == null) return null;
         const parts = String(item.end || '').match(/^(\d{1,2}):(\d{2})/);
-        if (!parts || startMs == null) return startMs + 4 * 3600000;
+        if (!parts) return startMs + 4 * 3600000;
         const d = new Date(startMs);
         d.setHours(parseInt(parts[1], 10), parseInt(parts[2], 10), 0, 0);
         return d.getTime();
@@ -1663,7 +1665,8 @@ const app = {
         const mine = Number(item.wp_user_id) === Number(uid);
         if (!mine && !this.canSuperviseOps()) return false;
         const startMs = this.getAssignmentStartMs(item);
-        const endMs = this.getAssignmentEndMs(item, startMs);
+        if (startMs == null) return false;
+        const endMs = item.end ? this.getAssignmentEndMs(item, startMs) : startMs + 4 * 3600000;
         const presence = this.data.volunteerOps?.settings?.presence || {};
         const from = this._parsePresenceRuleMs(presence.checkout_from || 'shift_end', startMs, endMs);
         const until = this._parsePresenceRuleMs(presence.checkout_until || 'minutes_after_end:30', startMs, endMs);
