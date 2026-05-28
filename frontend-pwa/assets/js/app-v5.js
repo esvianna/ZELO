@@ -1579,7 +1579,7 @@ const app = {
         const swaps = ops.swap_requests || [];
         if (this.canManageOps() || this.canReallocateOps()) {
             const pend = swaps.filter((s) => s.status === 'pending');
-            swapPanel = `<div class="ops-swap-panel" style="margin-bottom:1rem;"><h3>Pedidos de substituição</h3>${pend.length ? pend.map((s) => `<div class="ops-schedule-card" style="padding:0.75rem;"><code>${s.id}</code> — designação <strong>${s.assignment_id}</strong> (solicitante ${s.requester_id})<br/><button type="button" class="button button-small" onclick="app.resolveSwapPrompt('${s.id}')">Aprovar</button> <button type="button" class="button button-small" onclick="app.resolveSwap('${s.id}','rejected','',0)">Recusar</button></div>`).join('') : '<p class="text-muted">Nenhum pedido pendente.</p>'}</div>`;
+            swapPanel = `<div class="ops-swap-panel" style="margin-bottom:1rem;"><h3>Pedidos de substituição</h3>${pend.length ? pend.map((s) => `<div class="ops-schedule-card" style="padding:0.75rem;"><code>${s.id}</code> — designação <strong>${s.assignment_id}</strong> (solicitante ${s.requester_id})<div class="ops-swap-actions"><button type="button" class="ops-btn ops-btn--active" onclick="app.resolveSwapPrompt('${s.id}')">Aprovar</button><button type="button" class="ops-btn" onclick="app.resolveSwap('${s.id}','rejected','',0)">Recusar</button></div></div>`).join('') : '<p class="text-muted">Nenhum pedido pendente.</p>'}</div>`;
         }
 
         let histBlock = '';
@@ -1610,7 +1610,7 @@ const app = {
             const isCheckedIn = status.status === 'checked_in';
             const isCheckedOut = status.status === 'checked_out';
             const mineRow = Number(item.wp_user_id) === uid;
-            const swapBtn = mineRow ? `<button type="button" class="button" onclick="app.requestSwap('${String(item.id).replace(/'/g, "\\'")}')">Pedir substituição</button>` : '';
+            const swapBtn = mineRow ? `<button type="button" class="ops-btn ops-btn--accent" onclick="app.requestSwap('${String(item.id).replace(/'/g, "\\'")}')">Pedir substituição</button>` : '';
             return `
                 <div class="ops-schedule-card">
                     <div class="ops-card-head">
@@ -1622,9 +1622,9 @@ const app = {
                     <p><strong>Horário:</strong> ${item.start || '-'} às ${item.end || '-'}</p>
                     <p><strong>Idiomas:</strong> ${(item.languages || []).join(', ') || '-'}</p>
                     <div class="ops-actions">
-                        <button class="button ${isCheckedIn ? 'button-primary' : ''}" onclick="app.doCheckin('${String(item.id).replace(/'/g, "\\'")}')">Check-in</button>
-                        <button class="button ${isCheckedOut ? 'button-primary' : ''}" onclick="app.doCheckout('${String(item.id).replace(/'/g, "\\'")}')">Check-out</button>
-                        ${this.canReallocateOps() ? `<button class="button" onclick="app.doReallocate('${String(item.id).replace(/'/g, "\\'")}')">Realocar</button>` : ''}
+                        <button type="button" class="ops-btn${isCheckedIn ? ' ops-btn--active' : ''}" onclick="app.doCheckin('${String(item.id).replace(/'/g, "\\'")}')">Check-in</button>
+                        <button type="button" class="ops-btn${isCheckedOut ? ' ops-btn--active' : ''}" onclick="app.doCheckout('${String(item.id).replace(/'/g, "\\'")}')">Check-out</button>
+                        ${this.canReallocateOps() ? `<button type="button" class="ops-btn" onclick="app.doReallocate('${String(item.id).replace(/'/g, "\\'")}')">Realocar</button>` : ''}
                         ${swapBtn}
                     </div>
                 </div>

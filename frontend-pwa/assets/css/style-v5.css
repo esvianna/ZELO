@@ -1433,9 +1433,61 @@ body {
 
 .ops-actions {
     display: flex;
-    gap: 6px;
-    margin-top: 8px;
+    gap: 8px;
+    margin-top: 10px;
     flex-wrap: wrap;
+}
+
+/* Botões da escala operacional (alinha com .btn-block / tema Zelo) */
+.ops-btn {
+    flex: 1 1 calc(33% - 8px);
+    min-width: 5.5rem;
+    padding: 0.55rem 0.65rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-family: var(--font-family);
+    line-height: 1.2;
+    text-align: center;
+    border-radius: var(--border-radius);
+    border: 2px solid var(--primary-color);
+    background: transparent;
+    color: var(--primary-color);
+    cursor: pointer;
+    box-shadow: none;
+    margin: 0;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.ops-btn:active {
+    opacity: 0.9;
+}
+
+.ops-btn--active {
+    background: var(--primary-color);
+    color: #fff;
+    border-color: var(--primary-color);
+}
+
+.ops-btn--accent {
+    border-color: #4338ca;
+    color: #4338ca;
+}
+
+.ops-btn--accent:active {
+    background: #eef2ff;
+}
+
+.ops-swap-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.ops-swap-actions .ops-btn {
+    flex: 0 1 auto;
+    min-width: 5rem;
 }
 
 .ops-status-badge {
