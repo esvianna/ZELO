@@ -1,6 +1,11 @@
 const API = {
-    baseUrl: 'https://tenhazelo.com.br/wp-json/zelo/v1',
-    siteUrl: 'https://tenhazelo.com.br', // Base WP URL for links
+    baseUrl: (typeof window !== 'undefined' && window.location && window.location.origin)
+        ? `${window.location.origin}/wp-json/zelo/v1`
+        : 'https://tenhazelo.com.br/wp-json/zelo/v1',
+    siteUrl: (typeof window !== 'undefined' && window.location && window.location.origin)
+        ? window.location.origin
+        : 'https://tenhazelo.com.br',
+    lastSessionError: null,
 
     // Cached data for offline support
     cache: {
@@ -33,26 +38,51 @@ const API = {
 
     /**
      * Valida cookie WP e renova nonce (essencial para PWA em /zelo/).
+     * Não envia X-WP-Nonce: o WP devolve 403 (rest_cookie_invalid_nonce) se o nonce
+     * no localStorage não corresponder ao cookie de sessão atual.
      */
     async refreshSession() {
+        this.lastSessionError = null;
         const url = `${this.baseUrl}/auth/session?_t=${Date.now()}`;
         try {
             const response = await fetch(url, {
                 method: 'GET',
-                credentials: 'include',
-                headers: this.getAuthHeaders()
+                credentials: 'include'
             });
+            const data = await response.json().catch(() => ({}));
             if (!response.ok) {
+                this.lastSessionError = {
+                    status: response.status,
+                    code: data.code || null,
+                    message: data.message || null
+                };
                 return null;
             }
-            const data = await response.json();
             if (data && data.success && data.user && data.nonce) {
                 return this.persistAuthUser(data.user, data.nonce);
             }
         } catch (err) {
             console.warn('Falha ao renovar sessão', err);
+            this.lastSessionError = { status: 0, code: 'network_error', message: String(err) };
         }
         return null;
+    },
+
+    getSessionErrorMessage() {
+        const err = this.lastSessionError;
+        if (!err) {
+            return 'Não foi possível validar a sessão. Tente entrar novamente.';
+        }
+        if (err.code === 'rest_cookie_invalid_nonce' || err.status === 403) {
+            return 'Sessão desatualizada no navegador (nonce inválido). Saia, limpe os dados do site para tenhazelo.com.br e entre de novo, ou use uma aba anónima.';
+        }
+        if (err.status === 401 || err.code === 'zelo_not_logged_in') {
+            return 'O servidor não recebeu o cookie de login. Use https://tenhazelo.com.br/zelo/ (mesmo domínio do WordPress), confirme que o plugin Zelo 2.5.2+ está ativo e tente novamente.';
+        }
+        if (err.code === 'network_error' || err.status === 0) {
+            return 'Falha de rede ao validar a sessão. Verifique a conexão e tente novamente.';
+        }
+        return err.message || 'Não foi possível validar a sessão. Tente entrar novamente.';
     },
 
     async getLocais(params = {}) {

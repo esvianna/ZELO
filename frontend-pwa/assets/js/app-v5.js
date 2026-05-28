@@ -283,16 +283,18 @@ const app = {
                     if (synced) {
                         this.user = synced;
                         this.clearOpsAuthFailure();
-                    } else if (this.user.caps && this.user.caps.view_ops) {
-                        throw new Error(
-                            'Login aceito, mas a sessão não foi validada no servidor. Confirme que a PWA está no mesmo domínio do WordPress e tente novamente.'
-                        );
                     }
 
                     this.updateUI();
 
-                    if (this.user.caps && this.user.caps.view_ops && !app._opsAuthFailed) {
+                    if (this.user.caps && this.user.caps.view_ops) {
                         app.data.volunteerOps = await app.loadVolunteerOps(true);
+                        if (!synced && app._opsAuthFailed) {
+                            throw new Error(API.getSessionErrorMessage());
+                        }
+                        if (synced) {
+                            this.clearOpsAuthFailure();
+                        }
                     } else {
                         app.data.volunteerOps = null;
                     }

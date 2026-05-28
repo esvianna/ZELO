@@ -2,6 +2,12 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.5.3] - 2026-05-27
+
+### Autenticação
+- Login limpa cookies antigos antes de `wp_signon` e reforça `wp_set_auth_cookie` (evita 403 `rest_cookie_invalid_nonce` na PWA).
+- PWA: `GET /auth/session` sem cabeçalho `X-WP-Nonce` (validação só por cookie).
+
 ## [2.5.2] - 2026-05-27
 
 ### Autenticação

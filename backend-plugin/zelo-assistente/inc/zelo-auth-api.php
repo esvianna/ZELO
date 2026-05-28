@@ -90,6 +90,9 @@ function zelo_api_login( $request ) {
 		'remember'      => true,
 	);
 
+	// Evita cookie antigo + nonce novo (403 rest_cookie_invalid_nonce na PWA).
+	wp_clear_auth_cookie();
+
 	$user = wp_signon( $creds, is_ssl() );
 
 	if ( is_wp_error( $user ) ) {
@@ -109,6 +112,7 @@ function zelo_api_login( $request ) {
 	}
 
 	wp_set_current_user( $user->ID );
+	wp_set_auth_cookie( $user->ID, true, is_ssl() );
 
 	return rest_ensure_response(
 		array(
