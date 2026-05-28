@@ -177,6 +177,8 @@ function zelo_get_volunteer_ops_payload( $args = array() ) {
 			)
 		);
 	}
+	$catalogs = isset( $data['catalogs'] ) ? $data['catalogs'] : array();
+	$schedule = zelo_ops_enrich_schedule_for_output( $schedule, $catalogs );
 
 	$include_history = $uid > 0 && zelo_is_ops_manager( $uid );
 	$history_out     = array();

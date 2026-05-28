@@ -110,6 +110,7 @@ function zelo_volunteer_notify_run() {
 	}
 
 	$schedule = isset( $data['schedule'] ) && is_array( $data['schedule'] ) ? $data['schedule'] : array();
+	$catalogs = isset( $data['catalogs'] ) && is_array( $data['catalogs'] ) ? $data['catalogs'] : array();
 	$now      = new DateTimeImmutable( 'now', zelo_volunteer_notify_timezone() );
 
 	foreach ( $schedule as $row ) {
@@ -124,7 +125,8 @@ function zelo_volunteer_notify_run() {
 		if ( ! $user || ! is_email( $user->user_email ) ) {
 			continue;
 		}
-		$start_dt = zelo_volunteer_assignment_start_dt( $row['day'], isset( $row['start'] ) ? $row['start'] : '' );
+		list( $shift_start ) = zelo_ops_schedule_row_start_end( $row, $catalogs );
+		$start_dt            = zelo_volunteer_assignment_start_dt( $row['day'], $shift_start );
 		if ( ! $start_dt ) {
 			continue;
 		}

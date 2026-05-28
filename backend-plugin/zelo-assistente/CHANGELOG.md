@@ -2,6 +2,18 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.6.2] - 2026-05-28
+
+### Corrigido
+- Escala: `sched_lang_ids[N][]` com índice por linha (idiomas em linhas adicionadas via JS).
+- Save: `start`/`end` gravados a partir do catálogo de turnos (`zelo_ops_schedule_row_start_end`).
+
+## [2.6.1] - 2026-05-28
+
+### Alterado
+- Escala admin: removida coluna Nome (nome derivado do voluntário selecionado).
+- Horários início/fim só no catálogo de turnos; na escala são exibição; API/PWA recebem horários enriquecidos do turno.
+
 ## [2.6.0] - 2026-05-28
 
 ### Adicionado

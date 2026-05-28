@@ -372,6 +372,24 @@ function zelo_ops_volunteer_ref_from_row( $row ) {
 }
 
 /**
+ * Idiomas selecionados no POST para a linha $i da escala.
+ *
+ * @param int $row_index Índice da linha (paralelo a sched_id[]).
+ * @return array
+ */
+function zelo_ops_parse_schedule_lang_ids_from_post( $row_index ) {
+	$row_index = (int) $row_index;
+	if ( ! isset( $_POST['sched_lang_ids'] ) || ! is_array( $_POST['sched_lang_ids'] ) ) {
+		return array();
+	}
+	$posted = wp_unslash( $_POST['sched_lang_ids'] );
+	if ( isset( $posted[ $row_index ] ) && is_array( $posted[ $row_index ] ) ) {
+		return array_map( 'sanitize_text_field', $posted[ $row_index ] );
+	}
+	return array();
+}
+
+/**
  * Resolve idiomas do POST (IDs de catálogo → nomes).
  *
  * @param array $lang_ids IDs posted.
@@ -404,6 +422,76 @@ function zelo_ops_resolve_language_names( $lang_ids, $catalogs ) {
 }
 
 /**
+ * Horários de exibição da linha (sempre do catálogo de turnos).
+ *
+ * @param array $row      Schedule row.
+ * @param array $catalogs Catalogs.
+ * @return array{0: string, 1: string} start, end.
+ */
+function zelo_ops_schedule_row_start_end( $row, $catalogs ) {
+	$shift = isset( $row['shift'] ) ? sanitize_text_field( $row['shift'] ) : '';
+	$start = '';
+	$end   = '';
+	$sh    = zelo_ops_find_shift_by_code( $catalogs, $shift );
+	if ( $sh ) {
+		$start = zelo_ops_normalize_time( isset( $sh['start'] ) ? $sh['start'] : '' );
+		$end   = zelo_ops_normalize_time( isset( $sh['end'] ) ? $sh['end'] : '' );
+	}
+	// Legado: linhas antigas com start/end gravados antes de 2.6.1.
+	if ( $start === '' && ! empty( $row['start'] ) ) {
+		$start = zelo_ops_normalize_time( $row['start'] );
+	}
+	if ( $end === '' && ! empty( $row['end'] ) ) {
+		$end = zelo_ops_normalize_time( $row['end'] );
+	}
+	return array( $start, $end );
+}
+
+/**
+ * Preenche start/end na escala para API/PWA (derivados do turno).
+ *
+ * @param array $schedule Schedule rows.
+ * @param array $catalogs Catalogs.
+ * @return array
+ */
+function zelo_ops_enrich_schedule_for_output( $schedule, $catalogs ) {
+	$out = array();
+	foreach ( $schedule as $row ) {
+		if ( ! is_array( $row ) ) {
+			continue;
+		}
+		list( $start, $end ) = zelo_ops_schedule_row_start_end( $row, $catalogs );
+		$row['start']        = $start;
+		$row['end']          = $end;
+		$out[]               = $row;
+	}
+	return $out;
+}
+
+/**
+ * Nome do voluntário a partir de WP ou roster.
+ *
+ * @param int    $wp_uid   WP user id.
+ * @param string $rv_id    Roster id.
+ * @param array  $catalogs Catalogs.
+ * @return string
+ */
+function zelo_ops_resolve_volunteer_name( $wp_uid, $rv_id, $catalogs ) {
+	if ( $wp_uid > 0 ) {
+		$u = get_userdata( $wp_uid );
+		return ( $u && $u->display_name ) ? $u->display_name : '';
+	}
+	if ( $rv_id !== '' ) {
+		foreach ( $catalogs['roster_volunteers'] as $rv ) {
+			if ( isset( $rv['id'] ) && $rv['id'] === $rv_id && ! empty( $rv['name'] ) ) {
+				return sanitize_text_field( $rv['name'] );
+			}
+		}
+	}
+	return '';
+}
+
+/**
  * Normaliza linha da escala com catálogos.
  *
  * @param array $row      Raw row.
@@ -433,34 +521,7 @@ function zelo_normalize_schedule_row_with_catalogs( $row, $catalogs ) {
 	$shift = sanitize_text_field( isset( $row['shift'] ) ? $row['shift'] : '' );
 	$loc   = sanitize_text_field( isset( $row['location'] ) ? $row['location'] : '' );
 
-	$start = zelo_ops_normalize_time( isset( $row['start'] ) ? $row['start'] : '' );
-	$end   = zelo_ops_normalize_time( isset( $row['end'] ) ? $row['end'] : '' );
-
-	$sh = zelo_ops_find_shift_by_code( $catalogs, $shift );
-	if ( $sh ) {
-		if ( $start === '' && ! empty( $sh['start'] ) ) {
-			$start = zelo_ops_normalize_time( $sh['start'] );
-		}
-		if ( $end === '' && ! empty( $sh['end'] ) ) {
-			$end = zelo_ops_normalize_time( $sh['end'] );
-		}
-	}
-
-	$name = sanitize_text_field( isset( $row['volunteer_name'] ) ? $row['volunteer_name'] : '' );
-	if ( $wp_uid > 0 && $name === '' ) {
-		$u = get_userdata( $wp_uid );
-		if ( $u ) {
-			$name = $u->display_name;
-		}
-	}
-	if ( $rv_id !== '' && $name === '' ) {
-		foreach ( $catalogs['roster_volunteers'] as $rv ) {
-			if ( isset( $rv['id'] ) && $rv['id'] === $rv_id && ! empty( $rv['name'] ) ) {
-				$name = sanitize_text_field( $rv['name'] );
-				break;
-			}
-		}
-	}
+	$name = zelo_ops_resolve_volunteer_name( $wp_uid, $rv_id, $catalogs );
 
 	$languages = array();
 	if ( isset( $row['languages'] ) && is_array( $row['languages'] ) ) {
@@ -482,18 +543,22 @@ function zelo_normalize_schedule_row_with_catalogs( $row, $catalogs ) {
 		}
 	}
 
-	return array(
+	$normalized = array(
 		'id'                  => $id,
 		'day'                 => $day,
 		'shift'               => $shift,
 		'volunteer_name'      => $name,
 		'location'            => $loc,
-		'start'               => $start,
-		'end'                 => $end,
+		'start'               => '',
+		'end'                 => '',
 		'languages'           => $languages,
 		'wp_user_id'          => $wp_uid,
 		'roster_volunteer_id' => $rv_id,
 	);
+
+	list( $normalized['start'], $normalized['end'] ) = zelo_ops_schedule_row_start_end( $normalized, $catalogs );
+
+	return $normalized;
 }
 
 /**
