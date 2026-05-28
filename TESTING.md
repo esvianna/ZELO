@@ -147,6 +147,17 @@ Admin: Config → prazo, janelas presença, supervisores (select WP). Governanç
 
 ---
 
+## 10. Escala dia + data (plugin 2.7.1, PWA build 83+)
+
+| # | Passo | Esperado |
+|---|-------|----------|
+| 1 | Config: preencher datas sexta/sábado/domingo | Admin escala/governança mostram «Sexta-feira (dd/mm/aaaa)» |
+| 2 | Governança: homens-chave diferentes sábado vs sexta | Salvos independentemente; alertas de recusa usam supervisor do dia |
+| 3 | PWA escala/home/avisos | Rótulo «Sexta · 26/06» (ou equivalente) quando data configurada |
+| 4 | Turnos após migração | A1/B1 07:00–12:30, A2/B2 12:30–18:30 se catálogo ainda era default antigo |
+
+---
+
 ## Automação futura (sugestão)
 
 | Camada | Ferramenta sugerida |

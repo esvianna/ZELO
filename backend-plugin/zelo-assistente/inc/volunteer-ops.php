@@ -62,20 +62,142 @@ function zelo_register_volunteer_roles() {
 }
 add_action( 'init', 'zelo_register_volunteer_roles' );
 
+/**
+ * Estrutura vazia de governança por dia (copia supervisores da sexta se fornecido).
+ *
+ * @param array<string,mixed>|null $copy_from Sexta ou null.
+ * @return array<string,mixed>
+ */
+function zelo_ops_empty_governance_day( $copy_from = null ) {
+	$day = array(
+		'group_a_supervisor'    => '',
+		'group_b_supervisor'    => '',
+		'app_supervisor'        => '',
+		'group_a_supervisor_id' => 0,
+		'group_b_supervisor_id' => 0,
+		'app_supervisor_id'     => 0,
+		'keymen'                => array(),
+		'keymen_user_ids'       => array(),
+	);
+	if ( is_array( $copy_from ) ) {
+		foreach ( array( 'group_a_supervisor', 'group_b_supervisor', 'app_supervisor' ) as $f ) {
+			if ( ! empty( $copy_from[ $f ] ) ) {
+				$day[ $f ] = $copy_from[ $f ];
+			}
+		}
+		foreach ( array( 'group_a_supervisor_id', 'group_b_supervisor_id', 'app_supervisor_id' ) as $f ) {
+			if ( ! empty( $copy_from[ $f ] ) ) {
+				$day[ $f ] = (int) $copy_from[ $f ];
+			}
+		}
+	}
+	return $day;
+}
+
+/**
+ * Garante governança para sexta, sábado e domingo.
+ *
+ * @param array $data Ops data.
+ * @return array
+ */
+function zelo_ops_migrate_governance_three_days( $data ) {
+	$days = array( 'sexta', 'sabado', 'domingo' );
+	if ( ! isset( $data['governance'] ) || ! is_array( $data['governance'] ) ) {
+		$data['governance'] = array();
+	}
+	$sexta = isset( $data['governance']['sexta'] ) && is_array( $data['governance']['sexta'] )
+		? $data['governance']['sexta']
+		: array();
+	foreach ( $days as $day ) {
+		if ( ! isset( $data['governance'][ $day ] ) || ! is_array( $data['governance'][ $day ] ) ) {
+			$data['governance'][ $day ] = zelo_ops_empty_governance_day( 'sexta' === $day ? null : $sexta );
+		}
+		$g = &$data['governance'][ $day ];
+		foreach ( array( 'keymen', 'keymen_user_ids' ) as $k ) {
+			if ( ! isset( $g[ $k ] ) || ! is_array( $g[ $k ] ) ) {
+				$g[ $k ] = array();
+			}
+		}
+		if ( $day !== 'sexta' && ! empty( $sexta ) ) {
+			foreach ( array( 'group_a_supervisor', 'group_b_supervisor', 'app_supervisor' ) as $field ) {
+				if ( ( ! isset( $g[ $field ] ) || $g[ $field ] === '' ) && ! empty( $sexta[ $field ] ) ) {
+					$g[ $field ] = $sexta[ $field ];
+				}
+			}
+			foreach ( array( 'group_a_supervisor_id', 'group_b_supervisor_id', 'app_supervisor_id' ) as $field ) {
+				if ( empty( $g[ $field ] ) && ! empty( $sexta[ $field ] ) ) {
+					$g[ $field ] = (int) $sexta[ $field ];
+				}
+			}
+		}
+		unset( $g );
+	}
+	return $data;
+}
+
+/**
+ * Atualiza horários legados A1–B2 para alinhamento Congresso (idempotente).
+ *
+ * @param array $data Ops data.
+ * @return array
+ */
+function zelo_ops_migrate_legacy_shift_times( $data ) {
+	if ( ! isset( $data['catalogs']['shifts'] ) || ! is_array( $data['catalogs']['shifts'] ) ) {
+		return $data;
+	}
+	$legacy = array(
+		'A1' => array( 'start' => '07:30', 'end' => '12:30' ),
+		'B1' => array( 'start' => '07:30', 'end' => '12:30' ),
+		'A2' => array( 'start' => '13:00', 'end' => '18:00' ),
+		'B2' => array( 'start' => '13:00', 'end' => '18:00' ),
+	);
+	$new = array(
+		'A1' => array( 'start' => '07:00', 'end' => '12:30' ),
+		'B1' => array( 'start' => '07:00', 'end' => '12:30' ),
+		'A2' => array( 'start' => '12:30', 'end' => '18:30' ),
+		'B2' => array( 'start' => '12:30', 'end' => '18:30' ),
+	);
+	foreach ( $data['catalogs']['shifts'] as &$sh ) {
+		if ( ! is_array( $sh ) || empty( $sh['code'] ) ) {
+			continue;
+		}
+		$code = $sh['code'];
+		if ( ! isset( $legacy[ $code ], $new[ $code ] ) ) {
+			continue;
+		}
+		$st = isset( $sh['start'] ) ? zelo_ops_normalize_time( $sh['start'] ) : '';
+		$en = isset( $sh['end'] ) ? zelo_ops_normalize_time( $sh['end'] ) : '';
+		if ( $st === $legacy[ $code ]['start'] && $en === $legacy[ $code ]['end'] ) {
+			$sh['start'] = $new[ $code ]['start'];
+			$sh['end']   = $new[ $code ]['end'];
+		}
+	}
+	unset( $sh );
+	return $data;
+}
+
 function zelo_get_volunteer_ops_default_data() {
+	$gov_sexta = array(
+		'group_a_supervisor'    => 'Tony Rocha',
+		'group_b_supervisor'    => 'Cláudio Nogueira',
+		'app_supervisor'        => 'Eduardo Vianna',
+		'group_a_supervisor_id' => 0,
+		'group_b_supervisor_id' => 0,
+		'app_supervisor_id'     => 0,
+		'keymen'                => array(
+			'A1' => 'Guilherme Pires',
+			'B1' => 'Samuel Cardoso',
+			'A2' => 'Davi Carvalho',
+			'B2' => 'Esron Barros',
+		),
+		'keymen_user_ids'       => array(),
+	);
+
 	return array(
 		'governance' => array(
-			'sexta' => array(
-				'group_a_supervisor' => 'Tony Rocha',
-				'group_b_supervisor' => 'Cláudio Nogueira',
-				'app_supervisor'     => 'Eduardo Vianna',
-				'keymen'             => array(
-					'A1' => 'Guilherme Pires',
-					'B1' => 'Samuel Cardoso',
-					'A2' => 'Davi Carvalho',
-					'B2' => 'Esron Barros',
-				),
-			),
+			'sexta'   => $gov_sexta,
+			'sabado'  => zelo_ops_empty_governance_day( $gov_sexta ),
+			'domingo' => zelo_ops_empty_governance_day( $gov_sexta ),
 		),
 		'schedule'   => array(),
 		'catalogs'   => zelo_ops_empty_catalogs(),
@@ -122,10 +244,14 @@ function zelo_get_volunteer_ops_data() {
 	}
 	$data = zelo_get_ops_catalogs( $data );
 	$data = zelo_migrate_ops_catalogs_from_schedule( $data );
+	$data = zelo_ops_migrate_governance_three_days( $data );
+	$data = zelo_ops_migrate_legacy_shift_times( $data );
 	$migrated = get_option( 'zelo_ops_catalogs_migrated', '' );
-	if ( $migrated !== ZELO_VERSION ) {
+	$struct_migrated = get_option( 'zelo_ops_event_structure_migrated', '' );
+	if ( $migrated !== ZELO_VERSION || $struct_migrated !== ZELO_VERSION ) {
 		update_option( 'zelo_volunteer_ops_data', $data );
 		update_option( 'zelo_ops_catalogs_migrated', ZELO_VERSION );
+		update_option( 'zelo_ops_event_structure_migrated', ZELO_VERSION );
 	}
 	return $data;
 }

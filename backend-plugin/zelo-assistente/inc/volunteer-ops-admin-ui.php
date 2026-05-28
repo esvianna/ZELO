@@ -289,8 +289,9 @@ function zelo_render_volunteer_ops_admin_tabs() {
 	$dates    = isset( $set['event_dates'] ) && is_array( $set['event_dates'] ) ? $set['event_dates'] : array();
 	$wp_users = zelo_get_zelo_volunteer_users();
 	$ctx      = array(
-		'catalogs' => $catalogs,
-		'users'    => $wp_users,
+		'catalogs'    => $catalogs,
+		'users'       => $wp_users,
+		'event_dates' => $dates,
 	);
 	$notice_class = 'notice-success';
 	if ( $msg && ( strpos( $msg, 'Linha' ) !== false || strpos( $msg, 'utilizador' ) !== false || strpos( $msg, 'voluntário' ) !== false ) ) {
@@ -320,7 +321,8 @@ function zelo_render_volunteer_ops_admin_tabs() {
 			<input type="hidden" name="zelo_ops_tabs_save" value="1" />
 
 			<div id="tab-escala" class="zelo-ops-tab" style="display:block;">
-				<p class="description"><?php esc_html_e( 'O nome vem do voluntário selecionado (conta WordPress ou cadastro na aba Voluntários). Horários de início/fim são do turno (aba Turnos), apenas para consulta. Não repita a mesma pessoa no mesmo dia e turno.', 'zelo-assistente' ); ?></p>
+				<p class="description"><?php esc_html_e( 'Cada linha = um dia + um turno (A1/B1/A2/B2) + um voluntário. Repita linhas para Sexta, Sábado e Domingo. A coluna Turno corresponde ao “Grupo/Área” da programação; Local é o posto físico. Horários vêm da aba Turnos.', 'zelo-assistente' ); ?></p>
+				<p class="description"><?php esc_html_e( 'Não repita a mesma pessoa no mesmo dia e turno.', 'zelo-assistente' ); ?></p>
 				<table class="widefat striped zelo-sched-table">
 					<thead>
 						<tr>
@@ -372,14 +374,15 @@ function zelo_render_volunteer_ops_admin_tabs() {
 			</div>
 
 			<div id="tab-gov" class="zelo-ops-tab" style="display:none;">
+				<p class="description"><?php esc_html_e( 'Supervisores e homens-chave podem mudar a cada dia do evento. Configure Sexta, Sábado e Domingo separadamente (conforme a programação do departamento).', 'zelo-assistente' ); ?></p>
 				<?php
-				$gov_days = ! empty( $gov ) ? array_keys( $gov ) : array( 'sexta', 'sabado', 'domingo' );
+				$gov_days = array( 'sexta', 'sabado', 'domingo' );
 				foreach ( $gov_days as $dkey ) {
 					$d = $dkey;
 					$g = isset( $gov[ $d ] ) ? $gov[ $d ] : array();
 					?>
 					<input type="hidden" name="gov_days[]" value="<?php echo esc_attr( $d ); ?>" />
-					<h3><?php echo esc_html( strtoupper( $d ) ); ?></h3>
+					<h3><?php echo esc_html( zelo_ops_day_label( $d, $dates, true ) ); ?></h3>
 					<table class="form-table">
 						<tr><th>Grupo A</th><td><?php echo zelo_ops_user_select_html( $wp_users, isset( $g['group_a_supervisor_id'] ) ? (int) $g['group_a_supervisor_id'] : 0, 'gov_' . $d . '_ga_id' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?><input type="hidden" name="<?php echo esc_attr( 'gov_' . $d . '_ga' ); ?>" value="<?php echo esc_attr( isset( $g['group_a_supervisor'] ) ? $g['group_a_supervisor'] : '' ); ?>" /></td></tr>
 						<tr><th>Grupo B</th><td><?php echo zelo_ops_user_select_html( $wp_users, isset( $g['group_b_supervisor_id'] ) ? (int) $g['group_b_supervisor_id'] : 0, 'gov_' . $d . '_gb_id' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?><input type="hidden" name="<?php echo esc_attr( 'gov_' . $d . '_gb' ); ?>" value="<?php echo esc_attr( isset( $g['group_b_supervisor'] ) ? $g['group_b_supervisor'] : '' ); ?>" /></td></tr>
@@ -669,11 +672,15 @@ function zelo_ops_volunteer_ref_select_html( $ctx, $selected = '' ) {
  */
 function zelo_ops_schedule_row_html( $r, $ctx = array(), $row_index = 0 ) {
 	if ( empty( $ctx['catalogs'] ) ) {
-		$data          = zelo_get_volunteer_ops_data();
+		$data            = zelo_get_volunteer_ops_data();
 		$ctx['catalogs'] = $data['catalogs'];
 		$ctx['users']    = zelo_get_zelo_volunteer_users();
+		if ( empty( $ctx['event_dates'] ) && isset( $data['settings']['event_dates'] ) ) {
+			$ctx['event_dates'] = $data['settings']['event_dates'];
+		}
 	}
-	$catalogs = $ctx['catalogs'];
+	$catalogs    = $ctx['catalogs'];
+	$event_dates = isset( $ctx['event_dates'] ) && is_array( $ctx['event_dates'] ) ? $ctx['event_dates'] : array();
 	$idv      = isset( $r['id'] ) ? esc_attr( $r['id'] ) : '';
 	$day      = isset( $r['day'] ) ? esc_attr( $r['day'] ) : '';
 	$shift    = isset( $r['shift'] ) ? esc_attr( $r['shift'] ) : '';
@@ -684,9 +691,9 @@ function zelo_ops_schedule_row_html( $r, $ctx = array(), $row_index = 0 ) {
 	$st_disp = $st !== '' ? esc_html( $st ) : '—';
 	$en_disp = $en !== '' ? esc_html( $en ) : '—';
 
-	$day_html = '<select name="sched_day[]" class="sched-day" style="min-width:110px;">';
+	$day_html = '<select name="sched_day[]" class="sched-day" style="min-width:160px;">';
 	$day_html .= '<option value="">' . esc_html__( '—', 'zelo-assistente' ) . '</option>';
-	foreach ( zelo_ops_day_choices() as $slug => $label ) {
+	foreach ( zelo_ops_day_choices_with_labels( $event_dates, true ) as $slug => $label ) {
 		$day_html .= '<option value="' . esc_attr( $slug ) . '"' . selected( $day, $slug, false ) . '>' . esc_html( $label ) . '</option>';
 	}
 	$day_html .= '</select>';

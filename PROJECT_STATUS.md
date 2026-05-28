@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-05-28** (fluxo confirmação voluntários).
+> Última atualização: **2026-05-28** (UX escala Congresso).
 
 ---
 
@@ -10,15 +10,17 @@
 
 O projeto está em **produção funcional** com foco operacional para o **departamento de informações** (voluntários), mantendo o app **público para visitantes ocasionais**.
 
-**Pacote confirmação voluntários (2.7.0 / PWA 81):** compromisso antecipado por designação, prazo e janelas de presença no admin, vínculo cadastro↔roster com aprovação, alerta supervisor na recusa, validação check-in/out, UI PWA e aba Onboarding.
+**Pacote confirmação voluntários (2.7.0 / PWA 81–82):** compromisso antecipado, onboarding, check-in validado.
 
-**Próximo backlog:** deploy 2.7.0 + build 81; smoke `TESTING.md` §9; Web Push VAPID (Fase 3); export CSV.
+**UX escala Congresso (2.7.1 / PWA 83–84):** rótulos dia+data, governança 3 dias, turnos 07:00–18:30, guia em `docs/DEPLOY-ZELO-PWA.md`.
+
+**Próximo backlog:** deploy 2.7.1 + build 84; smoke §9–§10; Web Push VAPID.
 
 ---
 
 ## O que já foi implementado
 
-### Backend (`zelo-assistente` v2.7.0)
+### Backend (`zelo-assistente` v2.7.1)
 
 - [x] `zelo_volunteer_commitments` + REST `/ops/assignments/{id}/commit`
 - [x] `zelo_link_requests` + onboarding admin + matching cadastro por e-mail
@@ -26,16 +28,18 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 - [x] Check-in/out validado (compromisso, dia, janela, titular/supervisor)
 - [x] E-mails estendidos (compromisso pendente, 1 dia antes, check-in/out abertos)
 - [x] Stub push; hook `zelo_notification_dispatch`
+- [x] Rótulos dia+data; governança 3 dias; turnos Congresso; migração idempotente
 
-### Frontend (PWA build 81)
+### Frontend (PWA build 84)
 
 - [x] Aceitar/recusar turno; check-in/out com janelas; supervisor em nome
 - [x] Hub avisos: `commitment-*`, `checkin-*`, `checkout-*`, vínculo pendente
 - [x] Prompt notificações; SW handlers push (preparação)
+- [x] `getOpsDayLabel` com data; filtros escala com data
 
 ### Governança docs
 
-- [x] ADR-013; TESTING §9; ROADMAP pacote C
+- [x] ADR-013; TESTING §9–§10; guia Congresso em `docs/DEPLOY-ZELO-PWA.md`
 
 ---
 
@@ -43,7 +47,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Prioridade | Item | Notas |
 |------------|------|-------|
-| **Alta** | Deploy plugin 2.7.0 + PWA 81 | `TESTING.md` §9 |
+| **Alta** | Deploy plugin 2.7.1 + PWA 84 | `TESTING.md` §9–§10 |
 | **Média** | Web Push VAPID + subscribe real | Stub 501 hoje |
 | **Média** | `/ops/export` CSV | Stub 501 |
 | **Baixa** | Inbox avisos servidor (B10) | Fase 2 UX |
@@ -54,7 +58,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 1. Configurar no admin: datas evento (26–28/06), prazo compromisso (ex. 15/06), supervisores WP.
 2. Preencher roster com `expected_email`; convidar cadastro; aprovar vínculos.
-3. Smoke T1–T10 em staging.
+3. Smoke T1–T10 + §10 em staging.
 4. Gerar VAPID e ativar push quando infra estiver pronta.
 
 ---
@@ -74,16 +78,16 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | Campo | Valor |
 |-------|--------|
 | Data | 2026-05-28 |
-| Feito | Fluxo confirmação voluntários Fases 0–2 + prep push/motor |
-| Build PWA | **81** |
-| Plugin | **2.7.0** |
-| Próximo passo | Deploy + smoke §9 |
+| Feito | UX escala Congresso + bugfix check-in (`endMs` null sem `item.end`, build 84) |
+| Build PWA | **84** |
+| Plugin | **2.7.1** |
+| Próximo passo | Deploy + smoke TESTING §9–§10 |
 
 ---
 
 ## Como retomar em 30 segundos
 
 1. Leia **Onde paramos** acima.
-2. `TESTING.md` §9 antes do evento.
+2. `TESTING.md` §9–§10 antes do evento.
 3. Admin → Operação Voluntários → Config + Onboarding.
 4. `AGENTS.md` + `DECISIONS.md` (ADR-013).

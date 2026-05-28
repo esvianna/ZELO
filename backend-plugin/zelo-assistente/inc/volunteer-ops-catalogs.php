@@ -23,16 +23,67 @@ function zelo_ops_day_choices() {
 }
 
 /**
+ * Formata Y-m-d para exibição d/m/Y.
+ *
+ * @param string $ymd Date.
+ * @return string
+ */
+function zelo_ops_format_event_date_display( $ymd ) {
+	$ymd = trim( (string) $ymd );
+	if ( ! preg_match( '/^(\d{4})-(\d{2})-(\d{2})$/', $ymd, $m ) ) {
+		return '';
+	}
+	return $m[3] . '/' . $m[2] . '/' . $m[1];
+}
+
+/**
+ * Rótulo de dia da escala, opcionalmente com data do evento.
+ *
+ * @param string               $slug        sexta|sabado|domingo.
+ * @param array<string,string> $event_dates Mapa slug => Y-m-d.
+ * @param bool                 $with_date   Anexar data.
+ * @return string
+ */
+function zelo_ops_day_label( $slug, $event_dates = null, $with_date = false ) {
+	$choices = zelo_ops_day_choices();
+	$label   = isset( $choices[ $slug ] ) ? $choices[ $slug ] : $slug;
+	if ( ! $with_date || ! is_array( $event_dates ) ) {
+		return $label;
+	}
+	$ymd = isset( $event_dates[ $slug ] ) ? trim( (string) $event_dates[ $slug ] ) : '';
+	$disp = zelo_ops_format_event_date_display( $ymd );
+	if ( $disp === '' ) {
+		return $label;
+	}
+	return $label . ' (' . $disp . ')';
+}
+
+/**
+ * Choices com rótulos opcionais incluindo data.
+ *
+ * @param array<string,string>|null $event_dates Event dates.
+ * @param bool                      $with_date   With date suffix.
+ * @return array<string, string>
+ */
+function zelo_ops_day_choices_with_labels( $event_dates = null, $with_date = false ) {
+	$out = array();
+	foreach ( zelo_ops_day_choices() as $slug => $base ) {
+		$out[ $slug ] = zelo_ops_day_label( $slug, $event_dates, $with_date );
+	}
+	return $out;
+}
+
+/**
  * Turnos padrão (alinhados à governança A1–B2).
  *
  * @return array<int, array<string, mixed>>
  */
 function zelo_ops_default_shifts() {
 	$defaults = array(
-		array( 'code' => 'A1', 'label' => 'Turno A1', 'start' => '07:30', 'end' => '12:30' ),
-		array( 'code' => 'B1', 'label' => 'Turno B1', 'start' => '07:30', 'end' => '12:30' ),
-		array( 'code' => 'A2', 'label' => 'Turno A2', 'start' => '13:00', 'end' => '18:00' ),
-		array( 'code' => 'B2', 'label' => 'Turno B2', 'start' => '13:00', 'end' => '18:00' ),
+		array( 'code' => 'A1', 'label' => 'Turno A1', 'start' => '07:00', 'end' => '12:30' ),
+		array( 'code' => 'B1', 'label' => 'Turno B1', 'start' => '07:00', 'end' => '12:30' ),
+		array( 'code' => 'A2', 'label' => 'Turno A2', 'start' => '12:30', 'end' => '18:30' ),
+		array( 'code' => 'B2', 'label' => 'Turno B2', 'start' => '12:30', 'end' => '18:30' ),
 	);
 	$out = array();
 	foreach ( $defaults as $d ) {

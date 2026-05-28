@@ -9,6 +9,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 ## [Unreleased]
 
 ### Adicionado
+- Plugin **2.7.1**: rótulos dia+data (`zelo_ops_day_label`), governança sexta/sábado/domingo, turnos default 07:00–12:30 / 12:30–18:30, migração idempotente.
+- PWA build **83**: `getOpsDayLabel` com data de `event_dates`; filtros da escala com data.
+- Guia «Cadastrar escala Congresso» em `docs/DEPLOY-ZELO-PWA.md`.
 - Plugin **2.7.0**: fluxo confirmação voluntários — compromisso antecipado (`zelo_volunteer_commitments`), prazo e janelas de presença no admin, vínculo cadastro↔roster com aprovação (`zelo_link_requests`), alerta supervisor na recusa, validação check-in/out, REST `/ops/assignments/{id}/commit`, `/ops/onboarding`, `/ops/link-requests/*`, stub push.
 - PWA build **81**: UI aceitar/recusar turno, check-in/out com janelas, ações de supervisor, hub avisos (`commitment-*`, `checkout-*`), prompt notificações, handlers push no SW (preparação).
 - PWA build **78**: bottom nav 5 itens (S.O.S. central), header com sino (hub avisos MVP) e menu (Instalar/cache), widget tempo na home, view `avisos`.
@@ -16,6 +19,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 - PWA build **77**: view Previsão do tempo, cache `localStorage` (`zelo_clima`).
 
 ### Corrigido
+- PWA build **84**: `canCheckinAssignment` — sem `item.end`, `endMs` volta a ser `null` (build 82 tinha alterado para fallback de 4h por engano); `canCheckoutAssignment` restaura chamada direta a `getAssignmentEndMs` após guard de `startMs`.
 - PWA build **82**: `canCheckoutAssignment` / `getAssignmentEndMs` — evita `NaN` quando `getAssignmentStartMs` retorna null (janela de checkout bloqueada de forma segura).
 - PWA build **80**: `doReallocate()` atualiza badge de avisos e painel home após realocação.
 

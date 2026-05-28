@@ -2,6 +2,13 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.7.1] - 2026-05-28
+
+### Adicionado
+- `zelo_ops_day_label()` / `zelo_ops_day_choices_with_labels()` — rótulo de dia com data (`event_dates`).
+- Migração: governança para sexta/sábado/domingo; cópia de supervisores da sexta quando vazios; horários legados A1–B2 atualizados se ainda default antigo.
+- Admin: selects e títulos de governança com data; textos de ajuda escala/governança.
+
 ## [2.7.0] - 2026-05-28
 
 ### Adicionado

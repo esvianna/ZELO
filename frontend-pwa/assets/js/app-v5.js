@@ -1640,7 +1640,7 @@ const app = {
         if (!mine && !this.canSuperviseOps()) return false;
         const startMs = this.getAssignmentStartMs(item);
         if (startMs == null) return false;
-        const endMs = item.end ? this.getAssignmentEndMs(item, startMs) : startMs + 4 * 3600000;
+        const endMs = item.end ? this.getAssignmentEndMs(item, startMs) : null;
         const presence = this.data.volunteerOps?.settings?.presence || {};
         const from = this._parsePresenceRuleMs(presence.checkin_from || 'shift_start', startMs, endMs);
         const until = presence.checkin_until === 'shift_end' && endMs != null ? endMs : this._parsePresenceRuleMs(presence.checkin_until || 'shift_end', startMs, endMs);
@@ -1666,7 +1666,7 @@ const app = {
         if (!mine && !this.canSuperviseOps()) return false;
         const startMs = this.getAssignmentStartMs(item);
         if (startMs == null) return false;
-        const endMs = item.end ? this.getAssignmentEndMs(item, startMs) : startMs + 4 * 3600000;
+        const endMs = this.getAssignmentEndMs(item, startMs);
         const presence = this.data.volunteerOps?.settings?.presence || {};
         const from = this._parsePresenceRuleMs(presence.checkout_from || 'shift_end', startMs, endMs);
         const until = this._parsePresenceRuleMs(presence.checkout_until || 'minutes_after_end:30', startMs, endMs);
@@ -2002,7 +2002,14 @@ const app = {
 
     getOpsDayLabel(day) {
         const map = { sexta: 'Sexta', sabado: 'Sábado', domingo: 'Domingo' };
-        return map[day] || day;
+        let label = map[day] || day;
+        const dates = this.data.volunteerOps?.settings?.event_dates || {};
+        const ymd = dates[day];
+        if (ymd && /^\d{4}-\d{2}-\d{2}$/.test(ymd)) {
+            const parts = ymd.split('-');
+            label += ` · ${parts[2]}/${parts[1]}`;
+        }
+        return label;
     },
 
     getCheckinStatus(assignmentId) {
@@ -2154,9 +2161,9 @@ const app = {
             <div class="ops-filters">
                 <select id="ops-day-filter" onchange="app.renderVolunteerOps()">
                     <option value="">Todos os dias</option>
-                    <option value="sexta" ${selectedDay === 'sexta' ? 'selected' : ''}>Sexta</option>
-                    <option value="sabado" ${selectedDay === 'sabado' ? 'selected' : ''}>Sábado</option>
-                    <option value="domingo" ${selectedDay === 'domingo' ? 'selected' : ''}>Domingo</option>
+                    <option value="sexta" ${selectedDay === 'sexta' ? 'selected' : ''}>${this.escapeHtml(this.getOpsDayLabel('sexta'))}</option>
+                    <option value="sabado" ${selectedDay === 'sabado' ? 'selected' : ''}>${this.escapeHtml(this.getOpsDayLabel('sabado'))}</option>
+                    <option value="domingo" ${selectedDay === 'domingo' ? 'selected' : ''}>${this.escapeHtml(this.getOpsDayLabel('domingo'))}</option>
                 </select>
                 <select id="ops-shift-filter" onchange="app.renderVolunteerOps()">
                     <option value="">Todos os turnos</option>
