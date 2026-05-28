@@ -1504,6 +1504,32 @@ body {
     color: #4b5563;
 }
 
+.ops-commit-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.ops-commit-accepted {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.ops-commit-declined {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.ops-actions--stack {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.35rem;
+}
+
+.btn-block--muted {
+    background: #f1f5f9;
+    color: #475569;
+}
+
 .ops-status-checked_in {
     background: #dcfce7;
     color: #166534;

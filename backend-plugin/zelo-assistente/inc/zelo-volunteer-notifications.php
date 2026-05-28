@@ -101,17 +101,19 @@ add_action( 'zelo_volunteer_notify_tick', 'zelo_volunteer_notify_run' );
 
 function zelo_volunteer_notify_run() {
 	$data     = zelo_get_volunteer_ops_data();
-	$settings = isset( $data['settings'] ) && is_array( $data['settings'] ) ? $data['settings'] : array();
+	$settings = function_exists( 'zelo_ops_normalize_settings' )
+		? zelo_ops_normalize_settings( isset( $data['settings'] ) ? $data['settings'] : array() )
+		: ( isset( $data['settings'] ) && is_array( $data['settings'] ) ? $data['settings'] : array() );
 	$do_24    = ! empty( $settings['notify_24h'] );
 	$min_b    = isset( $settings['notify_before_min'] ) ? max( 5, (int) $settings['notify_before_min'] ) : 30;
-
-	if ( ! $do_24 && $min_b < 1 ) {
-		return;
-	}
+	$presence = isset( $settings['presence'] ) && is_array( $settings['presence'] ) ? $settings['presence'] : array();
+	$min_pres = isset( $presence['notify_minutes_before'] ) ? max( 5, (int) $presence['notify_minutes_before'] ) : $min_b;
+	$do_day   = ! empty( $presence['notify_1_day_before'] );
 
 	$schedule = isset( $data['schedule'] ) && is_array( $data['schedule'] ) ? $data['schedule'] : array();
 	$catalogs   = zelo_get_ops_catalogs( $data )['catalogs'];
 	$now      = new DateTimeImmutable( 'now', zelo_volunteer_notify_timezone() );
+	$deadline = isset( $settings['commitment_deadline'] ) ? trim( (string) $settings['commitment_deadline'] ) : '';
 
 	foreach ( $schedule as $row ) {
 		if ( empty( $row['id'] ) || empty( $row['day'] ) ) {
@@ -125,6 +127,40 @@ function zelo_volunteer_notify_run() {
 		if ( ! $user || ! is_email( $user->user_email ) ) {
 			continue;
 		}
+		if ( function_exists( 'zelo_user_email_verified' ) && ! zelo_user_email_verified( $uid ) ) {
+			continue;
+		}
+
+		$commit_st = function_exists( 'zelo_get_commitment_status' ) ? zelo_get_commitment_status( $row['id'] ) : 'accepted';
+
+		// Lembrete: confirmar participação (pendente) antes do deadline.
+		if ( $commit_st === 'pending' && $deadline !== '' && preg_match( '/^\d{4}-\d{2}-\d{2}$/', $deadline ) ) {
+			try {
+				$dl = new DateTimeImmutable( $deadline . ' 12:00:00', zelo_volunteer_notify_timezone() );
+				$diff_dl = $dl->getTimestamp() - $now->getTimestamp();
+				if ( $diff_dl > 0 && $diff_dl <= 86400 * 3 && ! zelo_volunteer_notify_already_sent( $uid, $row['id'], 'commitment_due' ) ) {
+					$subject = sprintf( '[%s] %s', wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ), __( 'Confirme sua designação no Zelo', 'zelo-assistente' ) );
+					$body    = sprintf(
+						"%s\n\n%s: %s\n%s: %s\n",
+						__( 'Você tem uma designação pendente de confirmação. Acesse o app e confirme se vai participar.', 'zelo-assistente' ),
+						__( 'Prazo até', 'zelo-assistente' ),
+						$dl->format( 'd/m/Y' ),
+						__( 'Turno', 'zelo-assistente' ),
+						(string) $row['day'] . ' / ' . ( isset( $row['shift'] ) ? $row['shift'] : '' )
+					);
+					if ( wp_mail( $user->user_email, $subject, $body ) ) {
+						zelo_volunteer_notify_mark_sent( $uid, $row['id'], 'commitment_due' );
+					}
+				}
+			} catch ( Exception $e ) {
+				// skip.
+			}
+		}
+
+		if ( $commit_st !== 'accepted' ) {
+			continue;
+		}
+
 		list( $shift_start ) = zelo_ops_schedule_row_start_end( $row, $catalogs );
 		$start_dt            = zelo_volunteer_assignment_start_dt( $row['day'], $shift_start );
 		if ( ! $start_dt ) {
@@ -138,6 +174,24 @@ function zelo_volunteer_notify_run() {
 
 		$name = isset( $row['volunteer_name'] ) ? $row['volunteer_name'] : '';
 		$loc  = isset( $row['location'] ) ? $row['location'] : '';
+
+		// Lembrete ~1 dia antes (config presence).
+		if ( $do_day && $diff_sec <= 90000 && $diff_sec >= 72000 ) {
+			if ( ! zelo_volunteer_notify_already_sent( $uid, $row['id'], 'before_1day' ) ) {
+				$subject = sprintf( '[%s] %s', wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ), __( 'Seu turno (Zelo) — amanhã', 'zelo-assistente' ) );
+				$body    = sprintf(
+					"%s\n\n%s: %s\n%s: %s\n",
+					__( 'Lembrete: você tem designação amanhã no Zelo.', 'zelo-assistente' ),
+					__( 'Turno', 'zelo-assistente' ),
+					(string) $row['day'] . ' / ' . ( isset( $row['shift'] ) ? $row['shift'] : '' ),
+					__( 'Início', 'zelo-assistente' ),
+					$start_dt->format( 'd/m/Y H:i' )
+				);
+				if ( wp_mail( $user->user_email, $subject, $body ) ) {
+					zelo_volunteer_notify_mark_sent( $uid, $row['id'], 'before_1day' );
+				}
+			}
+		}
 
 		// Janela larga para cron horário: entre ~20h e 28h antes do início.
 		if ( $do_24 && $diff_sec <= 100800 && $diff_sec >= 72000 ) {
@@ -160,7 +214,7 @@ function zelo_volunteer_notify_run() {
 			}
 		}
 
-		$win = $min_b * 60;
+		$win = $min_pres * 60;
 		// Margem de ±45 min em torno do alvo para o cron horário não perder o disparo.
 		if ( $diff_sec <= $win + 2700 && $diff_sec >= max( 60, $win - 2700 ) ) {
 			if ( zelo_volunteer_notify_already_sent( $uid, $row['id'], 'before_min' ) ) {
@@ -170,7 +224,7 @@ function zelo_volunteer_notify_run() {
 			$body    = sprintf(
 				"%s %d %s\n\n%s: %s\n%s: %s\n",
 				__( 'Lembrete: seu turno começa em aproximadamente', 'zelo-assistente' ),
-				$min_b,
+				$min_pres,
 				__( 'minutos.', 'zelo-assistente' ),
 				__( 'Local', 'zelo-assistente' ),
 				$loc,
@@ -179,6 +233,32 @@ function zelo_volunteer_notify_run() {
 			);
 			if ( wp_mail( $user->user_email, $subject, $body ) ) {
 				zelo_volunteer_notify_mark_sent( $uid, $row['id'], 'before_min' );
+			}
+		}
+
+		// Check-in: janela aberta (início do turno).
+		if ( function_exists( 'zelo_presence_window_open' ) && zelo_presence_window_open( $row['id'], 'checkin' ) ) {
+			$checkins = zelo_get_volunteer_checkins();
+			$st       = isset( $checkins[ $row['id'] ]['status'] ) ? $checkins[ $row['id'] ]['status'] : 'pending';
+			if ( $st === 'pending' && ! zelo_volunteer_notify_already_sent( $uid, $row['id'], 'checkin_open' ) ) {
+				$subject = sprintf( '[%s] %s', wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ), __( 'Faça seu check-in no Zelo', 'zelo-assistente' ) );
+				$body    = __( 'Sua janela de check-in está aberta. Confirme sua chegada no aplicativo.', 'zelo-assistente' );
+				if ( wp_mail( $user->user_email, $subject, $body ) ) {
+					zelo_volunteer_notify_mark_sent( $uid, $row['id'], 'checkin_open' );
+				}
+			}
+		}
+
+		// Check-out: janela aberta.
+		if ( function_exists( 'zelo_presence_window_open' ) && zelo_presence_window_open( $row['id'], 'checkout' ) ) {
+			$checkins = zelo_get_volunteer_checkins();
+			$st       = isset( $checkins[ $row['id'] ]['status'] ) ? $checkins[ $row['id'] ]['status'] : '';
+			if ( $st === 'checked_in' && ! zelo_volunteer_notify_already_sent( $uid, $row['id'], 'checkout_open' ) ) {
+				$subject = sprintf( '[%s] %s', wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ), __( 'Faça seu check-out no Zelo', 'zelo-assistente' ) );
+				$body    = __( 'Sua janela de check-out está aberta. Confirme sua saída no aplicativo.', 'zelo-assistente' );
+				if ( wp_mail( $user->user_email, $subject, $body ) ) {
+					zelo_volunteer_notify_mark_sent( $uid, $row['id'], 'checkout_open' );
+				}
 			}
 		}
 	}

@@ -6,6 +6,16 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 ---
 
+## ADR-013 — Compromisso antecipado vs presença (check-in/out) (2026-05-28)
+
+**Contexto:** `zelo_volunteer_checkins.pending` misturava “não aceitei o turno” com “não fiz check-in”; avisos e e-mails não distinguiam as fases.
+
+**Decisão:** Três camadas: onboarding (roster ↔ WP com aprovação admin), **compromisso** (`zelo_volunteer_commitments`: pending/accepted/declined + prazo `commitment_deadline` no admin), **presença** (check-ins existentes com validação de janela configurável). Recusa alerta supervisor (governança com `*_supervisor_id`). Supervisores podem agir em nome (`on_behalf`). Push e motor unificado: Fase 3–4.
+
+**Consequências:** Plugin **2.7.0**; PWA build **81**; novas rotas REST `/ops/assignments/{id}/commit`, `/ops/onboarding`, `/ops/link-requests/*`.
+
+---
+
 ## ADR-012 — Nav 5 itens + header sino/menu + hub avisos MVP (2026-05-28)
 
 **Contexto:** Bottom nav com 6 itens desalinhava o S.O.S.; tempo e avisos competiam por espaço na barra.

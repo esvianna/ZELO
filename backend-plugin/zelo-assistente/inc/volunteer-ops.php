@@ -81,14 +81,17 @@ function zelo_get_volunteer_ops_default_data() {
 		'catalogs'   => zelo_ops_empty_catalogs(),
 		'indoor_map' => array(),
 		'history'    => array(),
-		'settings'   => array(
-			'notify_24h'        => true,
-			'notify_before_min' => 30,
-			'event_dates'       => array(
-				'sexta'   => '',
-				'sabado'  => '',
-				'domingo' => '',
+		'settings'   => array_merge(
+			array(
+				'notify_24h'        => true,
+				'notify_before_min' => 30,
+				'event_dates'       => array(
+					'sexta'   => '',
+					'sabado'  => '',
+					'domingo' => '',
+				),
 			),
+			function_exists( 'zelo_ops_default_commitment_settings' ) ? zelo_ops_default_commitment_settings() : array()
 		),
 	);
 }
@@ -104,6 +107,9 @@ function zelo_get_volunteer_ops_data() {
 	$data['indoor_map'] = isset( $data['indoor_map'] ) && is_array( $data['indoor_map'] ) ? $data['indoor_map'] : array();
 	$data['history']    = isset( $data['history'] ) && is_array( $data['history'] ) ? $data['history'] : array();
 	$data['settings'] = isset( $data['settings'] ) && is_array( $data['settings'] ) ? $data['settings'] : array();
+	if ( function_exists( 'zelo_ops_normalize_settings' ) ) {
+		$data['settings'] = zelo_ops_normalize_settings( $data['settings'] );
+	}
 	$def               = zelo_get_volunteer_ops_default_data();
 	if ( ! isset( $data['settings']['event_dates'] ) || ! is_array( $data['settings']['event_dates'] ) ) {
 		$data['settings']['event_dates'] = isset( $def['settings']['event_dates'] ) ? $def['settings']['event_dates'] : array();
@@ -201,13 +207,56 @@ function zelo_get_volunteer_ops_payload( $args = array() ) {
 		}
 	}
 
+	$commitments = function_exists( 'zelo_get_volunteer_commitments' ) ? zelo_get_volunteer_commitments() : array();
+	$commitments_out = $commitments;
+	if ( ! empty( $args['mine_schedule_only'] ) && $uid > 0 ) {
+		$visible_ids = wp_list_pluck( $schedule, 'id' );
+		$commitments_out = array_intersect_key( $commitments, array_flip( $visible_ids ) );
+	} elseif ( $uid > 0 && ! zelo_is_ops_manager( $uid ) && ! zelo_is_reallocator( $uid ) && ! zelo_user_is_ops_supervisor_role( $uid ) ) {
+		$visible_ids = array();
+		foreach ( $data['schedule'] as $row ) {
+			if ( isset( $row['wp_user_id'] ) && (int) $row['wp_user_id'] === $uid && ! empty( $row['id'] ) ) {
+				$visible_ids[] = $row['id'];
+			}
+		}
+		$commitments_out = array_intersect_key( $commitments, array_flip( $visible_ids ) );
+	}
+
+	$link_pending = $uid > 0 && function_exists( 'zelo_user_has_pending_link_request' ) && zelo_user_has_pending_link_request( $uid );
+
+	$recent_declines = array();
+	if ( $uid > 0 && ( zelo_is_ops_manager( $uid ) || zelo_is_reallocator( $uid ) || zelo_user_is_ops_supervisor_role( $uid ) ) ) {
+		foreach ( $commitments as $aid => $c ) {
+			if ( isset( $c['status'] ) && $c['status'] === 'declined' ) {
+				$row = null;
+				foreach ( $data['schedule'] as $sr ) {
+					if ( isset( $sr['id'] ) && $sr['id'] === $aid ) {
+						$row = $sr;
+						break;
+					}
+				}
+				if ( $row && ( zelo_is_ops_manager( $uid ) || zelo_user_can_supervise_assignment( $uid, $row ) ) ) {
+					$recent_declines[] = array(
+						'assignment_id' => $aid,
+						'row'           => $row,
+						'commitment'    => $c,
+					);
+				}
+			}
+		}
+	}
+
 	return array(
-		'governance'     => $data['governance'],
-		'schedule'       => $schedule,
-		'indoor_map'     => $data['indoor_map'],
-		'settings'       => $data['settings'],
-		'checkins'       => $checkins,
-		'history'        => $history_out,
-		'swap_requests'  => $swap_requests,
+		'governance'       => $data['governance'],
+		'schedule'         => $schedule,
+		'indoor_map'       => $data['indoor_map'],
+		'settings'         => $data['settings'],
+		'checkins'         => $checkins,
+		'commitments'      => $commitments_out,
+		'commitment_deadline_passed' => function_exists( 'zelo_commitment_deadline_passed' ) ? zelo_commitment_deadline_passed() : false,
+		'link_pending'     => $link_pending,
+		'recent_declines'  => array_slice( $recent_declines, 0, 50 ),
+		'history'          => $history_out,
+		'swap_requests'    => $swap_requests,
 	);
 }

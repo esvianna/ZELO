@@ -2,6 +2,18 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.7.0] - 2026-05-28
+
+### Adicionado
+- Compromisso antecipado por designação (`zelo_volunteer_commitments`): aceitar/recusar com prazo `commitment_deadline` no admin.
+- Janelas configuráveis de check-in/check-out e lembretes (`settings.presence`).
+- Governança com `*_supervisor_id` e `keymen_user_ids` para alertas por e-mail na recusa.
+- Fila `zelo_link_requests` + aprovação admin; matching por e-mail no cadastro.
+- REST: `POST /ops/assignments/{id}/commit`, `GET /ops/onboarding`, `GET/POST /ops/link-requests/*`, stub `POST /ops/push/subscribe` (501).
+- Validação de check-in/out: titular ou supervisor, compromisso aceito, dia do evento, janela horária.
+- Aba admin **Onboarding**; roster com e-mail esperado e status de cadastro.
+- Hook `zelo_notification_dispatch` (base motor unificado).
+
 ## [2.6.5] - 2026-05-28
 
 ### Adicionado

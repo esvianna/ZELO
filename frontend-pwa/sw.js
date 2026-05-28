@@ -1,14 +1,14 @@
-const CACHE_NAME = 'zelo-cache-v80';
+const CACHE_NAME = 'zelo-cache-v81';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
     './manifest.json',
-    './assets/js/zelo-build.js?v=80',
-    './assets/css/style-v5.css?v=80',
-    './assets/js/i18n.js?v=80',
-    './assets/js/app-v5.js?v=80',
-    './assets/js/api-v5.js?v=80',
-    './assets/js/map-manager.js?v=80',
+    './assets/js/zelo-build.js?v=81',
+    './assets/css/style-v5.css?v=81',
+    './assets/js/i18n.js?v=81',
+    './assets/js/app-v5.js?v=81',
+    './assets/js/api-v5.js?v=81',
+    './assets/js/map-manager.js?v=81',
     './images/logo-zelo.png',
     'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
     'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
@@ -84,6 +84,42 @@ self.addEventListener('activate', (event) => {
                     }
                 })
             );
+        })
+    );
+});
+
+// Web Push (Fase 3 — requer VAPID e subscribe no servidor)
+self.addEventListener('push', (event) => {
+    let payload = { title: 'Zelo', body: '' };
+    try {
+        if (event.data) {
+            payload = event.data.json();
+        }
+    } catch (e) {
+        payload.body = event.data ? event.data.text() : '';
+    }
+    const title = payload.title || 'Zelo';
+    const options = {
+        body: payload.body || '',
+        icon: './images/logo-zelo.png',
+        data: { url: payload.url || './' }
+    };
+    event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    const url = (event.notification.data && event.notification.data.url) || './';
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+            for (const client of list) {
+                if ('focus' in client) {
+                    return client.focus();
+                }
+            }
+            if (clients.openWindow) {
+                return clients.openWindow(url);
+            }
         })
     );
 });

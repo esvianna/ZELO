@@ -295,17 +295,33 @@ function zelo_ops_checkin( $request ) {
 		return new WP_Error( 'zelo_missing_assignment', __( 'assignment_id é obrigatório.', 'zelo-assistente' ), array( 'status' => 400 ) );
 	}
 
+	$on_behalf = (bool) $request->get_param( 'on_behalf' );
+	$uid       = get_current_user_id();
+	if ( function_exists( 'zelo_validate_presence_action' ) ) {
+		$valid = zelo_validate_presence_action( $assignment_id, $uid, $on_behalf, 'checkin' );
+		if ( is_wp_error( $valid ) ) {
+			return $valid;
+		}
+	}
+
 	$checkins                   = zelo_get_volunteer_checkins();
 	$current                    = isset( $checkins[ $assignment_id ] ) ? $checkins[ $assignment_id ] : array();
 	$checkins[ $assignment_id ] = array(
 		'status'       => 'checked_in',
 		'check_in_at'  => current_time( 'mysql' ),
 		'check_out_at' => isset( $current['check_out_at'] ) ? $current['check_out_at'] : '',
-		'updated_by'   => get_current_user_id(),
+		'updated_by'   => $uid,
+		'on_behalf'    => $on_behalf,
 	);
 	update_option( 'zelo_volunteer_checkins', $checkins );
 
-	return rest_ensure_response( array( 'success' => true, 'checkins' => $checkins ) );
+	return rest_ensure_response(
+		array(
+			'success'  => true,
+			'checkins' => $checkins,
+			'data'     => zelo_get_volunteer_ops_payload( array( 'user_id' => $uid ) ),
+		)
+	);
 }
 
 function zelo_ops_checkout( $request ) {
@@ -314,17 +330,37 @@ function zelo_ops_checkout( $request ) {
 		return new WP_Error( 'zelo_missing_assignment', __( 'assignment_id é obrigatório.', 'zelo-assistente' ), array( 'status' => 400 ) );
 	}
 
+	$on_behalf = (bool) $request->get_param( 'on_behalf' );
+	$uid       = get_current_user_id();
+	if ( function_exists( 'zelo_validate_presence_action' ) ) {
+		$valid = zelo_validate_presence_action( $assignment_id, $uid, $on_behalf, 'checkout' );
+		if ( is_wp_error( $valid ) ) {
+			return $valid;
+		}
+	}
+
 	$checkins                   = zelo_get_volunteer_checkins();
 	$current                    = isset( $checkins[ $assignment_id ] ) ? $checkins[ $assignment_id ] : array();
+	if ( ! isset( $current['status'] ) || $current['status'] !== 'checked_in' ) {
+		return new WP_Error( 'zelo_checkout_requires_checkin', __( 'É necessário check-in antes do check-out.', 'zelo-assistente' ), array( 'status' => 400 ) );
+	}
+
 	$checkins[ $assignment_id ] = array(
 		'status'       => 'checked_out',
 		'check_in_at'  => isset( $current['check_in_at'] ) ? $current['check_in_at'] : '',
 		'check_out_at' => current_time( 'mysql' ),
-		'updated_by'   => get_current_user_id(),
+		'updated_by'   => $uid,
+		'on_behalf'    => $on_behalf,
 	);
 	update_option( 'zelo_volunteer_checkins', $checkins );
 
-	return rest_ensure_response( array( 'success' => true, 'checkins' => $checkins ) );
+	return rest_ensure_response(
+		array(
+			'success'  => true,
+			'checkins' => $checkins,
+			'data'     => zelo_get_volunteer_ops_payload( array( 'user_id' => $uid ) ),
+		)
+	);
 }
 
 function zelo_ops_reallocate( $request ) {

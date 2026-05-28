@@ -133,6 +133,10 @@ function zelo_rest_auth_register( $request ) {
 	);
 	wp_mail( $email, $subject, $body );
 
+	if ( function_exists( 'zelo_link_request_after_registration' ) ) {
+		zelo_link_request_after_registration( $user_id );
+	}
+
 	return rest_ensure_response(
 		array(
 			'success' => true,

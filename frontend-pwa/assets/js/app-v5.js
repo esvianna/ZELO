@@ -603,9 +603,36 @@ const app = {
             const in24h = now + 24 * 60 * 60 * 1000;
             const myRows = (ops.schedule || []).filter((i) => Number(i.wp_user_id) === Number(uid));
 
+            if (ops.link_pending) {
+                items.push({
+                    id: 'registration-pending',
+                    category: 'personal',
+                    icon: '📋',
+                    title: i18n.t('avisos_registration_pending'),
+                    summary: i18n.t('ops_link_pending'),
+                    time: '',
+                    action: 'profile'
+                });
+            }
+
             myRows.forEach((item) => {
-                const st = this.getCheckinStatus(item.id).status || 'pending';
-                if (st === 'pending') {
+                const commitSt = this.getCommitmentStatus(item.id);
+                const presenceSt = this.getCheckinStatus(item.id).status || 'pending';
+
+                if (commitSt === 'pending' && this.canCommitAssignment(item)) {
+                    const dl = ops.settings?.commitment_deadline || '';
+                    items.push({
+                        id: `commitment-${item.id}`,
+                        category: 'personal',
+                        icon: '📌',
+                        title: i18n.t('avisos_commitment_pending'),
+                        summary: `${this.getOpsDayLabel(item.day)} · ${item.shift || ''} — ${item.location || ''}${dl ? ` (até ${dl})` : ''}`,
+                        time: item.start || '',
+                        action: 'escala'
+                    });
+                }
+
+                if (commitSt === 'accepted' && presenceSt === 'pending' && this.canCheckinAssignment(item)) {
                     items.push({
                         id: `checkin-${item.id}`,
                         category: 'personal',
@@ -615,10 +642,22 @@ const app = {
                         time: item.start || '',
                         action: 'escala'
                     });
-                    return;
                 }
+
+                if (commitSt === 'accepted' && presenceSt === 'checked_in' && this.canCheckoutAssignment(item)) {
+                    items.push({
+                        id: `checkout-${item.id}`,
+                        category: 'personal',
+                        icon: '🚪',
+                        title: i18n.t('avisos_checkout_pending'),
+                        summary: `${this.getOpsDayLabel(item.day)} · ${item.shift || ''} — ${item.location || ''}`,
+                        time: item.end || '',
+                        action: 'escala'
+                    });
+                }
+
                 const startMs = this.getAssignmentStartMs(item);
-                if (startMs != null && startMs >= now && startMs <= in24h) {
+                if (commitSt === 'accepted' && startMs != null && startMs >= now && startMs <= in24h) {
                     items.push({
                         id: `shift-next-${item.id}`,
                         category: 'personal',
@@ -629,6 +668,19 @@ const app = {
                         action: 'escala'
                     });
                 }
+            });
+
+            (ops.recent_declines || []).forEach((d) => {
+                const row = d.row || {};
+                items.push({
+                    id: `decline-${d.assignment_id}`,
+                    category: 'personal',
+                    icon: '⚠️',
+                    title: i18n.t('avisos_decline_supervisor'),
+                    summary: `${row.volunteer_name || ''} — ${this.getOpsDayLabel(row.day)} ${row.shift || ''}`,
+                    time: '',
+                    action: 'escala'
+                });
             });
 
             if (this.canManageOps() || this.canReallocateOps()) {
@@ -1524,7 +1576,123 @@ const app = {
     },
 
     usesMineOnlyOps() {
-        return this.canViewOps() && !this.canReallocateOps() && !this.canManageOps();
+        return this.canViewOps() && !this.canReallocateOps() && !this.canManageOps() && !this.canSuperviseOps();
+    },
+
+    canSuperviseOps() {
+        if (this.canManageOps() || this.canReallocateOps()) return true;
+        const roles = this.auth.user?.roles || [];
+        return roles.includes('zelo_supervisor_grupo') || roles.includes('zelo_supervisor_app');
+    },
+
+    isCommitmentDeadlinePassed() {
+        return !!(this.data.volunteerOps && this.data.volunteerOps.commitment_deadline_passed);
+    },
+
+    getCommitmentStatus(assignmentId) {
+        const c = this.data.volunteerOps?.commitments?.[assignmentId];
+        return (c && c.status) ? c.status : 'pending';
+    },
+
+    getCommitmentLabel(status) {
+        if (status === 'accepted') return i18n.t('ops_commitment_accepted');
+        if (status === 'declined') return i18n.t('ops_commitment_declined');
+        return i18n.t('ops_commitment_pending');
+    },
+
+    canCommitAssignment(item) {
+        if (!item || !item.id) return false;
+        if (this.getCommitmentStatus(item.id) !== 'pending') return false;
+        const uid = this.auth.user?.id;
+        const mine = Number(item.wp_user_id) === Number(uid);
+        if (mine && !this.isCommitmentDeadlinePassed()) return true;
+        return this.canSuperviseOps();
+    },
+
+    _parsePresenceRuleMs(rule, startMs, endMs) {
+        if (!rule || startMs == null) return startMs;
+        if (rule === 'shift_start') return startMs;
+        if (rule === 'shift_end') return endMs;
+        if (rule === 'day_before') return startMs - 86400000;
+        const m = String(rule).match(/^minutes_before:(\d+)$/);
+        if (m) return startMs - parseInt(m[1], 10) * 60000;
+        const m2 = String(rule).match(/^minutes_after_end:(\d+)$/);
+        if (m2 && endMs != null) return endMs + parseInt(m2[1], 10) * 60000;
+        return startMs;
+    },
+
+    isAssignmentEventDay(item) {
+        const dates = this.data.volunteerOps?.settings?.event_dates || {};
+        const ymd = dates[item.day];
+        if (!ymd) return false;
+        const today = new Date();
+        const todayYmd = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        return ymd === todayYmd;
+    },
+
+    canCheckinAssignment(item) {
+        if (this.getCommitmentStatus(item.id) !== 'accepted') return false;
+        if (!this.isAssignmentEventDay(item)) return false;
+        const presenceSt = this.getCheckinStatus(item.id).status || 'pending';
+        if (presenceSt !== 'pending') return false;
+        const uid = this.auth.user?.id;
+        const mine = Number(item.wp_user_id) === Number(uid);
+        if (!mine && !this.canSuperviseOps()) return false;
+        const startMs = this.getAssignmentStartMs(item);
+        const endMs = startMs != null && item.end ? this.getAssignmentEndMs(item, startMs) : null;
+        const presence = this.data.volunteerOps?.settings?.presence || {};
+        const from = this._parsePresenceRuleMs(presence.checkin_from || 'shift_start', startMs, endMs);
+        const until = presence.checkin_until === 'shift_end' && endMs != null ? endMs : this._parsePresenceRuleMs(presence.checkin_until || 'shift_end', startMs, endMs);
+        const now = Date.now();
+        return from != null && until != null && now >= from && now <= until;
+    },
+
+    getAssignmentEndMs(item, startMs) {
+        const parts = String(item.end || '').match(/^(\d{1,2}):(\d{2})/);
+        if (!parts || startMs == null) return startMs + 4 * 3600000;
+        const d = new Date(startMs);
+        d.setHours(parseInt(parts[1], 10), parseInt(parts[2], 10), 0, 0);
+        return d.getTime();
+    },
+
+    canCheckoutAssignment(item) {
+        if (this.getCommitmentStatus(item.id) !== 'accepted') return false;
+        if (!this.isAssignmentEventDay(item)) return false;
+        if (this.getCheckinStatus(item.id).status !== 'checked_in') return false;
+        const uid = this.auth.user?.id;
+        const mine = Number(item.wp_user_id) === Number(uid);
+        if (!mine && !this.canSuperviseOps()) return false;
+        const startMs = this.getAssignmentStartMs(item);
+        const endMs = this.getAssignmentEndMs(item, startMs);
+        const presence = this.data.volunteerOps?.settings?.presence || {};
+        const from = this._parsePresenceRuleMs(presence.checkout_from || 'shift_end', startMs, endMs);
+        const until = this._parsePresenceRuleMs(presence.checkout_until || 'minutes_after_end:30', startMs, endMs);
+        const now = Date.now();
+        return from != null && until != null && now >= from && now <= until;
+    },
+
+    canActPresenceOn(item, onBehalf) {
+        const uid = this.auth.user?.id;
+        if (Number(item.wp_user_id) === Number(uid)) return true;
+        return onBehalf && this.canSuperviseOps();
+    },
+
+    async promptPushNotifications() {
+        if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+        if (localStorage.getItem('zelo_push_prompted') === '1') return;
+        if (Notification.permission === 'granted') {
+            localStorage.setItem('zelo_push_prompted', '1');
+            return;
+        }
+        if (Notification.permission === 'denied') return;
+        const ok = confirm(`${i18n.t('ops_push_prompt')}\n\n${i18n.t('ops_push_prompt_body')}`);
+        localStorage.setItem('zelo_push_prompted', '1');
+        if (!ok) return;
+        try {
+            await Notification.requestPermission();
+        } catch (e) {
+            console.warn('Push permission', e);
+        }
     },
 
     async loadVolunteerOps(force = false) {
@@ -1595,6 +1763,55 @@ const app = {
         return `<span class="ops-status-badge ${cls}">${this.escapeHtml(this.getOpsStatusLabel(status))}</span>`;
     },
 
+    getCommitmentBadge(assignmentId) {
+        const st = this.getCommitmentStatus(assignmentId);
+        const cls = st === 'accepted' ? 'ops-commit-accepted' : st === 'declined' ? 'ops-commit-declined' : 'ops-commit-pending';
+        return `<span class="ops-status-badge ${cls}">${this.escapeHtml(this.getCommitmentLabel(st))}</span>`;
+    },
+
+    renderAssignmentActions(item, forSupervisorRow) {
+        const idEsc = String(item.id).replace(/'/g, "\\'");
+        const commitSt = this.getCommitmentStatus(item.id);
+        const presenceSt = this.getCheckinStatus(item.id).status || 'pending';
+        const onBehalf = forSupervisorRow && this.canSuperviseOps() && Number(item.wp_user_id) !== Number(this.auth.user?.id);
+        let html = '';
+
+        if (commitSt === 'pending') {
+            if (this.canCommitAssignment(item)) {
+                html += `<button type="button" class="btn-block btn-block--compact" onclick="app.doCommit('${idEsc}', true, ${onBehalf})">${i18n.t(onBehalf ? 'ops_commit_on_behalf' : 'ops_commit_accept')}</button>`;
+                if (!onBehalf) {
+                    html += `<button type="button" class="btn-block btn-block--compact btn-block--muted" onclick="app.doCommit('${idEsc}', false, false)">${i18n.t('ops_commit_decline')}</button>`;
+                }
+            } else if (this.isCommitmentDeadlinePassed()) {
+                html += `<p class="text-muted" style="font-size:0.85rem;margin:0.25rem 0;">${i18n.t('ops_commitment_deadline_passed')}</p>`;
+            }
+        }
+
+        if (commitSt === 'accepted' && presenceSt === 'pending' && this.canCheckinAssignment(item) && this.canActPresenceOn(item, onBehalf)) {
+            html += `<button type="button" class="btn-block btn-block--compact" onclick="app.doCheckin('${idEsc}', ${onBehalf})">${i18n.t('ops_quick_checkin')}</button>`;
+        }
+        if (commitSt === 'accepted' && presenceSt === 'checked_in' && this.canCheckoutAssignment(item) && this.canActPresenceOn(item, onBehalf)) {
+            html += `<button type="button" class="btn-block btn-block--compact" onclick="app.doCheckout('${idEsc}', ${onBehalf})">${i18n.t('ops_status_checked_out')}</button>`;
+        }
+        return html;
+    },
+
+    async doCommit(assignmentId, accept, onBehalf = false) {
+        try {
+            const reason = accept ? '' : (prompt('Motivo (opcional):') || '');
+            const result = await API.commitAssignment(assignmentId, accept ? 'accepted' : 'declined', reason, onBehalf);
+            if (result.data) this.data.volunteerOps = result.data;
+            else if (result.commitments) {
+                if (this.data.volunteerOps) this.data.volunteerOps.commitments = result.commitments;
+            }
+            this.renderVolunteerOps();
+            if (this.router.currentView === 'home') this.renderHomeVolunteerDashboard();
+            this.updateNotificationsBadge();
+        } catch (err) {
+            alert(err.message || 'Não foi possível confirmar.');
+        }
+    },
+
     updateBottomNavForVolunteer() {
         const nav = document.getElementById('nav-profile-or-ops');
         if (!nav) return;
@@ -1661,31 +1878,33 @@ const app = {
             container.innerHTML = `<div class="loading">${i18n.t('loading')}</div>`;
             await this.loadVolunteerOps();
         }
+        this.promptPushNotifications();
 
         const ops = this.data.volunteerOps;
         const uid = this.auth.user.id;
         const schedule = (ops && Array.isArray(ops.schedule)) ? ops.schedule : [];
         const myRows = schedule.filter((i) => Number(i.wp_user_id) === uid);
 
+        let linkBanner = '';
+        if (ops && ops.link_pending) {
+            linkBanner = `<p class="home-ops-link-pending" style="background:#fef3c7;padding:0.75rem;border-radius:8px;font-size:0.9rem;">${i18n.t('ops_link_pending')}</p>`;
+        }
+
         let assignmentsHtml = '';
         if (!myRows.length) {
             assignmentsHtml = `<p class="text-muted">${i18n.t('ops_no_assignments')}</p>`;
         } else {
             assignmentsHtml = myRows.map((item) => {
-                const status = this.getCheckinStatus(item.id);
-                const idEsc = String(item.id).replace(/'/g, "\\'");
-                const checkinBtn = status.status === 'pending'
-                    ? `<button type="button" class="btn-block btn-block--compact" onclick="app.doCheckin('${idEsc}')">${i18n.t('ops_quick_checkin')}</button>`
-                    : '';
+                const actions = this.renderAssignmentActions(item, false);
                 return `
                     <div class="home-volunteer-assignment">
                         <div class="home-volunteer-assignment-head">
                             <strong>${this.escapeHtml(this.getOpsDayLabel(item.day))} · ${this.escapeHtml(item.shift || '')}</strong>
-                            ${this.getOpsStatusBadge(item.id)}
+                            ${this.getCommitmentBadge(item.id)} ${this.getOpsStatusBadge(item.id)}
                         </div>
                         <p style="margin:0.25rem 0;font-size:0.9rem;"><strong>${i18n.t('ops_location')}:</strong> ${this.escapeHtml(item.location || '-')}</p>
                         <p style="margin:0;font-size:0.85rem;color:#64748b;">${this.escapeHtml(item.start || '')}${item.end ? ' – ' + this.escapeHtml(item.end) : ''}</p>
-                        ${checkinBtn}
+                        ${actions}
                     </div>
                 `;
             }).join('');
@@ -1694,6 +1913,7 @@ const app = {
         container.innerHTML = `
             <h2>${i18n.t('ops_dashboard_title')}, ${name}</h2>
             <p class="volunteer-role-label">${roleLabel}</p>
+            ${linkBanner}
             <h3 style="font-size:0.95rem;margin:0 0 0.5rem;">${i18n.t('ops_my_assignments')}</h3>
             ${assignmentsHtml}
             <div class="home-volunteer-dashboard-actions">
@@ -1787,31 +2007,33 @@ const app = {
         return checkins[assignmentId] || { status: 'pending' };
     },
 
-    async doCheckin(assignmentId) {
+    async doCheckin(assignmentId, onBehalf = false) {
         try {
-            const result = await API.checkinVolunteer(assignmentId);
-            if (this.data.volunteerOps) this.data.volunteerOps.checkins = result.checkins || {};
+            const result = await API.checkinVolunteer(assignmentId, onBehalf);
+            if (result.data) this.data.volunteerOps = result.data;
+            else if (this.data.volunteerOps) this.data.volunteerOps.checkins = result.checkins || {};
             this.renderVolunteerOps();
             if (this.router.currentView === 'home') {
                 this.renderHomeVolunteerDashboard();
             }
             this.updateNotificationsBadge();
         } catch (err) {
-            alert('Não foi possível confirmar chegada.');
+            alert(err.message || 'Não foi possível confirmar chegada.');
         }
     },
 
-    async doCheckout(assignmentId) {
+    async doCheckout(assignmentId, onBehalf = false) {
         try {
-            const result = await API.checkoutVolunteer(assignmentId);
-            if (this.data.volunteerOps) this.data.volunteerOps.checkins = result.checkins || {};
+            const result = await API.checkoutVolunteer(assignmentId, onBehalf);
+            if (result.data) this.data.volunteerOps = result.data;
+            else if (this.data.volunteerOps) this.data.volunteerOps.checkins = result.checkins || {};
             this.renderVolunteerOps();
             if (this.router.currentView === 'home') {
                 this.renderHomeVolunteerDashboard();
             }
             this.updateNotificationsBadge();
         } catch (err) {
-            alert('Não foi possível confirmar saída.');
+            alert(err.message || 'Não foi possível confirmar saída.');
         }
     },
 
@@ -1898,24 +2120,23 @@ const app = {
         `).join('') : '';
 
         const scheduleHtml = items.map(item => {
-            const status = this.getCheckinStatus(item.id);
-            const isCheckedIn = status.status === 'checked_in';
-            const isCheckedOut = status.status === 'checked_out';
             const mineRow = Number(item.wp_user_id) === uid;
-            const swapBtn = mineRow ? `<button type="button" class="ops-btn ops-btn--accent" onclick="app.requestSwap('${String(item.id).replace(/'/g, "\\'")}')">Pedir substituição</button>` : '';
+            const supRow = this.canSuperviseOps() && !mineRow;
+            const actions = this.renderAssignmentActions(item, supRow);
+            const swapBtn = mineRow && this.getCommitmentStatus(item.id) === 'declined'
+                ? `<button type="button" class="ops-btn ops-btn--accent" onclick="app.requestSwap('${String(item.id).replace(/'/g, "\\'")}')">Pedir substituição</button>` : '';
             return `
                 <div class="ops-schedule-card">
                     <div class="ops-card-head">
                         <h4>${item.volunteer_name || 'Voluntário'}</h4>
                         <span class="ops-tag">${this.getOpsDayLabel(item.day)} • ${item.shift}</span>
-                        ${this.getOpsStatusBadge(item.id)}
+                        ${this.getCommitmentBadge(item.id)} ${this.getOpsStatusBadge(item.id)}
                     </div>
                     <p><strong>Local:</strong> ${item.location || '-'}</p>
                     <p><strong>Horário:</strong> ${item.start || '-'} às ${item.end || '-'}</p>
                     <p><strong>Idiomas:</strong> ${(item.languages || []).join(', ') || '-'}</p>
-                    <div class="ops-actions">
-                        <button type="button" class="ops-btn${isCheckedIn ? ' ops-btn--active' : ''}" onclick="app.doCheckin('${String(item.id).replace(/'/g, "\\'")}')">Check-in</button>
-                        <button type="button" class="ops-btn${isCheckedOut ? ' ops-btn--active' : ''}" onclick="app.doCheckout('${String(item.id).replace(/'/g, "\\'")}')">Check-out</button>
+                    <div class="ops-actions ops-actions--stack">
+                        ${actions}
                         ${this.canReallocateOps() ? `<button type="button" class="ops-btn" onclick="app.doReallocate('${String(item.id).replace(/'/g, "\\'")}')">Realocar</button>` : ''}
                         ${swapBtn}
                     </div>

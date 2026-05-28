@@ -765,10 +765,13 @@ function zelo_ops_parse_catalog_roster_from_post() {
 			$id = zelo_ops_catalog_new_id( 'vol_' );
 		}
 		$rows[] = array(
-			'id'     => $id,
-			'name'   => $name,
-			'phone'  => isset( $_POST['cat_vol_phone'][ $i ] ) ? sanitize_text_field( wp_unslash( $_POST['cat_vol_phone'][ $i ] ) ) : '',
-			'active' => zelo_ops_post_row_is_active( 'cat_vol_active', $i ),
+			'id'                  => $id,
+			'name'                => $name,
+			'phone'               => isset( $_POST['cat_vol_phone'][ $i ] ) ? sanitize_text_field( wp_unslash( $_POST['cat_vol_phone'][ $i ] ) ) : '',
+			'expected_email'      => isset( $_POST['cat_vol_email'][ $i ] ) ? sanitize_email( wp_unslash( $_POST['cat_vol_email'][ $i ] ) ) : '',
+			'registration_status' => isset( $_POST['cat_vol_reg_status'][ $i ] ) ? sanitize_key( wp_unslash( $_POST['cat_vol_reg_status'][ $i ] ) ) : 'not_invited',
+			'linked_wp_user_id'   => isset( $_POST['cat_vol_linked_uid'][ $i ] ) ? max( 0, (int) $_POST['cat_vol_linked_uid'][ $i ] ) : 0,
+			'active'              => zelo_ops_post_row_is_active( 'cat_vol_active', $i ),
 		);
 	}
 	return $rows;

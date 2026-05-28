@@ -18,11 +18,23 @@ Roadmap orientado ao contexto real do projeto (visitante + voluntários + WordPr
 
 ---
 
+## Pacote — Confirmação voluntários (2026-05-28)
+
+| # | Entrega | Status |
+|---|---------|--------|
+| C1 | Compromisso antecipado + prazo admin | Implementado (2.7.0) |
+| C2 | Janelas check-in/out + validação API | Implementado |
+| C3 | Onboarding roster + fila vínculos | Implementado |
+| C4 | Web Push completo (VAPID + subscribe) | Pendente (stub 501) |
+| C5 | Motor notificações unificado + inbox servidor | Parcial (hook + e-mail) |
+
+---
+
 ## Fase B — Operação voluntários (próximo pacote)
 
 | # | Entrega | Status |
 |---|---------|--------|
-| B0 | Check-in restrito à própria designação | Pendente |
+| B0 | Check-in restrito à própria designação | **Concluído** (2.7.0 — titular ou supervisor) |
 | B1 | Exportação escala/check-ins (`/ops/export`) | Stub 501 |
 | B2 | Painel de cobertura por posto/idioma | Pendente |
 

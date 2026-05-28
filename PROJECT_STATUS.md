@@ -2,39 +2,40 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-05-27** (Pacote A — mínimo viável voluntário).
+> Última atualização: **2026-05-28** (fluxo confirmação voluntários).
 
 ---
 
 ## Onde paramos
 
-O projeto está em **produção funcional** com foco operacional para o **departamento de informações** (voluntários), mantendo o app **público para visitantes ocasionais** (sem divulgação ativa).
+O projeto está em **produção funcional** com foco operacional para o **departamento de informações** (voluntários), mantendo o app **público para visitantes ocasionais**.
 
-**Pacote A implementado:** segurança ops, cache PWA v65, painel na home pós-login, nav Operação, escala `mine=1` para voluntário comum, badges de check-in.
+**Pacote confirmação voluntários (2.7.0 / PWA 81):** compromisso antecipado por designação, prazo e janelas de presença no admin, vínculo cadastro↔roster com aprovação, alerta supervisor na recusa, validação check-in/out, UI PWA e aba Onboarding.
 
-**Próximo backlog sugerido (Pacote B):** restringir check-in à própria designação, export CSV, painel de cobertura.
+**Próximo backlog:** deploy 2.7.0 + build 81; smoke `TESTING.md` §9; Web Push VAPID (Fase 3); export CSV.
 
 ---
 
 ## O que já foi implementado
 
-### Backend (`zelo-assistente` v2.5.1)
+### Backend (`zelo-assistente` v2.7.0)
 
-- [x] Tudo do v2.5.0 (locais, categorias, auth, ops, swaps, cron).
-- [x] Removido bypass público de `/ops/voluntarios`.
+- [x] `zelo_volunteer_commitments` + REST `/ops/assignments/{id}/commit`
+- [x] `zelo_link_requests` + onboarding admin + matching cadastro por e-mail
+- [x] Config: `commitment_deadline`, `presence`, supervisores com `wp_user_id`
+- [x] Check-in/out validado (compromisso, dia, janela, titular/supervisor)
+- [x] E-mails estendidos (compromisso pendente, 1 dia antes, check-in/out abertos)
+- [x] Stub push; hook `zelo_notification_dispatch`
 
-### Frontend (PWA build 65)
+### Frontend (PWA build 81)
 
-- [x] Painel operacional na home (`#home-volunteer-dashboard`).
-- [x] Bottom nav **OPERAÇÃO** para utilizadores com `view_ops`.
-- [x] `loadVolunteerOps()` com `mine=1` para voluntário comum.
-- [x] Badges de status (pendente / no posto / saiu).
-- [x] Secção visitante extra colapsável quando logado como voluntário.
-- [x] Cache alinhado (build 65, `zelo-cache-v65`).
+- [x] Aceitar/recusar turno; check-in/out com janelas; supervisor em nome
+- [x] Hub avisos: `commitment-*`, `checkin-*`, `checkout-*`, vínculo pendente
+- [x] Prompt notificações; SW handlers push (preparação)
 
-### Governança
+### Governança docs
 
-- [x] AGENTS, STATUS, ROADMAP, CHANGELOG, DECISIONS, SECURITY, TESTING, regras Cursor.
+- [x] ADR-013; TESTING §9; ROADMAP pacote C
 
 ---
 
@@ -42,20 +43,19 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Prioridade | Item | Notas |
 |------------|------|-------|
-| **Alta** | Validar em produção (HTTPS same-origin) | `TESTING.md` checklist |
-| **Média** | Pacote B: check-in só na própria designação | |
+| **Alta** | Deploy plugin 2.7.0 + PWA 81 | `TESTING.md` §9 |
+| **Média** | Web Push VAPID + subscribe real | Stub 501 hoje |
 | **Média** | `/ops/export` CSV | Stub 501 |
-| **Média** | Atualizar `README.md` | Ainda desatualizado |
-| **Baixa** | `.gitignore` | |
+| **Baixa** | Inbox avisos servidor (B10) | Fase 2 UX |
 
 ---
 
 ## Próximos passos lógicos
 
-1. Deploy plugin 2.5.1 + PWA build 65 no servidor.
-2. Smoke test com perfis: anônimo, voluntário, supervisor.
-3. Preencher escala com `wp_user_id` e roles Zelo.
-4. Planejar Pacote B conforme data do evento.
+1. Configurar no admin: datas evento (26–28/06), prazo compromisso (ex. 15/06), supervisores WP.
+2. Preencher roster com `expected_email`; convidar cadastro; aprovar vínculos.
+3. Smoke T1–T10 em staging.
+4. Gerar VAPID e ativar push quando infra estiver pronta.
 
 ---
 
@@ -63,10 +63,9 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Risco | Severidade | Estado |
 |-------|------------|--------|
-| Bypass público ops | Crítica | **Resolvido** (2.5.1) |
-| Cache desalinhado | Alta | **Resolvido** (build 65) |
-| Check-in em designação alheia | Média | Aberto (Pacote B) |
-| URL produção em `api-v5.js` | Média | Aberto |
+| Bypass público ops | Crítica | Resolvido (2.5.1) |
+| Check-in em designação alheia | Média | **Resolvido** (2.7.0) |
+| Push iOS só PWA instalada | Média | Documentar em deploy |
 
 ---
 
@@ -75,16 +74,16 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | Campo | Valor |
 |-------|--------|
 | Data | 2026-05-28 |
-| Feito | UX nav: 5 itens + S.O.S. central; header sino/menu; widget tempo home; hub avisos MVP |
-| Build PWA | 80 |
-| Plugin | **2.6.5** |
-| Próximo passo | Deploy PWA build 78; smoke `TESTING.md` §7; Fase 2 carrossel destaques |
+| Feito | Fluxo confirmação voluntários Fases 0–2 + prep push/motor |
+| Build PWA | **81** |
+| Plugin | **2.7.0** |
+| Próximo passo | Deploy + smoke §9 |
 
 ---
 
 ## Como retomar em 30 segundos
 
 1. Leia **Onde paramos** acima.
-2. `git log -5` para commits recentes.
-3. `TESTING.md` antes de cada evento.
-4. `AGENTS.md` antes de codar.
+2. `TESTING.md` §9 antes do evento.
+3. Admin → Operação Voluntários → Config + Onboarding.
+4. `AGENTS.md` + `DECISIONS.md` (ADR-013).

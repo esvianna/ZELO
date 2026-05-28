@@ -128,6 +128,25 @@ Configurar `baseUrl` / `siteUrl` em `frontend-pwa/assets/js/api-v5.js` para o am
 
 ---
 
+## 9. Confirmação voluntários (plugin 2.7.0, PWA build 81+)
+
+| # | Cenário | Esperado |
+|---|---------|----------|
+| T1 | Voluntário aceita designação antes de `commitment_deadline` | Status `accepted`; aviso `commitment-*` some |
+| T2 | Voluntário recusa | Status `declined`; supervisor recebe e-mail |
+| T3 | Após deadline, voluntário não aceita; supervisor confirma em nome | HTTP 200 com `on_behalf` |
+| T4 | Check-in sem `accepted` | HTTP 400 `zelo_commitment_required` |
+| T5 | Check-in fora do dia do evento | HTTP 400 `zelo_presence_wrong_day` |
+| T6 | Check-in fora da janela configurada | HTTP 400 `zelo_presence_window_closed` |
+| T7 | Supervisor check-in/checkout por outro | OK; `on_behalf` gravado |
+| T8 | Cadastro com e-mail = `expected_email` do roster → admin aprova vínculo | Linhas da escala ganham `wp_user_id` |
+| T9 | Admin aba Onboarding | Lista roster, fila de vínculos, stats compromissos |
+| T10 | Voluntário comum tenta check-in em designação alheia | HTTP 403 |
+
+Admin: Config → prazo, janelas presença, supervisores (select WP). Governança com IDs.
+
+---
+
 ## Automação futura (sugestão)
 
 | Camada | Ferramenta sugerida |

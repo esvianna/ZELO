@@ -9,6 +9,46 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/**
+ * Select de utilizadores Zelo para governança.
+ *
+ * @param array  $users Users.
+ * @param int    $selected Selected ID.
+ * @param string $name Field name.
+ * @return string
+ */
+function zelo_ops_user_select_html( $users, $selected, $name ) {
+	$html = '<select name="' . esc_attr( $name ) . '" class="regular-text"><option value="0">' . esc_html__( '— Nenhum —', 'zelo-assistente' ) . '</option>';
+	foreach ( $users as $u ) {
+		if ( ! $u instanceof WP_User ) {
+			continue;
+		}
+		$html .= '<option value="' . esc_attr( (string) $u->ID ) . '"' . selected( (int) $selected, (int) $u->ID, false ) . '>' . esc_html( $u->display_name . ' (' . $u->user_email . ')' ) . '</option>';
+	}
+	$html .= '</select>';
+	return $html;
+}
+
+function zelo_ops_handle_link_request_admin_post() {
+	if ( ! isset( $_POST['zelo_link_admin'] ) || ! check_admin_referer( 'zelo_link_admin_nonce' ) || ! current_user_can( 'manage_options' ) ) {
+		return '';
+	}
+	$lid    = isset( $_POST['link_id'] ) ? sanitize_text_field( wp_unslash( $_POST['link_id'] ) ) : '';
+	$action = isset( $_POST['link_action'] ) ? sanitize_key( wp_unslash( $_POST['link_action'] ) ) : '';
+	if ( $lid === '' || ! in_array( $action, array( 'approve', 'reject' ), true ) ) {
+		return __( 'Pedido inválido.', 'zelo-assistente' );
+	}
+	if ( $action === 'approve' && function_exists( 'zelo_approve_link_request' ) ) {
+		$res = zelo_approve_link_request( $lid, get_current_user_id() );
+		return is_wp_error( $res ) ? $res->get_error_message() : __( 'Vínculo aprovado.', 'zelo-assistente' );
+	}
+	if ( $action === 'reject' && function_exists( 'zelo_reject_link_request' ) ) {
+		$res = zelo_reject_link_request( $lid, get_current_user_id() );
+		return is_wp_error( $res ) ? $res->get_error_message() : __( 'Pedido rejeitado.', 'zelo-assistente' );
+	}
+	return '';
+}
+
 function zelo_parse_languages_csv( $s ) {
 	$out = array();
 	foreach ( explode( ',', (string) $s ) as $p ) {
@@ -80,17 +120,53 @@ function zelo_ops_save_from_post_tabs() {
 		if ( $day === '' ) {
 			continue;
 		}
+		$ga_id = isset( $_POST[ 'gov_' . $day . '_ga_id' ] ) ? (int) $_POST[ 'gov_' . $day . '_ga_id' ] : 0;
+		$gb_id = isset( $_POST[ 'gov_' . $day . '_gb_id' ] ) ? (int) $_POST[ 'gov_' . $day . '_gb_id' ] : 0;
+		$app_id = isset( $_POST[ 'gov_' . $day . '_app_id' ] ) ? (int) $_POST[ 'gov_' . $day . '_app_id' ] : 0;
 		$gov[ $day ] = array(
-			'group_a_supervisor' => isset( $_POST[ 'gov_' . $day . '_ga' ] ) ? sanitize_text_field( wp_unslash( $_POST[ 'gov_' . $day . '_ga' ] ) ) : '',
-			'group_b_supervisor' => isset( $_POST[ 'gov_' . $day . '_gb' ] ) ? sanitize_text_field( wp_unslash( $_POST[ 'gov_' . $day . '_gb' ] ) ) : '',
-			'app_supervisor'     => isset( $_POST[ 'gov_' . $day . '_app' ] ) ? sanitize_text_field( wp_unslash( $_POST[ 'gov_' . $day . '_app' ] ) ) : '',
-			'keymen'             => array(),
+			'group_a_supervisor'    => isset( $_POST[ 'gov_' . $day . '_ga' ] ) ? sanitize_text_field( wp_unslash( $_POST[ 'gov_' . $day . '_ga' ] ) ) : '',
+			'group_b_supervisor'    => isset( $_POST[ 'gov_' . $day . '_gb' ] ) ? sanitize_text_field( wp_unslash( $_POST[ 'gov_' . $day . '_gb' ] ) ) : '',
+			'app_supervisor'        => isset( $_POST[ 'gov_' . $day . '_app' ] ) ? sanitize_text_field( wp_unslash( $_POST[ 'gov_' . $day . '_app' ] ) ) : '',
+			'group_a_supervisor_id' => $ga_id,
+			'group_b_supervisor_id' => $gb_id,
+			'app_supervisor_id'     => $app_id,
+			'keymen'                => array(),
+			'keymen_user_ids'       => array(),
 		);
+		if ( $ga_id > 0 ) {
+			$u = get_userdata( $ga_id );
+			if ( $u ) {
+				$gov[ $day ]['group_a_supervisor'] = $u->display_name;
+			}
+		}
+		if ( $gb_id > 0 ) {
+			$u = get_userdata( $gb_id );
+			if ( $u ) {
+				$gov[ $day ]['group_b_supervisor'] = $u->display_name;
+			}
+		}
+		if ( $app_id > 0 ) {
+			$u = get_userdata( $app_id );
+			if ( $u ) {
+				$gov[ $day ]['app_supervisor'] = $u->display_name;
+			}
+		}
 		$shifts = array( 'A1', 'B1', 'A2', 'B2' );
 		foreach ( $shifts as $sh ) {
 			$field = 'gov_' . $day . '_km_' . $sh;
 			if ( isset( $_POST[ $field ] ) ) {
 				$gov[ $day ]['keymen'][ $sh ] = sanitize_text_field( wp_unslash( $_POST[ $field ] ) );
+			}
+			$field_id = 'gov_' . $day . '_km_id_' . $sh;
+			if ( isset( $_POST[ $field_id ] ) ) {
+				$kid = (int) $_POST[ $field_id ];
+				if ( $kid > 0 ) {
+					$gov[ $day ]['keymen_user_ids'][ $sh ] = $kid;
+					$u = get_userdata( $kid );
+					if ( $u ) {
+						$gov[ $day ]['keymen'][ $sh ] = $u->display_name;
+					}
+				}
 			}
 		}
 	}
@@ -101,6 +177,19 @@ function zelo_ops_save_from_post_tabs() {
 	// Settings.
 	$data['settings']['notify_24h']        = ! empty( $_POST['set_notify_24h'] );
 	$data['settings']['notify_before_min'] = isset( $_POST['set_notify_min'] ) ? max( 5, (int) $_POST['set_notify_min'] ) : 30;
+	$data['settings']['commitment_deadline']   = isset( $_POST['set_commitment_deadline'] ) ? sanitize_text_field( wp_unslash( $_POST['set_commitment_deadline'] ) ) : '';
+	$data['settings']['registration_required'] = ! empty( $_POST['set_registration_required'] );
+	$data['settings']['presence'] = array(
+		'notify_1_day_before'   => ! empty( $_POST['set_presence_1day'] ),
+		'notify_minutes_before' => isset( $_POST['set_presence_min'] ) ? max( 5, (int) $_POST['set_presence_min'] ) : 15,
+		'checkin_from'          => isset( $_POST['set_checkin_from'] ) ? sanitize_text_field( wp_unslash( $_POST['set_checkin_from'] ) ) : 'shift_start',
+		'checkin_until'         => isset( $_POST['set_checkin_until'] ) ? sanitize_text_field( wp_unslash( $_POST['set_checkin_until'] ) ) : 'shift_end',
+		'checkout_from'         => isset( $_POST['set_checkout_from'] ) ? sanitize_text_field( wp_unslash( $_POST['set_checkout_from'] ) ) : 'shift_end',
+		'checkout_until'        => isset( $_POST['set_checkout_until'] ) ? sanitize_text_field( wp_unslash( $_POST['set_checkout_until'] ) ) : 'minutes_after_end:30',
+	);
+	if ( function_exists( 'zelo_ops_normalize_settings' ) ) {
+		$data['settings'] = zelo_ops_normalize_settings( $data['settings'] );
+	}
 	foreach ( array( 'sexta', 'sabado', 'domingo' ) as $d ) {
 		$f = 'set_date_' . $d;
 		if ( isset( $_POST[ $f ] ) ) {
@@ -183,7 +272,11 @@ function zelo_register_volunteer_ops_admin_pages() {
 add_action( 'admin_menu', 'zelo_register_volunteer_ops_admin_pages' );
 
 function zelo_render_volunteer_ops_admin_tabs() {
-	$msg  = zelo_ops_save_from_post_tabs();
+	$msg  = zelo_ops_handle_link_request_admin_post();
+	$msg_tabs = zelo_ops_save_from_post_tabs();
+	if ( $msg_tabs ) {
+		$msg = $msg ? $msg . ' ' . $msg_tabs : $msg_tabs;
+	}
 	$msg2 = zelo_ops_save_json_advanced();
 	if ( $msg2 ) {
 		$msg = $msg ? $msg . ' ' . $msg2 : $msg2;
@@ -218,6 +311,7 @@ function zelo_render_volunteer_ops_admin_tabs() {
 			<a href="#tab-voluntarios" class="nav-tab" onclick="zeloOpsTab(event,'tab-voluntarios')"><?php esc_html_e( 'Voluntários', 'zelo-assistente' ); ?></a>
 			<a href="#tab-gov" class="nav-tab" onclick="zeloOpsTab(event,'tab-gov')"><?php esc_html_e( 'Governança', 'zelo-assistente' ); ?></a>
 			<a href="#tab-config" class="nav-tab" onclick="zeloOpsTab(event,'tab-config')"><?php esc_html_e( 'Config', 'zelo-assistente' ); ?></a>
+			<a href="#tab-onboarding" class="nav-tab" onclick="zeloOpsTab(event,'tab-onboarding')"><?php esc_html_e( 'Onboarding', 'zelo-assistente' ); ?></a>
 			<a href="#tab-json" class="nav-tab" onclick="zeloOpsTab(event,'tab-json')"><?php esc_html_e( 'JSON avançado', 'zelo-assistente' ); ?></a>
 		</h2>
 
@@ -287,15 +381,17 @@ function zelo_render_volunteer_ops_admin_tabs() {
 					<input type="hidden" name="gov_days[]" value="<?php echo esc_attr( $d ); ?>" />
 					<h3><?php echo esc_html( strtoupper( $d ) ); ?></h3>
 					<table class="form-table">
-						<tr><th>Grupo A</th><td><input class="regular-text" name="<?php echo esc_attr( 'gov_' . $d . '_ga' ); ?>" value="<?php echo esc_attr( isset( $g['group_a_supervisor'] ) ? $g['group_a_supervisor'] : '' ); ?>"></td></tr>
-						<tr><th>Grupo B</th><td><input class="regular-text" name="<?php echo esc_attr( 'gov_' . $d . '_gb' ); ?>" value="<?php echo esc_attr( isset( $g['group_b_supervisor'] ) ? $g['group_b_supervisor'] : '' ); ?>"></td></tr>
-						<tr><th>Supervisor App</th><td><input class="regular-text" name="<?php echo esc_attr( 'gov_' . $d . '_app' ); ?>" value="<?php echo esc_attr( isset( $g['app_supervisor'] ) ? $g['app_supervisor'] : '' ); ?>"></td></tr>
+						<tr><th>Grupo A</th><td><?php echo zelo_ops_user_select_html( $wp_users, isset( $g['group_a_supervisor_id'] ) ? (int) $g['group_a_supervisor_id'] : 0, 'gov_' . $d . '_ga_id' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?><input type="hidden" name="<?php echo esc_attr( 'gov_' . $d . '_ga' ); ?>" value="<?php echo esc_attr( isset( $g['group_a_supervisor'] ) ? $g['group_a_supervisor'] : '' ); ?>" /></td></tr>
+						<tr><th>Grupo B</th><td><?php echo zelo_ops_user_select_html( $wp_users, isset( $g['group_b_supervisor_id'] ) ? (int) $g['group_b_supervisor_id'] : 0, 'gov_' . $d . '_gb_id' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?><input type="hidden" name="<?php echo esc_attr( 'gov_' . $d . '_gb' ); ?>" value="<?php echo esc_attr( isset( $g['group_b_supervisor'] ) ? $g['group_b_supervisor'] : '' ); ?>" /></td></tr>
+						<tr><th>Supervisor App</th><td><?php echo zelo_ops_user_select_html( $wp_users, isset( $g['app_supervisor_id'] ) ? (int) $g['app_supervisor_id'] : 0, 'gov_' . $d . '_app_id' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?><input type="hidden" name="<?php echo esc_attr( 'gov_' . $d . '_app' ); ?>" value="<?php echo esc_attr( isset( $g['app_supervisor'] ) ? $g['app_supervisor'] : '' ); ?>" /></td></tr>
 						<?php
 						$km = isset( $g['keymen'] ) && is_array( $g['keymen'] ) ? $g['keymen'] : array();
+						$km_ids = isset( $g['keymen_user_ids'] ) && is_array( $g['keymen_user_ids'] ) ? $g['keymen_user_ids'] : array();
 						foreach ( array( 'A1', 'B1', 'A2', 'B2' ) as $sh ) {
 							$val = isset( $km[ $sh ] ) ? $km[ $sh ] : '';
+							$kid = isset( $km_ids[ $sh ] ) ? (int) $km_ids[ $sh ] : 0;
 							?>
-							<tr><th><?php echo esc_html( 'Homem-chave ' . $sh ); ?></th><td><input class="regular-text" name="<?php echo esc_attr( 'gov_' . $d . '_km_' . $sh ); ?>" value="<?php echo esc_attr( $val ); ?>"></td></tr>
+							<tr><th><?php echo esc_html( 'Homem-chave ' . $sh ); ?></th><td><?php echo zelo_ops_user_select_html( $wp_users, $kid, 'gov_' . $d . '_km_id_' . $sh ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?><input type="hidden" name="<?php echo esc_attr( 'gov_' . $d . '_km_' . $sh ); ?>" value="<?php echo esc_attr( $val ); ?>" /></td></tr>
 							<?php
 						}
 						?>
@@ -306,15 +402,84 @@ function zelo_render_volunteer_ops_admin_tabs() {
 			</div>
 
 			<div id="tab-config" class="zelo-ops-tab" style="display:none;">
+				<?php
+				$presence = isset( $set['presence'] ) && is_array( $set['presence'] ) ? $set['presence'] : array();
+				?>
 				<table class="form-table">
+					<tr><th><?php esc_html_e( 'Prazo para aceitar designações', 'zelo-assistente' ); ?></th><td><input type="date" name="set_commitment_deadline" value="<?php echo esc_attr( isset( $set['commitment_deadline'] ) ? $set['commitment_deadline'] : '' ); ?>" /><p class="description"><?php esc_html_e( 'Data limite (fim do dia) para voluntários confirmarem participação.', 'zelo-assistente' ); ?></p></td></tr>
+					<tr><th><?php esc_html_e( 'Cadastro obrigatório', 'zelo-assistente' ); ?></th><td><label><input type="checkbox" name="set_registration_required" value="1" <?php checked( ! isset( $set['registration_required'] ) || ! empty( $set['registration_required'] ) ); ?> /> <?php esc_html_e( 'Todos na escala devem ter conta no app', 'zelo-assistente' ); ?></label></td></tr>
 					<tr><th><?php esc_html_e( 'Lembrete 24h antes', 'zelo-assistente' ); ?></th><td><label><input type="checkbox" name="set_notify_24h" value="1" <?php checked( ! empty( $set['notify_24h'] ) ); ?> /> <?php esc_html_e( 'Ativo', 'zelo-assistente' ); ?></label></td></tr>
 					<tr><th><?php esc_html_e( 'Lembrete X minutos antes', 'zelo-assistente' ); ?></th><td><input type="number" name="set_notify_min" min="5" max="240" value="<?php echo esc_attr( isset( $set['notify_before_min'] ) ? (int) $set['notify_before_min'] : 30 ); ?>" /></td></tr>
-					<tr><th><?php esc_html_e( 'Datas do evento (Y-m-d) para e-mails', 'zelo-assistente' ); ?></th><td>
-						<p>Sexta: <input name="set_date_sexta" value="<?php echo esc_attr( isset( $dates['sexta'] ) ? $dates['sexta'] : '' ); ?>" placeholder="2026-04-25" /></p>
+					<tr><th><?php esc_html_e( 'Presença: lembrete 1 dia antes', 'zelo-assistente' ); ?></th><td><label><input type="checkbox" name="set_presence_1day" value="1" <?php checked( ! empty( $presence['notify_1_day_before'] ) ); ?> /> <?php esc_html_e( 'Ativo', 'zelo-assistente' ); ?></label></td></tr>
+					<tr><th><?php esc_html_e( 'Presença: minutos antes do turno', 'zelo-assistente' ); ?></th><td><input type="number" name="set_presence_min" min="5" max="240" value="<?php echo esc_attr( isset( $presence['notify_minutes_before'] ) ? (int) $presence['notify_minutes_before'] : 15 ); ?>" /></td></tr>
+					<tr><th><?php esc_html_e( 'Check-in a partir de', 'zelo-assistente' ); ?></th><td><select name="set_checkin_from"><option value="shift_start" <?php selected( isset( $presence['checkin_from'] ) ? $presence['checkin_from'] : '', 'shift_start' ); ?>>Início do turno</option><option value="day_before" <?php selected( isset( $presence['checkin_from'] ) ? $presence['checkin_from'] : '', 'day_before' ); ?>>1 dia antes</option><option value="minutes_before:15" <?php selected( isset( $presence['checkin_from'] ) ? $presence['checkin_from'] : '', 'minutes_before:15' ); ?>>15 min antes</option></select></td></tr>
+					<tr><th><?php esc_html_e( 'Check-in até', 'zelo-assistente' ); ?></th><td><select name="set_checkin_until"><option value="shift_end" <?php selected( isset( $presence['checkin_until'] ) ? $presence['checkin_until'] : '', 'shift_end' ); ?>>Fim do turno</option></select></td></tr>
+					<tr><th><?php esc_html_e( 'Check-out a partir de', 'zelo-assistente' ); ?></th><td><select name="set_checkout_from"><option value="shift_end" <?php selected( isset( $presence['checkout_from'] ) ? $presence['checkout_from'] : '', 'shift_end' ); ?>>Fim do turno</option></select></td></tr>
+					<tr><th><?php esc_html_e( 'Check-out até', 'zelo-assistente' ); ?></th><td><select name="set_checkout_until"><option value="minutes_after_end:30" <?php selected( isset( $presence['checkout_until'] ) ? $presence['checkout_until'] : '', 'minutes_after_end:30' ); ?>>30 min após fim</option><option value="minutes_after_end:60" <?php selected( isset( $presence['checkout_until'] ) ? $presence['checkout_until'] : '', 'minutes_after_end:60' ); ?>>60 min após fim</option></select></td></tr>
+					<tr><th><?php esc_html_e( 'Datas do evento (Y-m-d)', 'zelo-assistente' ); ?></th><td>
+						<p>Sexta: <input name="set_date_sexta" value="<?php echo esc_attr( isset( $dates['sexta'] ) ? $dates['sexta'] : '' ); ?>" placeholder="2026-06-26" /></p>
 						<p>Sábado: <input name="set_date_sabado" value="<?php echo esc_attr( isset( $dates['sabado'] ) ? $dates['sabado'] : '' ); ?>" /></p>
 						<p>Domingo: <input name="set_date_domingo" value="<?php echo esc_attr( isset( $dates['domingo'] ) ? $dates['domingo'] : '' ); ?>" /></p>
 					</td></tr>
 				</table>
+			</div>
+
+			<div id="tab-onboarding" class="zelo-ops-tab" style="display:none;">
+				<?php
+				$onboard = function_exists( 'zelo_build_onboarding_report' ) ? zelo_build_onboarding_report() : array( 'items' => array(), 'link_requests' => array(), 'commitment_stats' => array() );
+				$stats   = isset( $onboard['commitment_stats'] ) ? $onboard['commitment_stats'] : array();
+				?>
+				<h3><?php esc_html_e( 'Compromissos (confirmação antecipada)', 'zelo-assistente' ); ?></h3>
+				<p><?php printf( esc_html__( 'Pendentes: %d | Aceitos: %d | Recusados: %d', 'zelo-assistente' ), (int) ( $stats['pending'] ?? 0 ), (int) ( $stats['accepted'] ?? 0 ), (int) ( $stats['declined'] ?? 0 ) ); ?></p>
+				<h3><?php esc_html_e( 'Fila de vínculos (cadastro)', 'zelo-assistente' ); ?></h3>
+				<?php
+				$links = isset( $onboard['link_requests'] ) ? $onboard['link_requests'] : array();
+				if ( empty( $links ) ) {
+					echo '<p class="description">' . esc_html__( 'Nenhum pedido pendente.', 'zelo-assistente' ) . '</p>';
+				} else {
+					echo '<table class="widefat striped"><thead><tr><th>ID</th><th>User</th><th>Roster</th><th>Ações</th></tr></thead><tbody>';
+					foreach ( $links as $lr ) {
+						$uid = isset( $lr['user_id'] ) ? (int) $lr['user_id'] : 0;
+						$u   = $uid ? get_userdata( $uid ) : null;
+						echo '<tr><td><code>' . esc_html( $lr['id'] ?? '' ) . '</code></td>';
+						echo '<td>' . esc_html( $u ? $u->display_name . ' (' . $u->user_email . ')' : (string) $uid ) . '</td>';
+						echo '<td>' . esc_html( $lr['roster_volunteer_id'] ?? '' ) . '</td><td>';
+						?>
+						<form method="post" style="display:inline;">
+							<?php wp_nonce_field( 'zelo_link_admin_nonce' ); ?>
+							<input type="hidden" name="zelo_link_admin" value="1" />
+							<input type="hidden" name="link_id" value="<?php echo esc_attr( $lr['id'] ?? '' ); ?>" />
+							<input type="hidden" name="link_action" value="approve" />
+							<button type="submit" class="button button-primary"><?php esc_html_e( 'Aprovar', 'zelo-assistente' ); ?></button>
+						</form>
+						<form method="post" style="display:inline;margin-left:4px;">
+							<?php wp_nonce_field( 'zelo_link_admin_nonce' ); ?>
+							<input type="hidden" name="zelo_link_admin" value="1" />
+							<input type="hidden" name="link_id" value="<?php echo esc_attr( $lr['id'] ?? '' ); ?>" />
+							<input type="hidden" name="link_action" value="reject" />
+							<button type="submit" class="button"><?php esc_html_e( 'Rejeitar', 'zelo-assistente' ); ?></button>
+						</form>
+						<?php
+						echo '</td></tr>';
+					}
+					echo '</tbody></table>';
+				}
+				?>
+				<h3><?php esc_html_e( 'Roster × cadastro', 'zelo-assistente' ); ?></h3>
+				<table class="widefat striped">
+					<thead><tr><th><?php esc_html_e( 'Nome', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'E-mail esperado', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'Status', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'Designações', 'zelo-assistente' ); ?></th></tr></thead>
+					<tbody>
+					<?php foreach ( isset( $onboard['items'] ) ? $onboard['items'] : array() as $ob ) : ?>
+						<tr>
+							<td><?php echo esc_html( $ob['name'] ?? '' ); ?></td>
+							<td><?php echo esc_html( $ob['expected_email'] ?? '' ); ?></td>
+							<td><?php echo esc_html( $ob['registration_status'] ?? '' ); ?></td>
+							<td><?php echo esc_html( (string) ( $ob['assignments_count'] ?? 0 ) ); ?></td>
+						</tr>
+					<?php endforeach; ?>
+					</tbody>
+				</table>
+				<p class="description"><?php esc_html_e( 'Edite e-mail esperado e status na aba Voluntários. Link de cadastro: /zelo/ → Cadastro.', 'zelo-assistente' ); ?></p>
 			</div>
 
 			<p class="submit" id="zelo-ops-submit-tabs">
@@ -647,6 +812,8 @@ function zelo_ops_catalog_roster_table_html( $rows ) {
 	return '<table class="widefat striped"><thead><tr>'
 		. '<th>' . esc_html__( 'Nome', 'zelo-assistente' ) . '</th>'
 		. '<th>' . esc_html__( 'Telefone', 'zelo-assistente' ) . '</th>'
+		. '<th>' . esc_html__( 'E-mail esperado', 'zelo-assistente' ) . '</th>'
+		. '<th>' . esc_html__( 'Status cadastro', 'zelo-assistente' ) . '</th>'
 		. '<th>' . esc_html__( 'Ativo', 'zelo-assistente' ) . '</th><th></th></tr></thead>'
 		. '<tbody id="zelo-cat-vols-body">' . $body . '</tbody></table>';
 }
@@ -655,12 +822,24 @@ function zelo_ops_catalog_roster_row_html( $r, $idx = 0 ) {
 	$id     = isset( $r['id'] ) ? esc_attr( $r['id'] ) : '';
 	$name   = isset( $r['name'] ) ? esc_attr( $r['name'] ) : '';
 	$phone  = isset( $r['phone'] ) ? esc_attr( $r['phone'] ) : '';
+	$email  = isset( $r['expected_email'] ) ? esc_attr( $r['expected_email'] ) : '';
+	$reg_st = isset( $r['registration_status'] ) ? esc_attr( $r['registration_status'] ) : 'not_invited';
+	$linked = isset( $r['linked_wp_user_id'] ) ? (int) $r['linked_wp_user_id'] : 0;
 	$active = ! isset( $r['active'] ) || $r['active'];
 	$ix     = esc_attr( (string) $idx );
+	$status_opts = array( 'not_invited', 'invited', 'pending_link', 'active' );
+	$sel = '<select name="cat_vol_reg_status[]">';
+	foreach ( $status_opts as $st ) {
+		$sel .= '<option value="' . esc_attr( $st ) . '"' . selected( $reg_st, $st, false ) . '>' . esc_html( $st ) . '</option>';
+	}
+	$sel .= '</select>';
 	return '<tr>'
 		. '<input type="hidden" name="cat_vol_id[]" value="' . $id . '" />'
+		. '<input type="hidden" name="cat_vol_linked_uid[]" value="' . esc_attr( (string) $linked ) . '" />'
 		. '<td><input name="cat_vol_name[]" value="' . $name . '" class="regular-text" required /></td>'
 		. '<td><input name="cat_vol_phone[]" value="' . $phone . '" class="regular-text" type="tel" /></td>'
+		. '<td><input name="cat_vol_email[]" value="' . $email . '" class="regular-text" type="email" /></td>'
+		. '<td>' . $sel . '</td>'
 		. '<td><input type="checkbox" name="cat_vol_active[' . $ix . ']" value="1"' . ( $active ? ' checked' : '' ) . ' /></td>'
 		. '<td><button type="button" class="button-link-delete" onclick="this.closest(\'tr\').remove()">&times;</button></td>'
 		. '</tr>';

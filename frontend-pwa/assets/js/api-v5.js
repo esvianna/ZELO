@@ -258,7 +258,23 @@ const API = {
         return data;
     },
 
-    async checkinVolunteer(assignmentId) {
+    async commitAssignment(assignmentId, status, reason = '', onBehalf = false) {
+        const url = `${this.baseUrl}/ops/assignments/${encodeURIComponent(assignmentId)}/commit`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...this.getAuthHeaders()
+            },
+            credentials: 'include',
+            body: JSON.stringify({ status, reason, on_behalf: !!onBehalf })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'Falha ao confirmar designação');
+        return data;
+    },
+
+    async checkinVolunteer(assignmentId, onBehalf = false) {
         const url = `${this.baseUrl}/ops/checkin`;
         const response = await fetch(url, {
             method: 'POST',
@@ -267,13 +283,14 @@ const API = {
                 ...this.getAuthHeaders()
             },
             credentials: 'include',
-            body: JSON.stringify({ assignment_id: assignmentId })
+            body: JSON.stringify({ assignment_id: assignmentId, on_behalf: !!onBehalf })
         });
-        if (!response.ok) throw new Error('Falha no check-in');
-        return response.json();
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'Falha no check-in');
+        return data;
     },
 
-    async checkoutVolunteer(assignmentId) {
+    async checkoutVolunteer(assignmentId, onBehalf = false) {
         const url = `${this.baseUrl}/ops/checkout`;
         const response = await fetch(url, {
             method: 'POST',
@@ -282,10 +299,24 @@ const API = {
                 ...this.getAuthHeaders()
             },
             credentials: 'include',
-            body: JSON.stringify({ assignment_id: assignmentId })
+            body: JSON.stringify({ assignment_id: assignmentId, on_behalf: !!onBehalf })
         });
-        if (!response.ok) throw new Error('Falha no check-out');
-        return response.json();
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'Falha no check-out');
+        return data;
+    },
+
+    async subscribePushStub() {
+        const url = `${this.baseUrl}/ops/push/subscribe`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...this.getAuthHeaders() },
+            credentials: 'include',
+            body: JSON.stringify({})
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'Push indisponível');
+        return data;
     },
 
     async reallocateVolunteer(assignmentId, newLocation, newShift = '') {
