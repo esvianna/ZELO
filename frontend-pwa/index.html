@@ -17,7 +17,7 @@
     <!-- CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <link rel="stylesheet" href="assets/css/style-v5.css?v=77">
+    <link rel="stylesheet" href="assets/css/style-v5.css?v=78">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -32,24 +32,43 @@
             <img src="images/logo-zelo.png" alt="Zelo"
                 style="max-height: 36px !important; width: auto; object-fit: contain;">
         </a>
-        <div style="display: flex; gap: 10px; align-items: center;">
-            <select id="lang-selector" onchange="i18n.setLanguage(this.value)" style="background:transparent; border:none; color:inherit; font-weight:bold; cursor:pointer; font-size: 0.85rem;" aria-label="Selecione o idioma">
-                <option value="pt_br" style="color:#000;">PT</option>
-                <option value="en" style="color:#000;">EN</option>
-                <option value="es" style="color:#000;">ES</option>
+        <div class="header-actions">
+            <select id="lang-selector" class="header-lang-select" onchange="i18n.setLanguage(this.value)" aria-label="Selecione o idioma">
+                <option value="pt_br">PT</option>
+                <option value="en">EN</option>
+                <option value="es">ES</option>
             </select>
-            <button id="install-btn" class="install-btn" style="display: none;">📲 Instalar</button>
+            <button type="button" id="header-menu-btn" class="header-icon-btn" onclick="app.toggleHeaderMenu(); return false;" aria-label="Menu" aria-expanded="false" aria-controls="header-menu-sheet">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="18" x2="20" y2="18"></line></svg>
+            </button>
+            <button type="button" id="header-notifications-btn" class="header-icon-btn header-notifications-btn" onclick="app.router.navigate('avisos'); return false;" aria-label="Avisos">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                <span id="header-notifications-badge" class="header-notifications-badge" hidden>0</span>
+            </button>
             <button type="button" id="user-auth-indicator" class="user-auth-indicator"
                 onclick="app.auth.handleIconClick();" aria-label="Perfil ou entrar"></button>
             <div class="status-indicator" id="network-status">Online</div>
         </div>
     </header>
+    <div id="header-menu-backdrop" class="header-menu-backdrop" hidden onclick="app.closeHeaderMenu()"></div>
+    <div id="header-menu-sheet" class="header-menu-sheet" hidden role="dialog" aria-label="Menu">
+        <button type="button" id="header-menu-install" class="header-menu-item" hidden onclick="app.triggerInstallPwa(); app.closeHeaderMenu();">
+            <span data-i18n="header_menu_install">Instalar aplicativo</span>
+        </button>
+        <button type="button" class="header-menu-item" onclick="app.auth.forceUpdate(); app.closeHeaderMenu();">
+            <span data-i18n="update_app">Atualizar App / Limpar Cache</span>
+        </button>
+    </div>
 
     <!-- Main Content -->
     <main id="app-content">
 
         <!-- Home View -->
         <section id="view-home" class="view active">
+
+            <div id="home-volunteer-dashboard" class="home-volunteer-dashboard" hidden></div>
+
+            <div id="home-weather-widget" class="home-weather-widget" hidden aria-live="polite"></div>
 
             <!-- Search Bar -->
             <div class="home-search-bar">
@@ -65,8 +84,6 @@
                 <h1 data-i18n="welcome_greeting">Bem-vindo!</h1>
                 <p data-i18n="welcome_subtitle_new">Como podemos ajudar você hoje?</p>
             </div>
-
-            <div id="home-volunteer-dashboard" class="home-volunteer-dashboard" hidden></div>
 
             <!-- Event Banner Card -->
             <div id="home-event-banner" class="event-banner-card" onclick="app.router.navigate('evento')">
@@ -207,6 +224,17 @@
             </div>
             <div class="emergency-contacts" id="emergency-container">
                 <!-- Contacts injected here -->
+            </div>
+        </section>
+
+        <!-- Notifications Hub -->
+        <section id="view-avisos" class="view">
+            <div class="view-header">
+                <button class="back-btn" onclick="app.router.back()" data-i18n="back">Voltar</button>
+                <h2 data-i18n="avisos_title">Avisos</h2>
+            </div>
+            <div id="avisos-container" class="avisos-container">
+                <div class="loading" data-i18n="loading">Carregando...</div>
             </div>
         </section>
 
@@ -391,19 +419,6 @@
             <span data-i18n="nav_map">MAPA</span>
         </a>
 
-        <a href="#" class="nav-item" onclick="app.router.navigate('tempo'); return false;" data-target="tempo">
-            <div class="icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path>
-                    <path d="M12 2v2"></path>
-                    <path d="m4.93 4.93 1.41 1.41"></path>
-                    <path d="M2 12h2"></path>
-                </svg>
-            </div>
-            <span data-i18n="nav_weather">TEMPO</span>
-        </a>
-
         <a href="#" class="nav-item sos-item" onclick="app.router.navigate('emergencia'); return false;"
             data-target="emergencia">
             <div class="sos-button">
@@ -446,11 +461,11 @@
 
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script src="assets/js/zelo-build.js?v=77"></script>
-    <script src="assets/js/i18n.js?v=77"></script>
-    <script src="assets/js/api-v5.js?v=77"></script>
-    <script src="assets/js/map-manager.js?v=77"></script>
-    <script src="assets/js/app-v5.js?v=77"></script>
+    <script src="assets/js/zelo-build.js?v=78"></script>
+    <script src="assets/js/i18n.js?v=78"></script>
+    <script src="assets/js/api-v5.js?v=78"></script>
+    <script src="assets/js/map-manager.js?v=78"></script>
+    <script src="assets/js/app-v5.js?v=78"></script>
 
     <script>
         // Register Service Worker

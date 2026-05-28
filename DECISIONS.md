@@ -6,6 +6,16 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 ---
 
+## ADR-012 — Nav 5 itens + header sino/menu + hub avisos MVP (2026-05-28)
+
+**Contexto:** Bottom nav com 6 itens desalinhava o S.O.S.; tempo e avisos competiam por espaço na barra.
+
+**Decisão:** Bottom nav com 5 destinos (`INÍCIO · MAPA · S.O.S · INFO · PERFIL/OPERAÇÃO`); widget de tempo na home; sino no header para hub `view-avisos` (agregação cliente + `zelo_avisos_read` em localStorage); menu header para Instalar PWA e limpar cache. Carrossel de destaques e inbox servidor → Fase 2 (`ROADMAP.md`).
+
+**Consequências:** PWA build **78**; view `view-tempo` mantida sem tab na barra.
+
+---
+
 ## ADR-011 — Previsão do tempo via Open-Meteo (2026-05-28)
 
 **Contexto:** Visitantes precisam de previsão meteorológica no local do evento, com visualização simples, offline após primeira carga e sem expor API keys no frontend.

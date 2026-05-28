@@ -51,6 +51,10 @@ Itens do PRD ainda parcialmente cobertos ou evoluíveis:
 | B4 | Bottom navigation | Implementado |
 | B5 | Botão / área “Programação” | Não implementado |
 | B6 | Protótipos `docs/stitch_zelo/` → telas reais | Referência de design |
+| B7 | Hub avisos unificado (sino) | Implementado MVP (build 78) |
+| B8 | Widget tempo na home | Implementado (build 78) |
+| B9 | Carrossel destaques na home | Pendente (Fase 2) |
+| B10 | Inbox avisos com persistência servidor | Pendente (Fase 2) |
 
 ---
 

@@ -34,9 +34,10 @@ Configurar `baseUrl` / `siteUrl` em `frontend-pwa/assets/js/api-v5.js` para o am
 | 4 | Mapa geral | Pins e legenda; zoom/pan OK |
 | 5 | Emergência | Telefones do evento visíveis |
 | 6 | Evento (info) | Dados de `/evento` |
-| 7 | Bottom nav **TEMPO** | Previsão atual, horas do dia e 7 dias; local do evento |
-| 8 | Trocar idioma PT/EN/ES | Strings principais traduzidas |
-| 9 | Modo avião após visita online | Home, evento e **tempo** ainda acessíveis via cache (`zelo_clima` em localStorage) |
+| 7 | Widget tempo na home | Resumo + toque abre previsão completa |
+| 8 | Sino (avisos) | Lista evento + (voluntário) turno/check-in/swap |
+| 9 | Trocar idioma PT/EN/ES | Strings principais traduzidas |
+| 10 | Modo avião após visita online | Home, evento, tempo e avisos via cache |
 
 ---
 
@@ -139,15 +140,28 @@ Até lá, **checklist manual acima é a fonte de verdade**.
 
 ---
 
-## 6. Previsão do tempo (`/clima`, build 77+)
+## 6. Previsão do tempo (`/clima`, build 77+; widget home build 78+)
 
 | # | Passo | Esperado |
 |---|-------|----------|
-| 1 | Online: abrir **TEMPO** no bottom nav | Temperatura atual, horas e 7 dias |
-| 2 | DevTools → Offline → reabrir TEMPO | Último cache visível; badge offline |
+| 1 | Online: widget tempo na home → toque | Temperatura atual, horas e 7 dias na view completa |
+| 2 | DevTools → Offline → widget e view tempo | Último cache visível; badge offline |
 | 3 | Admin: desmarcar «Ativar previsão» → salvar | View mostra mensagem de desativado |
 | 4 | Admin: lat/lng vazios | Erro amigável (coordenadas não configuradas) |
 | 5 | Aguardar 30+ min online na view | Dados atualizados (transient expirado) |
+
+---
+
+## 7. Nav, header e avisos (build 78+)
+
+| # | Passo | Esperado |
+|---|-------|----------|
+| 1 | Bottom nav | 5 itens; S.O.S. central; sem TEMPO |
+| 2 | Sino | Badge com avisos não lidos; view com filtros |
+| 3 | Menu header | Instalar (se disponível), atualizar cache |
+| 4 | Aviso warning/critical na home | Faixa compacta + link para avisos |
+| 5 | Aviso info | Só no hub (não card grande na home) |
+| 6 | Voluntário logado | Secção «Para você» com turno/check-in |
 
 ---
 

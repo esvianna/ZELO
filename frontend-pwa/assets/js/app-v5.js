@@ -153,6 +153,8 @@ const app = {
                     app.renderEventInfo();
                 } else if (viewId === 'tempo') {
                     app.renderWeather();
+                } else if (viewId === 'avisos') {
+                    app.renderAvisos();
                 } else if (viewId === 'escala') {
                     app.renderVolunteerOps();
                 } else if (viewId === 'mapa-evento') {
@@ -163,11 +165,13 @@ const app = {
 
                 // Render Home components if on home
                 if (viewId === 'home') {
+                    app.renderHomeWeatherWidget();
                     app.renderHomeNotice();
                     app.renderEventBanner();
                     app.renderHomeMap();
                     app.renderHomeVolunteerDashboard();
                     app.toggleHomeVisitorExtrasCollapse();
+                    app.updateNotificationsBadge();
                 }
             }
         },
@@ -401,6 +405,7 @@ const app = {
             }
 
             app.updateBottomNavForVolunteer();
+            app.updateNotificationsBadge();
         },
 
         updateUI() {
@@ -485,7 +490,9 @@ const app = {
             this.renderEventBanner();
             this.renderHomeMap();
             this.renderHomeVolunteerDashboard();
+            this.renderHomeWeatherWidget();
             this.toggleHomeVisitorExtrasCollapse();
+            this.updateNotificationsBadge();
 
         } catch (err) {
             console.error('Failed to load data', err);
@@ -516,9 +523,279 @@ const app = {
     },
 
     // --- Render Methods ---
+
+    getAvisosReadSet() {
+        try {
+            const raw = localStorage.getItem('zelo_avisos_read');
+            const arr = raw ? JSON.parse(raw) : [];
+            return new Set(Array.isArray(arr) ? arr : []);
+        } catch (e) {
+            return new Set();
+        }
+    },
+
+    saveAvisosReadSet(set) {
+        localStorage.setItem('zelo_avisos_read', JSON.stringify(Array.from(set)));
+    },
+
+    markAvisoRead(id) {
+        const set = this.getAvisosReadSet();
+        set.add(id);
+        this.saveAvisosReadSet(set);
+        this.updateNotificationsBadge();
+    },
+
+    markAllAvisosRead() {
+        const items = this.buildAvisosFeed();
+        const set = this.getAvisosReadSet();
+        items.forEach((item) => set.add(item.id));
+        this.saveAvisosReadSet(set);
+        this.updateNotificationsBadge();
+        if (this.router.currentView === 'avisos') {
+            this.renderAvisos();
+        }
+        this.renderHomeNotice();
+    },
+
+    getAssignmentStartMs(item) {
+        const ops = this.data.volunteerOps;
+        const dates = ops?.settings?.event_dates || {};
+        const ymd = dates[item.day];
+        if (!ymd || !item.start) return null;
+        const parts = String(item.start).match(/^(\d{1,2}):(\d{2})/);
+        if (!parts) return null;
+        const iso = `${ymd}T${parts[1].padStart(2, '0')}:${parts[2]}:00`;
+        const t = new Date(iso).getTime();
+        return Number.isNaN(t) ? null : t;
+    },
+
+    isAssignmentToday(item) {
+        const ops = this.data.volunteerOps;
+        const dates = ops?.settings?.event_dates || {};
+        const ymd = dates[item.day];
+        if (!ymd) return false;
+        const today = new Date();
+        const todayYmd = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        return ymd === todayYmd;
+    },
+
+    buildAvisosFeed() {
+        const items = [];
+        const noticeData = this.data.evento?.info_uteis?.home_notice;
+        const noticeActive = noticeData && (noticeData.active == 1 || noticeData.active === true || noticeData.active === 'true');
+        if (noticeActive && noticeData.text) {
+            items.push({
+                id: 'event-notice',
+                category: 'event',
+                icon: noticeData.type === 'critical' ? '🚨' : noticeData.type === 'warning' ? '⚠️' : '📢',
+                title: i18n.t('avisos_event_notice'),
+                summary: noticeData.text,
+                time: '',
+                action: 'event_notice',
+                link: noticeData.link || ''
+            });
+        }
+
+        if (this.canViewOps() && this.data.volunteerOps) {
+            const ops = this.data.volunteerOps;
+            const uid = this.auth.user?.id;
+            const now = Date.now();
+            const in24h = now + 24 * 60 * 60 * 1000;
+            const myRows = (ops.schedule || []).filter((i) => Number(i.wp_user_id) === Number(uid));
+
+            myRows.forEach((item) => {
+                const startMs = this.getAssignmentStartMs(item);
+                if (startMs != null && startMs >= now && startMs <= in24h) {
+                    items.push({
+                        id: `shift-next-${item.id}`,
+                        category: 'personal',
+                        icon: '🕐',
+                        title: i18n.t('avisos_shift_reminder'),
+                        summary: `${this.getOpsDayLabel(item.day)} · ${item.shift || ''} — ${item.location || ''} (${item.start || ''}${item.end ? ' – ' + item.end : ''})`,
+                        time: item.start || '',
+                        action: 'escala'
+                    });
+                }
+                if (this.isAssignmentToday(item)) {
+                    const st = this.getCheckinStatus(item.id).status || 'pending';
+                    if (st === 'pending') {
+                        items.push({
+                            id: `checkin-${item.id}`,
+                            category: 'personal',
+                            icon: '✅',
+                            title: i18n.t('avisos_checkin_pending'),
+                            summary: `${this.getOpsDayLabel(item.day)} · ${item.location || ''} — ${item.start || ''}`,
+                            time: item.start || '',
+                            action: 'escala'
+                        });
+                    }
+                }
+            });
+
+            if (this.canManageOps() || this.canReallocateOps()) {
+                (ops.swap_requests || []).filter((s) => s.status === 'pending').forEach((s) => {
+                    items.push({
+                        id: `swap-${s.id}`,
+                        category: 'personal',
+                        icon: '🔄',
+                        title: i18n.t('avisos_swap_pending'),
+                        summary: i18n.t('avisos_swap_summary').replace('{0}', s.assignment_id || ''),
+                        time: '',
+                        action: 'escala'
+                    });
+                });
+            }
+        }
+
+        return items;
+    },
+
+    updateNotificationsBadge() {
+        const badge = document.getElementById('header-notifications-badge');
+        if (!badge) return;
+        const read = this.getAvisosReadSet();
+        const unread = this.buildAvisosFeed().filter((i) => !read.has(i.id)).length;
+        if (unread > 0) {
+            badge.hidden = false;
+            badge.textContent = unread > 9 ? '9+' : String(unread);
+        } else {
+            badge.hidden = true;
+        }
+    },
+
+    _avisosFilter: 'all',
+
+    handleAvisoClick(id) {
+        const items = this.buildAvisosFeed();
+        const item = items.find((i) => i.id === id);
+        if (!item) return;
+        this.markAvisoRead(id);
+        if (item.action === 'escala') {
+            this.openVolunteerOps();
+        } else if (item.action === 'event_notice') {
+            if (item.link && item.link !== '#') {
+                window.open(item.link, '_blank');
+            } else {
+                this.router.navigate('evento');
+            }
+        }
+    },
+
+    renderAvisos() {
+        const container = document.getElementById('avisos-container');
+        if (!container) return;
+
+        const read = this.getAvisosReadSet();
+        let items = this.buildAvisosFeed();
+        const showPersonal = this.canViewOps() && this.auth.user;
+
+        if (this._avisosFilter === 'personal' && showPersonal) {
+            items = items.filter((i) => i.category === 'personal');
+        } else if (this._avisosFilter === 'event') {
+            items = items.filter((i) => i.category === 'event');
+        }
+
+        const chips = `
+            <div class="avisos-toolbar">
+                <button type="button" class="avisos-filter-chip ${this._avisosFilter === 'all' ? 'active' : ''}" onclick="app._avisosFilter='all';app.renderAvisos();">${this.escapeHtml(i18n.t('avisos_filter_all'))}</button>
+                ${showPersonal ? `<button type="button" class="avisos-filter-chip ${this._avisosFilter === 'personal' ? 'active' : ''}" onclick="app._avisosFilter='personal';app.renderAvisos();">${this.escapeHtml(i18n.t('avisos_filter_personal'))}</button>` : ''}
+                <button type="button" class="avisos-filter-chip ${this._avisosFilter === 'event' ? 'active' : ''}" onclick="app._avisosFilter='event';app.renderAvisos();">${this.escapeHtml(i18n.t('avisos_filter_event'))}</button>
+                ${items.length ? `<button type="button" class="avisos-mark-all" onclick="app.markAllAvisosRead()">${this.escapeHtml(i18n.t('avisos_mark_all_read'))}</button>` : ''}
+            </div>
+        `;
+
+        if (!items.length) {
+            container.innerHTML = chips + `<div class="avisos-empty">${this.escapeHtml(i18n.t('avisos_empty'))}</div>`;
+            this.updateNotificationsBadge();
+            return;
+        }
+
+        const list = items.map((item) => {
+            const unread = !read.has(item.id);
+            return `
+                <button type="button" class="avisos-item ${unread ? 'unread' : ''}" onclick="app.handleAvisoClick('${String(item.id).replace(/'/g, "\\'")}')">
+                    <span class="avisos-item-icon">${item.icon}</span>
+                    <span class="avisos-item-body">
+                        <div class="avisos-item-title">${this.escapeHtml(item.title)}</div>
+                        <div class="avisos-item-summary">${this.escapeHtml(item.summary)}</div>
+                        ${item.time ? `<div class="avisos-item-meta">${this.escapeHtml(item.time)}</div>` : ''}
+                    </span>
+                </button>
+            `;
+        }).join('');
+
+        container.innerHTML = chips + `<div class="avisos-list">${list}</div>`;
+        this.updateNotificationsBadge();
+    },
+
+    renderHomeWeatherWidget() {
+        const el = document.getElementById('home-weather-widget');
+        if (!el) return;
+
+        const data = this.data.clima;
+        if (!data || data.enabled === false || !data.current) {
+            el.hidden = true;
+            el.innerHTML = '';
+            return;
+        }
+
+        const cur = data.current;
+        const loc = data.location || {};
+        const stale = !!data.stale || !navigator.onLine;
+
+        el.hidden = false;
+        el.onclick = () => this.router.navigate('tempo');
+        el.innerHTML = `
+            <span class="home-weather-widget-icon">${this.getWeatherIconSvg(cur.icon, 40)}</span>
+            <span class="home-weather-widget-main">
+                <span class="home-weather-widget-temp">${cur.temp_c != null ? cur.temp_c : '—'}° · ${this.escapeHtml(cur.label || '')}</span>
+                <span class="home-weather-widget-label">${stale ? this.escapeHtml(i18n.t('weather_stale')) : this.escapeHtml(i18n.t('weather_widget_tap'))}</span>
+                ${loc.name ? `<span class="home-weather-widget-loc">${this.escapeHtml(loc.name)}</span>` : ''}
+            </span>
+            <span class="home-weather-widget-chevron">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </span>
+        `;
+    },
+
+    toggleHeaderMenu() {
+        const sheet = document.getElementById('header-menu-sheet');
+        const backdrop = document.getElementById('header-menu-backdrop');
+        const btn = document.getElementById('header-menu-btn');
+        if (!sheet || !backdrop) return;
+        const open = sheet.hidden;
+        sheet.hidden = !open;
+        backdrop.hidden = !open;
+        if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    },
+
+    closeHeaderMenu() {
+        const sheet = document.getElementById('header-menu-sheet');
+        const backdrop = document.getElementById('header-menu-backdrop');
+        const btn = document.getElementById('header-menu-btn');
+        if (sheet) sheet.hidden = true;
+        if (backdrop) backdrop.hidden = true;
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+    },
+
+    updateInstallMenuItem() {
+        const item = document.getElementById('header-menu-install');
+        if (!item) return;
+        item.hidden = !this.data.installPrompt;
+    },
+
+    triggerInstallPwa() {
+        const prompt = this.data.installPrompt;
+        if (!prompt) return;
+        prompt.prompt();
+        prompt.userChoice.then(() => {
+            this.data.installPrompt = null;
+            this.updateInstallMenuItem();
+        });
+    },
+
     renderHomeNotice() {
         const container = document.getElementById('home-notice-container');
-        // The API structure nests this under info_uteis -> home_notice
         const noticeData = app.data.evento?.info_uteis?.home_notice;
 
         if (!container) return;
@@ -528,8 +805,6 @@ const app = {
             return;
         }
 
-        // Check if active (API returns boolean true/false or 1/0)
-        // Ensure truthy check handles string '1' or int 1 or boolean true
         const isActive = noticeData.active == 1 || noticeData.active === true || noticeData.active === 'true';
 
         if (!isActive) {
@@ -537,31 +812,28 @@ const app = {
             return;
         }
 
-        const type = noticeData.type || 'info'; // info, warning, critical
-        const text = noticeData.text || 'Aviso do Evento';
-        const link = noticeData.link || '#';
+        const type = noticeData.type || 'info';
+        const text = noticeData.text || '';
+        const read = this.getAvisosReadSet();
 
-        // Icon mapping
-        let icon = '📢'; // Default
-        if (type === 'warning') icon = '⚠️';
-        if (type === 'critical') icon = '🚨';
+        if (type === 'info' && read.has('event-notice')) {
+            container.innerHTML = '';
+            return;
+        }
 
-        const html = `
-            <a href="${link}" class="home-notice-card" onclick="${link === '#' ? 'return false;' : ''}">
-                <div class="home-notice-icon ${type}">
-                    ${icon}
-                </div>
-                <div class="home-notice-content">
-                    <div class="home-notice-title">${i18n.t('emergency_title')}</div>
-                    <div class="home-notice-text">${text}</div>
-                </div>
-                <div class="home-notice-arrow">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </div>
+        if (type === 'info') {
+            container.innerHTML = '';
+            return;
+        }
+
+        const icon = type === 'warning' ? '⚠️' : '🚨';
+        container.innerHTML = `
+            <a href="#" class="home-notice-strip ${type}" onclick="app.router.navigate('avisos'); return false;">
+                <span>${icon}</span>
+                <span class="home-notice-strip-text">${this.escapeHtml(text)}</span>
+                <span class="home-notice-strip-link">${this.escapeHtml(i18n.t('avisos_view_all'))}</span>
             </a>
         `;
-
-        container.innerHTML = html;
     },
 
     renderEventBanner() {
@@ -1276,6 +1548,7 @@ const app = {
             if (data) {
                 this.data.volunteerOps = data;
                 this._opsAuthFailed = false;
+                app.updateNotificationsBadge();
             }
             return data;
         })().finally(() => {
@@ -1429,6 +1702,7 @@ const app = {
             </div>
             <a href="#" class="profile-link" onclick="app.router.navigate('profile'); return false;">${i18n.t('my_profile')}</a>
         `;
+        this.updateNotificationsBadge();
     },
 
     async renderIndoorEventMap() {
@@ -1522,6 +1796,7 @@ const app = {
             if (this.router.currentView === 'home') {
                 this.renderHomeVolunteerDashboard();
             }
+            this.updateNotificationsBadge();
         } catch (err) {
             alert('Não foi possível confirmar chegada.');
         }
@@ -1535,6 +1810,7 @@ const app = {
             if (this.router.currentView === 'home') {
                 this.renderHomeVolunteerDashboard();
             }
+            this.updateNotificationsBadge();
         } catch (err) {
             alert('Não foi possível confirmar saída.');
         }
@@ -1698,6 +1974,7 @@ const app = {
         try {
             const data = await API.getClima();
             this.data.clima = data;
+            this.renderHomeWeatherWidget();
             if (this.router.currentView === 'tempo') {
                 this.renderWeather();
             }
@@ -2054,39 +2331,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // PWA Install Prompt Logic
     window.addEventListener('beforeinstallprompt', (e) => {
-        // Prevent Chrome 67 and earlier from automatically showing the prompt
         e.preventDefault();
-        // Stash the event so it can be triggered later.
         app.data.installPrompt = e;
-
-        // Show the install button
-        const installBtn = document.getElementById('install-btn');
-        if (installBtn) {
-            installBtn.style.display = 'block';
-
-            installBtn.addEventListener('click', () => {
-                // Hide the app provided install promotion
-                installBtn.style.display = 'none';
-                // Show the install prompt
-                app.data.installPrompt.prompt();
-                // Wait for the user to respond to the prompt
-                app.data.installPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') {
-                        console.log('User accepted the A2HS prompt');
-                    } else {
-                        console.log('User dismissed the A2HS prompt');
-                    }
-                    app.data.installPrompt = null;
-                });
-            });
-        }
+        app.updateInstallMenuItem();
     });
 
-    // Optional: Hide button if already installed (handled by browser not firing event, but good to be safe)
-    window.addEventListener('appinstalled', (evt) => {
+    window.addEventListener('appinstalled', () => {
         console.log('a2hs installed');
-        const installBtn = document.getElementById('install-btn');
-        if (installBtn) installBtn.style.display = 'none';
+        app.data.installPrompt = null;
+        app.updateInstallMenuItem();
     });
 
     // Network Status Logic
@@ -2095,9 +2348,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (navigator.onLine) {
             statusEl.textContent = 'Online';
             statusEl.classList.remove('offline');
+            statusEl.classList.add('online');
         } else {
             statusEl.textContent = 'Offline';
             statusEl.classList.add('offline');
+            statusEl.classList.remove('online');
         }
     };
 

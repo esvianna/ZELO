@@ -9,8 +9,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 ## [Unreleased]
 
 ### Adicionado
+- PWA build **78**: bottom nav 5 itens (S.O.S. central), header com sino (hub avisos MVP) e menu (Instalar/cache), widget tempo na home, view `avisos`.
 - Plugin **2.6.5**: endpoint público `GET /zelo/v1/clima` (proxy Open-Meteo, cache 30 min, coordenadas do evento).
-- PWA build **77**: view Previsão do tempo, item **TEMPO** no bottom nav, cache `localStorage` (`zelo_clima`).
+- PWA build **77**: view Previsão do tempo, cache `localStorage` (`zelo_clima`).
+
+### Alterado
+- PWA build **78**: removido **TEMPO** do bottom nav; previsão acessível pelo widget na home.
 
 ### Alterado
 - PWA build **76**: botões da escala operacional (Check-in, Check-out, Realocar, substituição) com estilo `ops-btn` alinhado ao tema (`btn-block`).

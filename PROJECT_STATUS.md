@@ -75,10 +75,10 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | Campo | Valor |
 |-------|--------|
 | Data | 2026-05-28 |
-| Feito | Previsão do tempo: `GET /clima` (Open-Meteo), view TEMPO no bottom nav, cache offline `zelo_clima` |
-| Build PWA | 77 |
+| Feito | UX nav: 5 itens + S.O.S. central; header sino/menu; widget tempo home; hub avisos MVP |
+| Build PWA | 78 |
 | Plugin | **2.6.5** |
-| Próximo passo | Deploy plugin 2.6.5 + PWA build 77; smoke `TESTING.md` §6 (clima) |
+| Próximo passo | Deploy PWA build 78; smoke `TESTING.md` §7; Fase 2 carrossel destaques |
 
 ---
 
