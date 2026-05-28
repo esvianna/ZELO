@@ -2,6 +2,17 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.6.4] - 2026-05-28
+
+### Corrigido
+- `zelo_ops_find_shift_by_code`: não acede a `$catalogs['shifts']` sem validar (evita warning com catálogo vazio/parcial).
+- Notificações de voluntários: catálogos via `zelo_get_ops_catalogs()` antes de resolver horários da escala.
+
+## [2.6.3] - 2026-05-28
+
+### Alterado
+- Escala admin: select **Contas WordPress** inclui utilizadores com role `administrator` (além dos roles Zelo).
+
 ## [2.6.2] - 2026-05-28
 
 ### Corrigido

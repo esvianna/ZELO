@@ -113,12 +113,18 @@ function zelo_get_ops_catalogs( $data ) {
 }
 
 /**
- * Utilizadores WordPress com roles Zelo.
+ * Utilizadores WordPress elegíveis na escala (roles Zelo + administradores).
  *
  * @return WP_User[]
  */
 function zelo_get_zelo_volunteer_users() {
-	$roles = array( 'zelo_voluntario', 'zelo_homem_chave', 'zelo_supervisor_grupo', 'zelo_supervisor_app' );
+	$roles = array(
+		'administrator',
+		'zelo_voluntario',
+		'zelo_homem_chave',
+		'zelo_supervisor_grupo',
+		'zelo_supervisor_app',
+	);
 	$users = get_users(
 		array(
 			'role__in' => $roles,
@@ -151,7 +157,14 @@ function zelo_ops_normalize_roster_name_key( $name ) {
  */
 function zelo_ops_find_shift_by_code( $catalogs, $code ) {
 	$code = sanitize_text_field( $code );
-	foreach ( $catalogs['shifts'] as $sh ) {
+	if ( $code === '' || ! is_array( $catalogs ) ) {
+		return null;
+	}
+	$shifts = isset( $catalogs['shifts'] ) && is_array( $catalogs['shifts'] ) ? $catalogs['shifts'] : array();
+	foreach ( $shifts as $sh ) {
+		if ( ! is_array( $sh ) ) {
+			continue;
+		}
 		if ( isset( $sh['code'] ) && $sh['code'] === $code ) {
 			return $sh;
 		}

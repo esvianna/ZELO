@@ -110,7 +110,7 @@ function zelo_volunteer_notify_run() {
 	}
 
 	$schedule = isset( $data['schedule'] ) && is_array( $data['schedule'] ) ? $data['schedule'] : array();
-	$catalogs = isset( $data['catalogs'] ) && is_array( $data['catalogs'] ) ? $data['catalogs'] : array();
+	$catalogs   = zelo_get_ops_catalogs( $data )['catalogs'];
 	$now      = new DateTimeImmutable( 'now', zelo_volunteer_notify_timezone() );
 
 	foreach ( $schedule as $row ) {
