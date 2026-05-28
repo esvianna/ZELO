@@ -12,6 +12,7 @@ const API = {
         locais: null,
         evento: null,
         categorias: null,
+        clima: null,
         volunteerOps: null
     },
 
@@ -173,6 +174,35 @@ const API = {
                 console.warn('Falha ao carregar operação de voluntários', error);
             }
             return null;
+        }
+    },
+
+    async getClima() {
+        const url = `${this.baseUrl}/clima?_t=${Date.now()}`;
+        try {
+            const response = await fetch(url);
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                const err = new Error(data.message || 'Falha ao carregar previsão do tempo');
+                err.code = data.code || null;
+                this.lastClimaError = err;
+                throw err;
+            }
+            this.lastClimaError = null;
+            this.cache.clima = data;
+            if (data && data.enabled !== false && data.current) {
+                localStorage.setItem('zelo_clima', JSON.stringify(data));
+            }
+            return data;
+        } catch (error) {
+            console.warn('Fetch clima falhou, tentando cache', error);
+            const cached = localStorage.getItem('zelo_clima');
+            if (cached) {
+                const parsed = JSON.parse(cached);
+                this.cache.clima = parsed;
+                return parsed;
+            }
+            throw error;
         }
     },
 

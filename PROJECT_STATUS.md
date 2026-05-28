@@ -75,10 +75,10 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | Campo | Valor |
 |-------|--------|
 | Data | 2026-05-28 |
-| Feito | Plugin **2.6.0**: catálogos escala (turnos/locais/idiomas/roster), admin UX com selects, validação duplicados |
-| Build PWA | 75 |
-| Plugin | **2.6.0** |
-| Próximo passo | Deploy plugin 2.6.0; smoke `TESTING.md` §3 Admin + §4 PWA |
+| Feito | Previsão do tempo: `GET /clima` (Open-Meteo), view TEMPO no bottom nav, cache offline `zelo_clima` |
+| Build PWA | 77 |
+| Plugin | **2.6.5** |
+| Próximo passo | Deploy plugin 2.6.5 + PWA build 77; smoke `TESTING.md` §6 (clima) |
 
 ---
 

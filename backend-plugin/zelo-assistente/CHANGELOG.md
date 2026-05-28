@@ -2,6 +2,13 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.6.5] - 2026-05-28
+
+### Adicionado
+- `GET /zelo/v1/clima`: previsão do tempo via Open-Meteo (coordenadas do evento), cache transient 30 min, payload normalizado para a PWA.
+- Módulo `inc/weather.php` (mapeamento WMO, fallback stale).
+- Admin: checkbox «Ativar previsão do tempo» nas configurações do evento.
+
 ## [2.6.4] - 2026-05-28
 
 ### Corrigido

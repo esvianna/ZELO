@@ -34,8 +34,9 @@ Configurar `baseUrl` / `siteUrl` em `frontend-pwa/assets/js/api-v5.js` para o am
 | 4 | Mapa geral | Pins e legenda; zoom/pan OK |
 | 5 | Emergência | Telefones do evento visíveis |
 | 6 | Evento (info) | Dados de `/evento` |
-| 7 | Trocar idioma PT/EN/ES | Strings principais traduzidas |
-| 8 | Modo avião após visita | Conteúdo em cache ainda acessível (limitações aceitáveis) |
+| 7 | Bottom nav **TEMPO** | Previsão atual, horas do dia e 7 dias; local do evento |
+| 8 | Trocar idioma PT/EN/ES | Strings principais traduzidas |
+| 9 | Modo avião após visita online | Home, evento e **tempo** ainda acessíveis via cache (`zelo_clima` em localStorage) |
 
 ---
 
@@ -135,6 +136,18 @@ Configurar `baseUrl` / `siteUrl` em `frontend-pwa/assets/js/api-v5.js` para o am
 | CI | GitHub Action em push (quando existir `.gitignore` e ambiente WP de teste) |
 
 Até lá, **checklist manual acima é a fonte de verdade**.
+
+---
+
+## 6. Previsão do tempo (`/clima`, build 77+)
+
+| # | Passo | Esperado |
+|---|-------|----------|
+| 1 | Online: abrir **TEMPO** no bottom nav | Temperatura atual, horas e 7 dias |
+| 2 | DevTools → Offline → reabrir TEMPO | Último cache visível; badge offline |
+| 3 | Admin: desmarcar «Ativar previsão» → salvar | View mostra mensagem de desativado |
+| 4 | Admin: lat/lng vazios | Erro amigável (coordenadas não configuradas) |
+| 5 | Aguardar 30+ min online na view | Dados atualizados (transient expirado) |
 
 ---
 

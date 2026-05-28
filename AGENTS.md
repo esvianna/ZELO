@@ -82,6 +82,7 @@ Desalinhamento = usuários presos em cache antigo.
 | GET | `/evento` | Público | Dados do evento, avisos |
 | GET | `/categorias` | Público | Categorias dinâmicas |
 | GET | `/indoor-map` | Público | Mapa indoor |
+| GET | `/clima` | Público | Previsão do tempo (Open-Meteo, coords do evento) |
 | POST | `/auth/login` | Público | Retorna nonce WP |
 | POST | `/auth/register` | Público | Rate limit por IP |
 | GET | `/auth/verify-email` | Público | Token de verificação |

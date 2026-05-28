@@ -23,6 +23,12 @@ function zelo_register_api_routes() {
 		'permission_callback' => '__return_true',
 	) );
 
+	register_rest_route( 'zelo/v1', '/clima', array(
+		'methods'             => 'GET',
+		'callback'            => 'zelo_get_clima',
+		'permission_callback' => '__return_true',
+	) );
+
 	register_rest_route(
 		'zelo/v1',
 		'/indoor-map',

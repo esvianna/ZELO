@@ -17,7 +17,7 @@
     <!-- CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <link rel="stylesheet" href="assets/css/style-v5.css?v=76">
+    <link rel="stylesheet" href="assets/css/style-v5.css?v=77">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -210,6 +210,17 @@
             </div>
         </section>
 
+        <!-- Weather View -->
+        <section id="view-tempo" class="view">
+            <div class="view-header">
+                <button class="back-btn" onclick="app.router.back()" data-i18n="back">Voltar</button>
+                <h2 data-i18n="weather_title">Previsão do tempo</h2>
+            </div>
+            <div id="weather-container" class="weather-container">
+                <div class="loading" data-i18n="loading">Carregando...</div>
+            </div>
+        </section>
+
         <!-- Event Info View -->
         <section id="view-evento" class="view">
             <div class="view-header">
@@ -380,6 +391,19 @@
             <span data-i18n="nav_map">MAPA</span>
         </a>
 
+        <a href="#" class="nav-item" onclick="app.router.navigate('tempo'); return false;" data-target="tempo">
+            <div class="icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path>
+                    <path d="M12 2v2"></path>
+                    <path d="m4.93 4.93 1.41 1.41"></path>
+                    <path d="M2 12h2"></path>
+                </svg>
+            </div>
+            <span data-i18n="nav_weather">TEMPO</span>
+        </a>
+
         <a href="#" class="nav-item sos-item" onclick="app.router.navigate('emergencia'); return false;"
             data-target="emergencia">
             <div class="sos-button">
@@ -422,11 +446,11 @@
 
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script src="assets/js/zelo-build.js?v=76"></script>
-    <script src="assets/js/i18n.js?v=76"></script>
-    <script src="assets/js/api-v5.js?v=76"></script>
-    <script src="assets/js/map-manager.js?v=76"></script>
-    <script src="assets/js/app-v5.js?v=76"></script>
+    <script src="assets/js/zelo-build.js?v=77"></script>
+    <script src="assets/js/i18n.js?v=77"></script>
+    <script src="assets/js/api-v5.js?v=77"></script>
+    <script src="assets/js/map-manager.js?v=77"></script>
+    <script src="assets/js/app-v5.js?v=77"></script>
 
     <script>
         // Register Service Worker

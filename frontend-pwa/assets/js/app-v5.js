@@ -2,6 +2,7 @@ const app = {
     data: {
         locais: [],
         evento: null,
+        clima: null,
         categoriesMeta: {},
         volunteerOps: null,
         indoorMap: null,
@@ -150,6 +151,8 @@ const app = {
                     app.renderEmergency();
                 } else if (viewId === 'evento') {
                     app.renderEventInfo();
+                } else if (viewId === 'tempo') {
+                    app.renderWeather();
                 } else if (viewId === 'escala') {
                     app.renderVolunteerOps();
                 } else if (viewId === 'mapa-evento') {
@@ -449,14 +452,16 @@ const app = {
             this.auth.init();
 
             // Load initial data
-            const [locais, evento, categorias] = await Promise.all([
+            const [locais, evento, categorias, clima] = await Promise.all([
                 API.getLocais(), // Fetch all initially
                 API.getEvento(),
-                API.getCategorias()
+                API.getCategorias(),
+                API.getClima().catch(() => null)
             ]);
 
             this.data.locais = locais || [];
             this.data.evento = evento || {};
+            this.data.clima = clima || null;
             this.data.categoriesMeta = this.buildCategoryMeta(categorias || []);
 
             if (this.auth.user && this.auth.user.caps && this.auth.user.caps.view_ops) {
@@ -500,6 +505,14 @@ const app = {
 
         // Request location
         this.getUserLocation();
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && this.router.currentView === 'tempo' && navigator.onLine) {
+                if (this.shouldRefreshWeather()) {
+                    this.refreshWeather();
+                }
+            }
+        });
     },
 
     // --- Render Methods ---
@@ -1668,6 +1681,181 @@ const app = {
                 <a href="tel:${p.numero}" class="call-btn">${p.numero}</a>
             </div>
         `).join('');
+    },
+
+    shouldRefreshWeather() {
+        const c = this.data.clima;
+        if (!c || !c.updated_at) return true;
+        const updated = new Date(c.updated_at).getTime();
+        if (Number.isNaN(updated)) return true;
+        return (Date.now() - updated) > 30 * 60 * 1000;
+    },
+
+    async refreshWeather() {
+        if (this._weatherRefreshing) return;
+        this._weatherRefreshing = true;
+        const container = document.getElementById('weather-container');
+        try {
+            const data = await API.getClima();
+            this.data.clima = data;
+            if (this.router.currentView === 'tempo') {
+                this.renderWeather();
+            }
+        } catch (err) {
+            console.warn('Falha ao atualizar clima', err);
+            if (this.router.currentView === 'tempo' && container) {
+                if (this.data.clima && this.data.clima.current) {
+                    this.renderWeather();
+                } else {
+                    const key = (err && err.code === 'zelo_weather_no_coords') ? 'weather_no_coords' : 'weather_unavailable';
+                    this.renderWeatherError(container, key);
+                }
+            }
+        } finally {
+            this._weatherRefreshing = false;
+        }
+    },
+
+    getWeatherIconSvg(iconKey, size) {
+        const s = size || 48;
+        const icons = {
+            clear: `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>`,
+            partly_cloudy: `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="M20 12h2"/><path d="m19.07 4.93-1.41 1.41"/><path d="M15.947 12.65a4 4 0 0 0-5.925-4.128"/><path d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z"/></svg>`,
+            cloudy: `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>`,
+            fog: `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h16M4 18h16M4 10h16M4 6h10"/></svg>`,
+            drizzle: `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M8 19v1M8 21v1M12 19v1M12 21v1M16 19v1M16 21v1"/></svg>`,
+            rain: `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M8 19v2M8 21v2M12 19v2M12 21v2M16 19v2M16 21v2"/></svg>`,
+            snow: `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M8 15h.01M8 19h.01M12 17h.01M12 21h.01M16 15h.01M16 19h.01"/></svg>`,
+            thunder: `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="m13 17-3-5h4l-3 5"/></svg>`
+        };
+        return icons[iconKey] || icons.cloudy;
+    },
+
+    formatWeatherUpdatedAt(iso) {
+        if (!iso) return '';
+        try {
+            const d = new Date(iso);
+            if (Number.isNaN(d.getTime())) return '';
+            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        } catch (e) {
+            return '';
+        }
+    },
+
+    renderWeatherError(container, messageKey) {
+        container.innerHTML = `
+            <div class="info-card weather-error-card">
+                <p>${this.escapeHtml(i18n.t(messageKey))}</p>
+                <button type="button" class="btn-block outline" onclick="app.refreshWeather()">${this.escapeHtml(i18n.t('weather_retry'))}</button>
+            </div>
+        `;
+    },
+
+    renderWeather() {
+        const container = document.getElementById('weather-container');
+        if (!container) return;
+
+        const renderFromData = (data) => {
+            if (!data || data.enabled === false) {
+                this.renderWeatherError(container, 'weather_disabled');
+                return;
+            }
+            if (!data.current) {
+                this.renderWeatherError(container, 'weather_unavailable');
+                return;
+            }
+
+            const cur = data.current;
+            const loc = data.location || {};
+            const offline = !navigator.onLine;
+            const stale = !!data.stale;
+            const updatedLabel = this.formatWeatherUpdatedAt(data.updated_at);
+            const badges = [];
+            if (offline) {
+                badges.push(`<span class="weather-badge weather-badge-offline">${this.escapeHtml(i18n.t('weather_offline'))}</span>`);
+            }
+            if (stale || offline) {
+                badges.push(`<span class="weather-badge weather-badge-stale">${this.escapeHtml(i18n.t('weather_stale'))}</span>`);
+            }
+
+            const hourly = (data.hourly_today || []).map((slot) => `
+                <div class="weather-hour-chip">
+                    <span class="weather-hour-time">${this.escapeHtml(slot.time)}</span>
+                    <span class="weather-hour-icon">${this.getWeatherIconSvg(slot.icon, 22)}</span>
+                    <span class="weather-hour-temp">${slot.temp_c != null ? slot.temp_c + '°' : '—'}</span>
+                    ${slot.precip_pct > 0 ? `<span class="weather-hour-precip">${slot.precip_pct}%</span>` : ''}
+                </div>
+            `).join('');
+
+            const daily = (data.daily || []).map((day) => `
+                <div class="weather-day-row">
+                    <span class="weather-day-label">${this.escapeHtml(day.day_label || day.date)}</span>
+                    <span class="weather-day-icon">${this.getWeatherIconSvg(day.icon, 28)}</span>
+                    <span class="weather-day-precip">${day.precip_pct > 0 ? day.precip_pct + '%' : ''}</span>
+                    <span class="weather-day-temps">
+                        <span class="weather-temp-max">${day.temp_max_c != null ? day.temp_max_c + '°' : '—'}</span>
+                        <span class="weather-temp-min">${day.temp_min_c != null ? day.temp_min_c + '°' : ''}</span>
+                    </span>
+                </div>
+            `).join('');
+
+            container.innerHTML = `
+                <div class="weather-hero">
+                    <div class="weather-hero-main">
+                        <div class="weather-hero-icon">${this.getWeatherIconSvg(cur.icon, 56)}</div>
+                        <div class="weather-hero-temp">${cur.temp_c != null ? cur.temp_c : '—'}°</div>
+                    </div>
+                    <p class="weather-hero-label">${this.escapeHtml(cur.label || '')}</p>
+                    <div class="weather-hero-stats">
+                        <span>${this.escapeHtml(i18n.t('weather_feels_like'))}: ${cur.feels_like_c != null ? cur.feels_like_c + '°' : '—'}</span>
+                        <span>${this.escapeHtml(i18n.t('weather_humidity'))}: ${cur.humidity_pct != null ? cur.humidity_pct + '%' : '—'}</span>
+                        <span>${this.escapeHtml(i18n.t('weather_wind'))}: ${cur.wind_kmh != null ? cur.wind_kmh + ' km/h' : '—'}</span>
+                    </div>
+                </div>
+                <div class="weather-meta">
+                    <div>
+                        <strong>${this.escapeHtml(loc.name || '')}</strong>
+                        ${loc.address ? `<p class="weather-meta-address">${this.escapeHtml(loc.address)}</p>` : ''}
+                    </div>
+                    <div class="weather-meta-right">
+                        ${updatedLabel ? `<span class="weather-updated">${this.escapeHtml(i18n.t('weather_updated'))} ${this.escapeHtml(updatedLabel)}</span>` : ''}
+                        <div class="weather-badges">${badges.join('')}</div>
+                    </div>
+                </div>
+                ${hourly ? `
+                <div class="info-card weather-section-card">
+                    <div class="card-title">${this.escapeHtml(i18n.t('weather_hourly'))}</div>
+                    <div class="weather-hourly-scroll">${hourly}</div>
+                </div>` : ''}
+                ${daily ? `
+                <div class="info-card weather-section-card">
+                    <div class="card-title">${this.escapeHtml(i18n.t('weather_week'))}</div>
+                    <div class="weather-daily-list">${daily}</div>
+                </div>` : ''}
+                <p class="weather-attribution">${this.escapeHtml(i18n.t('weather_attribution'))}</p>
+            `;
+        };
+
+        if (this.data.clima && this.data.clima.current) {
+            renderFromData(this.data.clima);
+            if (navigator.onLine && this.shouldRefreshWeather()) {
+                this.refreshWeather();
+            }
+            return;
+        }
+
+        container.innerHTML = `<div class="loading">${this.escapeHtml(i18n.t('loading'))}</div>`;
+
+        if (navigator.onLine) {
+            this.refreshWeather();
+            return;
+        }
+
+        if (this.data.clima) {
+            renderFromData(this.data.clima);
+        } else {
+            this.renderWeatherError(container, 'weather_unavailable');
+        }
     },
 
     renderEventInfo() {

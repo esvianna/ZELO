@@ -6,6 +6,16 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 ---
 
+## ADR-011 — Previsão do tempo via Open-Meteo (2026-05-28)
+
+**Contexto:** Visitantes precisam de previsão meteorológica no local do evento, com visualização simples, offline após primeira carga e sem expor API keys no frontend.
+
+**Decisão:** Proxy WordPress `GET /zelo/v1/clima` → Open-Meteo; lat/lng de `zelo_event_data`; cache servidor (`set_transient`, 30 min, filtro `zelo_weather_cache_ttl`); PWA com `localStorage` (`zelo_clima`) e view dedicada + item **TEMPO** no bottom nav (build 77).
+
+**Consequências:** Endpoint público (como `/evento`); sem PII; atribuição Open-Meteo na UI; toggle `weather_enabled` no admin. Plugin **2.6.5**.
+
+---
+
 ## ADR-010 — Catálogos de escala em `wp_options` (2026-05-28)
 
 **Contexto:** Admin da escala usava campos texto livres (dia, turno, local, idiomas, `wp_user_id` manual); voluntários sem conta WP precisam constar na escala.

@@ -50,6 +50,7 @@ function zelo_render_settings_page() {
             'home_notice_type' => sanitize_text_field( $_POST['zelo_home_notice_type'] ),
             'home_notice_text' => sanitize_textarea_field( $_POST['zelo_home_notice_text'] ),
             'home_notice_link' => esc_url_raw( $_POST['zelo_home_notice_link'] ),
+            'weather_enabled' => isset( $_POST['zelo_weather_enabled'] ) ? 1 : 0,
 			'phones'  => array(),
 		);
 
@@ -99,7 +100,16 @@ function zelo_render_settings_page() {
 					<td>
 						<input type="text" name="zelo_event_lat" placeholder="Latitude (ex: -23.55)" value="<?php echo esc_attr( $data['lat'] ); ?>" class="small-text">
 						<input type="text" name="zelo_event_lng" placeholder="Longitude (ex: -46.63)" value="<?php echo esc_attr( $data['lng'] ); ?>" class="small-text">
-						<p class="description">Usado como centro do mapa.</p>
+						<p class="description"><?php esc_html_e( 'Usado como centro do mapa e localização da previsão do tempo.', 'zelo-assistente' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Previsão do tempo', 'zelo-assistente' ); ?></th>
+					<td>
+						<label>
+							<input type="checkbox" name="zelo_weather_enabled" value="1" <?php checked( ! isset( $data['weather_enabled'] ) || ! empty( $data['weather_enabled'] ) ); ?>>
+							<?php esc_html_e( 'Ativar previsão do tempo na PWA (Open-Meteo)', 'zelo-assistente' ); ?>
+						</label>
 					</td>
 				</tr>
 				<tr>
