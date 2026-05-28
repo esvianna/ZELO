@@ -10,13 +10,14 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#137fec">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Zelo">
 
     <!-- CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <link rel="stylesheet" href="assets/css/style-v5.css?v=72">
+    <link rel="stylesheet" href="assets/css/style-v5.css?v=74">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -272,15 +273,15 @@
                     <form onsubmit="app.auth.register(event)">
                         <div class="form-group">
                             <label>Nome completo</label>
-                            <input type="text" id="register-name" class="form-input" required>
+                            <input type="text" id="register-name" class="form-input" autocomplete="name" required>
                         </div>
                         <div class="form-group">
                             <label>E-mail</label>
-                            <input type="email" id="register-email" class="form-input" required>
+                            <input type="email" id="register-email" class="form-input" autocomplete="email" required>
                         </div>
                         <div class="form-group">
                             <label>Telefone (opcional)</label>
-                            <input type="text" id="register-phone" class="form-input">
+                            <input type="tel" id="register-phone" class="form-input" autocomplete="tel">
                         </div>
                         <div class="form-group">
                             <label>Senha (mín. 8 caracteres)</label>
@@ -421,11 +422,11 @@
 
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script src="assets/js/zelo-build.js?v=72"></script>
-    <script src="assets/js/i18n.js?v=72"></script>
-    <script src="assets/js/api-v5.js?v=72"></script>
-    <script src="assets/js/map-manager.js?v=72"></script>
-    <script src="assets/js/app-v5.js?v=72"></script>
+    <script src="assets/js/zelo-build.js?v=74"></script>
+    <script src="assets/js/i18n.js?v=74"></script>
+    <script src="assets/js/api-v5.js?v=74"></script>
+    <script src="assets/js/map-manager.js?v=74"></script>
+    <script src="assets/js/app-v5.js?v=74"></script>
 
     <script>
         // Register Service Worker
@@ -433,7 +434,7 @@
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
                     .then(registration => {
-                        console.log('SW registred:', registration);
+                        console.log('SW registered:', registration);
                     })
                     .catch(error => {
                         console.log('SW registration failed:', error);

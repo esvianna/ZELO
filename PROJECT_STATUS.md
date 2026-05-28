@@ -74,11 +74,11 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Campo | Valor |
 |-------|--------|
-| Data | 2026-05-27 |
-| Feito | Pacote A completo (código + docs) |
-| Build PWA | 65 |
-| Plugin | 2.5.1 |
-| Próximo passo | Deploy + smoke test em produção |
+| Data | 2026-05-28 |
+| Feito | PWA build 74: fix `_opsAuthFailed` após login; mensagem plugin 2.5.3+ |
+| Build PWA | 74 |
+| Plugin | 2.5.3 (branch local) |
+| Próximo passo | Publicar `index.html` + `sw.js` + `zelo-build.js`; hard refresh / limpar cache SW |
 
 ---
 

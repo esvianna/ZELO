@@ -12,6 +12,24 @@ _Nada pendente._
 
 ---
 
+## [2026-05-28] — PWA build 74 (auth ops pós-login)
+
+### Corrigido
+- Login: não limpar `_opsAuthFailed` quando `refreshSession` ok mas `loadVolunteerOps` falha (401/403).
+- Init: `clearOpsAuthFailure` só após escala carregar com sucesso.
+- Mensagem de sessão: referência ao plugin **2.5.3+**.
+
+---
+
+## [2026-05-28] — PWA build 73 (higiene console/HTML)
+
+### Alterado
+- `index.html`: meta `mobile-web-app-capable` (Chrome); `autocomplete` em nome/e-mail/telefone no cadastro; `type="tel"` no telefone.
+- Log de registro do Service Worker: `SW registered` (typo corrigido).
+- Cache PWA: `zelo-cache-v73`, assets `?v=73`.
+
+---
+
 ## [2026-05-27] — Pacote A (voluntários dept. informações)
 
 ### Adicionado

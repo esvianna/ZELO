@@ -282,19 +282,19 @@ const app = {
                     const synced = await API.refreshSession();
                     if (synced) {
                         this.user = synced;
-                        this.clearOpsAuthFailure();
                     }
 
                     this.updateUI();
 
                     if (this.user.caps && this.user.caps.view_ops) {
                         app.data.volunteerOps = await app.loadVolunteerOps(true);
-                        if (!synced && app._opsAuthFailed) {
-                            throw new Error(API.getSessionErrorMessage());
+                        if (app._opsAuthFailed) {
+                            const msg = synced
+                                ? 'Login aceito, mas a escala operacional não pôde ser carregada (sessão ou permissão). Saia e entre novamente.'
+                                : API.getSessionErrorMessage();
+                            throw new Error(msg);
                         }
-                        if (synced) {
-                            this.clearOpsAuthFailure();
-                        }
+                        this.clearOpsAuthFailure();
                     } else {
                         app.data.volunteerOps = null;
                     }
@@ -463,8 +463,10 @@ const app = {
                 const synced = await API.refreshSession();
                 if (synced) {
                     this.auth.user = synced;
-                    this.auth.clearOpsAuthFailure();
                     this.data.volunteerOps = await this.loadVolunteerOps();
+                    if (!this._opsAuthFailed) {
+                        this.auth.clearOpsAuthFailure();
+                    }
                 } else {
                     this.auth.handleOpsAuthFailure();
                 }

@@ -77,7 +77,7 @@ const API = {
             return 'Sessão desatualizada no navegador (nonce inválido). Saia, limpe os dados do site para tenhazelo.com.br e entre de novo, ou use uma aba anónima.';
         }
         if (err.status === 401 || err.code === 'zelo_not_logged_in') {
-            return 'O servidor não recebeu o cookie de login. Use https://tenhazelo.com.br/zelo/ (mesmo domínio do WordPress), confirme que o plugin Zelo 2.5.2+ está ativo e tente novamente.';
+            return 'O servidor não recebeu o cookie de login. Use https://tenhazelo.com.br/zelo/ (mesmo domínio do WordPress), confirme que o plugin Zelo 2.5.3+ está ativo e tente novamente.';
         }
         if (err.code === 'network_error' || err.status === 0) {
             return 'Falha de rede ao validar a sessão. Verifique a conexão e tente novamente.';
