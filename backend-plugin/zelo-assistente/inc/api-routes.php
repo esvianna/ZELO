@@ -39,6 +39,16 @@ function zelo_register_api_routes() {
 		)
 	);
 
+	register_rest_route(
+		'zelo/v1',
+		'/ops/languages',
+		array(
+			'methods'             => 'GET',
+			'callback'            => 'zelo_get_ops_languages_catalog',
+			'permission_callback' => '__return_true',
+		)
+	);
+
 	register_rest_route( 'zelo/v1', '/ops/voluntarios', array(
 		'methods'  => 'GET',
 		'callback' => 'zelo_get_ops_voluntarios',
@@ -94,6 +104,31 @@ function zelo_ops_export_stub( $request ) {
 		__( 'Exportação ainda não implementada (pós-MVP).', 'zelo-assistente' ),
 		array( 'status' => 501 )
 	);
+}
+
+/**
+ * Catálogo público de idiomas (cadastro sem login).
+ *
+ * @return WP_REST_Response
+ */
+function zelo_get_ops_languages_catalog() {
+	$data  = zelo_get_volunteer_ops_data();
+	$out   = array();
+	$langs = isset( $data['catalogs']['languages'] ) && is_array( $data['catalogs']['languages'] )
+		? $data['catalogs']['languages'] : array();
+	foreach ( $langs as $lang ) {
+		if ( empty( $lang['id'] ) || empty( $lang['name'] ) ) {
+			continue;
+		}
+		if ( isset( $lang['active'] ) && ! $lang['active'] ) {
+			continue;
+		}
+		$out[] = array(
+			'id'   => sanitize_text_field( $lang['id'] ),
+			'name' => sanitize_text_field( $lang['name'] ),
+		);
+	}
+	return rest_ensure_response( array( 'languages' => $out ) );
 }
 
 /**

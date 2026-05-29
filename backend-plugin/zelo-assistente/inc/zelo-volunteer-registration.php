@@ -115,6 +115,13 @@ function zelo_rest_auth_register( $request ) {
 		update_user_meta( $user_id, 'zelo_phone', $phone );
 	}
 
+	if ( function_exists( 'zelo_rest_parse_language_ids_param' ) && function_exists( 'zelo_ops_save_user_language_ids' ) ) {
+		$lang_ids = zelo_rest_parse_language_ids_param( $request );
+		if ( ! empty( $lang_ids ) ) {
+			zelo_ops_save_user_language_ids( $user_id, $lang_ids );
+		}
+	}
+
 	// Não usar rawurlencode aqui: add_query_arg já codifica; dupla codificação quebrava o link.
 	$verify_url = add_query_arg(
 		array(

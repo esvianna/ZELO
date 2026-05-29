@@ -160,7 +160,9 @@ const app = {
                 } else if (viewId === 'mapa-evento') {
                     app.renderIndoorEventMap();
                 } else if (viewId === 'register') {
-                    /* static form */
+                    app.loadRegisterLanguages();
+                } else if (viewId === 'profile') {
+                    app.renderProfileLanguages();
                 }
 
                 // Render Home components if on home
@@ -334,6 +336,10 @@ const app = {
             const email = document.getElementById('register-email').value.trim();
             const phone = document.getElementById('register-phone').value.trim();
             const pass = document.getElementById('register-password').value;
+            const langSel = document.getElementById('register-languages');
+            const language_ids = langSel
+                ? Array.from(langSel.selectedOptions).map((o) => o.value).filter(Boolean)
+                : [];
             errEl.style.display = 'none';
             btn.disabled = true;
             btn.textContent = i18n.t('loading');
@@ -342,7 +348,8 @@ const app = {
                     display_name: name,
                     email,
                     phone,
-                    password: pass
+                    password: pass,
+                    language_ids
                 });
                 errEl.className = 'text-success';
                 errEl.style.display = 'block';
@@ -406,6 +413,7 @@ const app = {
 
             app.updateBottomNavForVolunteer();
             app.updateNotificationsBadge();
+            app.renderProfileLanguages();
         },
 
         updateUI() {
@@ -442,6 +450,93 @@ const app = {
         }
     },
 
+    _languageCatalogCache: null,
+
+    async getLanguageCatalog() {
+        if (this._languageCatalogCache) {
+            return this._languageCatalogCache;
+        }
+        try {
+            this._languageCatalogCache = await API.getOpsLanguages();
+        } catch (e) {
+            console.warn('Idiomas', e);
+            this._languageCatalogCache = [];
+        }
+        return this._languageCatalogCache;
+    },
+
+    async fillLanguageSelect(selectEl, selectedIds = []) {
+        if (!selectEl) {
+            return;
+        }
+        const langs = await this.getLanguageCatalog();
+        const selected = new Set((selectedIds || []).map(String));
+        selectEl.innerHTML = '';
+        langs.forEach((lang) => {
+            const opt = document.createElement('option');
+            opt.value = lang.id;
+            opt.textContent = lang.name;
+            opt.selected = selected.has(String(lang.id));
+            selectEl.appendChild(opt);
+        });
+    },
+
+    async loadRegisterLanguages() {
+        const sel = document.getElementById('register-languages');
+        await this.fillLanguageSelect(sel, []);
+    },
+
+    async renderProfileLanguages() {
+        const section = document.getElementById('profile-languages-section');
+        const sel = document.getElementById('profile-languages');
+        if (!this.auth.user) {
+            if (section) {
+                section.style.display = 'none';
+            }
+            return;
+        }
+        if (section) {
+            section.style.display = 'block';
+        }
+        const ids = this.auth.user.language_ids || [];
+        await this.fillLanguageSelect(sel, ids);
+    },
+
+    async saveProfileLanguages() {
+        const sel = document.getElementById('profile-languages');
+        const msg = document.getElementById('profile-languages-msg');
+        const btn = document.getElementById('profile-languages-save');
+        const ids = sel ? Array.from(sel.selectedOptions).map((o) => o.value).filter(Boolean) : [];
+        if (msg) {
+            msg.style.display = 'none';
+        }
+        if (btn) {
+            btn.disabled = true;
+        }
+        try {
+            const res = await API.patchProfile({ language_ids: ids });
+            if (res.user) {
+                this.auth.user = res.user;
+                localStorage.setItem('zelo_user', JSON.stringify(res.user));
+                this.auth.refreshAuthChrome();
+            }
+            if (msg) {
+                msg.style.display = 'block';
+                msg.className = 'text-success';
+                msg.textContent = i18n.t('profile_languages_saved');
+            }
+        } catch (e) {
+            if (msg) {
+                msg.style.display = 'block';
+                msg.className = 'text-danger';
+                msg.textContent = e.message || 'Erro';
+            }
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+            }
+        }
+    },
 
     async init() {
         console.log('Zelo App Initializing...');

@@ -246,12 +246,15 @@ function zelo_get_volunteer_ops_data() {
 	$data = zelo_migrate_ops_catalogs_from_schedule( $data );
 	$data = zelo_ops_migrate_governance_three_days( $data );
 	$data = zelo_ops_migrate_legacy_shift_times( $data );
+	$data = zelo_ops_migrate_languages_to_volunteers( $data );
 	$migrated = get_option( 'zelo_ops_catalogs_migrated', '' );
 	$struct_migrated = get_option( 'zelo_ops_event_structure_migrated', '' );
-	if ( $migrated !== ZELO_VERSION || $struct_migrated !== ZELO_VERSION ) {
+	$lang_migrated     = get_option( 'zelo_ops_languages_migrated', '' );
+	if ( $migrated !== ZELO_VERSION || $struct_migrated !== ZELO_VERSION || $lang_migrated !== ZELO_VERSION ) {
 		update_option( 'zelo_volunteer_ops_data', $data );
 		update_option( 'zelo_ops_catalogs_migrated', ZELO_VERSION );
 		update_option( 'zelo_ops_event_structure_migrated', ZELO_VERSION );
+		update_option( 'zelo_ops_languages_migrated', ZELO_VERSION );
 	}
 	return $data;
 }
@@ -372,9 +375,26 @@ function zelo_get_volunteer_ops_payload( $args = array() ) {
 		}
 	}
 
+	$catalog_langs = array();
+	if ( ! empty( $catalogs['languages'] ) && is_array( $catalogs['languages'] ) ) {
+		foreach ( $catalogs['languages'] as $lang ) {
+			if ( empty( $lang['id'] ) || empty( $lang['name'] ) ) {
+				continue;
+			}
+			if ( isset( $lang['active'] ) && ! $lang['active'] ) {
+				continue;
+			}
+			$catalog_langs[] = array(
+				'id'   => sanitize_text_field( $lang['id'] ),
+				'name' => sanitize_text_field( $lang['name'] ),
+			);
+		}
+	}
+
 	return array(
 		'governance'       => $data['governance'],
 		'schedule'         => $schedule,
+		'catalogs'         => array( 'languages' => $catalog_langs ),
 		'indoor_map'       => $data['indoor_map'],
 		'settings'         => $data['settings'],
 		'checkins'         => $checkins,

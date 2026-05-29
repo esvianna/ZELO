@@ -143,6 +143,20 @@ function zelo_approve_link_request( $request_id, $resolver ) {
 		unset( $rv );
 	}
 
+	$roster_lang_ids = array();
+	foreach ( $data['catalogs']['roster_volunteers'] as $rv_copy ) {
+		if ( isset( $rv_copy['id'] ) && $rv_copy['id'] === $rvid && ! empty( $rv_copy['language_ids'] ) ) {
+			$roster_lang_ids = $rv_copy['language_ids'];
+			break;
+		}
+	}
+	if ( ! empty( $roster_lang_ids ) ) {
+		$meta = get_user_meta( $uid, 'zelo_language_ids', true );
+		if ( ! is_array( $meta ) || empty( $meta ) ) {
+			update_user_meta( $uid, 'zelo_language_ids', zelo_ops_sanitize_language_ids( $roster_lang_ids, $data['catalogs'] ) );
+		}
+	}
+
 	foreach ( $data['schedule'] as &$row ) {
 		if ( isset( $row['roster_volunteer_id'] ) && $row['roster_volunteer_id'] === $rvid ) {
 			$row['wp_user_id']          = $uid;
@@ -228,11 +242,16 @@ function zelo_build_onboarding_report() {
 		if ( ! empty( $rv['linked_wp_user_id'] ) ) {
 			$status = 'active';
 		}
+		$lang_labels = zelo_ops_resolve_language_names(
+			isset( $rv['language_ids'] ) ? $rv['language_ids'] : array(),
+			$data['catalogs']
+		);
 		$items[] = array(
 			'roster_volunteer_id' => $rv['id'],
 			'name'                  => isset( $rv['name'] ) ? $rv['name'] : '',
 			'phone'                 => isset( $rv['phone'] ) ? $rv['phone'] : '',
 			'expected_email'        => isset( $rv['expected_email'] ) ? $rv['expected_email'] : '',
+			'language_labels'       => implode( ', ', $lang_labels ),
 			'registration_status'   => $status,
 			'linked_wp_user_id'     => isset( $rv['linked_wp_user_id'] ) ? (int) $rv['linked_wp_user_id'] : 0,
 			'assignments_count'     => isset( $assignments_by_rv[ $rv['id'] ] ) ? (int) $assignments_by_rv[ $rv['id'] ] : 0,

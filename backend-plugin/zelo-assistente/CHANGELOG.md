@@ -2,6 +2,17 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.8.0] - 2026-05-28
+
+### Adicionado
+- Idiomas no voluntário: `roster_volunteers.language_ids`, `user_meta` `zelo_language_ids`.
+- Migração idempotente de `schedule.languages` para roster/WP; herança em `zelo_ops_enrich_schedule_for_output`.
+- REST `GET /zelo/v1/ops/languages` (público), `PATCH /zelo/v1/auth/profile`.
+- Cadastro aceita `language_ids` opcional; sessão/login expõe `language_ids` e `languages`.
+
+### Alterado
+- Admin: coluna Idiomas removida da escala; multi-select na aba Voluntários e coluna Idiomas no Onboarding.
+
 ## [2.7.2] - 2026-05-28
 
 ### Corrigido

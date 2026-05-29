@@ -517,6 +517,224 @@ function zelo_ops_resolve_language_names( $lang_ids, $catalogs ) {
 }
 
 /**
+ * Mapa nome → id de idiomas ativos no catálogo.
+ *
+ * @param array $catalogs Catalogs.
+ * @return array<string, string>
+ */
+function zelo_ops_language_name_to_id_map( $catalogs ) {
+	$map = array();
+	if ( empty( $catalogs['languages'] ) || ! is_array( $catalogs['languages'] ) ) {
+		return $map;
+	}
+	foreach ( $catalogs['languages'] as $lang ) {
+		if ( empty( $lang['id'] ) || empty( $lang['name'] ) ) {
+			continue;
+		}
+		if ( isset( $lang['active'] ) && ! $lang['active'] ) {
+			continue;
+		}
+		$key = strtolower( trim( sanitize_text_field( $lang['name'] ) ) );
+		if ( $key !== '' ) {
+			$map[ $key ] = sanitize_text_field( $lang['id'] );
+		}
+	}
+	return $map;
+}
+
+/**
+ * Converte nomes de idioma em IDs do catálogo.
+ *
+ * @param array $names    Language names.
+ * @param array $catalogs Catalogs.
+ * @return array
+ */
+function zelo_ops_language_names_to_ids( $names, $catalogs ) {
+	$name_to_id = zelo_ops_language_name_to_id_map( $catalogs );
+	$ids        = array();
+	foreach ( (array) $names as $name ) {
+		$key = strtolower( trim( sanitize_text_field( $name ) ) );
+		if ( $key !== '' && isset( $name_to_id[ $key ] ) ) {
+			$ids[] = $name_to_id[ $key ];
+		}
+	}
+	return array_values( array_unique( $ids ) );
+}
+
+/**
+ * Sanitiza lista de IDs de idioma contra o catálogo ativo.
+ *
+ * @param array $ids      Raw ids.
+ * @param array $catalogs Catalogs.
+ * @return array
+ */
+function zelo_ops_sanitize_language_ids( $ids, $catalogs ) {
+	$valid = array();
+	if ( empty( $catalogs['languages'] ) || ! is_array( $catalogs['languages'] ) ) {
+		return $valid;
+	}
+	$allowed = array();
+	foreach ( $catalogs['languages'] as $lang ) {
+		if ( empty( $lang['id'] ) ) {
+			continue;
+		}
+		if ( isset( $lang['active'] ) && ! $lang['active'] ) {
+			continue;
+		}
+		$allowed[ $lang['id'] ] = true;
+	}
+	foreach ( (array) $ids as $id ) {
+		$id = sanitize_text_field( $id );
+		if ( $id !== '' && isset( $allowed[ $id ] ) ) {
+			$valid[] = $id;
+		}
+	}
+	return array_values( array_unique( $valid ) );
+}
+
+/**
+ * IDs de idioma do voluntário (WP user_meta ou roster).
+ *
+ * @param int    $wp_uid   WP user id.
+ * @param string $rv_id    Roster id.
+ * @param array  $catalogs Catalogs.
+ * @return array
+ */
+function zelo_ops_get_volunteer_language_ids( $wp_uid, $rv_id, $catalogs ) {
+	$wp_uid = max( 0, (int) $wp_uid );
+	$rv_id  = sanitize_text_field( $rv_id );
+	$ids    = array();
+
+	if ( $wp_uid > 0 ) {
+		$meta = get_user_meta( $wp_uid, 'zelo_language_ids', true );
+		if ( is_array( $meta ) && ! empty( $meta ) ) {
+			$ids = zelo_ops_sanitize_language_ids( $meta, $catalogs );
+		}
+	}
+
+	if ( empty( $ids ) && $rv_id !== '' && ! empty( $catalogs['roster_volunteers'] ) ) {
+		foreach ( $catalogs['roster_volunteers'] as $rv ) {
+			if ( isset( $rv['id'] ) && $rv['id'] === $rv_id && ! empty( $rv['language_ids'] ) && is_array( $rv['language_ids'] ) ) {
+				$ids = zelo_ops_sanitize_language_ids( $rv['language_ids'], $catalogs );
+				break;
+			}
+		}
+	}
+
+	if ( empty( $ids ) && $wp_uid > 0 && ! empty( $catalogs['roster_volunteers'] ) ) {
+		foreach ( $catalogs['roster_volunteers'] as $rv ) {
+			if ( ! empty( $rv['linked_wp_user_id'] ) && (int) $rv['linked_wp_user_id'] === $wp_uid && ! empty( $rv['language_ids'] ) && is_array( $rv['language_ids'] ) ) {
+				$ids = zelo_ops_sanitize_language_ids( $rv['language_ids'], $catalogs );
+				break;
+			}
+		}
+	}
+
+	return $ids;
+}
+
+/**
+ * Nomes de idioma do voluntário para exibição na escala/API.
+ *
+ * @param int    $wp_uid   WP user id.
+ * @param string $rv_id    Roster id.
+ * @param array  $catalogs Catalogs.
+ * @return array
+ */
+function zelo_ops_volunteer_language_names( $wp_uid, $rv_id, $catalogs ) {
+	return zelo_ops_resolve_language_names(
+		zelo_ops_get_volunteer_language_ids( $wp_uid, $rv_id, $catalogs ),
+		$catalogs
+	);
+}
+
+/**
+ * Persiste idiomas no user_meta e no roster ligado.
+ *
+ * @param int   $user_id      WP user id.
+ * @param array $language_ids Language ids.
+ * @return array Sanitized ids.
+ */
+function zelo_ops_save_user_language_ids( $user_id, $language_ids ) {
+	$user_id = max( 0, (int) $user_id );
+	if ( $user_id < 1 ) {
+		return array();
+	}
+	$data     = zelo_get_volunteer_ops_data();
+	$catalogs = isset( $data['catalogs'] ) ? $data['catalogs'] : array();
+	$ids      = zelo_ops_sanitize_language_ids( $language_ids, $catalogs );
+	update_user_meta( $user_id, 'zelo_language_ids', $ids );
+
+	$updated = false;
+	if ( ! empty( $data['catalogs']['roster_volunteers'] ) ) {
+		foreach ( $data['catalogs']['roster_volunteers'] as &$rv ) {
+			if ( ! empty( $rv['linked_wp_user_id'] ) && (int) $rv['linked_wp_user_id'] === $user_id ) {
+				$rv['language_ids'] = $ids;
+				$updated            = true;
+			}
+		}
+		unset( $rv );
+	}
+	if ( $updated ) {
+		update_option( 'zelo_volunteer_ops_data', $data );
+	}
+	return $ids;
+}
+
+/**
+ * Migra idiomas das linhas da escala para roster e remove duplicação na escala.
+ *
+ * @param array $data Ops data.
+ * @return array
+ */
+function zelo_ops_migrate_languages_to_volunteers( $data ) {
+	if ( empty( $data['catalogs'] ) || empty( $data['schedule'] ) ) {
+		return $data;
+	}
+	$catalogs = $data['catalogs'];
+	$roster   = isset( $catalogs['roster_volunteers'] ) && is_array( $catalogs['roster_volunteers'] )
+		? $catalogs['roster_volunteers'] : array();
+
+	foreach ( $data['schedule'] as $idx => $row ) {
+		if ( ! is_array( $row ) || empty( $row['languages'] ) || ! is_array( $row['languages'] ) ) {
+			continue;
+		}
+		$wp  = isset( $row['wp_user_id'] ) ? (int) $row['wp_user_id'] : 0;
+		$rid = function_exists( 'zelo_ops_resolve_row_roster_id' )
+			? zelo_ops_resolve_row_roster_id( $row, $roster )
+			: ( isset( $row['roster_volunteer_id'] ) ? sanitize_text_field( $row['roster_volunteer_id'] ) : '' );
+
+		$lang_ids = zelo_ops_language_names_to_ids( $row['languages'], $catalogs );
+		if ( empty( $lang_ids ) ) {
+			unset( $data['schedule'][ $idx ]['languages'] );
+			continue;
+		}
+
+		if ( $rid !== '' ) {
+			foreach ( $data['catalogs']['roster_volunteers'] as &$rv ) {
+				if ( isset( $rv['id'] ) && $rv['id'] === $rid ) {
+					$existing = isset( $rv['language_ids'] ) && is_array( $rv['language_ids'] ) ? $rv['language_ids'] : array();
+					if ( empty( $existing ) ) {
+						$rv['language_ids'] = $lang_ids;
+					}
+					break;
+				}
+			}
+			unset( $rv );
+		} elseif ( $wp > 0 ) {
+			$meta = get_user_meta( $wp, 'zelo_language_ids', true );
+			if ( ! is_array( $meta ) || empty( $meta ) ) {
+				update_user_meta( $wp, 'zelo_language_ids', $lang_ids );
+			}
+		}
+
+		unset( $data['schedule'][ $idx ]['languages'] );
+	}
+
+	return $data;
+}
+
+/**
  * Horários de exibição da linha (sempre do catálogo de turnos).
  *
  * @param array $row      Schedule row.
@@ -556,9 +774,12 @@ function zelo_ops_enrich_schedule_for_output( $schedule, $catalogs ) {
 			continue;
 		}
 		list( $start, $end ) = zelo_ops_schedule_row_start_end( $row, $catalogs );
-		$row['start']        = $start;
-		$row['end']          = $end;
-		$out[]               = $row;
+		$row['start']     = $start;
+		$row['end']       = $end;
+		$wp               = isset( $row['wp_user_id'] ) ? (int) $row['wp_user_id'] : 0;
+		$rv               = isset( $row['roster_volunteer_id'] ) ? sanitize_text_field( $row['roster_volunteer_id'] ) : '';
+		$row['languages'] = zelo_ops_volunteer_language_names( $wp, $rv, $catalogs );
+		$out[]            = $row;
 	}
 	return $out;
 }
@@ -618,14 +839,7 @@ function zelo_normalize_schedule_row_with_catalogs( $row, $catalogs ) {
 
 	$name = zelo_ops_resolve_volunteer_name( $wp_uid, $rv_id, $catalogs );
 
-	$languages = array();
-	if ( isset( $row['languages'] ) && is_array( $row['languages'] ) ) {
-		$languages = array_map( 'sanitize_text_field', $row['languages'] );
-	} elseif ( isset( $row['language_ids'] ) && is_array( $row['language_ids'] ) ) {
-		$languages = zelo_ops_resolve_language_names( $row['language_ids'], $catalogs );
-	} elseif ( isset( $row['languages_csv'] ) ) {
-		$languages = zelo_parse_languages_csv( $row['languages_csv'] );
-	}
+	$languages = zelo_ops_volunteer_language_names( $wp_uid, $rv_id, $catalogs );
 
 	// location: POST may send location_id; resolve to name.
 	if ( ! empty( $row['location_id'] ) ) {
@@ -846,6 +1060,10 @@ function zelo_ops_parse_catalog_roster_from_post() {
 		if ( $id === '' ) {
 			$id = zelo_ops_catalog_new_id( 'vol_' );
 		}
+		$lang_ids = array();
+		if ( isset( $_POST['cat_vol_lang_ids'][ $i ] ) && is_array( $_POST['cat_vol_lang_ids'][ $i ] ) ) {
+			$lang_ids = array_map( 'sanitize_text_field', wp_unslash( $_POST['cat_vol_lang_ids'][ $i ] ) );
+		}
 		$rows[] = array(
 			'id'                  => $id,
 			'name'                => $name,
@@ -853,6 +1071,7 @@ function zelo_ops_parse_catalog_roster_from_post() {
 			'expected_email'      => isset( $_POST['cat_vol_email'][ $i ] ) ? sanitize_email( wp_unslash( $_POST['cat_vol_email'][ $i ] ) ) : '',
 			'registration_status' => isset( $_POST['cat_vol_reg_status'][ $i ] ) ? sanitize_key( wp_unslash( $_POST['cat_vol_reg_status'][ $i ] ) ) : 'not_invited',
 			'linked_wp_user_id'   => isset( $_POST['cat_vol_linked_uid'][ $i ] ) ? max( 0, (int) $_POST['cat_vol_linked_uid'][ $i ] ) : 0,
+			'language_ids'        => $lang_ids,
 			'active'              => zelo_ops_post_row_is_active( 'cat_vol_active', $i ),
 		);
 	}

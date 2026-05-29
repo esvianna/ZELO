@@ -6,6 +6,16 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 ---
 
+## ADR-014 — Idiomas no perfil do voluntário (2026-05-28)
+
+**Contexto:** Idiomas eram multi-select em cada linha da escala (71+ repetições); não havia campo no roster nem no cadastro PWA.
+
+**Decisão:** Catálogo global (`catalogs.languages`) inalterado; **capacidade** em `roster_volunteers.language_ids` e `user_meta` `zelo_language_ids`. Admin preenche na aba Voluntários; voluntário no cadastro/perfil (opcional). Coluna Idiomas removida da escala; `schedule[].languages` na API é **derivado** do voluntário. Migração idempotente copia idiomas legados da escala para o roster. REST: `GET /ops/languages`, `PATCH /auth/profile`.
+
+**Consequências:** Plugin **2.8.0**; PWA build **85**. Requisito de idioma por posto/local fica fora de escopo.
+
+---
+
 ## ADR-013 — Compromisso antecipado vs presença (check-in/out) (2026-05-28)
 
 **Contexto:** `zelo_volunteer_checkins.pending` misturava “não aceitei o turno” com “não fiz check-in”; avisos e e-mails não distinguiam as fases.

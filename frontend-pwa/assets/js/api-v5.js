@@ -217,6 +217,31 @@ const API = {
         }
     },
 
+    async getOpsLanguages() {
+        const url = `${this.baseUrl}/ops/languages`;
+        const r = await fetch(url);
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) {
+            throw new Error(data.message || 'Falha ao carregar idiomas');
+        }
+        return data.languages || [];
+    },
+
+    async patchProfile(payload) {
+        const url = `${this.baseUrl}/auth/profile`;
+        const r = await fetch(url, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', ...this.getAuthHeaders() },
+            credentials: 'include',
+            body: JSON.stringify(payload)
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) {
+            throw new Error(data.message || 'Falha ao salvar perfil');
+        }
+        return data;
+    },
+
     async registerVolunteer(payload) {
         const url = `${this.baseUrl}/auth/register`;
         const r = await fetch(url, {

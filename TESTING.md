@@ -148,6 +148,20 @@ Admin: Config → prazo, janelas presença, supervisores (select WP). Governanç
 
 ---
 
+## 11. Idiomas no perfil (plugin 2.8.0, PWA build 85+)
+
+| # | Passo | Esperado |
+|---|-------|----------|
+| 1 | Admin Voluntários: idiomas no roster; salvar | Escala **sem** coluna Idiomas; designações na PWA mostram idiomas do voluntário |
+| 2 | `GET /wp-json/zelo/v1/ops/languages` sem auth | Lista `{ id, name }` de idiomas ativos |
+| 3 | Cadastro PWA com 2 idiomas | Após verificar e-mail e login, perfil mostra idiomas |
+| 4 | Perfil PWA: alterar idiomas e Salvar | `PATCH /auth/profile` OK; escala atualiza filtro/exibição |
+| 5 | Migração: escala antiga só com idiomas na linha | Após atualizar plugin, idiomas no roster; linhas da escala sem `languages` gravado |
+
+---
+
+---
+
 ## 10. Escala dia + data (plugin 2.7.1, PWA build 83+)
 
 | # | Passo | Esperado |

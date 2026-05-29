@@ -10,17 +10,31 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return array
  */
 function zelo_rest_auth_user_payload( $user ) {
+	$catalogs = array();
+	if ( function_exists( 'zelo_get_volunteer_ops_data' ) ) {
+		$ops      = zelo_get_volunteer_ops_data();
+		$catalogs = isset( $ops['catalogs'] ) ? $ops['catalogs'] : array();
+	}
+	$lang_ids = function_exists( 'zelo_ops_get_volunteer_language_ids' )
+		? zelo_ops_get_volunteer_language_ids( $user->ID, '', $catalogs )
+		: array();
+	$lang_names = function_exists( 'zelo_ops_resolve_language_names' )
+		? zelo_ops_resolve_language_names( $lang_ids, $catalogs )
+		: array();
+
 	return array(
-		'id'     => $user->ID,
-		'name'   => $user->display_name,
-		'email'  => $user->user_email,
-		'avatar' => get_avatar_url( $user->ID ),
-		'roles'  => $user->roles,
-		'caps'   => array(
-			'view_ops'        => user_can( $user, 'zelo_view_ops' ),
-			'checkin_ops'     => user_can( $user, 'zelo_checkin_ops' ),
-			'reallocate_ops'  => user_can( $user, 'zelo_reallocate_volunteer' ),
-			'manage_ops'      => user_can( $user, 'zelo_manage_ops' ),
+		'id'            => $user->ID,
+		'name'          => $user->display_name,
+		'email'         => $user->user_email,
+		'avatar'        => get_avatar_url( $user->ID ),
+		'roles'         => $user->roles,
+		'language_ids'  => $lang_ids,
+		'languages'     => $lang_names,
+		'caps'          => array(
+			'view_ops'       => user_can( $user, 'zelo_view_ops' ),
+			'checkin_ops'    => user_can( $user, 'zelo_checkin_ops' ),
+			'reallocate_ops' => user_can( $user, 'zelo_reallocate_volunteer' ),
+			'manage_ops'     => user_can( $user, 'zelo_manage_ops' ),
 		),
 	);
 }
@@ -77,8 +91,72 @@ add_action(
 				'permission_callback' => '__return_true',
 			)
 		);
+
+		register_rest_route(
+			'zelo/v1',
+			'/auth/profile',
+			array(
+				'methods'             => 'PATCH',
+				'callback'            => 'zelo_api_update_profile',
+				'permission_callback' => function () {
+					return is_user_logged_in();
+				},
+			)
+		);
 	}
 );
+
+/**
+ * Extrai language_ids de um pedido REST (array ou JSON).
+ *
+ * @param WP_REST_Request $request Request.
+ * @return array
+ */
+function zelo_rest_parse_language_ids_param( $request ) {
+	$raw = $request->get_param( 'language_ids' );
+	if ( ! is_array( $raw ) ) {
+		$json = $request->get_json_params();
+		if ( is_array( $json ) && isset( $json['language_ids'] ) && is_array( $json['language_ids'] ) ) {
+			$raw = $json['language_ids'];
+		} else {
+			return array();
+		}
+	}
+	return array_map( 'sanitize_text_field', $raw );
+}
+
+/**
+ * @param WP_REST_Request $request Request.
+ */
+function zelo_api_update_profile( $request ) {
+	$user = zelo_rest_resolve_user_from_cookie();
+	if ( ! $user ) {
+		return new WP_Error(
+			'zelo_not_logged_in',
+			__( 'Sessão não encontrada. Faça login novamente.', 'zelo-assistente' ),
+			array( 'status' => 401 )
+		);
+	}
+
+	if ( ! function_exists( 'zelo_ops_save_user_language_ids' ) ) {
+		return new WP_Error( 'zelo_unavailable', __( 'Recurso indisponível.', 'zelo-assistente' ), array( 'status' => 500 ) );
+	}
+
+	$lang_ids = zelo_rest_parse_language_ids_param( $request );
+	$saved    = zelo_ops_save_user_language_ids( $user->ID, $lang_ids );
+	$catalogs = array();
+	$ops      = zelo_get_volunteer_ops_data();
+	$catalogs = isset( $ops['catalogs'] ) ? $ops['catalogs'] : array();
+
+	return rest_ensure_response(
+		array(
+			'success'      => true,
+			'language_ids' => $saved,
+			'languages'    => zelo_ops_resolve_language_names( $saved, $catalogs ),
+			'user'         => zelo_rest_auth_user_payload( $user ),
+		)
+	);
+}
 
 /**
  * @param WP_REST_Request $request Request.

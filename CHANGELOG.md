@@ -9,6 +9,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 ## [Unreleased]
 
 ### Adicionado
+- Plugin **2.8.0**: idiomas no perfil — `roster.language_ids`, `user_meta` `zelo_language_ids`, herança na API, migração escala→roster; REST `GET /ops/languages`, `PATCH /auth/profile`.
+- PWA build **85**: cadastro e perfil com multi-select de idiomas (opcional).
 - Plugin **2.7.1**: rótulos dia+data (`zelo_ops_day_label`), governança sexta/sábado/domingo, turnos default 07:00–12:30 / 12:30–18:30, migração idempotente.
 - PWA build **83**: `getOpsDayLabel` com data de `event_dates`; filtros da escala com data.
 - Guia «Cadastrar escala Congresso» em `docs/DEPLOY-ZELO-PWA.md`.

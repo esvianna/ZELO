@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-05-28** (UX escala Congresso).
+> Última atualização: **2026-05-28** (idiomas no perfil do voluntário).
 
 ---
 
@@ -14,13 +14,15 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 **UX escala Congresso (2.7.1 / PWA 83–84):** rótulos dia+data, governança 3 dias, turnos 07:00–18:30, guia em `docs/DEPLOY-ZELO-PWA.md`.
 
-**Próximo backlog:** deploy 2.7.2 + build 84; smoke §9–§10; Web Push VAPID.
+**Idiomas no perfil (2.8.0 / PWA 85):** roster + user_meta; escala sem coluna Idiomas; cadastro/perfil PWA; ADR-014.
+
+**Próximo backlog:** deploy 2.8.0 + build 85; smoke §9–§11; Web Push VAPID.
 
 ---
 
 ## O que já foi implementado
 
-### Backend (`zelo-assistente` v2.7.2)
+### Backend (`zelo-assistente` v2.8.0)
 
 - [x] `zelo_volunteer_commitments` + REST `/ops/assignments/{id}/commit`
 - [x] `zelo_link_requests` + onboarding admin + matching cadastro por e-mail
@@ -29,17 +31,19 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 - [x] E-mails estendidos (compromisso pendente, 1 dia antes, check-in/out abertos)
 - [x] Stub push; hook `zelo_notification_dispatch`
 - [x] Rótulos dia+data; governança 3 dias; turnos Congresso; migração idempotente
+- [x] Idiomas no perfil (roster + WP); herança na API; REST languages/profile
 
-### Frontend (PWA build 84)
+### Frontend (PWA build 85)
 
 - [x] Aceitar/recusar turno; check-in/out com janelas; supervisor em nome
 - [x] Hub avisos: `commitment-*`, `checkin-*`, `checkout-*`, vínculo pendente
 - [x] Prompt notificações; SW handlers push (preparação)
 - [x] `getOpsDayLabel` com data; filtros escala com data
+- [x] Cadastro/perfil: idiomas opcionais
 
 ### Governança docs
 
-- [x] ADR-013; TESTING §9–§10; guia Congresso em `docs/DEPLOY-ZELO-PWA.md`
+- [x] ADR-013–014; TESTING §9–§11; guia Congresso em `docs/DEPLOY-ZELO-PWA.md`
 
 ---
 
@@ -47,7 +51,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Prioridade | Item | Notas |
 |------------|------|-------|
-| **Alta** | Deploy plugin 2.7.2 + PWA 84 | `TESTING.md` §9–§10 |
+| **Alta** | Deploy plugin 2.8.0 + PWA 85 | `TESTING.md` §9–§11 |
 | **Média** | Web Push VAPID + subscribe real | Stub 501 hoje |
 | **Média** | `/ops/export` CSV | Stub 501 |
 | **Baixa** | Inbox avisos servidor (B10) | Fase 2 UX |
@@ -78,16 +82,16 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | Campo | Valor |
 |-------|--------|
 | Data | 2026-05-28 |
-| Feito | UX escala Congresso + bugfix check-in (`endMs` null sem `item.end`, build 84) |
-| Build PWA | **84** |
-| Plugin | **2.7.1** |
-| Próximo passo | Deploy + smoke TESTING §9–§10 |
+| Feito | Idiomas no perfil voluntário (roster, API, PWA cadastro/perfil) |
+| Build PWA | **85** |
+| Plugin | **2.8.0** |
+| Próximo passo | Deploy + smoke TESTING §11 |
 
 ---
 
 ## Como retomar em 30 segundos
 
 1. Leia **Onde paramos** acima.
-2. `TESTING.md` §9–§10 antes do evento.
+2. `TESTING.md` §9–§11 antes do evento.
 3. Admin → Operação Voluntários → Config + Onboarding.
 4. `AGENTS.md` + `DECISIONS.md` (ADR-013).
