@@ -18,14 +18,21 @@ function zelo_ops_require_fpdf() {
 	if ( class_exists( 'FPDF', false ) ) {
 		return true;
 	}
-	$path = ZELO_PLUGIN_DIR . 'inc/lib/fpdf.php';
-	if ( ! file_exists( $path ) ) {
+	$path     = ZELO_PLUGIN_DIR . 'inc/lib/fpdf.php';
+	$font_dir = ZELO_PLUGIN_DIR . 'inc/lib/font/';
+	if ( ! file_exists( $path ) || ! is_dir( $font_dir ) ) {
 		return false;
+	}
+	if ( ! defined( 'FPDF_FONTPATH' ) ) {
+		define( 'FPDF_FONTPATH', $font_dir );
 	}
 	if ( PHP_VERSION_ID >= 80200 ) {
 		$code = file_get_contents( $path );
 		if ( is_string( $code ) && strpos( $code, 'AllowDynamicProperties' ) === false ) {
-			$code = str_replace( "class FPDF\n", "#[\\AllowDynamicProperties]\nclass FPDF\n", $code, 1 );
+			$pos = strpos( $code, 'class FPDF' );
+			if ( false !== $pos ) {
+				$code = substr_replace( $code, "#[\\AllowDynamicProperties]\n", $pos, 0 );
+			}
 			$tmp  = function_exists( 'wp_tempnam' ) ? wp_tempnam( 'zelo-fpdf' ) : false;
 			if ( $tmp ) {
 				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents

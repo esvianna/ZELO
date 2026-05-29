@@ -114,7 +114,8 @@ Configurar `baseUrl` / `siteUrl` em `frontend-pwa/assets/js/api-v5.js` para o am
 | `/ops/export` sem `zelo_manage_ops` | HTTP 403 |
 | `/ops/export?format=pdf` com gestor + nonce | HTTP 200, `Content-Type: application/pdf` |
 | `/ops/export?format=csv` com gestor + nonce | HTTP 200, CSV com cabeçalho `dia;turno;...` |
-| Falha FPDF (plugin &lt; 2.9.1) | JSON `zelo_export_pdf_failed`, não página crítica HTML |
+| Deploy plugin sem `inc/lib/font/*.php` | JSON `zelo_export_pdf_failed` (helveticab.php, etc.) |
+| Falha FPDF (plugin &lt; 2.9.3) | JSON `zelo_export_pdf_failed`, não página crítica HTML |
 | Rate limit cadastro (8+/hora/IP) | HTTP 429 |
 | Login sem e-mail verificado | HTTP 403 |
 

@@ -2,6 +2,17 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.9.3] - 2026-05-29
+
+### Corrigido
+- Export PDF: pasta `inc/lib/font/` com definições core FPDF (Helvetica bold, etc.) — faltava no deploy.
+- `FPDF_FONTPATH` definido para o plugin (evita path errado quando FPDF é carregado via ficheiro temporário em PHP 8.2+).
+
+## [2.9.2] - 2026-05-29
+
+### Corrigido
+- Export PDF: `zelo_ops_require_fpdf()` — `str_replace(..., 1)` quebrava no PHP 8+ (4º argumento por referência); uso de `substr_replace` para injetar `AllowDynamicProperties`.
+
 ## [2.9.1] - 2026-05-29
 
 ### Corrigido

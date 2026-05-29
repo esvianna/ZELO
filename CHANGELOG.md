@@ -13,6 +13,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 - Labels de catálogo admin em EN/ES (fase 2b i18n).
 
 ### Corrigido
+- Plugin **2.9.3**: export PDF — fontes FPDF em `inc/lib/font/` + `FPDF_FONTPATH`.
+- Plugin **2.9.2**: export PDF — correção `str_replace` / `AllowDynamicProperties` em PHP 8+.
 - Plugin **2.9.1**: export PDF escala — exceções FPDF/PHP 8.2 tratadas; PDF em paisagem; mensagem JSON em falha (em vez de página crítica WP).
 - PWA build **90**: mensagem de erro do export PDF lê JSON da API.
 - PWA build **91**: `escapeHtml` no turno (`shift`) dos homens-chave na governança da escala.
