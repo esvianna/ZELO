@@ -446,6 +446,7 @@ const app = {
             // localStorage.removeItem('zelo_locais'); // Clear data cache
 
             // 4. Reload
+            this._languageCatalogCache = null;
             window.location.reload(true);
         }
     },
@@ -453,16 +454,17 @@ const app = {
     _languageCatalogCache: null,
 
     async getLanguageCatalog() {
-        if (this._languageCatalogCache) {
+        if (this._languageCatalogCache !== null) {
             return this._languageCatalogCache;
         }
         try {
-            this._languageCatalogCache = await API.getOpsLanguages();
+            const langs = await API.getOpsLanguages();
+            this._languageCatalogCache = Array.isArray(langs) ? langs : [];
+            return this._languageCatalogCache;
         } catch (e) {
             console.warn('Idiomas', e);
-            this._languageCatalogCache = [];
+            return [];
         }
-        return this._languageCatalogCache;
     },
 
     async fillLanguageSelect(selectEl, selectedIds = []) {

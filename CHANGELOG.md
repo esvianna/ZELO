@@ -21,6 +21,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 - PWA build **77**: view Previsão do tempo, cache `localStorage` (`zelo_clima`).
 
 ### Corrigido
+- PWA build **86**: `getLanguageCatalog()` — não cacheia `[]` em falha de API; nova visita a cadastro/perfil tenta de novo.
 - Plugin **2.7.2**: aba Onboarding — exibe todas as designações da escala; contagem por voluntário alinhada ao vínculo real (nome/WP/roster).
 - PWA build **84**: `canCheckinAssignment` — sem `item.end`, `endMs` volta a ser `null` (build 82 tinha alterado para fallback de 4h por engano); `canCheckoutAssignment` restaura chamada direta a `getAssignmentEndMs` após guard de `startMs`.
 - PWA build **82**: `canCheckoutAssignment` / `getAssignmentEndMs` — evita `NaN` quando `getAssignmentStartMs` retorna null (janela de checkout bloqueada de forma segura).
