@@ -66,10 +66,22 @@ function zelo_register_api_routes() {
 		'/ops/export',
 		array(
 			'methods'             => 'GET',
-			'callback'            => 'zelo_ops_export_stub',
-			'permission_callback' => function () {
-				return is_user_logged_in() && current_user_can( 'manage_options' );
-			},
+			'callback'            => 'zelo_ops_export',
+			'permission_callback' => 'zelo_rest_can_export_ops',
+			'args'                => array(
+				'format' => array(
+					'type'    => 'string',
+					'default' => 'pdf',
+				),
+				'day'    => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+				'shift'  => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+			),
 		)
 	);
 
@@ -92,19 +104,6 @@ function zelo_register_api_routes() {
 	) );
 }
 add_action( 'rest_api_init', 'zelo_register_api_routes' );
-
-/**
- * Exportação CSV/PDF: pós-MVP (stub).
- *
- * @param WP_REST_Request $request Request.
- */
-function zelo_ops_export_stub( $request ) {
-	return new WP_Error(
-		'zelo_export_not_implemented',
-		__( 'Exportação ainda não implementada (pós-MVP).', 'zelo-assistente' ),
-		array( 'status' => 501 )
-	);
-}
 
 /**
  * Catálogo público de idiomas (cadastro sem login).

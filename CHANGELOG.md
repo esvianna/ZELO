@@ -9,10 +9,14 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 ## [Unreleased]
 
 ### Planejado (backlog UX)
-- Escala: filtros idioma/responsável/voluntário; listagem por dia (PDF); links WhatsApp.
-- Home: secção «Mais opções» expandida por defeito.
+- Escala: filtros responsável/voluntário; links WhatsApp.
+- Labels de catálogo admin em EN/ES (fase 2b i18n).
 
 ### Adicionado
+- Plugin **2.9.0**: `GET /ops/export` PDF (e CSV) com FPDF; permissão `zelo_manage_ops`; rate limit.
+- PWA build **89**: snapshots offline (`zelo_locais`, `zelo_volunteer_ops`), badge stale, `default-avatar.png` precache, escala por dia em tabela, botão exportar PDF, i18n auditoria PT/EN/ES, home extras expandida.
+
+### Adicionado (anterior)
 - Plugin **2.8.0**: idiomas no perfil — `roster.language_ids`, `user_meta` `zelo_language_ids`, herança na API, migração escala→roster; REST `GET /ops/languages`, `PATCH /auth/profile`.
 - PWA build **85**: cadastro e perfil com multi-select de idiomas (opcional).
 - Plugin **2.7.1**: rótulos dia+data (`zelo_ops_day_label`), governança sexta/sábado/domingo, turnos default 07:00–12:30 / 12:30–18:30, migração idempotente.

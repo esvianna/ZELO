@@ -88,7 +88,7 @@ Desalinhamento = usuários presos em cache antigo.
 | GET | `/auth/verify-email` | Público | Token de verificação |
 | GET | `/ops/voluntarios` | Auth ou público* | *Ver filtro temporário |
 | POST | `/ops/checkin`, `/checkout`, `/reallocate` | Capabilities | |
-| GET | `/ops/export` | Admin | Stub 501 |
+| GET | `/ops/export` | `zelo_manage_ops` | PDF/CSV escala |
 | * | `/ops/swap-requests` | Capabilities | Substituições |
 
 ## O que NÃO fazer sem pedido explícito

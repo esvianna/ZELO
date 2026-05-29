@@ -2483,3 +2483,147 @@ body {
     padding: 2rem 1rem;
     color: var(--text-secondary);
 }
+
+/* Offline stale + escala por dia */
+.zelo-stale-badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #92400e;
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    border-radius: 999px;
+    padding: 0.2rem 0.55rem;
+}
+
+.zelo-stale-banner {
+    margin-bottom: 0.75rem;
+}
+
+.ops-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.ops-export-btn {
+    flex-shrink: 0;
+}
+
+.ops-mine-block {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: #f0f9ff;
+    border-radius: 8px;
+    border: 1px solid #bae6fd;
+}
+
+.ops-mine-block h3 {
+    margin: 0 0 0.5rem;
+}
+
+.ops-mine-block ul {
+    margin: 0;
+    padding-left: 1.2rem;
+}
+
+.ops-governance-details {
+    margin-bottom: 1rem;
+}
+
+.ops-governance-details summary {
+    cursor: pointer;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.ops-day-group {
+    margin-bottom: 1.25rem;
+}
+
+.ops-day-group-title {
+    margin: 0 0 0.5rem;
+    font-size: 1.05rem;
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 0.25rem;
+}
+
+.ops-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.ops-schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    background: var(--surface-color);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: var(--box-shadow);
+}
+
+.ops-schedule-table th,
+.ops-schedule-table td {
+    padding: 0.5rem 0.45rem;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: left;
+    vertical-align: top;
+}
+
+.ops-schedule-table thead th {
+    background: #f1f5f9;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.ops-schedule-table tbody tr:nth-child(even) {
+    background: #f8fafc;
+}
+
+.ops-schedule-row--mine {
+    background: #eff6ff !important;
+}
+
+.ops-table-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.ops-schedule-heading {
+    margin-top: 0.5rem;
+}
+
+@media (max-width: 720px) {
+    .ops-schedule-table thead {
+        display: none;
+    }
+
+    .ops-schedule-table tr {
+        display: block;
+        margin-bottom: 0.75rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 0.35rem;
+    }
+
+    .ops-schedule-table td {
+        display: block;
+        border: none;
+        padding: 0.25rem 0.35rem;
+    }
+
+    .ops-schedule-table td::before {
+        content: attr(data-label) ": ";
+        font-weight: 600;
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+    }
+}

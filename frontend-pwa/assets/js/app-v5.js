@@ -19,6 +19,50 @@ const app = {
         installPrompt: null // Store PWA install prompt
     },
 
+    _dataStale: {
+        locais: false,
+        ops: false,
+        clima: false,
+        evento: false
+    },
+
+    // --- Helpers ---
+    renderStaleBadge(scope) {
+        const key = scope === 'ops' ? 'data_stale_ops' : scope === 'locais' ? 'data_stale_locais' : 'data_stale_generic';
+        return `<span class="zelo-stale-badge" role="status">${this.escapeHtml(i18n.t(key))}</span>`;
+    },
+
+    syncStaleFlags() {
+        if (typeof API === 'undefined' || !API.lastFetchFromCache) return;
+        this._dataStale.locais = !!API.lastFetchFromCache.locais;
+        this._dataStale.ops = !!API.lastFetchFromCache.volunteerOps;
+        this._dataStale.clima = !!API.lastFetchFromCache.clima;
+        this._dataStale.evento = !!API.lastFetchFromCache.evento;
+    },
+
+    async cacheUserAvatar(url) {
+        if (!url || typeof caches === 'undefined') return;
+        try {
+            const u = new URL(url, window.location.href);
+            if (u.origin !== window.location.origin) {
+                return;
+            }
+            const res = await fetch(url, { mode: 'cors', credentials: 'include' });
+            if (!res.ok) return;
+            const cacheName = 'zelo-cache-v' + (typeof window.ZELO_APP_BUILD !== 'undefined' ? window.ZELO_APP_BUILD : '89');
+            const cache = await caches.open(cacheName);
+            await cache.put(url, res);
+        } catch (e) {
+            console.warn('Avatar cache skipped', e);
+        }
+    },
+
+    getAvatarUrl() {
+        const fallback = 'images/default-avatar.png';
+        if (!this.auth.user || !this.auth.user.avatar) return fallback;
+        return this.auth.user.avatar;
+    },
+
     // --- Helpers ---
     calculateDistance(lat1, lon1, lat2, lon2) {
         const R = 6371; // Radius of the earth in km
@@ -280,7 +324,7 @@ const app = {
                 const data = await response.json();
 
                 if (!response.ok) {
-                    const msg = data.message || data.code || 'Erro ao fazer login';
+                    const msg = data.message || data.code || i18n.t('auth_login_error');
                     throw new Error(msg);
                 }
 
@@ -291,6 +335,7 @@ const app = {
                     const synced = await API.refreshSession();
                     if (synced) {
                         this.user = synced;
+                        app.cacheUserAvatar(synced.avatar);
                     }
 
                     this.updateUI();
@@ -299,7 +344,7 @@ const app = {
                         app.data.volunteerOps = await app.loadVolunteerOps(true);
                         if (app._opsAuthFailed) {
                             const msg = synced
-                                ? 'Login aceito, mas a escala operacional não pôde ser carregada (sessão ou permissão). Saia e entre novamente.'
+                                ? i18n.t('auth_login_ops_failed')
                                 : API.getSessionErrorMessage();
                             throw new Error(msg);
                         }
@@ -315,12 +360,12 @@ const app = {
                     document.getElementById('login-password').value = '';
 
                 } else {
-                    throw new Error(data.message || 'Erro ao fazer login');
+                    throw new Error(data.message || i18n.t('auth_login_error'));
                 }
 
             } catch (err) {
                 console.error('Login error:', err);
-                errorEl.textContent = err.message || 'Erro de conexão. Tente novamente.';
+                errorEl.textContent = err.message || i18n.t('auth_connection_error');
                 errorEl.style.display = 'block';
             } finally {
                 submitBtn.disabled = false;
@@ -353,21 +398,23 @@ const app = {
                 });
                 errEl.className = 'text-success';
                 errEl.style.display = 'block';
-                errEl.textContent = 'Cadastro criado. Verifique seu e-mail para o link de confirmação.';
+                errEl.textContent = i18n.t('auth_register_success');
                 document.getElementById('register-password').value = '';
             } catch (e) {
                 errEl.className = 'text-danger';
-                errEl.textContent = e.message || 'Erro';
+                errEl.textContent = e.message || i18n.t('error_generic');
                 errEl.style.display = 'block';
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Criar conta';
+                btn.textContent = i18n.t('auth_create_account');
             }
         },
 
         logout() {
             this.user = null;
             localStorage.removeItem('zelo_user');
+            localStorage.removeItem('zelo_volunteer_ops');
+            localStorage.removeItem('zelo_volunteer_ops_mine');
             app.data.volunteerOps = null;
             this.clearOpsAuthFailure();
             this.refreshAuthChrome();
@@ -386,8 +433,8 @@ const app = {
             const iconContainer = document.getElementById('user-auth-indicator');
 
             if (this.user && iconContainer) {
-                const avatarUrl = this.user.avatar || 'images/default-avatar.png';
-                iconContainer.innerHTML = `<img src="${avatarUrl}" alt="">`;
+                const avatarUrl = app.getAvatarUrl();
+                iconContainer.innerHTML = `<img src="${avatarUrl}" alt="" onerror="this.onerror=null;this.src='images/default-avatar.png';">`;
                 iconContainer.setAttribute('title', this.user.name || i18n.t('my_profile'));
             } else if (iconContainer) {
                 iconContainer.innerHTML = `
@@ -395,7 +442,7 @@ const app = {
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                             <circle cx="12" cy="7" r="4"></circle>
                         </svg>`;
-                iconContainer.setAttribute('title', 'Entrar');
+                iconContainer.setAttribute('title', i18n.t('auth_sign_in'));
             }
 
             const pName = document.getElementById('profile-name');
@@ -404,11 +451,17 @@ const app = {
             const pAvatar = document.getElementById('profile-avatar');
 
             if (this.user) {
-                const avatarUrl = this.user.avatar || 'images/default-avatar.png';
+                const avatarUrl = app.getAvatarUrl();
                 if (pName) pName.textContent = this.user.name;
                 if (pEmail) pEmail.textContent = this.user.email;
                 if (pRole) pRole.textContent = app.getOpsRoleLabel() || this.user.roles[0] || i18n.t('visitor_role');
-                if (pAvatar) pAvatar.src = avatarUrl;
+                if (pAvatar) {
+                    pAvatar.src = avatarUrl;
+                    pAvatar.onerror = function () {
+                        this.onerror = null;
+                        this.src = 'images/default-avatar.png';
+                    };
+                }
             }
 
             app.updateBottomNavForVolunteer();
@@ -421,7 +474,7 @@ const app = {
         },
 
         async forceUpdate() {
-            if (!confirm('Isso irá recarregar o aplicativo e baixar a versão mais recente. Deseja continuar?')) return;
+            if (!confirm(i18n.t('confirm_force_update'))) return;
 
             console.log('Forcing update...');
 
@@ -565,18 +618,23 @@ const app = {
             this.data.evento = evento || {};
             this.data.clima = clima || null;
             this.data.categoriesMeta = this.buildCategoryMeta(categorias || []);
+            this.syncStaleFlags();
 
             if (this.auth.user && this.auth.user.caps && this.auth.user.caps.view_ops) {
                 const synced = await API.refreshSession();
                 if (synced) {
                     this.auth.user = synced;
+                    app.cacheUserAvatar(synced.avatar);
                     // force=true: após refreshSession ok, ignorar _opsAuthFailed de tentativa anterior
                     this.data.volunteerOps = await this.loadVolunteerOps(true);
                     if (!this._opsAuthFailed) {
                         this.auth.clearOpsAuthFailure();
                     }
                 } else {
-                    this.auth.handleOpsAuthFailure();
+                    const cachedOps = await this.loadVolunteerOps(true);
+                    if (!cachedOps) {
+                        this.auth.handleOpsAuthFailure();
+                    }
                 }
             }
 
@@ -1815,9 +1873,17 @@ const app = {
             if (data) {
                 this.data.volunteerOps = data;
                 this._opsAuthFailed = false;
+                this.syncStaleFlags();
                 app.updateNotificationsBadge();
+            } else if (!force) {
+                const fallback = API.readSnapshot(mineOnly ? 'zelo_volunteer_ops_mine' : 'zelo_volunteer_ops');
+                if (fallback) {
+                    this.data.volunteerOps = fallback;
+                    API.lastFetchFromCache.volunteerOps = true;
+                    this.syncStaleFlags();
+                }
             }
-            return data;
+            return data || this.data.volunteerOps;
         })().finally(() => {
             this._volunteerOpsPromise = null;
         });
@@ -1898,7 +1964,7 @@ const app = {
 
     async doCommit(assignmentId, accept, onBehalf = false) {
         try {
-            const reason = accept ? '' : (prompt('Motivo (opcional):') || '');
+            const reason = accept ? '' : (prompt(i18n.t('ops_decline_reason')) || '');
             const result = await API.commitAssignment(assignmentId, accept ? 'accepted' : 'declined', reason, onBehalf);
             if (result.data) this.data.volunteerOps = result.data;
             else if (result.commitments) {
@@ -1908,7 +1974,7 @@ const app = {
             if (this.router.currentView === 'home') this.renderHomeVolunteerDashboard();
             this.updateNotificationsBadge();
         } catch (err) {
-            alert(err.message || 'Não foi possível confirmar.');
+            alert(err.message || i18n.t('ops_commit_fail'));
         }
     },
 
@@ -1935,7 +2001,8 @@ const app = {
     toggleHomeVisitorExtrasCollapse() {
         const el = document.getElementById('home-visitor-extras');
         if (!el) return;
-        if (this.canViewOps() && this.auth.user) {
+        const pref = localStorage.getItem('zelo_home_extras_open');
+        if (pref === '0') {
             el.removeAttribute('open');
         } else {
             el.setAttribute('open', '');
@@ -2050,14 +2117,14 @@ const app = {
     },
 
     async requestSwap(assignmentId) {
-        const reason = prompt('Motivo (opcional):') || '';
+        const reason = prompt(i18n.t('ops_decline_reason')) || '';
         try {
             await API.createSwapRequest(assignmentId, reason);
-            alert('Pedido de substituição enviado.');
+            alert(i18n.t('ops_swap_sent'));
             await this.loadVolunteerOps();
             this.renderVolunteerOps();
         } catch (e) {
-            alert(e.message || 'Falha ao enviar pedido.');
+            alert(e.message || i18n.t('ops_swap_fail'));
         }
     },
 
@@ -2070,13 +2137,13 @@ const app = {
             if (res.data) this.data.volunteerOps = res.data;
             this.renderVolunteerOps();
         } catch (e) {
-            alert(e.message || 'Falha.');
+            alert(e.message || i18n.t('ops_swap_generic_fail'));
         }
     },
 
     resolveSwapPrompt(id) {
-        const name = prompt('Nome do substituto (opcional):') || '';
-        const rid = parseInt(prompt('ID WordPress do substituto (0 se não aplicar):') || '0', 10) || 0;
+        const name = prompt(i18n.t('ops_swap_substitute_name')) || '';
+        const rid = parseInt(prompt(i18n.t('ops_swap_substitute_id')) || '0', 10) || 0;
         this.resolveSwap(id, 'approved', name, rid);
     },
 
@@ -2086,7 +2153,7 @@ const app = {
             return;
         }
         if (!this.canViewOps()) {
-            alert('Seu perfil não possui acesso à escala operacional.');
+            alert(i18n.t('ops_no_access'));
             return;
         }
         if (this._opsAuthFailed) {
@@ -2125,7 +2192,7 @@ const app = {
             }
             this.updateNotificationsBadge();
         } catch (err) {
-            alert(err.message || 'Não foi possível confirmar chegada.');
+            alert(err.message || i18n.t('ops_checkin_fail'));
         }
     },
 
@@ -2140,13 +2207,13 @@ const app = {
             }
             this.updateNotificationsBadge();
         } catch (err) {
-            alert(err.message || 'Não foi possível confirmar saída.');
+            alert(err.message || i18n.t('ops_checkout_fail'));
         }
     },
 
     async doReallocate(assignmentId) {
         if (!this.canReallocateOps()) return;
-        const newLocation = prompt('Informe o novo local de atuação:');
+        const newLocation = prompt(i18n.t('reallocate_prompt'));
         if (!newLocation) return;
         try {
             const result = await API.reallocateVolunteer(assignmentId, newLocation);
@@ -2157,7 +2224,108 @@ const app = {
             }
             this.updateNotificationsBadge();
         } catch (err) {
-            alert('Falha na realocação.');
+            alert(i18n.t('reallocate_fail'));
+        }
+    },
+
+    renderOpsGovernanceCard(day, data) {
+        const keymen = data.keymen
+            ? Object.entries(data.keymen).map(([shift, person]) => `${shift}: ${this.escapeHtml(person)}`).join(' | ')
+            : '-';
+        return `
+            <div class="ops-governance-card">
+                <h4>${this.escapeHtml(this.getOpsDayLabel(day))}</h4>
+                <p><strong>${this.escapeHtml(i18n.t('governance_group_a'))}:</strong> ${this.escapeHtml(data.group_a_supervisor || '-')}</p>
+                <p><strong>${this.escapeHtml(i18n.t('governance_group_b'))}:</strong> ${this.escapeHtml(data.group_b_supervisor || '-')}</p>
+                <p><strong>${this.escapeHtml(i18n.t('governance_app_supervisor'))}:</strong> ${this.escapeHtml(data.app_supervisor || '-')}</p>
+                <p><strong>${this.escapeHtml(i18n.t('governance_keymen'))}:</strong> ${keymen}</p>
+            </div>`;
+    },
+
+    renderOpsScheduleRow(item, uid) {
+        const mineRow = Number(item.wp_user_id) === uid;
+        const supRow = this.canSuperviseOps() && !mineRow;
+        const actions = this.renderAssignmentActions(item, supRow);
+        const swapBtn = mineRow && this.getCommitmentStatus(item.id) === 'declined'
+            ? `<button type="button" class="ops-btn ops-btn--accent" onclick="app.requestSwap('${String(item.id).replace(/'/g, "\\'")}')">${this.escapeHtml(i18n.t('ops_request_swap'))}</button>` : '';
+        const actionCell = (actions || swapBtn)
+            ? `<div class="ops-table-actions">${actions}${this.canReallocateOps() ? `<button type="button" class="ops-btn" onclick="app.doReallocate('${String(item.id).replace(/'/g, "\\'")}')">${this.escapeHtml(i18n.t('ops_reallocate'))}</button>` : ''}${swapBtn}</div>`
+            : '';
+        const timeRange = `${item.start || '-'} ${i18n.t('ops_time_to')} ${item.end || '-'}`;
+        return `
+            <tr class="ops-schedule-row${mineRow ? ' ops-schedule-row--mine' : ''}">
+                <td data-label="${this.escapeHtml(i18n.t('ops_shift_label'))}">${this.escapeHtml(item.shift || '-')}</td>
+                <td data-label="${this.escapeHtml(i18n.t('ops_time_label'))}">${this.escapeHtml(timeRange)}</td>
+                <td data-label="${this.escapeHtml(i18n.t('ops_location_label'))}">${this.escapeHtml(item.location || '-')}</td>
+                <td data-label="${this.escapeHtml(i18n.t('ops_volunteer_label'))}">${this.escapeHtml(item.volunteer_name || i18n.t('ops_volunteer_default'))}</td>
+                <td data-label="${this.escapeHtml(i18n.t('ops_languages_label'))}">${this.escapeHtml((item.languages || []).join(', ') || '-')}</td>
+                <td data-label="${this.escapeHtml(i18n.t('ops_status_label'))}">${this.getCommitmentBadge(item.id)} ${this.getOpsStatusBadge(item.id)}</td>
+                ${actionCell ? `<td class="ops-table-actions-cell">${actionCell}</td>` : '<td></td>'}
+            </tr>`;
+    },
+
+    renderOpsDayGroups(items, uid, showActions) {
+        const dayOrder = ['sexta', 'sabado', 'domingo'];
+        const byDay = {};
+        items.forEach((item) => {
+            const d = item.day || 'outros';
+            if (!byDay[d]) byDay[d] = [];
+            byDay[d].push(item);
+        });
+        const sections = [];
+        dayOrder.forEach((day) => {
+            const rows = byDay[day];
+            if (!rows || !rows.length) return;
+            const tableRows = rows.map((item) => this.renderOpsScheduleRow(item, uid)).join('');
+            sections.push(`
+                <section class="ops-day-group">
+                    <h3 class="ops-day-group-title">${this.escapeHtml(this.getOpsDayLabel(day))}</h3>
+                    <div class="ops-table-wrap">
+                        <table class="ops-schedule-table">
+                            <thead>
+                                <tr>
+                                    <th>${this.escapeHtml(i18n.t('ops_shift_label'))}</th>
+                                    <th>${this.escapeHtml(i18n.t('ops_time_label'))}</th>
+                                    <th>${this.escapeHtml(i18n.t('ops_location_label'))}</th>
+                                    <th>${this.escapeHtml(i18n.t('ops_volunteer_label'))}</th>
+                                    <th>${this.escapeHtml(i18n.t('ops_languages_label'))}</th>
+                                    <th>${this.escapeHtml(i18n.t('ops_status_label'))}</th>
+                                    ${showActions ? `<th>${this.escapeHtml(i18n.t('ops_actions_label'))}</th>` : '<th></th>'}
+                                </tr>
+                            </thead>
+                            <tbody>${tableRows}</tbody>
+                        </table>
+                    </div>
+                </section>`);
+        });
+        return sections.join('') || `<div class="loading">${this.escapeHtml(i18n.t('ops_no_schedule_filtered'))}</div>`;
+    },
+
+    async downloadOpsExportPdf() {
+        const day = document.getElementById('ops-day-filter')?.value || '';
+        const shift = document.getElementById('ops-shift-filter')?.value || '';
+        const btn = document.getElementById('ops-export-pdf-btn');
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = i18n.t('ops_exporting');
+        }
+        try {
+            const blob = await API.downloadOpsExport({ day, shift });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `zelo-escala${day ? '-' + day : ''}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        } catch (e) {
+            alert(e.message || i18n.t('ops_export_error'));
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = i18n.t('ops_export_pdf');
+            }
         }
     },
 
@@ -2166,20 +2334,21 @@ const app = {
         if (!container) return;
 
         if (!this.auth.user) {
-            container.innerHTML = '<div class="loading">Faça login para acessar a escala operacional.</div>';
+            container.innerHTML = `<div class="loading">${this.escapeHtml(i18n.t('ops_login_required'))}</div>`;
             return;
         }
         if (!this.canViewOps()) {
-            container.innerHTML = '<div class="loading">Seu perfil não possui permissão para visualizar a escala.</div>';
+            container.innerHTML = `<div class="loading">${this.escapeHtml(i18n.t('ops_no_permission'))}</div>`;
             return;
         }
 
         const ops = this.data.volunteerOps;
         if (!ops || !Array.isArray(ops.schedule)) {
-            container.innerHTML = '<div class="loading">Carregando escala operacional...</div>';
+            container.innerHTML = `<div class="loading">${this.escapeHtml(i18n.t('ops_loading'))}</div>`;
             return;
         }
 
+        const staleBanner = this._dataStale.ops ? `<div class="zelo-stale-banner">${this.renderStaleBadge('ops')}</div>` : '';
         const mineOnly = this.usesMineOnlyOps();
         const selectedDay = document.getElementById('ops-day-filter')?.value || '';
         const selectedShift = document.getElementById('ops-shift-filter')?.value || '';
@@ -2190,9 +2359,9 @@ const app = {
         let myHtml = '';
         if (!mineOnly) {
             if (myRows.length) {
-                myHtml = `<div class="ops-mine-block" style="margin-bottom:1rem;padding:0.75rem;background:#f0f9ff;border-radius:8px;border:1px solid #bae6fd;"><h3 style="margin:0 0 0.5rem;">${i18n.t('ops_my_assignments')}</h3><ul style="margin:0;padding-left:1.2rem;">${myRows.map((i) => `<li><strong>${this.getOpsDayLabel(i.day)}</strong> ${i.shift} — ${i.volunteer_name || ''} @ ${i.location || '-'}</li>`).join('')}</ul></div>`;
+                myHtml = `<div class="ops-mine-block"><h3>${i18n.t('ops_my_assignments')}</h3><ul>${myRows.map((i) => `<li><strong>${this.escapeHtml(this.getOpsDayLabel(i.day))}</strong> ${this.escapeHtml(i.shift)} — ${this.escapeHtml(i.volunteer_name || '')} @ ${this.escapeHtml(i.location || '-')}</li>`).join('')}</ul></div>`;
             } else {
-                myHtml = `<div class="ops-mine-block text-muted" style="margin-bottom:1rem;">${i18n.t('ops_no_wp_user')}</div>`;
+                myHtml = `<div class="ops-mine-block text-muted">${i18n.t('ops_no_wp_user')}</div>`;
             }
         }
 
@@ -2200,12 +2369,12 @@ const app = {
         const swaps = ops.swap_requests || [];
         if (this.canManageOps() || this.canReallocateOps()) {
             const pend = swaps.filter((s) => s.status === 'pending');
-            swapPanel = `<div class="ops-swap-panel" style="margin-bottom:1rem;"><h3>Pedidos de substituição</h3>${pend.length ? pend.map((s) => `<div class="ops-schedule-card" style="padding:0.75rem;"><code>${s.id}</code> — designação <strong>${s.assignment_id}</strong> (solicitante ${s.requester_id})<div class="ops-swap-actions"><button type="button" class="ops-btn ops-btn--active" onclick="app.resolveSwapPrompt('${s.id}')">Aprovar</button><button type="button" class="ops-btn" onclick="app.resolveSwap('${s.id}','rejected','',0)">Recusar</button></div></div>`).join('') : '<p class="text-muted">Nenhum pedido pendente.</p>'}</div>`;
+            swapPanel = `<div class="ops-swap-panel"><h3>${this.escapeHtml(i18n.t('ops_swap_requests_title'))}</h3>${pend.length ? pend.map((s) => `<div class="ops-schedule-card ops-swap-card"><code>${this.escapeHtml(s.id)}</code> — ${this.escapeHtml(i18n.t('ops_swap_assignment'))} <strong>${this.escapeHtml(String(s.assignment_id))}</strong> (${this.escapeHtml(i18n.t('ops_swap_requester'))} ${this.escapeHtml(String(s.requester_id))})<div class="ops-swap-actions"><button type="button" class="ops-btn ops-btn--active" onclick="app.resolveSwapPrompt('${s.id}')">${this.escapeHtml(i18n.t('ops_swap_approve'))}</button><button type="button" class="ops-btn" onclick="app.resolveSwap('${s.id}','rejected','',0)">${this.escapeHtml(i18n.t('ops_swap_reject'))}</button></div></div>`).join('') : `<p class="text-muted">${this.escapeHtml(i18n.t('ops_swap_none'))}</p>`}</div>`;
         }
 
         let histBlock = '';
         if (this.canManageOps() && Array.isArray(ops.history) && ops.history.length) {
-            histBlock = `<div style="margin-bottom:1rem;"><h3>Últimas alterações</h3><ul style="font-size:0.85rem;">${ops.history.slice(0, 15).map((h) => `<li><code>${h.type || ''}</code> ${h.at || ''} — assignment ${h.assignment_id || ''}</li>`).join('')}</ul></div>`;
+            histBlock = `<div class="ops-history-block"><h3>${this.escapeHtml(i18n.t('ops_history_title'))}</h3><ul>${ops.history.slice(0, 15).map((h) => `<li><code>${this.escapeHtml(h.type || '')}</code> ${this.escapeHtml(h.at || '')} — ${this.escapeHtml(i18n.t('ops_history_assignment'))} ${this.escapeHtml(h.assignment_id || '')}</li>`).join('')}</ul></div>`;
         }
 
         let items = ops.schedule.slice();
@@ -2216,65 +2385,42 @@ const app = {
         }
 
         const governance = ops.governance || {};
-        const governanceHtml = !mineOnly ? Object.entries(governance).map(([day, data]) => `
-            <div class="ops-governance-card">
-                <h4>${this.getOpsDayLabel(day)}</h4>
-                <p><strong>Grupo A:</strong> ${data.group_a_supervisor || '-'}</p>
-                <p><strong>Grupo B:</strong> ${data.group_b_supervisor || '-'}</p>
-                <p><strong>Supervisor App:</strong> ${data.app_supervisor || '-'}</p>
-                <p><strong>Homens-chave:</strong> ${data.keymen ? Object.entries(data.keymen).map(([shift, person]) => `${shift}: ${person}`).join(' | ') : '-'}</p>
-            </div>
-        `).join('') : '';
+        const governanceHtml = !mineOnly ? Object.entries(governance).map(([day, data]) => this.renderOpsGovernanceCard(day, data)).join('') : '';
 
-        const scheduleHtml = items.map(item => {
-            const mineRow = Number(item.wp_user_id) === uid;
-            const supRow = this.canSuperviseOps() && !mineRow;
-            const actions = this.renderAssignmentActions(item, supRow);
-            const swapBtn = mineRow && this.getCommitmentStatus(item.id) === 'declined'
-                ? `<button type="button" class="ops-btn ops-btn--accent" onclick="app.requestSwap('${String(item.id).replace(/'/g, "\\'")}')">Pedir substituição</button>` : '';
-            return `
-                <div class="ops-schedule-card">
-                    <div class="ops-card-head">
-                        <h4>${item.volunteer_name || 'Voluntário'}</h4>
-                        <span class="ops-tag">${this.getOpsDayLabel(item.day)} • ${item.shift}</span>
-                        ${this.getCommitmentBadge(item.id)} ${this.getOpsStatusBadge(item.id)}
-                    </div>
-                    <p><strong>Local:</strong> ${item.location || '-'}</p>
-                    <p><strong>Horário:</strong> ${item.start || '-'} às ${item.end || '-'}</p>
-                    <p><strong>Idiomas:</strong> ${(item.languages || []).join(', ') || '-'}</p>
-                    <div class="ops-actions ops-actions--stack">
-                        ${actions}
-                        ${this.canReallocateOps() ? `<button type="button" class="ops-btn" onclick="app.doReallocate('${String(item.id).replace(/'/g, "\\'")}')">Realocar</button>` : ''}
-                        ${swapBtn}
-                    </div>
-                </div>
-            `;
-        }).join('');
+        const showActions = this.canSuperviseOps() || this.canReallocateOps() || mineOnly;
+        const scheduleHtml = this.renderOpsDayGroups(items, uid, showActions);
+
+        const exportBtn = this.canManageOps()
+            ? `<button type="button" id="ops-export-pdf-btn" class="ops-btn ops-btn--accent ops-export-btn" onclick="app.downloadOpsExportPdf()">${this.escapeHtml(i18n.t('ops_export_pdf'))}</button>`
+            : '';
 
         container.innerHTML = `
+            ${staleBanner}
             ${myHtml}
             ${swapPanel}
             ${histBlock}
-            <div class="ops-filters">
-                <select id="ops-day-filter" onchange="app.renderVolunteerOps()">
-                    <option value="">Todos os dias</option>
-                    <option value="sexta" ${selectedDay === 'sexta' ? 'selected' : ''}>${this.escapeHtml(this.getOpsDayLabel('sexta'))}</option>
-                    <option value="sabado" ${selectedDay === 'sabado' ? 'selected' : ''}>${this.escapeHtml(this.getOpsDayLabel('sabado'))}</option>
-                    <option value="domingo" ${selectedDay === 'domingo' ? 'selected' : ''}>${this.escapeHtml(this.getOpsDayLabel('domingo'))}</option>
-                </select>
-                <select id="ops-shift-filter" onchange="app.renderVolunteerOps()">
-                    <option value="">Todos os turnos</option>
-                    <option value="A1" ${selectedShift === 'A1' ? 'selected' : ''}>A1</option>
-                    <option value="B1" ${selectedShift === 'B1' ? 'selected' : ''}>B1</option>
-                    <option value="A2" ${selectedShift === 'A2' ? 'selected' : ''}>A2</option>
-                    <option value="B2" ${selectedShift === 'B2' ? 'selected' : ''}>B2</option>
-                </select>
-                <input id="ops-language-filter" value="${selectedLanguage}" oninput="app.renderVolunteerOps()" placeholder="Filtrar idioma">
+            <div class="ops-toolbar">
+                <div class="ops-filters">
+                    <select id="ops-day-filter" onchange="app.renderVolunteerOps()">
+                        <option value="">${this.escapeHtml(i18n.t('ops_filter_all_days'))}</option>
+                        <option value="sexta" ${selectedDay === 'sexta' ? 'selected' : ''}>${this.escapeHtml(this.getOpsDayLabel('sexta'))}</option>
+                        <option value="sabado" ${selectedDay === 'sabado' ? 'selected' : ''}>${this.escapeHtml(this.getOpsDayLabel('sabado'))}</option>
+                        <option value="domingo" ${selectedDay === 'domingo' ? 'selected' : ''}>${this.escapeHtml(this.getOpsDayLabel('domingo'))}</option>
+                    </select>
+                    <select id="ops-shift-filter" onchange="app.renderVolunteerOps()">
+                        <option value="">${this.escapeHtml(i18n.t('ops_filter_all_shifts'))}</option>
+                        <option value="A1" ${selectedShift === 'A1' ? 'selected' : ''}>A1</option>
+                        <option value="B1" ${selectedShift === 'B1' ? 'selected' : ''}>B1</option>
+                        <option value="A2" ${selectedShift === 'A2' ? 'selected' : ''}>A2</option>
+                        <option value="B2" ${selectedShift === 'B2' ? 'selected' : ''}>B2</option>
+                    </select>
+                    <input id="ops-language-filter" value="${this.escapeHtml(selectedLanguage)}" oninput="app.renderVolunteerOps()" placeholder="${this.escapeHtml(i18n.t('ops_filter_language_placeholder'))}">
+                </div>
+                ${exportBtn}
             </div>
-            ${!mineOnly ? `<h3>${i18n.t('ops_governance_title')}</h3>
-            <div class="ops-governance-grid">${governanceHtml || '<p class="text-muted">Sem dados de governança.</p>'}</div>` : ''}
-            <h3 style="margin-top:1rem;">${mineOnly ? i18n.t('ops_my_schedule') : i18n.t('ops_detailed_schedule')}</h3>
-            <div class="ops-schedule-grid">${scheduleHtml || '<div class="loading">Nenhuma designação encontrada para os filtros selecionados.</div>'}</div>
+            ${!mineOnly ? `<details class="ops-governance-details" open><summary>${this.escapeHtml(i18n.t('ops_governance_title'))}</summary><div class="ops-governance-grid">${governanceHtml || `<p class="text-muted">${this.escapeHtml(i18n.t('ops_no_governance'))}</p>`}</div></details>` : ''}
+            <h3 class="ops-schedule-heading">${mineOnly ? i18n.t('ops_my_schedule') : i18n.t('ops_detailed_schedule')}</h3>
+            <div class="ops-schedule-by-day">${scheduleHtml}</div>
         `;
     },
 
@@ -2677,11 +2823,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const updateNetworkStatus = () => {
         const statusEl = document.getElementById('network-status');
         if (navigator.onLine) {
-            statusEl.textContent = 'Online';
+            statusEl.textContent = i18n.t('network_online');
             statusEl.classList.remove('offline');
             statusEl.classList.add('online');
         } else {
-            statusEl.textContent = 'Offline';
+            statusEl.textContent = i18n.t('network_offline');
             statusEl.classList.add('offline');
             statusEl.classList.remove('online');
         }

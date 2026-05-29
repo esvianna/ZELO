@@ -19,7 +19,7 @@ Se a PWA for hospedada noutro domínio, será necessário JWT ou Application Pas
 
 ## Exportação
 
-O endpoint `GET /wp-json/zelo/v1/ops/export` devolve **501** até implementação pós-MVP.
+O endpoint `GET /wp-json/zelo/v1/ops/export` (plugin **2.9.0+**) gera PDF da escala para utilizadores com `zelo_manage_ops`. Parâmetros: `format=pdf`, `day` (sexta|sabado|domingo), `shift` (opcional). Botão na PWA build **89+**.
 
 ## Cadastrar escala do Congresso (dia + turno)
 

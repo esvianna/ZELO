@@ -111,7 +111,8 @@ Configurar `baseUrl` / `siteUrl` em `frontend-pwa/assets/js/api-v5.js` para o am
 | Cenário | Esperado |
 |---------|----------|
 | API offline na primeira visita | Fallback cache ou mensagem clara |
-| `/ops/export` | HTTP 501 com mensagem |
+| `/ops/export` sem `zelo_manage_ops` | HTTP 403 |
+| `/ops/export` com gestor + filtros | HTTP 200 PDF legível |
 | Rate limit cadastro (8+/hora/IP) | HTTP 429 |
 | Login sem e-mail verificado | HTTP 403 |
 
@@ -207,6 +208,27 @@ Até lá, **checklist manual acima é a fonte de verdade**.
 | 4 | Aviso warning/critical na home | Faixa compacta + link para avisos |
 | 5 | Aviso info | Só no hub (não card grande na home) |
 | 6 | Voluntário logado | Secção «Para você» com check-in pendente em qualquer dia da escala |
+
+---
+
+## 12. Offline e cache (PWA build 89+)
+
+| # | Passo | Esperado |
+|---|-------|----------|
+| O1 | Login + abrir escala online; depois modo avião | Última escala visível com badge «em cache» |
+| O2 | Avatar offline após sessão online | Default local ou último avatar same-origin em cache |
+| O3 | `default-avatar.png` no precache SW | Imagem carrega offline no header/perfil |
+| O4 | Home tempo após visita online | Widget com dados `zelo_clima` + indicador stale se offline |
+
+---
+
+## 13. i18n completo (PWA build 89+)
+
+| # | Passo | Esperado |
+|---|-------|----------|
+| I1 | Perfil → idioma EN → escala operacional | Filtros, tabela, governança e export em inglês |
+| I2 | Idioma ES → login + cadastro + erros sessão | Sem português residual nas strings auditadas |
+| I3 | Header «Offline» / «Online» | Traduz ao mudar idioma |
 
 ---
 

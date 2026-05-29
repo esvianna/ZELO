@@ -6,6 +6,33 @@ const API = {
         ? window.location.origin
         : 'https://tenhazelo.com.br',
     lastSessionError: null,
+    lastFetchFromCache: {
+        locais: false,
+        volunteerOps: false,
+        evento: false,
+        categorias: false,
+        clima: false
+    },
+
+    readSnapshot(key) {
+        try {
+            const raw = localStorage.getItem(key);
+            if (!raw) return null;
+            return JSON.parse(raw);
+        } catch (e) {
+            console.warn('Snapshot inválido:', key, e);
+            return null;
+        }
+    },
+
+    writeSnapshot(key, data) {
+        if (data == null) return;
+        try {
+            localStorage.setItem(key, JSON.stringify(data));
+        } catch (e) {
+            console.warn('Falha ao gravar snapshot:', key, e);
+        }
+    },
 
     // Cached data for offline support
     cache: {
@@ -70,20 +97,21 @@ const API = {
     },
 
     getSessionErrorMessage() {
+        const t = (key) => (typeof i18n !== 'undefined' && i18n.t) ? i18n.t(key) : key;
         const err = this.lastSessionError;
         if (!err) {
-            return 'Não foi possível validar a sessão. Tente entrar novamente.';
+            return t('session_error_default');
         }
         if (err.code === 'rest_cookie_invalid_nonce' || err.status === 403) {
-            return 'Sessão desatualizada no navegador (nonce inválido). Saia, limpe os dados do site para tenhazelo.com.br e entre de novo, ou use uma aba anónima.';
+            return t('session_error_nonce');
         }
         if (err.status === 401 || err.code === 'zelo_not_logged_in') {
-            return 'O servidor não recebeu o cookie de login. Use https://tenhazelo.com.br/zelo/ (mesmo domínio do WordPress), confirme que o plugin Zelo 2.5.3+ está ativo e tente novamente.';
+            return t('session_error_cookie');
         }
         if (err.code === 'network_error' || err.status === 0) {
-            return 'Falha de rede ao validar a sessão. Verifique a conexão e tente novamente.';
+            return t('session_error_network');
         }
-        return err.message || 'Não foi possível validar a sessão. Tente entrar novamente.';
+        return err.message || t('session_error_default');
     },
 
     async getLocais(params = {}) {
@@ -105,10 +133,18 @@ const API = {
                 // However, for explicit cache busting:
             }
             this.cache.locais = data;
+            this.writeSnapshot('zelo_locais', data);
+            this.lastFetchFromCache.locais = false;
             return data;
         } catch (error) {
-            console.warn('Network failed, trying cache for locais');
-            return null; // Let app handle fallback or use internal cache
+            console.warn('Network failed, trying cache for locais', error);
+            const cached = this.readSnapshot('zelo_locais');
+            if (cached) {
+                this.cache.locais = cached;
+                this.lastFetchFromCache.locais = true;
+                return cached;
+            }
+            return null;
         }
     },
 
@@ -120,14 +156,16 @@ const API = {
             const data = await response.json();
 
             this.cache.evento = data;
-            localStorage.setItem('zelo_evento', JSON.stringify(data));
-
+            this.writeSnapshot('zelo_evento', data);
+            this.lastFetchFromCache.evento = false;
             return data;
         } catch (error) {
             console.warn('Fetch failed, trying cache', error);
-            const cached = localStorage.getItem('zelo_evento');
+            const cached = this.readSnapshot('zelo_evento');
             if (cached) {
-                return JSON.parse(cached);
+                this.cache.evento = cached;
+                this.lastFetchFromCache.evento = true;
+                return cached;
             }
             throw error;
         }
@@ -141,14 +179,16 @@ const API = {
             const data = await response.json();
 
             this.cache.categorias = data;
-            localStorage.setItem('zelo_categorias', JSON.stringify(data));
-
+            this.writeSnapshot('zelo_categorias', data);
+            this.lastFetchFromCache.categorias = false;
             return data;
         } catch (error) {
             console.warn('Fetch categorias falhou, tentando cache', error);
-            const cached = localStorage.getItem('zelo_categorias');
+            const cached = this.readSnapshot('zelo_categorias');
             if (cached) {
-                return JSON.parse(cached);
+                this.cache.categorias = cached;
+                this.lastFetchFromCache.categorias = true;
+                return cached;
             }
             return [];
         }
@@ -168,10 +208,20 @@ const API = {
             if (!response.ok) throw new Error('Ops API unavailable');
             const data = await response.json();
             this.cache.volunteerOps = data;
+            const cacheKey = mine ? 'zelo_volunteer_ops_mine' : 'zelo_volunteer_ops';
+            this.writeSnapshot(cacheKey, data);
+            this.lastFetchFromCache.volunteerOps = false;
             return data;
         } catch (error) {
             if (!error || !error.__authError) {
                 console.warn('Falha ao carregar operação de voluntários', error);
+            }
+            const cacheKey = mine ? 'zelo_volunteer_ops_mine' : 'zelo_volunteer_ops';
+            const cached = this.readSnapshot(cacheKey);
+            if (cached) {
+                this.cache.volunteerOps = cached;
+                this.lastFetchFromCache.volunteerOps = true;
+                return { ...cached, __fromCache: true };
             }
             return null;
         }
@@ -191,19 +241,35 @@ const API = {
             this.lastClimaError = null;
             this.cache.clima = data;
             if (data && data.enabled !== false && data.current) {
-                localStorage.setItem('zelo_clima', JSON.stringify(data));
+                this.writeSnapshot('zelo_clima', data);
             }
+            this.lastFetchFromCache.clima = false;
             return data;
         } catch (error) {
             console.warn('Fetch clima falhou, tentando cache', error);
-            const cached = localStorage.getItem('zelo_clima');
+            const cached = this.readSnapshot('zelo_clima');
             if (cached) {
-                const parsed = JSON.parse(cached);
-                this.cache.clima = parsed;
-                return parsed;
+                this.cache.clima = cached;
+                this.lastFetchFromCache.clima = true;
+                return cached;
             }
             throw error;
         }
+    },
+
+    async downloadOpsExport(params = {}) {
+        const qs = new URLSearchParams({ format: 'pdf', ...params });
+        const url = `${this.baseUrl}/ops/export?${qs.toString()}&_t=${Date.now()}`;
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: this.getAuthHeaders(),
+            credentials: 'include'
+        });
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.message || 'Falha ao exportar escala');
+        }
+        return response.blob();
     },
 
     async getIndoorMap() {

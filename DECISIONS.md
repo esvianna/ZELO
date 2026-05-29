@@ -6,6 +6,16 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 ---
 
+## ADR-015 — Snapshots offline + escala legível + export PDF (2026-05-28)
+
+**Contexto:** Escala e locais não persistiam em `localStorage`; avatar offline falhava; UI da escala difícil de ler; export REST era stub 501; strings novas só em PT.
+
+**Decisão:** PWA grava `zelo_locais`, `zelo_volunteer_ops` (+ `_mine`) em snapshot com badge stale (como clima/evento). `default-avatar.png` no precache SW. Escala agrupada por dia em tabela responsiva; governança em `<details>`. `GET /ops/export` com FPDF vendored (`inc/lib/fpdf.php`), permissão `zelo_manage_ops`, PDF por dia com governança e status compromisso/presença. Auditoria i18n PT/EN/ES nas telas auditadas; labels de catálogo admin permanecem no idioma cadastrado (exceção até campos `label_en`/`label_es`).
+
+**Consequências:** Plugin **2.9.0**; PWA build **89**. Home «Mais opções» expandida por defeito (`localStorage zelo_home_extras_open=0` para recolher).
+
+---
+
 ## ADR-014 — Idiomas no perfil do voluntário (2026-05-28)
 
 **Contexto:** Idiomas eram multi-select em cada linha da escala (71+ repetições); não havia campo no roster nem no cadastro PWA.

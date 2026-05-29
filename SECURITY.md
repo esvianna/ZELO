@@ -43,7 +43,7 @@ Princípios e checklist de segurança adaptados a **WordPress REST + PWA estáti
 | `/ops/checkin`, `/checkout` | `zelo_checkin_ops` |
 | `/ops/reallocate` | `zelo_reallocate_volunteer` |
 | `/ops/swap-requests` | gestor/realocador conforme rota |
-| `/ops/export` | `manage_options` |
+| `/ops/export` | `zelo_manage_ops` ou `manage_options`; rate limit 60 s/usuário |
 | `/clima` | Público; proxy Open-Meteo; sem PII; cache transient 30 min |
 
 ### Ameaças e mitigação

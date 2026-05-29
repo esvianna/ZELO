@@ -2,6 +2,12 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.9.0] - 2026-05-28
+
+### Adicionado
+- `GET /zelo/v1/ops/export` — PDF da escala (FPDF em `inc/lib/fpdf.php`), CSV opcional; filtros `day`, `shift`.
+- Permissão `zelo_manage_ops` (e `manage_options`); rate limit 60 s por utilizador.
+
 ## [2.8.0] - 2026-05-28
 
 ### Adicionado
