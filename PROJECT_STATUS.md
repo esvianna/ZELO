@@ -14,13 +14,13 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 **UX escala Congresso (2.7.1 / PWA 83–84):** rótulos dia+data, governança 3 dias, turnos 07:00–18:30, guia em `docs/DEPLOY-ZELO-PWA.md`.
 
-**Próximo backlog:** deploy 2.7.1 + build 84; smoke §9–§10; Web Push VAPID.
+**Próximo backlog:** deploy 2.7.2 + build 84; smoke §9–§10; Web Push VAPID.
 
 ---
 
 ## O que já foi implementado
 
-### Backend (`zelo-assistente` v2.7.1)
+### Backend (`zelo-assistente` v2.7.2)
 
 - [x] `zelo_volunteer_commitments` + REST `/ops/assignments/{id}/commit`
 - [x] `zelo_link_requests` + onboarding admin + matching cadastro por e-mail
@@ -47,7 +47,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Prioridade | Item | Notas |
 |------------|------|-------|
-| **Alta** | Deploy plugin 2.7.1 + PWA 84 | `TESTING.md` §9–§10 |
+| **Alta** | Deploy plugin 2.7.2 + PWA 84 | `TESTING.md` §9–§10 |
 | **Média** | Web Push VAPID + subscribe real | Stub 501 hoje |
 | **Média** | `/ops/export` CSV | Stub 501 |
 | **Baixa** | Inbox avisos servidor (B10) | Fase 2 UX |

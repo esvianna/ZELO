@@ -202,21 +202,22 @@ function zelo_build_onboarding_report() {
 	$data     = zelo_get_volunteer_ops_data();
 	$roster   = isset( $data['catalogs']['roster_volunteers'] ) ? $data['catalogs']['roster_volunteers'] : array();
 	$schedule = isset( $data['schedule'] ) ? $data['schedule'] : array();
+	$dates    = isset( $data['settings']['event_dates'] ) && is_array( $data['settings']['event_dates'] )
+		? $data['settings']['event_dates'] : array();
 	$items    = array();
 
 	$assignments_by_rv = array();
 	foreach ( $schedule as $row ) {
-		$rvid = isset( $row['roster_volunteer_id'] ) ? $row['roster_volunteer_id'] : '';
-		$wp   = isset( $row['wp_user_id'] ) ? (int) $row['wp_user_id'] : 0;
-		if ( $rvid !== '' ) {
-			if ( ! isset( $assignments_by_rv[ $rvid ] ) ) {
-				$assignments_by_rv[ $rvid ] = array();
-			}
-			$assignments_by_rv[ $rvid ][] = $row;
+		$rid = function_exists( 'zelo_ops_resolve_row_roster_id' )
+			? zelo_ops_resolve_row_roster_id( $row, $roster )
+			: ( isset( $row['roster_volunteer_id'] ) ? sanitize_text_field( $row['roster_volunteer_id'] ) : '' );
+		if ( $rid === '' ) {
+			continue;
 		}
-		if ( $wp > 0 && $rvid === '' ) {
-			// linked via wp only.
+		if ( ! isset( $assignments_by_rv[ $rid ] ) ) {
+			$assignments_by_rv[ $rid ] = 0;
 		}
+		++$assignments_by_rv[ $rid ];
 	}
 
 	foreach ( $roster as $rv ) {
@@ -234,7 +235,7 @@ function zelo_build_onboarding_report() {
 			'expected_email'        => isset( $rv['expected_email'] ) ? $rv['expected_email'] : '',
 			'registration_status'   => $status,
 			'linked_wp_user_id'     => isset( $rv['linked_wp_user_id'] ) ? (int) $rv['linked_wp_user_id'] : 0,
-			'assignments_count'     => isset( $assignments_by_rv[ $rv['id'] ] ) ? count( $assignments_by_rv[ $rv['id'] ] ) : 0,
+			'assignments_count'     => isset( $assignments_by_rv[ $rv['id'] ] ) ? (int) $assignments_by_rv[ $rv['id'] ] : 0,
 		);
 	}
 
@@ -242,10 +243,10 @@ function zelo_build_onboarding_report() {
 		return isset( $r['status'] ) && $r['status'] === 'pending';
 	} ) );
 
-	$commitments = zelo_get_volunteer_commitments();
 	$pending_commit = 0;
-	$accepted = 0;
-	$declined = 0;
+	$accepted       = 0;
+	$declined       = 0;
+	$schedule_items = array();
 	foreach ( $schedule as $row ) {
 		if ( empty( $row['id'] ) ) {
 			continue;
@@ -258,15 +259,30 @@ function zelo_build_onboarding_report() {
 		} else {
 			++$pending_commit;
 		}
+		$day = isset( $row['day'] ) ? sanitize_key( $row['day'] ) : '';
+		$rid = function_exists( 'zelo_ops_resolve_row_roster_id' )
+			? zelo_ops_resolve_row_roster_id( $row, $roster )
+			: ( isset( $row['roster_volunteer_id'] ) ? sanitize_text_field( $row['roster_volunteer_id'] ) : '' );
+		$schedule_items[] = array(
+			'id'                => $row['id'],
+			'volunteer_name'    => isset( $row['volunteer_name'] ) ? $row['volunteer_name'] : '',
+			'day'               => $day,
+			'day_label'         => function_exists( 'zelo_ops_day_label' ) ? zelo_ops_day_label( $day, $dates, true ) : $day,
+			'shift'             => isset( $row['shift'] ) ? $row['shift'] : '',
+			'commitment_status' => $st,
+			'roster_volunteer_id' => $rid,
+		);
 	}
 
 	return array(
-		'items'          => $items,
-		'link_requests'  => $pending_links,
-		'commitment_stats' => array(
+		'items'              => $items,
+		'schedule_items'     => $schedule_items,
+		'link_requests'      => $pending_links,
+		'commitment_stats'   => array(
 			'pending'  => $pending_commit,
 			'accepted' => $accepted,
 			'declined' => $declined,
+			'total'    => count( $schedule_items ),
 		),
 	);
 }

@@ -433,7 +433,30 @@ function zelo_render_volunteer_ops_admin_tabs() {
 				$stats   = isset( $onboard['commitment_stats'] ) ? $onboard['commitment_stats'] : array();
 				?>
 				<h3><?php esc_html_e( 'Compromissos (confirmação antecipada)', 'zelo-assistente' ); ?></h3>
-				<p><?php printf( esc_html__( 'Pendentes: %d | Aceitos: %d | Recusados: %d', 'zelo-assistente' ), (int) ( $stats['pending'] ?? 0 ), (int) ( $stats['accepted'] ?? 0 ), (int) ( $stats['declined'] ?? 0 ) ); ?></p>
+				<p><?php printf( esc_html__( 'Pendentes: %d | Aceitos: %d | Recusados: %d | Total de designações: %d', 'zelo-assistente' ), (int) ( $stats['pending'] ?? 0 ), (int) ( $stats['accepted'] ?? 0 ), (int) ( $stats['declined'] ?? 0 ), (int) ( $stats['total'] ?? 0 ) ); ?></p>
+				<p class="description"><?php esc_html_e( 'Cada linha da escala (dia + turno) gera um compromisso. O roster abaixo agrupa por voluntário cadastrado.', 'zelo-assistente' ); ?></p>
+				<?php
+				$sched_items = isset( $onboard['schedule_items'] ) ? $onboard['schedule_items'] : array();
+				if ( ! empty( $sched_items ) ) :
+					?>
+				<details style="margin:12px 0;">
+					<summary><strong><?php printf( esc_html__( 'Ver todas as designações (%d)', 'zelo-assistente' ), count( $sched_items ) ); ?></strong></summary>
+					<table class="widefat striped" style="margin-top:8px;">
+						<thead><tr><th><?php esc_html_e( 'Voluntário', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'Dia', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'Turno', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'Compromisso', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'Roster', 'zelo-assistente' ); ?></th></tr></thead>
+						<tbody>
+						<?php foreach ( $sched_items as $si ) : ?>
+							<tr>
+								<td><?php echo esc_html( $si['volunteer_name'] ?? '' ); ?></td>
+								<td><?php echo esc_html( $si['day_label'] ?? ( $si['day'] ?? '' ) ); ?></td>
+								<td><?php echo esc_html( $si['shift'] ?? '' ); ?></td>
+								<td><?php echo esc_html( $si['commitment_status'] ?? 'pending' ); ?></td>
+								<td><?php echo ! empty( $si['roster_volunteer_id'] ) ? '<code>' . esc_html( $si['roster_volunteer_id'] ) . '</code>' : '<span class="description">' . esc_html__( 'sem vínculo', 'zelo-assistente' ) . '</span>'; ?></td>
+							</tr>
+						<?php endforeach; ?>
+						</tbody>
+					</table>
+				</details>
+				<?php endif; ?>
 				<h3><?php esc_html_e( 'Fila de vínculos (cadastro)', 'zelo-assistente' ); ?></h3>
 				<?php
 				$links = isset( $onboard['link_requests'] ) ? $onboard['link_requests'] : array();
@@ -468,7 +491,7 @@ function zelo_render_volunteer_ops_admin_tabs() {
 					echo '</tbody></table>';
 				}
 				?>
-				<h3><?php esc_html_e( 'Roster × cadastro', 'zelo-assistente' ); ?></h3>
+				<h3><?php printf( esc_html__( 'Roster × cadastro (%d voluntários)', 'zelo-assistente' ), count( isset( $onboard['items'] ) ? $onboard['items'] : array() ) ); ?></h3>
 				<table class="widefat striped">
 					<thead><tr><th><?php esc_html_e( 'Nome', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'E-mail esperado', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'Status', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'Designações', 'zelo-assistente' ); ?></th></tr></thead>
 					<tbody>

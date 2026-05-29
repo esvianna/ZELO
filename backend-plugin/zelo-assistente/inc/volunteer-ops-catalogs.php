@@ -398,6 +398,37 @@ function zelo_migrate_ops_catalogs_from_schedule( $data ) {
 }
 
 /**
+ * Resolve schedule row to roster volunteer id (rv field, linked wp, or name match).
+ *
+ * @param array $row    Schedule row.
+ * @param array $roster Roster volunteers.
+ * @return string
+ */
+function zelo_ops_resolve_row_roster_id( $row, $roster ) {
+	$rv_id = isset( $row['roster_volunteer_id'] ) ? sanitize_text_field( $row['roster_volunteer_id'] ) : '';
+	if ( $rv_id !== '' ) {
+		return $rv_id;
+	}
+	$wp = isset( $row['wp_user_id'] ) ? (int) $row['wp_user_id'] : 0;
+	if ( $wp > 0 ) {
+		foreach ( $roster as $rv ) {
+			if ( ! empty( $rv['id'] ) && ! empty( $rv['linked_wp_user_id'] ) && (int) $rv['linked_wp_user_id'] === $wp ) {
+				return sanitize_text_field( $rv['id'] );
+			}
+		}
+	}
+	$name_key = isset( $row['volunteer_name'] ) ? zelo_ops_normalize_roster_name_key( $row['volunteer_name'] ) : '';
+	if ( $name_key !== '' ) {
+		foreach ( $roster as $rv ) {
+			if ( ! empty( $rv['id'] ) && ! empty( $rv['name'] ) && zelo_ops_normalize_roster_name_key( $rv['name'] ) === $name_key ) {
+				return sanitize_text_field( $rv['id'] );
+			}
+		}
+	}
+	return '';
+}
+
+/**
  * Parse sched_volunteer_ref (wp:ID / rv:ID).
  *
  * @param string $ref Ref.

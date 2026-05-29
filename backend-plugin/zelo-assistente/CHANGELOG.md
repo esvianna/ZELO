@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.7.2] - 2026-05-28
+
+### Corrigido
+- Onboarding admin: lista todas as designações da escala (`schedule_items`); contagem de designações por voluntário resolve vínculo por nome/WP além de `roster_volunteer_id`.
+
 ## [2.7.1] - 2026-05-28
 
 ### Adicionado

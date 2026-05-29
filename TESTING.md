@@ -142,6 +142,7 @@ Configurar `baseUrl` / `siteUrl` em `frontend-pwa/assets/js/api-v5.js` para o am
 | T8 | Cadastro com e-mail = `expected_email` do roster → admin aprova vínculo | Linhas da escala ganham `wp_user_id` |
 | T9 | Admin aba Onboarding | Lista roster, fila de vínculos, stats compromissos |
 | T10 | Voluntário comum tenta check-in em designação alheia | HTTP 403 |
+| T11 | Admin aba Onboarding com 70+ designações | «Ver todas as designações» lista o total; roster mostra contagem correta por voluntário |
 
 Admin: Config → prazo, janelas presença, supervisores (select WP). Governança com IDs.
 
