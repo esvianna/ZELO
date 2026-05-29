@@ -8,6 +8,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Planejado (backlog UX)
+- Escala: filtros idioma/responsável/voluntário; listagem por dia (PDF); links WhatsApp.
+- Home: secção «Mais opções» expandida por defeito.
+
 ### Adicionado
 - Plugin **2.8.0**: idiomas no perfil — `roster.language_ids`, `user_meta` `zelo_language_ids`, herança na API, migração escala→roster; REST `GET /ops/languages`, `PATCH /auth/profile`.
 - PWA build **85**: cadastro e perfil com multi-select de idiomas (opcional).

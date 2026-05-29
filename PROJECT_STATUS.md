@@ -56,6 +56,22 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | **Média** | `/ops/export` CSV | Stub 501 |
 | **Baixa** | Inbox avisos servidor (B10) | Fase 2 UX |
 
+### Melhorias UX (backlog — próximo pacote)
+
+**1. Página da Escala completa**
+
+| # | Item | Notas |
+|---|------|-------|
+| 1.1 | Novos filtros de pesquisa | Idioma (seleção), Responsável, Voluntário |
+| 1.2 | Melhorar exibição da listagem | Alinhar ao PDF: agrupamento/visualização **por dia**; equipe acostumada com planilha por Sexta/Sábado/Domingo |
+| 1.3 | Hiperlinks WhatsApp | Contato com responsáveis e voluntários via `tel`/`wa.me` usando telefone do cadastro/roster |
+
+**2. Home — «Mais opções (cidade e mapas)»**
+
+| # | Item | Notas |
+|---|------|-------|
+| 2.1 | Secção expandida por defeito | Exibir todos os botões (Cultura, mapas, etc.) sem precisar expandir manualmente |
+
 ---
 
 ## Próximos passos lógicos
