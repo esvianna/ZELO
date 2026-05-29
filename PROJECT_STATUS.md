@@ -12,15 +12,15 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 **Pacote offline + i18n + escala (2.9.0 / PWA 89):** snapshots localStorage, escala por dia, export PDF servidor, auditoria i18n PT/EN/ES, ADR-015.
 
-**Anterior:** idiomas perfil 2.8.0 / PWA 86; Congresso 2.7.1 / PWA 84; confirmação 2.7.0 / PWA 81.
+**Correção export PDF (2.9.1 / PWA 90):** try/catch FPDF, layout paisagem, erros JSON na API.
 
-**Próximo:** deploy **plugin 2.9.0** + **PWA build 89**; smoke `TESTING.md` §12–§13 + §9–§11; Web Push VAPID.
+**Próximo:** deploy **plugin 2.9.1** + **PWA build 90**; validar export PDF em produção; Web Push VAPID.
 
 ---
 
 ## O que já foi implementado
 
-### Backend (`zelo-assistente` v2.9.0)
+### Backend (`zelo-assistente` v2.9.1)
 
 - [x] Tudo de 2.8.0 (idiomas perfil, compromisso, onboarding, etc.)
 - [x] `GET /ops/export` PDF/CSV — `inc/volunteer-ops-export.php`, FPDF vendored
@@ -44,7 +44,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Prioridade | Item | Notas |
 |------------|------|-------|
-| **Alta** | Deploy plugin 2.9.0 + PWA 89 | `TESTING.md` §12–§13, §9–§11 |
+| **Alta** | Deploy plugin 2.9.1 + PWA 90 | Export PDF smoke após 2.9.0 falhou com 500 |
 | **Média** | Web Push VAPID + subscribe real | Stub 501 hoje |
 | **Baixa** | Filtros escala avançados + WhatsApp (B1.1, B1.3) | Após PDF |
 | **Baixa** | Inbox avisos servidor (B10) | Fase 2 UX |

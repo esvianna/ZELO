@@ -10,6 +10,42 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * Carrega FPDF (com atributo AllowDynamicProperties em PHP 8.2+).
+ *
+ * @return bool True se a classe existe.
+ */
+function zelo_ops_require_fpdf() {
+	if ( class_exists( 'FPDF', false ) ) {
+		return true;
+	}
+	$path = ZELO_PLUGIN_DIR . 'inc/lib/fpdf.php';
+	if ( ! file_exists( $path ) ) {
+		return false;
+	}
+	if ( PHP_VERSION_ID >= 80200 ) {
+		$code = file_get_contents( $path );
+		if ( is_string( $code ) && strpos( $code, 'AllowDynamicProperties' ) === false ) {
+			$code = str_replace( "class FPDF\n", "#[\\AllowDynamicProperties]\nclass FPDF\n", $code, 1 );
+			$tmp  = function_exists( 'wp_tempnam' ) ? wp_tempnam( 'zelo-fpdf' ) : false;
+			if ( $tmp ) {
+				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+				file_put_contents( $tmp, $code );
+				require_once $tmp;
+				if ( function_exists( 'wp_delete_file' ) ) {
+					wp_delete_file( $tmp );
+				} else {
+					// phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink
+					@unlink( $tmp );
+				}
+				return class_exists( 'FPDF', false );
+			}
+		}
+	}
+	require_once $path;
+	return class_exists( 'FPDF', false );
+}
+
+/**
  * Permissão para exportar escala.
  *
  * @return bool
@@ -22,20 +58,90 @@ function zelo_rest_can_export_ops() {
 }
 
 /**
+ * Valor escalar seguro para células PDF.
+ *
+ * @param mixed $value Valor.
+ * @return string
+ */
+function zelo_pdf_scalar( $value ) {
+	if ( is_scalar( $value ) || ( is_object( $value ) && method_exists( $value, '__toString' ) ) ) {
+		return (string) $value;
+	}
+	return '';
+}
+
+/**
  * Converte texto UTF-8 para ISO-8859-1 (FPDF core font).
  *
- * @param string $text Texto.
+ * @param mixed $text Texto.
  * @return string
  */
 function zelo_pdf_encode( $text ) {
-	$text = (string) $text;
+	$text = zelo_pdf_scalar( $text );
+	if ( $text === '' ) {
+		return '';
+	}
 	if ( function_exists( 'iconv' ) ) {
-		$converted = @iconv( 'UTF-8', 'ISO-8859-1//TRANSLIT', $text );
-		if ( false !== $converted ) {
+		$converted = @iconv( 'UTF-8', 'ISO-8859-1//TRANSLIT//IGNORE', $text );
+		if ( false !== $converted && $converted !== '' ) {
 			return $converted;
 		}
 	}
-	return wp_strip_all_tags( $text );
+	$ascii = wp_strip_all_tags( $text );
+	return preg_replace( '/[^\x09\x0A\x0D\x20-\x7E]/', '?', $ascii );
+}
+
+/**
+ * Trunca texto para caber em célula FPDF.
+ *
+ * @param string $text    Texto.
+ * @param int    $max_len Máximo de caracteres.
+ * @return string
+ */
+function zelo_pdf_truncate( $text, $max_len = 72 ) {
+	$text = zelo_pdf_scalar( $text );
+	if ( strlen( $text ) <= $max_len ) {
+		return $text;
+	}
+	return substr( $text, 0, $max_len - 3 ) . '...';
+}
+
+/**
+ * Suprime deprecações de propriedades dinâmicas do FPDF em PHP 8.2+.
+ *
+ * @param int    $errno   Código.
+ * @param string $errstr  Mensagem.
+ * @param string $errfile Ficheiro.
+ * @return bool
+ */
+function zelo_ops_export_pdf_error_handler( $errno, $errstr, $errfile ) {
+	if ( E_DEPRECATED === $errno && strpos( $errstr, 'Creation of dynamic property FPDF' ) !== false ) {
+		return true;
+	}
+	if ( E_DEPRECATED === $errno && strpos( $errfile, 'fpdf.php' ) !== false ) {
+		return true;
+	}
+	return false;
+}
+
+/**
+ * Junta idiomas da linha da escala para o PDF.
+ *
+ * @param array $row Linha.
+ * @return string
+ */
+function zelo_ops_export_format_languages( $row ) {
+	if ( empty( $row['languages'] ) || ! is_array( $row['languages'] ) ) {
+		return '';
+	}
+	$parts = array();
+	foreach ( $row['languages'] as $lang ) {
+		$s = zelo_pdf_scalar( $lang );
+		if ( $s !== '' ) {
+			$parts[] = $s;
+		}
+	}
+	return implode( ', ', $parts );
 }
 
 /**
@@ -234,107 +340,154 @@ function zelo_ops_export_pdf_response( $schedule, $governance, $event_dates, $co
 		);
 	}
 
-	require_once $fpdf_path;
+	$prev_handler = set_error_handler( 'zelo_ops_export_pdf_error_handler' );
 
-	$event_name = get_bloginfo( 'name' );
-	$ev         = get_option( 'zelo_event_data', array() );
-	if ( ! empty( $ev['nome'] ) ) {
-		$event_name = $ev['nome'];
-	} elseif ( ! empty( $ev['titulo'] ) ) {
-		$event_name = $ev['titulo'];
-	}
-
-	$pdf = new FPDF( 'P', 'mm', 'A4' );
-	$pdf->SetAutoPageBreak( true, 12 );
-	$pdf->AddPage();
-	$pdf->SetFont( 'Helvetica', 'B', 14 );
-	$pdf->Cell( 0, 8, zelo_pdf_encode( $event_name ), 0, 1 );
-	$pdf->SetFont( 'Helvetica', '', 10 );
-	$pdf->Cell( 0, 6, zelo_pdf_encode( __( 'Escala operacional', 'zelo-assistente' ) . ' — ' . wp_date( 'd/m/Y H:i' ) ), 0, 1 );
-	$pdf->Ln( 4 );
-
-	$order = array( 'sexta', 'sabado', 'domingo' );
-	foreach ( $order as $day_slug ) {
-		if ( $day_filter !== '' && $day_slug !== $day_filter ) {
-			continue;
+	try {
+		if ( ! zelo_ops_require_fpdf() ) {
+			return new WP_Error(
+				'zelo_export_pdf_unavailable',
+				__( 'Biblioteca PDF indisponível no servidor.', 'zelo-assistente' ),
+				array( 'status' => 500 )
+			);
 		}
 
-		$day_rows = array_values(
-			array_filter(
-				$schedule,
-				function ( $row ) use ( $day_slug ) {
-					return isset( $row['day'] ) && $row['day'] === $day_slug;
+		$event_name = get_bloginfo( 'name' );
+		$ev         = get_option( 'zelo_event_data', array() );
+		if ( ! empty( $ev['nome'] ) ) {
+			$event_name = zelo_pdf_scalar( $ev['nome'] );
+		} elseif ( ! empty( $ev['titulo'] ) ) {
+			$event_name = zelo_pdf_scalar( $ev['titulo'] );
+		}
+
+		// Paisagem: mais espaço para tabela (evita exceção FPDF por largura).
+		$pdf = new FPDF( 'L', 'mm', 'A4' );
+		$pdf->SetMargins( 10, 10, 10 );
+		$pdf->SetAutoPageBreak( true, 12 );
+		$pdf->AddPage();
+		$pdf->SetFont( 'Helvetica', 'B', 14 );
+		$pdf->Cell( 0, 8, zelo_pdf_encode( $event_name ), 0, 1 );
+		$pdf->SetFont( 'Helvetica', '', 10 );
+		$pdf->Cell( 0, 6, zelo_pdf_encode( __( 'Escala operacional', 'zelo-assistente' ) . ' — ' . wp_date( 'd/m/Y H:i' ) ), 0, 1 );
+		$pdf->Ln( 4 );
+
+		$cols    = array( 20, 24, 24, 42, 52, 105 );
+		$headers = array( 'Turno', 'Inicio', 'Fim', 'Local', 'Voluntario', 'Idiomas / Status' );
+
+		$order = array( 'sexta', 'sabado', 'domingo' );
+		foreach ( $order as $day_slug ) {
+			if ( $day_filter !== '' && $day_slug !== $day_filter ) {
+				continue;
+			}
+
+			$day_rows = array_values(
+				array_filter(
+					$schedule,
+					function ( $row ) use ( $day_slug ) {
+						return isset( $row['day'] ) && $row['day'] === $day_slug;
+					}
+				)
+			);
+			if ( empty( $day_rows ) && empty( $governance[ $day_slug ] ) ) {
+				continue;
+			}
+
+			$pdf->SetFont( 'Helvetica', 'B', 12 );
+			$pdf->Cell( 0, 8, zelo_pdf_encode( zelo_ops_day_label( $day_slug, $event_dates, true ) ), 0, 1 );
+
+			if ( ! empty( $governance[ $day_slug ] ) && is_array( $governance[ $day_slug ] ) ) {
+				$gov = $governance[ $day_slug ];
+				$pdf->SetFont( 'Helvetica', '', 9 );
+				$pdf->Cell( 0, 5, zelo_pdf_encode( 'Grupo A: ' . zelo_pdf_scalar( isset( $gov['group_a_supervisor'] ) ? $gov['group_a_supervisor'] : '-' ) ), 0, 1 );
+				$pdf->Cell( 0, 5, zelo_pdf_encode( 'Grupo B: ' . zelo_pdf_scalar( isset( $gov['group_b_supervisor'] ) ? $gov['group_b_supervisor'] : '-' ) ), 0, 1 );
+				$pdf->Cell( 0, 5, zelo_pdf_encode( 'Supervisor App: ' . zelo_pdf_scalar( isset( $gov['app_supervisor'] ) ? $gov['app_supervisor'] : '-' ) ), 0, 1 );
+				if ( ! empty( $gov['keymen'] ) && is_array( $gov['keymen'] ) ) {
+					foreach ( $gov['keymen'] as $kshift => $person ) {
+						$pdf->Cell( 0, 5, zelo_pdf_encode( zelo_pdf_scalar( $kshift ) . ': ' . zelo_pdf_scalar( $person ) ), 0, 1 );
+					}
 				}
+				$pdf->Ln( 2 );
+			}
+
+			if ( ! empty( $day_rows ) ) {
+				$pdf->SetFont( 'Helvetica', 'B', 8 );
+				$pdf->SetX( $pdf->GetX() );
+				foreach ( $headers as $i => $h ) {
+					$pdf->Cell( $cols[ $i ], 6, zelo_pdf_encode( $h ), 1, 0, 'C' );
+				}
+				$pdf->Ln();
+
+				$pdf->SetFont( 'Helvetica', '', 7 );
+				foreach ( $day_rows as $row ) {
+					$aid = isset( $row['id'] ) ? zelo_pdf_scalar( $row['id'] ) : '';
+					$langs = zelo_ops_export_format_languages( $row );
+					$status = zelo_ops_export_row_status( $aid, $commitments, $checkins );
+					$extra  = trim( $langs . ( $langs ? ' — ' : '' ) . $status );
+
+					$cells = array(
+						isset( $row['shift'] ) ? $row['shift'] : '',
+						isset( $row['start'] ) ? $row['start'] : '',
+						isset( $row['end'] ) ? $row['end'] : '',
+						isset( $row['location'] ) ? $row['location'] : '',
+						isset( $row['volunteer_name'] ) ? $row['volunteer_name'] : '',
+						$extra,
+					);
+					$max_lens = array( 8, 10, 10, 28, 32, 80 );
+					foreach ( $cells as $i => $cell ) {
+						$pdf->Cell(
+							$cols[ $i ],
+							6,
+							zelo_pdf_encode( zelo_pdf_truncate( zelo_pdf_scalar( $cell ), $max_lens[ $i ] ) ),
+							1,
+							0,
+							'L'
+						);
+					}
+					$pdf->Ln();
+				}
+			}
+			$pdf->Ln( 4 );
+		}
+
+		$filename = 'zelo-escala';
+		if ( $day_filter !== '' ) {
+			$filename .= '-' . $day_filter;
+		}
+		$filename .= '-' . wp_date( 'Y-m-d' ) . '.pdf';
+
+		$pdf_bytes = $pdf->Output( 'S' );
+		if ( ! is_string( $pdf_bytes ) || $pdf_bytes === '' ) {
+			throw new RuntimeException( __( 'PDF vazio após geração.', 'zelo-assistente' ) );
+		}
+
+		$response = new WP_REST_Response( $pdf_bytes, 200 );
+		$response->set_headers(
+			array(
+				'Content-Type'        => 'application/pdf',
+				'Content-Disposition' => 'attachment; filename="' . $filename . '"',
 			)
 		);
-		if ( empty( $day_rows ) && empty( $governance[ $day_slug ] ) ) {
-			continue;
+		return $response;
+	} catch ( Throwable $e ) {
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+			error_log( 'zelo_ops_export_pdf: ' . $e->getMessage() );
 		}
-
-		$pdf->SetFont( 'Helvetica', 'B', 12 );
-		$pdf->Cell( 0, 8, zelo_pdf_encode( zelo_ops_day_label( $day_slug, $event_dates, true ) ), 0, 1 );
-
-		if ( ! empty( $governance[ $day_slug ] ) && is_array( $governance[ $day_slug ] ) ) {
-			$gov = $governance[ $day_slug ];
-			$pdf->SetFont( 'Helvetica', '', 9 );
-			$pdf->Cell( 0, 5, zelo_pdf_encode( 'Grupo A: ' . ( isset( $gov['group_a_supervisor'] ) ? $gov['group_a_supervisor'] : '-' ) ), 0, 1 );
-			$pdf->Cell( 0, 5, zelo_pdf_encode( 'Grupo B: ' . ( isset( $gov['group_b_supervisor'] ) ? $gov['group_b_supervisor'] : '-' ) ), 0, 1 );
-			$pdf->Cell( 0, 5, zelo_pdf_encode( 'Supervisor App: ' . ( isset( $gov['app_supervisor'] ) ? $gov['app_supervisor'] : '-' ) ), 0, 1 );
-			if ( ! empty( $gov['keymen'] ) && is_array( $gov['keymen'] ) ) {
-				foreach ( $gov['keymen'] as $kshift => $person ) {
-					$pdf->Cell( 0, 5, zelo_pdf_encode( $kshift . ': ' . $person ), 0, 1 );
-				}
-			}
-			$pdf->Ln( 2 );
+		return new WP_Error(
+			'zelo_export_pdf_failed',
+			sprintf(
+				/* translators: %s: error message */
+				__( 'Falha ao gerar PDF: %s', 'zelo-assistente' ),
+				$e->getMessage()
+			),
+			array( 'status' => 500 )
+		);
+	} finally {
+		if ( $prev_handler !== null ) {
+			set_error_handler( $prev_handler );
+		} else {
+			restore_error_handler();
 		}
-
-		$pdf->SetFont( 'Helvetica', 'B', 8 );
-		$cols = array( 18, 22, 22, 38, 42, 48 );
-		$headers = array( 'Turno', 'Inicio', 'Fim', 'Local', 'Voluntario', 'Idiomas / Status' );
-		foreach ( $headers as $i => $h ) {
-			$pdf->Cell( $cols[ $i ], 6, zelo_pdf_encode( $h ), 1, 0, 'C' );
-		}
-		$pdf->Ln();
-
-		$pdf->SetFont( 'Helvetica', '', 7 );
-		foreach ( $day_rows as $row ) {
-			$aid    = isset( $row['id'] ) ? $row['id'] : '';
-			$langs  = isset( $row['languages'] ) && is_array( $row['languages'] ) ? implode( ', ', $row['languages'] ) : '';
-			$status = zelo_ops_export_row_status( $aid, $commitments, $checkins );
-			$extra  = trim( $langs . ( $langs ? ' — ' : '' ) . $status );
-
-			$cells = array(
-				isset( $row['shift'] ) ? $row['shift'] : '',
-				isset( $row['start'] ) ? $row['start'] : '',
-				isset( $row['end'] ) ? $row['end'] : '',
-				isset( $row['location'] ) ? $row['location'] : '',
-				isset( $row['volunteer_name'] ) ? $row['volunteer_name'] : '',
-				$extra,
-			);
-			foreach ( $cells as $i => $cell ) {
-				$pdf->Cell( $cols[ $i ], 6, zelo_pdf_encode( $cell ), 1, 0, 'L' );
-			}
-			$pdf->Ln();
-		}
-		$pdf->Ln( 4 );
 	}
-
-	$filename = 'zelo-escala';
-	if ( $day_filter !== '' ) {
-		$filename .= '-' . $day_filter;
-	}
-	$filename .= '-' . wp_date( 'Y-m-d' ) . '.pdf';
-
-	$pdf_bytes = $pdf->Output( 'S' );
-
-	$response = new WP_REST_Response( $pdf_bytes, 200 );
-	$response->set_headers(
-		array(
-			'Content-Type'        => 'application/pdf',
-			'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-		)
-	);
-	return $response;
 }
 
 /**

@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.9.1] - 2026-05-29
+
+### Corrigido
+- Export PDF (`/ops/export`): `try/catch`, supressão de deprecações FPDF em PHP 8.2+, layout em paisagem, truncagem de células e valores escalares seguros (evita HTTP 500 / erro crítico WP).
+
 ## [2.9.0] - 2026-05-28
 
 ### Adicionado

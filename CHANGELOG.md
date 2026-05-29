@@ -12,6 +12,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 - Escala: filtros responsável/voluntário; links WhatsApp.
 - Labels de catálogo admin em EN/ES (fase 2b i18n).
 
+### Corrigido
+- Plugin **2.9.1**: export PDF escala — exceções FPDF/PHP 8.2 tratadas; PDF em paisagem; mensagem JSON em falha (em vez de página crítica WP).
+- PWA build **90**: mensagem de erro do export PDF lê JSON da API.
+- PWA build **91**: `escapeHtml` no turno (`shift`) dos homens-chave na governança da escala.
+
 ### Adicionado
 - Plugin **2.9.0**: `GET /ops/export` PDF (e CSV) com FPDF; permissão `zelo_manage_ops`; rate limit.
 - PWA build **89**: snapshots offline (`zelo_locais`, `zelo_volunteer_ops`), badge stale, `default-avatar.png` precache, escala por dia em tabela, botão exportar PDF, i18n auditoria PT/EN/ES, home extras expandida.

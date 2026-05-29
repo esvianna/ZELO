@@ -266,8 +266,13 @@ const API = {
             credentials: 'include'
         });
         if (!response.ok) {
-            const data = await response.json().catch(() => ({}));
-            throw new Error(data.message || 'Falha ao exportar escala');
+            const ct = response.headers.get('content-type') || '';
+            let msg = 'Falha ao exportar escala';
+            if (ct.indexOf('application/json') !== -1) {
+                const data = await response.json().catch(() => ({}));
+                msg = data.message || msg;
+            }
+            throw new Error(msg);
         }
         return response.blob();
     },

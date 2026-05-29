@@ -2230,7 +2230,7 @@ const app = {
 
     renderOpsGovernanceCard(day, data) {
         const keymen = data.keymen
-            ? Object.entries(data.keymen).map(([shift, person]) => `${shift}: ${this.escapeHtml(person)}`).join(' | ')
+            ? Object.entries(data.keymen).map(([shift, person]) => `${this.escapeHtml(shift)}: ${this.escapeHtml(person)}`).join(' | ')
             : '-';
         return `
             <div class="ops-governance-card">
