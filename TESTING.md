@@ -235,6 +235,7 @@ Até lá, **checklist manual acima é a fonte de verdade**.
 | I2 | Idioma ES → login + cadastro + erros sessão | Sem português residual nas strings auditadas |
 | I3 | Header «Offline» / «Online» | Traduz ao mudar idioma |
 | I4 | Home com ES selecionado (sem sair da view) | Dashboard, widget clima e banner atualizam na hora |
+| I5 | Home «Minhas designações» (2+ turnos) | Título `Dia · data` + turno à direita; meta `Local · horário`; botões lado a lado |
 
 ---
 

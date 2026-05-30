@@ -2017,29 +2017,34 @@ const app = {
         return `<span class="ops-status-badge ${cls}">${this.escapeHtml(this.getCommitmentLabel(st))}</span>`;
     },
 
-    renderAssignmentActions(item, forSupervisorRow) {
+    renderAssignmentActions(item, forSupervisorRow, compactRow = false) {
         const idEsc = String(item.id).replace(/'/g, "\\'");
         const commitSt = this.getCommitmentStatus(item.id);
         const presenceSt = this.getCheckinStatus(item.id).status || 'pending';
         const onBehalf = forSupervisorRow && this.canSuperviseOps() && Number(item.wp_user_id) !== Number(this.auth.user?.id);
+        const btnPrimary = compactRow ? 'btn-assignment-action' : 'btn-block btn-block--compact';
+        const btnMuted = compactRow ? 'btn-assignment-action btn-assignment-action--muted' : 'btn-block btn-block--compact btn-block--muted';
         let html = '';
 
         if (commitSt === 'pending') {
             if (this.canCommitAssignment(item)) {
-                html += `<button type="button" class="btn-block btn-block--compact" onclick="app.doCommit('${idEsc}', true, ${onBehalf})">${i18n.t(onBehalf ? 'ops_commit_on_behalf' : 'ops_commit_accept')}</button>`;
+                html += `<button type="button" class="${btnPrimary}" onclick="app.doCommit('${idEsc}', true, ${onBehalf})">${i18n.t(onBehalf ? 'ops_commit_on_behalf' : 'ops_commit_accept')}</button>`;
                 if (!onBehalf) {
-                    html += `<button type="button" class="btn-block btn-block--compact btn-block--muted" onclick="app.doCommit('${idEsc}', false, false)">${i18n.t('ops_commit_decline')}</button>`;
+                    html += `<button type="button" class="${btnMuted}" onclick="app.doCommit('${idEsc}', false, false)">${i18n.t('ops_commit_decline')}</button>`;
                 }
             } else if (this.isCommitmentDeadlinePassed()) {
-                html += `<p class="text-muted" style="font-size:0.85rem;margin:0.25rem 0;">${i18n.t('ops_commitment_deadline_passed')}</p>`;
+                html += `<p class="text-muted home-assignment-note">${this.escapeHtml(i18n.t('ops_commitment_deadline_passed'))}</p>`;
             }
         }
 
         if (commitSt === 'accepted' && presenceSt === 'pending' && this.canCheckinAssignment(item) && this.canActPresenceOn(item, onBehalf)) {
-            html += `<button type="button" class="btn-block btn-block--compact" onclick="app.doCheckin('${idEsc}', ${onBehalf})">${i18n.t('ops_quick_checkin')}</button>`;
+            html += `<button type="button" class="${btnPrimary}" onclick="app.doCheckin('${idEsc}', ${onBehalf})">${i18n.t('ops_quick_checkin')}</button>`;
         }
         if (commitSt === 'accepted' && presenceSt === 'checked_in' && this.canCheckoutAssignment(item) && this.canActPresenceOn(item, onBehalf)) {
-            html += `<button type="button" class="btn-block btn-block--compact" onclick="app.doCheckout('${idEsc}', ${onBehalf})">${i18n.t('ops_status_checked_out')}</button>`;
+            html += `<button type="button" class="${btnPrimary}" onclick="app.doCheckout('${idEsc}', ${onBehalf})">${i18n.t('ops_status_checked_out')}</button>`;
+        }
+        if (compactRow && html) {
+            return `<div class="home-assignment-actions">${html}</div>`;
         }
         return html;
     },
@@ -2144,15 +2149,24 @@ const app = {
             assignmentsHtml = `<p class="text-muted">${i18n.t('ops_no_assignments')}</p>`;
         } else {
             assignmentsHtml = myRows.map((item) => {
-                const actions = this.renderAssignmentActions(item, false);
+                const actions = this.renderAssignmentActions(item, false, true);
+                const dayName = this.escapeHtml(this.getOpsDayName(item.day));
+                const dayDate = this.getOpsDayDateShort(item.day);
+                const dayLine = dayDate ? `${dayName} · ${this.escapeHtml(dayDate)}` : dayName;
+                const shift = this.escapeHtml(item.shift || '—');
+                const location = this.escapeHtml(item.location || '—');
+                const timeRange = this.escapeHtml(this.formatAssignmentTimeRange(item));
+                const meta = timeRange ? `${location} · ${timeRange}` : location;
                 return `
                     <div class="home-volunteer-assignment">
-                        <div class="home-volunteer-assignment-head">
-                            <strong>${this.escapeHtml(this.getOpsDayLabel(item.day))} · ${this.escapeHtml(item.shift || '')}</strong>
+                        <div class="home-volunteer-assignment-title">
+                            <span class="home-assignment-day">${dayLine}</span>
+                            <span class="home-assignment-shift">${this.escapeHtml(i18n.t('ops_shift_label'))} ${shift}</span>
+                        </div>
+                        <p class="home-assignment-meta">${meta}</p>
+                        <div class="home-assignment-badges">
                             ${this.getCommitmentBadge(item.id)} ${this.getOpsStatusBadge(item.id)}
                         </div>
-                        <p style="margin:0.25rem 0;font-size:0.9rem;"><strong>${i18n.t('ops_location')}:</strong> ${this.escapeHtml(item.location || '-')}</p>
-                        <p style="margin:0;font-size:0.85rem;color:#64748b;">${this.escapeHtml(item.start || '')}${item.end ? ' – ' + this.escapeHtml(item.end) : ''}</p>
                         ${actions}
                     </div>
                 `;
@@ -2256,6 +2270,30 @@ const app = {
             label += ` · ${parts[2]}/${parts[1]}`;
         }
         return label;
+    },
+
+    getOpsDayName(day) {
+        const map = { sexta: 'Sexta', sabado: 'Sábado', domingo: 'Domingo' };
+        return map[day] || day;
+    },
+
+    getOpsDayDateShort(day) {
+        const dates = this.data.volunteerOps?.settings?.event_dates || {};
+        const ymd = dates[day];
+        if (ymd && /^\d{4}-\d{2}-\d{2}$/.test(ymd)) {
+            const parts = ymd.split('-');
+            return `${parts[2]}/${parts[1]}`;
+        }
+        return '';
+    },
+
+    formatAssignmentTimeRange(item) {
+        const start = item.start || '';
+        const end = item.end || '';
+        if (start && end) {
+            return `${start}–${end}`;
+        }
+        return start || end || '';
     },
 
     getCheckinStatus(assignmentId) {

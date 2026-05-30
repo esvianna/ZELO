@@ -16,7 +16,9 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 **Plugin 2.9.4:** admin confirma cadastro pendente (Onboarding) — demo com e-mail fake.
 
-**Próximo:** deploy **plugin 2.9.4** + **PWA build 96**; validar export PDF e demo cadastro; Web Push VAPID.
+**PWA build 97:** cards compactos «Minhas designações» na home.
+
+**Próximo:** deploy **plugin 2.9.4** + **PWA build 97**; validar export PDF e demo cadastro; Web Push VAPID.
 
 ---
 
@@ -29,7 +31,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 - [x] Permissão export: `zelo_manage_ops`
 - [x] Admin Onboarding: confirmar cadastro (e-mail não verificado)
 
-### Frontend (PWA build 96)
+### Frontend (PWA build 97)
 
 - [x] Snapshots: `zelo_locais`, `zelo_volunteer_ops`, badges stale
 - [x] Avatar: `default-avatar.png` + precache SW + onerror fallback
@@ -47,7 +49,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Prioridade | Item | Notas |
 |------------|------|-------|
-| **Alta** | Deploy plugin 2.9.4 + PWA 96 | PDF + demo cadastro admin |
+| **Alta** | Deploy plugin 2.9.4 + PWA 97 | PDF + demo cadastro + cards home |
 | **Média** | Web Push VAPID + subscribe real | Stub 501 hoje |
 | **Baixa** | Filtros escala avançados + WhatsApp (B1.1, B1.3) | Após PDF |
 | **Baixa** | Inbox avisos servidor (B10) | Fase 2 UX |
