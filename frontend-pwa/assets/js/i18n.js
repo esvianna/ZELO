@@ -671,7 +671,7 @@ const i18n = {
         if (this.dict[lang]) {
             this.current = lang;
             localStorage.setItem('zelo_lang', lang);
-            this.updateDOM();
+            this.updateDOM(true);
 
             if (window.app && app.auth) {
                 app.auth.updateUI();
@@ -699,9 +699,11 @@ const i18n = {
     },
 
     /**
-     * Update all DOM elements with data-i18n attribute
+     * Update all DOM elements with data-i18n attribute.
+     *
+     * @param {boolean} notifyApp Se true, dispara zelo:langChanged (troca de idioma); omitir no boot.
      */
-    updateDOM() {
+    updateDOM(notifyApp = false) {
         document.querySelectorAll('[data-i18n]').forEach(el => {
             const key = el.getAttribute('data-i18n');
             const translation = this.t(key);
@@ -722,8 +724,9 @@ const i18n = {
             langSelect.value = this.current;
         }
         
-        // Dispatch custom event for app components to listen
-        document.dispatchEvent(new CustomEvent('zelo:langChanged', { detail: { lang: this.current } }));
+        if ( notifyApp ) {
+            document.dispatchEvent(new CustomEvent('zelo:langChanged', { detail: { lang: this.current } }));
+        }
     }
 };
 

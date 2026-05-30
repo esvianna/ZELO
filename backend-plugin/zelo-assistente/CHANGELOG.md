@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.9.4] - 2026-05-29
+
+### Adicionado
+- Admin **Onboarding**: lista cadastros com e-mail não confirmado; botão **Confirmar cadastro** (`zelo_admin_approve_user_registration`, meta `zelo_email_verified_by` / `_at` / `_method`).
+
 ## [2.9.3] - 2026-05-29
 
 ### Corrigido

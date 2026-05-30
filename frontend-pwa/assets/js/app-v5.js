@@ -693,10 +693,6 @@ const app = {
                 }
             }
         });
-
-        document.addEventListener('zelo:langChanged', () => {
-            this.refreshViewForLanguage();
-        });
     },
 
     /**
@@ -2887,6 +2883,12 @@ const app = {
         }
     }
 };
+
+document.addEventListener('zelo:langChanged', () => {
+    if ( typeof app !== 'undefined' && typeof app.refreshViewForLanguage === 'function' ) {
+        app.refreshViewForLanguage();
+    }
+});
 
 // Start app
 document.addEventListener('DOMContentLoaded', () => {

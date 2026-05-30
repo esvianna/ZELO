@@ -49,6 +49,22 @@ function zelo_ops_handle_link_request_admin_post() {
 	return '';
 }
 
+function zelo_ops_handle_registration_admin_post() {
+	if ( ! isset( $_POST['zelo_reg_admin'] ) || ! check_admin_referer( 'zelo_reg_admin_nonce' ) || ! current_user_can( 'manage_options' ) ) {
+		return '';
+	}
+	$user_id = isset( $_POST['user_id'] ) ? (int) $_POST['user_id'] : 0;
+	$action  = isset( $_POST['reg_action'] ) ? sanitize_key( wp_unslash( $_POST['reg_action'] ) ) : '';
+	if ( $user_id < 1 || $action !== 'approve' ) {
+		return __( 'Pedido inválido.', 'zelo-assistente' );
+	}
+	if ( function_exists( 'zelo_admin_approve_user_registration' ) ) {
+		$res = zelo_admin_approve_user_registration( $user_id, get_current_user_id() );
+		return is_wp_error( $res ) ? $res->get_error_message() : __( 'Cadastro confirmado. O usuário já pode entrar no app.', 'zelo-assistente' );
+	}
+	return '';
+}
+
 function zelo_parse_languages_csv( $s ) {
 	$out = array();
 	foreach ( explode( ',', (string) $s ) as $p ) {
@@ -278,6 +294,10 @@ add_action( 'admin_menu', 'zelo_register_volunteer_ops_admin_pages' );
 
 function zelo_render_volunteer_ops_admin_tabs() {
 	$msg  = zelo_ops_handle_link_request_admin_post();
+	$msg_reg = zelo_ops_handle_registration_admin_post();
+	if ( $msg_reg ) {
+		$msg = $msg ? $msg . ' ' . $msg_reg : $msg_reg;
+	}
 	$msg_tabs = zelo_ops_save_from_post_tabs();
 	if ( $msg_tabs ) {
 		$msg = $msg ? $msg . ' ' . $msg_tabs : $msg_tabs;
@@ -434,8 +454,45 @@ function zelo_render_volunteer_ops_admin_tabs() {
 
 			<div id="tab-onboarding" class="zelo-ops-tab" style="display:none;">
 				<?php
-				$onboard = function_exists( 'zelo_build_onboarding_report' ) ? zelo_build_onboarding_report() : array( 'items' => array(), 'link_requests' => array(), 'commitment_stats' => array() );
-				$stats   = isset( $onboard['commitment_stats'] ) ? $onboard['commitment_stats'] : array();
+				$onboard       = function_exists( 'zelo_build_onboarding_report' ) ? zelo_build_onboarding_report() : array( 'items' => array(), 'link_requests' => array(), 'commitment_stats' => array() );
+				$stats         = isset( $onboard['commitment_stats'] ) ? $onboard['commitment_stats'] : array();
+				$pending_regs  = function_exists( 'zelo_get_users_pending_email_verification' ) ? zelo_get_users_pending_email_verification() : array();
+				?>
+				<h3><?php esc_html_e( 'Cadastros aguardando confirmação de e-mail', 'zelo-assistente' ); ?></h3>
+				<p class="description"><?php esc_html_e( 'Usuários que se cadastraram na PWA mas ainda não confirmaram o e-mail (ou usaram e-mail inválido). Aprove manualmente para liberar o login.', 'zelo-assistente' ); ?></p>
+				<?php
+				if ( empty( $pending_regs ) ) {
+					echo '<p class="description">' . esc_html__( 'Nenhum cadastro pendente.', 'zelo-assistente' ) . '</p>';
+				} else {
+					echo '<table class="widefat striped"><thead><tr>';
+					echo '<th>' . esc_html__( 'Nome', 'zelo-assistente' ) . '</th>';
+					echo '<th>' . esc_html__( 'E-mail', 'zelo-assistente' ) . '</th>';
+					echo '<th>' . esc_html__( 'Cadastro em', 'zelo-assistente' ) . '</th>';
+					echo '<th>' . esc_html__( 'Ações', 'zelo-assistente' ) . '</th>';
+					echo '</tr></thead><tbody>';
+					foreach ( $pending_regs as $pending_user ) {
+						if ( ! $pending_user instanceof WP_User ) {
+							continue;
+						}
+						$registered = $pending_user->user_registered ? mysql2date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $pending_user->user_registered ) : '—';
+						echo '<tr>';
+						echo '<td>' . esc_html( $pending_user->display_name ) . '</td>';
+						echo '<td>' . esc_html( $pending_user->user_email ) . '</td>';
+						echo '<td>' . esc_html( $registered ) . '</td>';
+						echo '<td>';
+						?>
+						<form method="post" style="display:inline;">
+							<?php wp_nonce_field( 'zelo_reg_admin_nonce' ); ?>
+							<input type="hidden" name="zelo_reg_admin" value="1" />
+							<input type="hidden" name="user_id" value="<?php echo esc_attr( (string) $pending_user->ID ); ?>" />
+							<input type="hidden" name="reg_action" value="approve" />
+							<button type="submit" class="button button-primary"><?php esc_html_e( 'Confirmar cadastro', 'zelo-assistente' ); ?></button>
+						</form>
+						<?php
+						echo '</td></tr>';
+					}
+					echo '</tbody></table>';
+				}
 				?>
 				<h3><?php esc_html_e( 'Compromissos (confirmação antecipada)', 'zelo-assistente' ); ?></h3>
 				<p><?php printf( esc_html__( 'Pendentes: %d | Aceitos: %d | Recusados: %d | Total de designações: %d', 'zelo-assistente' ), (int) ( $stats['pending'] ?? 0 ), (int) ( $stats['accepted'] ?? 0 ), (int) ( $stats['declined'] ?? 0 ), (int) ( $stats['total'] ?? 0 ) ); ?></p>

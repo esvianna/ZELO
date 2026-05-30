@@ -145,6 +145,7 @@ Configurar `baseUrl` / `siteUrl` em `frontend-pwa/assets/js/api-v5.js` para o am
 | T7 | Supervisor check-in/checkout por outro | OK; `on_behalf` gravado |
 | T8 | Cadastro com e-mail = `expected_email` do roster → admin aprova vínculo | Linhas da escala ganham `wp_user_id` |
 | T9 | Admin aba Onboarding | Lista roster, fila de vínculos, stats compromissos |
+| T9b | Onboarding → cadastro pendente → **Confirmar cadastro** | `zelo_email_verified=1`; login PWA OK sem link no e-mail |
 | T10 | Voluntário comum tenta check-in em designação alheia | HTTP 403 |
 | T11 | Admin aba Onboarding com 70+ designações | «Ver todas as designações» lista o total; roster mostra contagem correta por voluntário |
 

@@ -153,6 +153,80 @@ function zelo_rest_auth_register( $request ) {
 }
 
 /**
+ * Marca e-mail do utilizador como verificado (link ou admin).
+ *
+ * @param int $user_id       ID WP.
+ * @param int $admin_user_id 0 = confirmação por link; >0 = aprovação admin.
+ * @return true|WP_Error
+ */
+function zelo_mark_user_email_verified( $user_id, $admin_user_id = 0 ) {
+	$user_id = (int) $user_id;
+	if ( $user_id < 1 ) {
+		return new WP_Error( 'zelo_invalid_user', __( 'Utilizador inválido.', 'zelo-assistente' ), array( 'status' => 400 ) );
+	}
+
+	$user = get_userdata( $user_id );
+	if ( ! $user ) {
+		return new WP_Error( 'zelo_invalid_user', __( 'Utilizador não encontrado.', 'zelo-assistente' ), array( 'status' => 404 ) );
+	}
+
+	if ( zelo_user_email_verified( $user_id ) ) {
+		return new WP_Error( 'zelo_already_verified', __( 'Este cadastro já está confirmado.', 'zelo-assistente' ), array( 'status' => 409 ) );
+	}
+
+	update_user_meta( $user_id, 'zelo_email_verified', '1' );
+	delete_user_meta( $user_id, 'zelo_email_verify_token' );
+	delete_user_meta( $user_id, 'zelo_email_verify_expires' );
+
+	$admin_user_id = (int) $admin_user_id;
+	if ( $admin_user_id > 0 ) {
+		update_user_meta( $user_id, 'zelo_email_verified_by', $admin_user_id );
+		update_user_meta( $user_id, 'zelo_email_verified_at', time() );
+		update_user_meta( $user_id, 'zelo_email_verified_method', 'admin' );
+	} else {
+		delete_user_meta( $user_id, 'zelo_email_verified_by' );
+		delete_user_meta( $user_id, 'zelo_email_verified_at' );
+		update_user_meta( $user_id, 'zelo_email_verified_method', 'link' );
+	}
+
+	return true;
+}
+
+/**
+ * Aprova cadastro pendente (confirma e-mail) pelo administrador.
+ *
+ * @param int $user_id  ID WP.
+ * @param int $admin_id Admin que aprovou.
+ * @return true|WP_Error
+ */
+function zelo_admin_approve_user_registration( $user_id, $admin_id ) {
+	if ( ! user_can( (int) $admin_id, 'manage_options' ) ) {
+		return new WP_Error( 'zelo_forbidden', __( 'Sem permissão.', 'zelo-assistente' ), array( 'status' => 403 ) );
+	}
+	return zelo_mark_user_email_verified( (int) $user_id, (int) $admin_id );
+}
+
+/**
+ * Utilizadores com cadastro aguardando confirmação de e-mail.
+ *
+ * @return WP_User[]
+ */
+function zelo_get_users_pending_email_verification() {
+	$users = get_users(
+		array(
+			'meta_key'     => 'zelo_email_verified',
+			'meta_value'   => '0',
+			'orderby'      => 'registered',
+			'order'        => 'DESC',
+			'number'       => 100,
+			'count_total'  => false,
+			'fields'       => 'all',
+		)
+	);
+	return is_array( $users ) ? $users : array();
+}
+
+/**
  * @param WP_REST_Request $request Request.
  */
 function zelo_rest_auth_verify_email( $request ) {
@@ -168,9 +242,10 @@ function zelo_rest_auth_verify_email( $request ) {
 		return new WP_Error( 'zelo_bad_token', __( 'Link expirado ou inválido.', 'zelo-assistente' ), array( 'status' => 400 ) );
 	}
 
-	update_user_meta( $user_id, 'zelo_email_verified', '1' );
-	delete_user_meta( $user_id, 'zelo_email_verify_token' );
-	delete_user_meta( $user_id, 'zelo_email_verify_expires' );
+	$result = zelo_mark_user_email_verified( $user_id, 0 );
+	if ( is_wp_error( $result ) ) {
+		return $result;
+	}
 
 	// Destino pós-confirmação: PWA em /zelo/ (filtro zelo_email_verify_redirect para personalizar).
 	$redirect = apply_filters( 'zelo_email_verify_redirect', trailingslashit( home_url( '/zelo' ) ) );

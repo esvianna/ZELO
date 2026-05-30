@@ -14,21 +14,22 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 **Correção export PDF (2.9.3):** fontes FPDF em `inc/lib/font/` + `FPDF_FONTPATH` (deploy deve incluir a pasta `font/`).
 
-**PWA build 95:** lista compacta de idiomas (divisórias, sem borda por linha).
+**Plugin 2.9.4:** admin confirma cadastro pendente (Onboarding) — demo com e-mail fake.
 
-**Próximo:** deploy **plugin 2.9.3** + **PWA build 95**; validar export PDF e i18n home em produção; Web Push VAPID.
+**Próximo:** deploy **plugin 2.9.4** + **PWA build 96**; validar export PDF e demo cadastro; Web Push VAPID.
 
 ---
 
 ## O que já foi implementado
 
-### Backend (`zelo-assistente` v2.9.3)
+### Backend (`zelo-assistente` v2.9.4)
 
 - [x] Tudo de 2.8.0 (idiomas perfil, compromisso, onboarding, etc.)
 - [x] `GET /ops/export` PDF/CSV — `inc/volunteer-ops-export.php`, FPDF vendored
 - [x] Permissão export: `zelo_manage_ops`
+- [x] Admin Onboarding: confirmar cadastro (e-mail não verificado)
 
-### Frontend (PWA build 95)
+### Frontend (PWA build 96)
 
 - [x] Snapshots: `zelo_locais`, `zelo_volunteer_ops`, badges stale
 - [x] Avatar: `default-avatar.png` + precache SW + onerror fallback
@@ -46,7 +47,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Prioridade | Item | Notas |
 |------------|------|-------|
-| **Alta** | Deploy plugin 2.9.3 + PWA 95 | Export PDF + i18n + cadastro checkboxes |
+| **Alta** | Deploy plugin 2.9.4 + PWA 96 | PDF + demo cadastro admin |
 | **Média** | Web Push VAPID + subscribe real | Stub 501 hoje |
 | **Baixa** | Filtros escala avançados + WhatsApp (B1.1, B1.3) | Após PDF |
 | **Baixa** | Inbox avisos servidor (B10) | Fase 2 UX |

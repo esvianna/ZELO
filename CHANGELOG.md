@@ -22,9 +22,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 - PWA build **93**: idiomas no cadastro/perfil — checkboxes em vez de `<select multiple>`.
 - PWA build **94**: layout dos checkboxes de idioma (espaçamento, alinhamento).
 - PWA build **95**: lista compacta de idiomas — divisórias leves, sem caixa por linha.
+- PWA build **96**: i18n — `updateDOM(notifyApp)` evita `zelo:langChanged` no boot; listener registado ao carregar `app-v5.js`.
 
 ### Adicionado
-- Plugin **2.9.0**: `GET /ops/export` PDF (e CSV) com FPDF; permissão `zelo_manage_ops`; rate limit.
+- Plugin **2.9.4**: admin Onboarding — confirmar cadastro pendente (e-mail não verificado).
 - PWA build **89**: snapshots offline (`zelo_locais`, `zelo_volunteer_ops`), badge stale, `default-avatar.png` precache, escala por dia em tabela, botão exportar PDF, i18n auditoria PT/EN/ES, home extras expandida.
 
 ### Adicionado (anterior)
