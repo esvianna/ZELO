@@ -17,7 +17,7 @@
     <!-- CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <link rel="stylesheet" href="assets/css/style-v5.css?v=91">
+    <link rel="stylesheet" href="assets/css/style-v5.css?v=94">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -323,8 +323,8 @@
                             <input type="tel" id="register-phone" class="form-input" autocomplete="tel">
                         </div>
                         <div class="form-group">
-                            <label data-i18n="register_languages_label">Idiomas que fala (opcional)</label>
-                            <select id="register-languages" class="form-input" multiple style="min-height:88px;"></select>
+                            <label id="register-languages-label" data-i18n="register_languages_label">Idiomas que fala (opcional)</label>
+                            <div id="register-languages" class="language-checkbox-list" role="group" aria-labelledby="register-languages-label"></div>
                         </div>
                         <div class="form-group">
                             <label>Senha (mín. 8 caracteres)</label>
@@ -386,9 +386,9 @@
                 </div>
 
                 <div id="profile-languages-section" class="profile-languages" style="padding:0 1rem 1rem;display:none;">
-                    <h3 style="font-size:1rem;margin:0 0 0.5rem;" data-i18n="profile_languages_title">Idiomas que falo</h3>
+                    <h3 id="profile-languages-title" style="font-size:1rem;margin:0 0 0.5rem;" data-i18n="profile_languages_title">Idiomas que falo</h3>
                     <p class="description" style="font-size:0.85rem;margin:0 0 0.75rem;" data-i18n="profile_languages_hint">Opcional. Usado na escala operacional.</p>
-                    <select id="profile-languages" class="form-input" multiple style="min-height:88px;width:100%;"></select>
+                    <div id="profile-languages" class="language-checkbox-list" role="group" aria-labelledby="profile-languages-title"></div>
                     <button type="button" class="btn-block" style="margin-top:0.75rem;" id="profile-languages-save" onclick="app.saveProfileLanguages()" data-i18n="profile_languages_save">Salvar idiomas</button>
                     <p id="profile-languages-msg" style="display:none;font-size:0.9rem;margin-top:0.5rem;"></p>
                 </div>
@@ -473,11 +473,11 @@
 
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script src="assets/js/zelo-build.js?v=91"></script>
-    <script src="assets/js/i18n.js?v=91"></script>
-    <script src="assets/js/api-v5.js?v=91"></script>
-    <script src="assets/js/map-manager.js?v=91"></script>
-    <script src="assets/js/app-v5.js?v=91"></script>
+    <script src="assets/js/zelo-build.js?v=94"></script>
+    <script src="assets/js/i18n.js?v=94"></script>
+    <script src="assets/js/api-v5.js?v=94"></script>
+    <script src="assets/js/map-manager.js?v=94"></script>
+    <script src="assets/js/app-v5.js?v=94"></script>
 
     <script>
         // Register Service Worker

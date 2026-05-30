@@ -672,15 +672,9 @@ const i18n = {
             this.current = lang;
             localStorage.setItem('zelo_lang', lang);
             this.updateDOM();
-            
-            // Re-render current view in app.js if needed (handled by an event or direct call)
-            if (window.app && app.router) {
-                app.router.navigate(app.router.currentView, app.router.lastParams || {});
-            }
-            
-            // Re-render auth icon logic explicitly to be safe
+
             if (window.app && app.auth) {
-                 app.auth.updateUI();
+                app.auth.updateUI();
             }
             const statusEl = document.getElementById('network-status');
             if (statusEl && typeof navigator !== 'undefined') {

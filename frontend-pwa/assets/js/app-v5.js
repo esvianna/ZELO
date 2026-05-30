@@ -160,8 +160,10 @@ const app = {
 
     router: {
         currentView: 'home',
+        lastParams: {},
 
         navigate(viewId, params = {}) {
+            this.lastParams = params || {};
             // Hide current view
             document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
 
@@ -381,10 +383,8 @@ const app = {
             const email = document.getElementById('register-email').value.trim();
             const phone = document.getElementById('register-phone').value.trim();
             const pass = document.getElementById('register-password').value;
-            const langSel = document.getElementById('register-languages');
-            const language_ids = langSel
-                ? Array.from(langSel.selectedOptions).map((o) => o.value).filter(Boolean)
-                : [];
+            const langContainer = document.getElementById('register-languages');
+            const language_ids = app.getSelectedLanguageIdsFromContainer(langContainer);
             errEl.style.display = 'none';
             btn.disabled = true;
             btn.textContent = i18n.t('loading');
@@ -520,30 +520,48 @@ const app = {
         }
     },
 
-    async fillLanguageSelect(selectEl, selectedIds = []) {
-        if (!selectEl) {
+    async fillLanguageCheckboxes(containerEl, selectedIds = []) {
+        if (!containerEl) {
             return;
         }
         const langs = await this.getLanguageCatalog();
         const selected = new Set((selectedIds || []).map(String));
-        selectEl.innerHTML = '';
+        containerEl.innerHTML = '';
         langs.forEach((lang) => {
-            const opt = document.createElement('option');
-            opt.value = lang.id;
-            opt.textContent = lang.name;
-            opt.selected = selected.has(String(lang.id));
-            selectEl.appendChild(opt);
+            const label = document.createElement('label');
+            label.className = 'language-checkbox-item';
+
+            const input = document.createElement('input');
+            input.type = 'checkbox';
+            input.value = lang.id;
+            input.checked = selected.has(String(lang.id));
+
+            const text = document.createElement('span');
+            text.textContent = lang.name;
+
+            label.appendChild(input);
+            label.appendChild(text);
+            containerEl.appendChild(label);
         });
     },
 
+    getSelectedLanguageIdsFromContainer(containerEl) {
+        if (!containerEl) {
+            return [];
+        }
+        return Array.from(containerEl.querySelectorAll('input[type="checkbox"]:checked'))
+            .map((el) => el.value)
+            .filter(Boolean);
+    },
+
     async loadRegisterLanguages() {
-        const sel = document.getElementById('register-languages');
-        await this.fillLanguageSelect(sel, []);
+        const container = document.getElementById('register-languages');
+        await this.fillLanguageCheckboxes(container, []);
     },
 
     async renderProfileLanguages() {
         const section = document.getElementById('profile-languages-section');
-        const sel = document.getElementById('profile-languages');
+        const container = document.getElementById('profile-languages');
         if (!this.auth.user) {
             if (section) {
                 section.style.display = 'none';
@@ -554,14 +572,14 @@ const app = {
             section.style.display = 'block';
         }
         const ids = this.auth.user.language_ids || [];
-        await this.fillLanguageSelect(sel, ids);
+        await this.fillLanguageCheckboxes(container, ids);
     },
 
     async saveProfileLanguages() {
-        const sel = document.getElementById('profile-languages');
+        const container = document.getElementById('profile-languages');
         const msg = document.getElementById('profile-languages-msg');
         const btn = document.getElementById('profile-languages-save');
-        const ids = sel ? Array.from(sel.selectedOptions).map((o) => o.value).filter(Boolean) : [];
+        const ids = this.getSelectedLanguageIdsFromContainer(container);
         if (msg) {
             msg.style.display = 'none';
         }
@@ -675,6 +693,74 @@ const app = {
                 }
             }
         });
+
+        document.addEventListener('zelo:langChanged', () => {
+            this.refreshViewForLanguage();
+        });
+    },
+
+    /**
+     * Re-renderiza blocos montados em JS após troca de idioma (data-i18n já foi atualizado).
+     */
+    refreshViewForLanguage() {
+        const viewId = this.router.currentView;
+        const params = this.router.lastParams || {};
+
+        switch (viewId) {
+            case 'home':
+                this.renderHomeWeatherWidget();
+                this.renderHomeNotice();
+                this.renderEventBanner();
+                this.renderHomeMap();
+                this.renderHomeVolunteerDashboard();
+                this.toggleHomeVisitorExtrasCollapse();
+                this.updateNotificationsBadge();
+                break;
+            case 'lista':
+                if (this.data.currentCategory) {
+                    this.renderList(
+                        this.data.currentCategory,
+                        this.data.listPage,
+                        this.data.listSearch,
+                        this.data.listSort,
+                        this.data.listBairro,
+                        this.data.listCidade,
+                        this.data.listOpenNow
+                    );
+                }
+                break;
+            case 'detalhe':
+                if (params.id != null) {
+                    this.renderDetail(params.id);
+                }
+                break;
+            case 'emergencia':
+                this.renderEmergency();
+                break;
+            case 'evento':
+                this.renderEventInfo();
+                break;
+            case 'tempo':
+                this.renderWeather();
+                break;
+            case 'avisos':
+                this.renderAvisos();
+                break;
+            case 'escala':
+                this.renderVolunteerOps();
+                break;
+            case 'mapa-evento':
+                this.renderIndoorEventMap();
+                break;
+            case 'profile':
+                this.renderProfileLanguages();
+                break;
+            case 'register':
+                this.loadRegisterLanguages();
+                break;
+            default:
+                break;
+        }
     },
 
     // --- Render Methods ---

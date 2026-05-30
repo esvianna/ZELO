@@ -159,6 +159,7 @@ Admin: Config → prazo, janelas presença, supervisores (select WP). Governanç
 | 1 | Admin Voluntários: idiomas no roster; salvar | Escala **sem** coluna Idiomas; designações na PWA mostram idiomas do voluntário |
 | 2 | `GET /wp-json/zelo/v1/ops/languages` sem auth | Lista `{ id, name }` de idiomas ativos |
 | 3 | Cadastro PWA com 2 idiomas | Após verificar e-mail e login, perfil mostra idiomas |
+| 3b | Cadastro: marcar 2+ idiomas (checkboxes) | Seleção clara sem Ctrl/toque prolongado; `language_ids` enviados no POST |
 | 4 | Perfil PWA: alterar idiomas e Salvar | `PATCH /auth/profile` OK; escala atualiza filtro/exibição |
 | 5 | Migração: escala antiga só com idiomas na linha | Após atualizar plugin, idiomas no roster; linhas da escala sem `languages` gravado |
 
@@ -232,6 +233,7 @@ Até lá, **checklist manual acima é a fonte de verdade**.
 | I1 | Perfil → idioma EN → escala operacional | Filtros, tabela, governança e export em inglês |
 | I2 | Idioma ES → login + cadastro + erros sessão | Sem português residual nas strings auditadas |
 | I3 | Header «Offline» / «Online» | Traduz ao mudar idioma |
+| I4 | Home com ES selecionado (sem sair da view) | Dashboard, widget clima e banner atualizam na hora |
 
 ---
 
