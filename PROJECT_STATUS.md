@@ -14,9 +14,9 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 **Correção export PDF (2.9.3):** fontes FPDF em `inc/lib/font/` + `FPDF_FONTPATH` (deploy deve incluir a pasta `font/`).
 
-**PWA build 94:** ajuste visual checkboxes de idioma (cadastro/perfil).
+**PWA build 95:** lista compacta de idiomas (divisórias, sem borda por linha).
 
-**Próximo:** deploy **plugin 2.9.3** + **PWA build 94**; validar export PDF e i18n home em produção; Web Push VAPID.
+**Próximo:** deploy **plugin 2.9.3** + **PWA build 95**; validar export PDF e i18n home em produção; Web Push VAPID.
 
 ---
 
@@ -28,7 +28,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 - [x] `GET /ops/export` PDF/CSV — `inc/volunteer-ops-export.php`, FPDF vendored
 - [x] Permissão export: `zelo_manage_ops`
 
-### Frontend (PWA build 94)
+### Frontend (PWA build 95)
 
 - [x] Snapshots: `zelo_locais`, `zelo_volunteer_ops`, badges stale
 - [x] Avatar: `default-avatar.png` + precache SW + onerror fallback
@@ -46,7 +46,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Prioridade | Item | Notas |
 |------------|------|-------|
-| **Alta** | Deploy plugin 2.9.3 + PWA 94 | Export PDF + i18n + cadastro checkboxes |
+| **Alta** | Deploy plugin 2.9.3 + PWA 95 | Export PDF + i18n + cadastro checkboxes |
 | **Média** | Web Push VAPID + subscribe real | Stub 501 hoje |
 | **Baixa** | Filtros escala avançados + WhatsApp (B1.1, B1.3) | Após PDF |
 | **Baixa** | Inbox avisos servidor (B10) | Fase 2 UX |

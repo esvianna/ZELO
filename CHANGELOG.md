@@ -21,6 +21,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 - PWA build **92**: re-render de blocos JS na troca de idioma (`refreshViewForLanguage` / `zelo:langChanged`).
 - PWA build **93**: idiomas no cadastro/perfil — checkboxes em vez de `<select multiple>`.
 - PWA build **94**: layout dos checkboxes de idioma (espaçamento, alinhamento).
+- PWA build **95**: lista compacta de idiomas — divisórias leves, sem caixa por linha.
 
 ### Adicionado
 - Plugin **2.9.0**: `GET /ops/export` PDF (e CSV) com FPDF; permissão `zelo_manage_ops`; rate limit.
