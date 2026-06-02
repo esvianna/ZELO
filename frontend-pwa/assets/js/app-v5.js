@@ -2396,7 +2396,12 @@ const app = {
         dayOrder.forEach((day) => {
             const rows = byDay[day];
             if (!rows || !rows.length) return;
-            const tableRows = rows.map((item) => this.renderOpsScheduleRow(item, uid)).join('');
+            const sorted = rows.slice().sort((a, b) => {
+                const ta = (a.start || '').localeCompare(b.start || '');
+                if (ta !== 0) return ta;
+                return (a.end || '').localeCompare(b.end || '');
+            });
+            const tableRows = sorted.map((item) => this.renderOpsScheduleRow(item, uid)).join('');
             sections.push(`
                 <section class="ops-day-group">
                     <h3 class="ops-day-group-title">${this.escapeHtml(this.getOpsDayLabel(day))}</h3>

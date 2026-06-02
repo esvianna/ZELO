@@ -6,6 +6,16 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 ---
 
+## ADR-016 — Horário customizado por linha da escala (2026-06-02)
+
+**Contexto:** Operação precisa subdividir turnos macro (A1 07:00–12:30) em faixas (ex. 07:00–08:15) sem novo modelo de slots nem CPT.
+
+**Decisão:** `schedule[].start` e `schedule[].end` opcionais por linha; se preenchidos, têm prioridade sobre o catálogo de turnos; se vazios, fallback ao turno. Admin grava via `sched_start[]`/`sched_end[]`. Validação: `start < end` e faixa contida no turno; duplicata = mesmo dia + turno + voluntário + mesmo par horário. Compromisso/check-in/lembretes/export continuam por `assignment_id` com janelas derivadas da faixa da linha.
+
+**Consequências:** Plugin **2.10.0**; PWA build **98** (ordenação por `start` na tabela). JSON avançado sem validação no save (comportamento pré-existente). Grade/headcount/programação permanecem fora de escopo.
+
+---
+
 ## ADR-015 — Snapshots offline + escala legível + export PDF (2026-05-28)
 
 **Contexto:** Escala e locais não persistiam em `localStorage`; avatar offline falhava; UI da escala difícil de ler; export REST era stub 501; strings novas só em PT.

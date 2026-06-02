@@ -2,6 +2,12 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.10.0] - 2026-06-02
+
+### Adicionado
+- **Escala:** campos `start`/`end` por linha (admin: inputs `type="time"`); persistidos em `schedule[]`; API/PWA/check-in/export usam faixa real.
+- Validação: horário dentro do intervalo do turno no catálogo; duplicata apenas se dia+turno+voluntário+início+fim forem iguais (várias faixas no mesmo turno permitidas).
+
 ## [2.9.4] - 2026-05-29
 
 ### Adicionado

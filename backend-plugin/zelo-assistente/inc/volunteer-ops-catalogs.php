@@ -735,29 +735,99 @@ function zelo_ops_migrate_languages_to_volunteers( $data ) {
 }
 
 /**
- * Horários de exibição da linha (sempre do catálogo de turnos).
+ * Início/fim do turno no catálogo.
+ *
+ * @param array  $catalogs Catalogs.
+ * @param string $shift    Shift code.
+ * @return array{0: string, 1: string}
+ */
+function zelo_ops_catalog_shift_start_end( $catalogs, $shift ) {
+	$sh = zelo_ops_find_shift_by_code( $catalogs, $shift );
+	if ( ! $sh ) {
+		return array( '', '' );
+	}
+	return array(
+		zelo_ops_normalize_time( isset( $sh['start'] ) ? $sh['start'] : '' ),
+		zelo_ops_normalize_time( isset( $sh['end'] ) ? $sh['end'] : '' ),
+	);
+}
+
+/**
+ * Converte HH:MM para minutos desde meia-noite.
+ *
+ * @param string $time Time.
+ * @return int|null
+ */
+function zelo_ops_time_to_minutes( $time ) {
+	$time = zelo_ops_normalize_time( $time );
+	if ( ! preg_match( '/^(\d{2}):(\d{2})$/', $time, $m ) ) {
+		return null;
+	}
+	return ( (int) $m[1] * 60 ) + (int) $m[2];
+}
+
+/**
+ * Limites do turno no catálogo.
+ *
+ * @param array  $catalogs   Catalogs.
+ * @param string $shift_code Shift code.
+ * @return array{start: string, end: string}|null
+ */
+function zelo_ops_shift_bounds( $catalogs, $shift_code ) {
+	list( $start, $end ) = zelo_ops_catalog_shift_start_end( $catalogs, $shift_code );
+	if ( $start === '' || $end === '' ) {
+		return null;
+	}
+	return array(
+		'start' => $start,
+		'end'   => $end,
+	);
+}
+
+/**
+ * Valida faixa horária da linha dentro do turno.
+ *
+ * @param string $row_start   Row start.
+ * @param string $row_end     Row end.
+ * @param string $bound_start Shift start.
+ * @param string $bound_end   Shift end.
+ * @return bool
+ */
+function zelo_ops_validate_schedule_times( $row_start, $row_end, $bound_start, $bound_end ) {
+	$rs = zelo_ops_time_to_minutes( $row_start );
+	$re = zelo_ops_time_to_minutes( $row_end );
+	$bs = zelo_ops_time_to_minutes( $bound_start );
+	$be = zelo_ops_time_to_minutes( $bound_end );
+	if ( null === $rs || null === $re || null === $bs || null === $be ) {
+		return false;
+	}
+	return $rs < $re && $bs <= $rs && $re <= $be;
+}
+
+/**
+ * Horários efetivos da linha: customizados na linha ou padrão do catálogo de turnos.
  *
  * @param array $row      Schedule row.
  * @param array $catalogs Catalogs.
  * @return array{0: string, 1: string} start, end.
  */
 function zelo_ops_schedule_row_start_end( $row, $catalogs ) {
+	$row_start = zelo_ops_normalize_time( isset( $row['start'] ) ? $row['start'] : '' );
+	$row_end   = zelo_ops_normalize_time( isset( $row['end'] ) ? $row['end'] : '' );
+
+	if ( $row_start !== '' && $row_end !== '' ) {
+		return array( $row_start, $row_end );
+	}
+
 	$shift = isset( $row['shift'] ) ? sanitize_text_field( $row['shift'] ) : '';
-	$start = '';
-	$end   = '';
-	$sh    = zelo_ops_find_shift_by_code( $catalogs, $shift );
-	if ( $sh ) {
-		$start = zelo_ops_normalize_time( isset( $sh['start'] ) ? $sh['start'] : '' );
-		$end   = zelo_ops_normalize_time( isset( $sh['end'] ) ? $sh['end'] : '' );
+	list( $cat_start, $cat_end ) = zelo_ops_catalog_shift_start_end( $catalogs, $shift );
+	if ( $row_start === '' ) {
+		$row_start = $cat_start;
 	}
-	// Legado: linhas antigas com start/end gravados antes de 2.6.1.
-	if ( $start === '' && ! empty( $row['start'] ) ) {
-		$start = zelo_ops_normalize_time( $row['start'] );
+	if ( $row_end === '' ) {
+		$row_end = $cat_end;
 	}
-	if ( $end === '' && ! empty( $row['end'] ) ) {
-		$end = zelo_ops_normalize_time( $row['end'] );
-	}
-	return array( $start, $end );
+	return array( $row_start, $row_end );
 }
 
 /**
@@ -858,8 +928,8 @@ function zelo_normalize_schedule_row_with_catalogs( $row, $catalogs ) {
 		'shift'               => $shift,
 		'volunteer_name'      => $name,
 		'location'            => $loc,
-		'start'               => '',
-		'end'                 => '',
+		'start'               => zelo_ops_normalize_time( isset( $row['start'] ) ? $row['start'] : '' ),
+		'end'                 => zelo_ops_normalize_time( isset( $row['end'] ) ? $row['end'] : '' ),
 		'languages'           => $languages,
 		'wp_user_id'          => $wp_uid,
 		'roster_volunteer_id' => $rv_id,
@@ -873,10 +943,16 @@ function zelo_normalize_schedule_row_with_catalogs( $row, $catalogs ) {
 /**
  * Valida linhas da escala.
  *
- * @param array $schedule Normalized schedule.
+ * @param array      $schedule  Normalized schedule.
+ * @param array|null $catalogs  Catalogs (opcional; usa dados gravados se omitido).
  * @return true|WP_Error
  */
-function zelo_validate_schedule_rows( $schedule ) {
+function zelo_validate_schedule_rows( $schedule, $catalogs = null ) {
+	if ( ! is_array( $catalogs ) ) {
+		$data     = zelo_get_volunteer_ops_data();
+		$catalogs = isset( $data['catalogs'] ) && is_array( $data['catalogs'] ) ? $data['catalogs'] : array();
+	}
+
 	$wp_seen = array();
 	$rv_seen = array();
 
@@ -886,6 +962,8 @@ function zelo_validate_schedule_rows( $schedule ) {
 		$rv   = isset( $row['roster_volunteer_id'] ) ? sanitize_text_field( $row['roster_volunteer_id'] ) : '';
 		$day  = isset( $row['day'] ) ? sanitize_key( $row['day'] ) : '';
 		$sh   = isset( $row['shift'] ) ? sanitize_text_field( $row['shift'] ) : '';
+		$st   = isset( $row['start'] ) ? zelo_ops_normalize_time( $row['start'] ) : '';
+		$en   = isset( $row['end'] ) ? zelo_ops_normalize_time( $row['end'] ) : '';
 
 		if ( $wp > 0 && $rv !== '' ) {
 			return new WP_Error(
@@ -902,14 +980,53 @@ function zelo_validate_schedule_rows( $schedule ) {
 			continue;
 		}
 
+		$bounds = zelo_ops_shift_bounds( $catalogs, $sh );
+		if ( ! $bounds ) {
+			return new WP_Error(
+				'zelo_schedule_unknown_shift',
+				sprintf(
+					/* translators: 1: line number, 2: shift code */
+					__( 'Linha %1$d: turno «%2$s» não encontrado no catálogo ou sem horário definido.', 'zelo-assistente' ),
+					$line,
+					$sh
+				)
+			);
+		}
+
+		if ( $st === '' || $en === '' ) {
+			return new WP_Error(
+				'zelo_schedule_missing_times',
+				sprintf(
+					/* translators: %d: line number */
+					__( 'Linha %d: informe início e fim dentro do turno (ou selecione o turno para preencher automaticamente).', 'zelo-assistente' ),
+					$line
+				)
+			);
+		}
+
+		if ( ! zelo_ops_validate_schedule_times( $st, $en, $bounds['start'], $bounds['end'] ) ) {
+			return new WP_Error(
+				'zelo_schedule_times_out_of_bounds',
+				sprintf(
+					/* translators: 1: line number, 2: row start, 3: row end, 4: bound start, 5: bound end */
+					__( 'Linha %1$d: horário %2$s–%3$s deve estar dentro do turno %4$s–%5$s e o início deve ser anterior ao fim.', 'zelo-assistente' ),
+					$line,
+					$st,
+					$en,
+					$bounds['start'],
+					$bounds['end']
+				)
+			);
+		}
+
 		if ( $wp > 0 ) {
-			$key = $day . '|' . $sh . '|wp|' . $wp;
+			$key = $day . '|' . $sh . '|wp|' . $wp . '|' . $st . '|' . $en;
 			if ( isset( $wp_seen[ $key ] ) ) {
 				return new WP_Error(
 					'zelo_schedule_duplicate',
 					sprintf(
 						/* translators: %d: line number */
-						__( 'Linha %d: o mesmo utilizador WordPress já está designado neste dia e turno.', 'zelo-assistente' ),
+						__( 'Linha %d: designação duplicada (mesmo dia, turno, utilizador e horário).', 'zelo-assistente' ),
 						$line
 					)
 				);
@@ -918,13 +1035,13 @@ function zelo_validate_schedule_rows( $schedule ) {
 		}
 
 		if ( $rv !== '' ) {
-			$key = $day . '|' . $sh . '|rv|' . $rv;
+			$key = $day . '|' . $sh . '|rv|' . $rv . '|' . $st . '|' . $en;
 			if ( isset( $rv_seen[ $key ] ) ) {
 				return new WP_Error(
 					'zelo_schedule_duplicate',
 					sprintf(
 						/* translators: %d: line number */
-						__( 'Linha %d: o mesmo voluntário cadastrado já está designado neste dia e turno.', 'zelo-assistente' ),
+						__( 'Linha %d: designação duplicada (mesmo dia, turno, voluntário e horário).', 'zelo-assistente' ),
 						$line
 					)
 				);

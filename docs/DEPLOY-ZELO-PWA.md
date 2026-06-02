@@ -29,7 +29,7 @@ A programação do dept. de informações tem **três blocos** (Sexta, Sábado, 
 2. **Turnos** — horários globais: A1/B1 `07:00–12:30`, A2/B2 `12:30–18:30`.
 3. **Governança** — **um bloco por dia**: supervisores Grupo A/B/App + homens-chave A1–B2 (podem **rodar** entre dias).
 4. **Voluntários** — roster com `expected_email` para cadastro no app.
-5. **Escala** — **uma linha por voluntário por dia por turno** (coluna Dia = Sexta/Sábado/Domingo; coluna Turno = A1/B1/A2/B2; Local = posto físico).
+5. **Escala** — **uma linha por voluntário por faixa horária** (Dia, Turno A1–B2, Local, **Início/Fim** — plugin 2.10.0+; padrão = turno inteiro, pode subdividir ex. 07:00–08:15 dentro de A1). Várias linhas no mesmo turno com horários diferentes são permitidas.
 6. **Onboarding** — confirmar cadastros com e-mail pendente; aprovar vínculos cadastro ↔ roster.
 
 Após salvar Config, os selects de dia no admin e a PWA exibem a data (ex.: `Sexta · 26/06`).

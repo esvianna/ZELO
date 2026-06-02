@@ -60,11 +60,13 @@ Configurar `baseUrl` / `siteUrl` em `frontend-pwa/assets/js/api-v5.js` para o am
 | 1 | Abrir **Locais Zelo → Operação Voluntários** após atualizar plugin | Abas: Escala, Turnos, Locais, Idiomas, Voluntários, Governança, Config, JSON |
 | 2 | Aba **Turnos** | Códigos A1–B2 (ou migrados); início/fim; ativo |
 | 3 | Aba **Voluntários** | Cadastrar nome + telefone sem conta WP |
-| 4 | Aba **Escala** | Dia (select), turno, voluntário (WP ou cadastrado), local, idiomas (multi); sem coluna `id` visível |
-| 5 | Selecionar turno | Início/fim preenchidos do catálogo (editáveis) |
+| 4 | Aba **Escala** (2.10.0+) | Dia, turno, voluntário, local, início/fim (`type="time"`); sem coluna `id` visível |
+| 5 | Selecionar turno | Início/fim preenchidos do catálogo; ajustar faixa dentro do turno |
 | 6 | Selecionar voluntário | Nome preenchido (editável) |
-| 7 | Duplicar mesma pessoa em sexta+A1 | Erro ao salvar; escala não gravada |
-| 8 | Salvar abas | Notice de sucesso; PWA lista escala normalmente |
+| 7a | Duplicar mesma pessoa em sexta+A1 com **mesmos** início/fim | Erro ao salvar |
+| 7b | Mesma pessoa em sexta+A1 com horários **diferentes** (ex. 07:00–08:15 e 11:00–12:30) | Salva OK |
+| 7c | Horário fora do turno (ex. 06:00–08:00 em A1 07:00–12:30) | Erro de validação |
+| 8 | Salvar abas | Notice de sucesso; PWA lista escala com horários da linha |
 | 9 | JSON avançado | `catalogs` e `roster_volunteer_id` presentes após save |
 
 ---

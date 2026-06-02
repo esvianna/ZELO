@@ -117,6 +117,8 @@ function zelo_ops_save_from_post_tabs() {
 				'id'            => isset( $_POST['sched_id'][ $i ] ) ? sanitize_text_field( wp_unslash( $_POST['sched_id'][ $i ] ) ) : '',
 				'day'           => isset( $_POST['sched_day'][ $i ] ) ? sanitize_key( wp_unslash( $_POST['sched_day'][ $i ] ) ) : '',
 				'shift'         => isset( $_POST['sched_shift'][ $i ] ) ? sanitize_text_field( wp_unslash( $_POST['sched_shift'][ $i ] ) ) : '',
+				'start'         => isset( $_POST['sched_start'][ $i ] ) ? sanitize_text_field( wp_unslash( $_POST['sched_start'][ $i ] ) ) : '',
+				'end'           => isset( $_POST['sched_end'][ $i ] ) ? sanitize_text_field( wp_unslash( $_POST['sched_end'][ $i ] ) ) : '',
 				'volunteer_ref' => isset( $_POST['sched_volunteer_ref'][ $i ] ) ? sanitize_text_field( wp_unslash( $_POST['sched_volunteer_ref'][ $i ] ) ) : '',
 				'location_id'   => isset( $_POST['sched_loc_id'][ $i ] ) ? sanitize_text_field( wp_unslash( $_POST['sched_loc_id'][ $i ] ) ) : '',
 			);
@@ -127,7 +129,7 @@ function zelo_ops_save_from_post_tabs() {
 		}
 	}
 
-	$valid = zelo_validate_schedule_rows( $schedule );
+	$valid = zelo_validate_schedule_rows( $schedule, $catalogs );
 	if ( is_wp_error( $valid ) ) {
 		return $valid->get_error_message();
 	}
@@ -346,9 +348,10 @@ function zelo_render_volunteer_ops_admin_tabs() {
 			<input type="hidden" name="zelo_ops_tabs_save" value="1" />
 
 			<div id="tab-escala" class="zelo-ops-tab" style="display:block;">
-				<p class="description"><?php esc_html_e( 'Cada linha = um dia + um turno (A1/B1/A2/B2) + um voluntário. Repita linhas para Sexta, Sábado e Domingo. A coluna Turno corresponde ao “Grupo/Área” da programação; Local é o posto físico. Horários vêm da aba Turnos.', 'zelo-assistente' ); ?></p>
+				<p class="description"><?php esc_html_e( 'Cada linha = um dia + um turno (A1/B1/A2/B2) + um voluntário + faixa horária. Repita linhas para Sexta, Sábado e Domingo. A coluna Turno corresponde ao “Grupo/Área” da programação; Local é o posto físico.', 'zelo-assistente' ); ?></p>
+				<p class="description"><?php esc_html_e( 'Início e fim são preenchidos ao selecionar o turno (limites da aba Turnos). Pode ajustar a faixa dentro desse intervalo. Várias linhas no mesmo turno com horários diferentes são permitidas.', 'zelo-assistente' ); ?></p>
 				<p class="description"><?php esc_html_e( 'Idiomas vêm do perfil do voluntário (aba Voluntários ou cadastro no app), não desta tabela.', 'zelo-assistente' ); ?></p>
-				<p class="description"><?php esc_html_e( 'Não repita a mesma pessoa no mesmo dia e turno.', 'zelo-assistente' ); ?></p>
+				<p class="description"><?php esc_html_e( 'Não repita a mesma pessoa no mesmo dia, turno e horário (início + fim iguais).', 'zelo-assistente' ); ?></p>
 				<table class="widefat striped zelo-sched-table">
 					<thead>
 						<tr>
@@ -601,7 +604,7 @@ function zelo_render_volunteer_ops_admin_tabs() {
 	function zeloOpsTab(e,id){e.preventDefault();document.querySelectorAll('.zelo-ops-tab').forEach(function(el){el.style.display='none';});document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('nav-tab-active');});e.target.classList.add('nav-tab-active');document.getElementById(id).style.display='block';var sb=document.getElementById('zelo-ops-submit-tabs');if(sb)sb.style.display=(id==='tab-json')?'none':'block';}
 	function zeloAddSchedRow(){var tb=document.getElementById('zelo-sched-body');var tr=document.createElement('tr');var idx=String(tb.querySelectorAll('tr').length);tr.innerHTML=ZELO_SCHED_ROW_TPL.split('__ROW_INDEX__').join(idx);tb.appendChild(tr);zeloBindSchedRow(tr);}
 	function zeloAddCatalogRow(bodyId,type){var tb=document.getElementById(bodyId);var tr=document.createElement('tr');var tpl='';var idx=String(tb.querySelectorAll('tr').length);if(type==='shift')tpl=ZELO_CAT_SHIFT_TPL;else if(type==='loc')tpl=ZELO_CAT_LOC_TPL;else if(type==='lang')tpl=ZELO_CAT_LANG_TPL;else if(type==='vol')tpl=ZELO_CAT_VOL_TPL;tr.innerHTML=tpl.split('__IDX__').join(idx);tb.appendChild(tr);}
-	function zeloOnShiftChange(sel){var tr=sel.closest('tr');if(!tr)return;var opt=sel.options[sel.selectedIndex];var st=opt?opt.getAttribute('data-start'):'';var en=opt?opt.getAttribute('data-end'):'';var si=tr.querySelector('.sched-time-start');var ei=tr.querySelector('.sched-time-end');if(si){si.textContent=st||'—';}if(ei){ei.textContent=en||'—';}}
+	function zeloOnShiftChange(sel){var tr=sel.closest('tr');if(!tr)return;var opt=sel.options[sel.selectedIndex];var st=opt?opt.getAttribute('data-start'):'';var en=opt?opt.getAttribute('data-end'):'';var si=tr.querySelector('.sched-time-start');var ei=tr.querySelector('.sched-time-end');if(si){si.value=st||'';}if(ei){ei.value=en||'';}}
 	function zeloBindSchedRow(tr){var sh=tr.querySelector('.sched-shift');if(sh){sh.addEventListener('change',function(){zeloOnShiftChange(sh);});zeloOnShiftChange(sh);}}
 	document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('#zelo-sched-body tr').forEach(zeloBindSchedRow);});
 	function zeloRemoveSchedRow(btn){var tr=btn.closest('tr');if(tr)tr.remove();}
@@ -803,8 +806,8 @@ function zelo_ops_schedule_row_html( $r, $ctx = array(), $row_index = 0 ) {
 	$loc_name = isset( $r['location'] ) ? $r['location'] : '';
 	$vref     = zelo_ops_volunteer_ref_from_row( $r );
 	list( $st, $en ) = zelo_ops_schedule_row_start_end( $r, $catalogs );
-	$st_disp = $st !== '' ? esc_html( $st ) : '—';
-	$en_disp = $en !== '' ? esc_html( $en ) : '—';
+	$st_val = zelo_ops_time_input_value( $st );
+	$en_val = zelo_ops_time_input_value( $en );
 
 	$day_html = '<select name="sched_day[]" class="sched-day" style="min-width:160px;">';
 	$day_html .= '<option value="">' . esc_html__( '—', 'zelo-assistente' ) . '</option>';
@@ -819,8 +822,8 @@ function zelo_ops_schedule_row_html( $r, $ctx = array(), $row_index = 0 ) {
 		. '<td><select name="sched_shift[]" class="sched-shift" style="min-width:90px;" onchange="zeloOnShiftChange(this)">' . zelo_ops_shift_options_html( $catalogs['shifts'], $shift ) . '</select></td>'
 		. '<td>' . zelo_ops_volunteer_ref_select_html( $ctx, $vref ) . '</td>'
 		. '<td><select name="sched_loc_id[]" class="sched-loc" style="min-width:120px;">' . zelo_ops_location_options_html( $catalogs['locations'], $loc_name ) . '</select></td>'
-		. '<td><span class="sched-time-start" style="display:inline-block;min-width:52px;">' . $st_disp . '</span></td>'
-		. '<td><span class="sched-time-end" style="display:inline-block;min-width:52px;">' . $en_disp . '</span></td>'
+		. '<td><input type="time" name="sched_start[]" class="sched-time-start" value="' . esc_attr( $st_val ) . '" style="min-width:88px;" /></td>'
+		. '<td><input type="time" name="sched_end[]" class="sched-time-end" value="' . esc_attr( $en_val ) . '" style="min-width:88px;" /></td>'
 		. '<td><button type="button" class="button button-link-delete" onclick="zeloRemoveSchedRow(this)" aria-label="' . esc_attr__( 'Remover', 'zelo-assistente' ) . '">&times;</button></td>'
 		. '</tr>';
 }

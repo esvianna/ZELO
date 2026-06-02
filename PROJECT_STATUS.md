@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-05-29** (export PDF fontes, i18n re-render).
+> Última atualização: **2026-06-02** (escala horário customizado por linha).
 
 ---
 
@@ -10,29 +10,26 @@
 
 O projeto está em **produção funcional** com foco operacional para o **departamento de informações** (voluntários), mantendo o app **público para visitantes ocasionais**.
 
-**Pacote offline + i18n + escala (2.9.0 / PWA 89):** snapshots localStorage, escala por dia, export PDF servidor, auditoria i18n PT/EN/ES, ADR-015.
+**Plugin 2.10.0:** escala com `start`/`end` por linha (admin + validação dentro do turno); ADR-016.
 
-**Correção export PDF (2.9.3):** fontes FPDF em `inc/lib/font/` + `FPDF_FONTPATH` (deploy deve incluir a pasta `font/`).
+**PWA build 98:** tabela da escala ordenada por horário de início.
 
-**Plugin 2.9.4:** admin confirma cadastro pendente (Onboarding) — demo com e-mail fake.
+**Anterior:** 2.9.x export PDF, onboarding, cards home (build 97).
 
-**PWA build 97:** cards compactos «Minhas designações» na home.
-
-**Próximo:** deploy **plugin 2.9.4** + **PWA build 97**; validar export PDF e demo cadastro; Web Push VAPID.
+**Próximo:** deploy **plugin 2.10.0** + **PWA build 98**; smoke escala com sub-faixas; Web Push VAPID.
 
 ---
 
 ## O que já foi implementado
 
-### Backend (`zelo-assistente` v2.9.4)
+### Backend (`zelo-assistente` v2.10.0)
 
-- [x] Tudo de 2.8.0 (idiomas perfil, compromisso, onboarding, etc.)
-- [x] `GET /ops/export` PDF/CSV — `inc/volunteer-ops-export.php`, FPDF vendored
-- [x] Permissão export: `zelo_manage_ops`
-- [x] Admin Onboarding: confirmar cadastro (e-mail não verificado)
+- [x] Escala: horário customizado por linha (`schedule.start`/`end`), validação bounds + duplicata com faixa horária
+- [x] Tudo de 2.9.x (export PDF, onboarding, idiomas perfil, compromisso, etc.)
 
-### Frontend (PWA build 97)
+### Frontend (PWA build 98)
 
+- [x] Escala detalhada: ordenação por `start` dentro do dia
 - [x] Snapshots: `zelo_locais`, `zelo_volunteer_ops`, badges stale
 - [x] Avatar: `default-avatar.png` + precache SW + onerror fallback
 - [x] Escala: agrupamento por dia, tabela responsiva, export PDF
@@ -41,7 +38,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ### Governança docs
 
-- [x] ADR-015; TESTING §12–§13; DEPLOY atualizado (export)
+- [x] ADR-015/016; TESTING §3/§12–§13; DEPLOY atualizado
 
 ---
 
@@ -49,7 +46,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Prioridade | Item | Notas |
 |------------|------|-------|
-| **Alta** | Deploy plugin 2.9.4 + PWA 97 | PDF + demo cadastro + cards home |
+| **Alta** | Deploy plugin 2.10.0 + PWA 98 | Escala sub-faixas + smoke TESTING §3 |
 | **Média** | Web Push VAPID + subscribe real | Stub 501 hoje |
 | **Baixa** | Filtros escala avançados + WhatsApp (B1.1, B1.3) | Após PDF |
 | **Baixa** | Inbox avisos servidor (B10) | Fase 2 UX |
@@ -65,7 +62,14 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ---
 
-## Última sessão (2026-05-28)
+## Última sessão (2026-06-02)
+
+- Plugin 2.10.0: `start`/`end` por linha da escala; admin inputs time; validação bounds e duplicata com horário.
+- PWA build 98: ordenação da escala por início; cache alinhado.
+
+**Como testar:** `TESTING.md` §3 (7a–7c), §4 (horários na PWA/check-in).
+
+## Sessão anterior (2026-05-28)
 
 - Offline-first: `api-v5.js` snapshots + `app-v5.js` stale UI.
 - Avatar default + precache; cache best-effort same-origin.
