@@ -58,9 +58,10 @@ Configurar `baseUrl` / `siteUrl` em `frontend-pwa/assets/js/api-v5.js` para o am
 | # | Passo | Esperado |
 |---|-------|----------|
 | 1 | Abrir **Locais Zelo → Operação Voluntários** após atualizar plugin | Abas: Escala, Turnos, Locais, Idiomas, Voluntários, Governança, Config, JSON |
-| 2 | Aba **Turnos** | Códigos A1–B2 (ou migrados); início/fim; ativo |
+| 2 | Aba **Turnos** (2.10.1+) | Códigos A1–B2; **local** (select); início/fim; ativo |
 | 3 | Aba **Voluntários** | Cadastrar nome + telefone sem conta WP |
-| 4 | Aba **Escala** (2.10.0+) | Dia, turno, voluntário, local, início/fim (`type="time"`); sem coluna `id` visível |
+| 4 | Aba **Escala** (2.10.0+) | Dia, turno, voluntário, início/fim (`type="time"`); sem coluna Local (vem do turno) |
+| 4b | Escala sem local no turno A1 | Erro ao salvar: configure local na aba Turnos |
 | 5 | Selecionar turno | Início/fim preenchidos do catálogo; ajustar faixa dentro do turno |
 | 6 | Selecionar voluntário | Nome preenchido (editável) |
 | 7a | Duplicar mesma pessoa em sexta+A1 com **mesmos** início/fim | Erro ao salvar |

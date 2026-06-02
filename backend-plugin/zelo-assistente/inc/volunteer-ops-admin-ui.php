@@ -120,7 +120,6 @@ function zelo_ops_save_from_post_tabs() {
 				'start'         => isset( $_POST['sched_start'][ $i ] ) ? sanitize_text_field( wp_unslash( $_POST['sched_start'][ $i ] ) ) : '',
 				'end'           => isset( $_POST['sched_end'][ $i ] ) ? sanitize_text_field( wp_unslash( $_POST['sched_end'][ $i ] ) ) : '',
 				'volunteer_ref' => isset( $_POST['sched_volunteer_ref'][ $i ] ) ? sanitize_text_field( wp_unslash( $_POST['sched_volunteer_ref'][ $i ] ) ) : '',
-				'location_id'   => isset( $_POST['sched_loc_id'][ $i ] ) ? sanitize_text_field( wp_unslash( $_POST['sched_loc_id'][ $i ] ) ) : '',
 			);
 			if ( $row['day'] === '' && $row['shift'] === '' ) {
 				continue;
@@ -348,7 +347,7 @@ function zelo_render_volunteer_ops_admin_tabs() {
 			<input type="hidden" name="zelo_ops_tabs_save" value="1" />
 
 			<div id="tab-escala" class="zelo-ops-tab" style="display:block;">
-				<p class="description"><?php esc_html_e( 'Cada linha = um dia + um turno (A1/B1/A2/B2) + um voluntário + faixa horária. Repita linhas para Sexta, Sábado e Domingo. A coluna Turno corresponde ao “Grupo/Área” da programação; Local é o posto físico.', 'zelo-assistente' ); ?></p>
+				<p class="description"><?php esc_html_e( 'Cada linha = um dia + um turno (A1/B1/A2/B2) + um voluntário + faixa horária. Repita linhas para Sexta, Sábado e Domingo. A coluna Local é só leitura (definida na aba Turnos).', 'zelo-assistente' ); ?></p>
 				<p class="description"><?php esc_html_e( 'Início e fim são preenchidos ao selecionar o turno (limites da aba Turnos). Pode ajustar a faixa dentro desse intervalo. Várias linhas no mesmo turno com horários diferentes são permitidas.', 'zelo-assistente' ); ?></p>
 				<p class="description"><?php esc_html_e( 'Idiomas vêm do perfil do voluntário (aba Voluntários ou cadastro no app), não desta tabela.', 'zelo-assistente' ); ?></p>
 				<p class="description"><?php esc_html_e( 'Não repita a mesma pessoa no mesmo dia, turno e horário (início + fim iguais).', 'zelo-assistente' ); ?></p>
@@ -359,8 +358,8 @@ function zelo_render_volunteer_ops_admin_tabs() {
 							<th><?php esc_html_e( 'Turno', 'zelo-assistente' ); ?></th>
 							<th><?php esc_html_e( 'Voluntário', 'zelo-assistente' ); ?></th>
 							<th><?php esc_html_e( 'Local', 'zelo-assistente' ); ?></th>
-							<th><?php esc_html_e( 'Início (turno)', 'zelo-assistente' ); ?></th>
-							<th><?php esc_html_e( 'Fim (turno)', 'zelo-assistente' ); ?></th>
+							<th><?php esc_html_e( 'Início', 'zelo-assistente' ); ?></th>
+							<th><?php esc_html_e( 'Fim', 'zelo-assistente' ); ?></th>
 							<th></th>
 						</tr>
 					</thead>
@@ -380,8 +379,8 @@ function zelo_render_volunteer_ops_admin_tabs() {
 			</div>
 
 			<div id="tab-turnos" class="zelo-ops-tab" style="display:none;">
-				<p class="description"><?php esc_html_e( 'Códigos de turno (ex.: A1) são usados na escala e na governança.', 'zelo-assistente' ); ?></p>
-				<?php echo zelo_ops_catalog_shifts_table_html( $catalogs['shifts'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				<p class="description"><?php esc_html_e( 'Códigos de turno (ex.: A1) são usados na escala e na governança. O local de cada turno aplica-se a todas as linhas da escala com esse código.', 'zelo-assistente' ); ?></p>
+				<?php echo zelo_ops_catalog_shifts_table_html( $catalogs['shifts'], $catalogs['locations'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 				<p><button type="button" class="button" onclick="zeloAddCatalogRow('zelo-cat-shifts-body','shift')"><?php esc_html_e( 'Adicionar turno', 'zelo-assistente' ); ?></button></p>
 			</div>
 
@@ -590,7 +589,7 @@ function zelo_render_volunteer_ops_admin_tabs() {
 	</div>
 	<?php
 	$sched_row_tpl       = zelo_ops_schedule_row_html( array(), $ctx, '__ROW_INDEX__' );
-	$cat_shift_tpl       = zelo_ops_catalog_shift_row_html( array(), '__IDX__' );
+	$cat_shift_tpl       = zelo_ops_catalog_shift_row_html( array(), '__IDX__', $catalogs['locations'] );
 	$cat_loc_tpl         = zelo_ops_catalog_location_row_html( array(), '__IDX__' );
 	$cat_lang_tpl        = zelo_ops_catalog_language_row_html( array(), '__IDX__' );
 	$cat_vol_tpl         = zelo_ops_catalog_roster_row_html( array(), '__IDX__', $catalogs );
@@ -604,7 +603,7 @@ function zelo_render_volunteer_ops_admin_tabs() {
 	function zeloOpsTab(e,id){e.preventDefault();document.querySelectorAll('.zelo-ops-tab').forEach(function(el){el.style.display='none';});document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('nav-tab-active');});e.target.classList.add('nav-tab-active');document.getElementById(id).style.display='block';var sb=document.getElementById('zelo-ops-submit-tabs');if(sb)sb.style.display=(id==='tab-json')?'none':'block';}
 	function zeloAddSchedRow(){var tb=document.getElementById('zelo-sched-body');var tr=document.createElement('tr');var idx=String(tb.querySelectorAll('tr').length);tr.innerHTML=ZELO_SCHED_ROW_TPL.split('__ROW_INDEX__').join(idx);tb.appendChild(tr);zeloBindSchedRow(tr);}
 	function zeloAddCatalogRow(bodyId,type){var tb=document.getElementById(bodyId);var tr=document.createElement('tr');var tpl='';var idx=String(tb.querySelectorAll('tr').length);if(type==='shift')tpl=ZELO_CAT_SHIFT_TPL;else if(type==='loc')tpl=ZELO_CAT_LOC_TPL;else if(type==='lang')tpl=ZELO_CAT_LANG_TPL;else if(type==='vol')tpl=ZELO_CAT_VOL_TPL;tr.innerHTML=tpl.split('__IDX__').join(idx);tb.appendChild(tr);}
-	function zeloOnShiftChange(sel){var tr=sel.closest('tr');if(!tr)return;var opt=sel.options[sel.selectedIndex];var st=opt?opt.getAttribute('data-start'):'';var en=opt?opt.getAttribute('data-end'):'';var si=tr.querySelector('.sched-time-start');var ei=tr.querySelector('.sched-time-end');if(si){si.value=st||'';}if(ei){ei.value=en||'';}}
+	function zeloOnShiftChange(sel){var tr=sel.closest('tr');if(!tr)return;var opt=sel.options[sel.selectedIndex];var st=opt?opt.getAttribute('data-start'):'';var en=opt?opt.getAttribute('data-end'):'';var loc=opt?opt.getAttribute('data-location'):'';var si=tr.querySelector('.sched-time-start');var ei=tr.querySelector('.sched-time-end');var ld=tr.querySelector('.sched-loc-display');if(si){si.value=st||'';}if(ei){ei.value=en||'';}if(ld){ld.textContent=loc||'—';}}
 	function zeloBindSchedRow(tr){var sh=tr.querySelector('.sched-shift');if(sh){sh.addEventListener('change',function(){zeloOnShiftChange(sh);});zeloOnShiftChange(sh);}}
 	document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('#zelo-sched-body tr').forEach(zeloBindSchedRow);});
 	function zeloRemoveSchedRow(btn){var tr=btn.closest('tr');if(tr)tr.remove();}
@@ -615,11 +614,12 @@ function zelo_render_volunteer_ops_admin_tabs() {
 /**
  * Opções HTML de turnos.
  *
- * @param array  $shifts   Shifts catalog.
- * @param string $selected Selected code.
+ * @param array  $shifts    Shifts catalog.
+ * @param string $selected  Selected code.
+ * @param array  $locations Locations catalog (para data-location nas options).
  * @return string
  */
-function zelo_ops_shift_options_html( $shifts, $selected = '' ) {
+function zelo_ops_shift_options_html( $shifts, $selected = '', $locations = array() ) {
 	$html = '<option value="">' . esc_html__( '—', 'zelo-assistente' ) . '</option>';
 	foreach ( $shifts as $sh ) {
 		if ( empty( $sh['code'] ) ) {
@@ -636,7 +636,12 @@ function zelo_ops_shift_options_html( $shifts, $selected = '' ) {
 		}
 		$st = isset( $sh['start'] ) ? esc_attr( $sh['start'] ) : '';
 		$en = isset( $sh['end'] ) ? esc_attr( $sh['end'] ) : '';
-		$html .= '<option value="' . $code . '" data-start="' . $st . '" data-end="' . $en . '"' . selected( $selected, $sh['code'], false ) . '>' . esc_html( $label ) . '</option>';
+		$loc_name = '';
+		if ( ! empty( $sh['location_id'] ) && function_exists( 'zelo_ops_location_name_by_id' ) ) {
+			$loc_name = zelo_ops_location_name_by_id( array( 'locations' => $locations ), $sh['location_id'] );
+		}
+		$loc_attr = esc_attr( $loc_name );
+		$html .= '<option value="' . $code . '" data-start="' . $st . '" data-end="' . $en . '" data-location="' . $loc_attr . '"' . selected( $selected, $sh['code'], false ) . '>' . esc_html( $label ) . '</option>';
 	}
 	return $html;
 }
@@ -648,13 +653,15 @@ function zelo_ops_shift_options_html( $shifts, $selected = '' ) {
  * @param string $selected_name Selected location name on row.
  * @return string
  */
-function zelo_ops_location_options_html( $locations, $selected_name = '' ) {
+function zelo_ops_location_options_html( $locations, $selected_name = '', $selected_id = '' ) {
 	$html = '<option value="">' . esc_html__( '—', 'zelo-assistente' ) . '</option>';
-	$sel_id = '';
-	foreach ( $locations as $loc ) {
-		if ( ! empty( $loc['name'] ) && $loc['name'] === $selected_name ) {
-			$sel_id = isset( $loc['id'] ) ? $loc['id'] : '';
-			break;
+	$sel_id = sanitize_text_field( $selected_id );
+	if ( $sel_id === '' ) {
+		foreach ( $locations as $loc ) {
+			if ( ! empty( $loc['name'] ) && $loc['name'] === $selected_name ) {
+				$sel_id = isset( $loc['id'] ) ? $loc['id'] : '';
+				break;
+			}
 		}
 	}
 	foreach ( $locations as $loc ) {
@@ -803,11 +810,17 @@ function zelo_ops_schedule_row_html( $r, $ctx = array(), $row_index = 0 ) {
 	$idv      = isset( $r['id'] ) ? esc_attr( $r['id'] ) : '';
 	$day      = isset( $r['day'] ) ? esc_attr( $r['day'] ) : '';
 	$shift    = isset( $r['shift'] ) ? esc_attr( $r['shift'] ) : '';
-	$loc_name = isset( $r['location'] ) ? $r['location'] : '';
 	$vref     = zelo_ops_volunteer_ref_from_row( $r );
 	list( $st, $en ) = zelo_ops_schedule_row_start_end( $r, $catalogs );
 	$st_val = zelo_ops_time_input_value( $st );
 	$en_val = zelo_ops_time_input_value( $en );
+	$loc_disp = '—';
+	if ( $shift !== '' && function_exists( 'zelo_ops_schedule_row_location' ) ) {
+		$loc_name = zelo_ops_schedule_row_location( array( 'shift' => $shift ), $catalogs );
+		if ( $loc_name !== '' ) {
+			$loc_disp = esc_html( $loc_name );
+		}
+	}
 
 	$day_html = '<select name="sched_day[]" class="sched-day" style="min-width:160px;">';
 	$day_html .= '<option value="">' . esc_html__( '—', 'zelo-assistente' ) . '</option>';
@@ -819,9 +832,9 @@ function zelo_ops_schedule_row_html( $r, $ctx = array(), $row_index = 0 ) {
 	return '<tr>'
 		. '<td style="display:none;"><input type="hidden" name="sched_id[]" value="' . $idv . '" /></td>'
 		. '<td>' . $day_html . '</td>'
-		. '<td><select name="sched_shift[]" class="sched-shift" style="min-width:90px;" onchange="zeloOnShiftChange(this)">' . zelo_ops_shift_options_html( $catalogs['shifts'], $shift ) . '</select></td>'
+		. '<td><select name="sched_shift[]" class="sched-shift" style="min-width:90px;" onchange="zeloOnShiftChange(this)">' . zelo_ops_shift_options_html( $catalogs['shifts'], $shift, $catalogs['locations'] ) . '</select></td>'
 		. '<td>' . zelo_ops_volunteer_ref_select_html( $ctx, $vref ) . '</td>'
-		. '<td><select name="sched_loc_id[]" class="sched-loc" style="min-width:120px;">' . zelo_ops_location_options_html( $catalogs['locations'], $loc_name ) . '</select></td>'
+		. '<td><span class="sched-loc-display" style="display:inline-block;min-width:100px;">' . $loc_disp . '</span></td>'
 		. '<td><input type="time" name="sched_start[]" class="sched-time-start" value="' . esc_attr( $st_val ) . '" style="min-width:88px;" /></td>'
 		. '<td><input type="time" name="sched_end[]" class="sched-time-end" value="' . esc_attr( $en_val ) . '" style="min-width:88px;" /></td>'
 		. '<td><button type="button" class="button button-link-delete" onclick="zeloRemoveSchedRow(this)" aria-label="' . esc_attr__( 'Remover', 'zelo-assistente' ) . '">&times;</button></td>'
@@ -842,35 +855,42 @@ function zelo_ops_time_input_value( $time ) {
 	return '';
 }
 
-function zelo_ops_catalog_shifts_table_html( $rows ) {
+function zelo_ops_catalog_shifts_table_html( $rows, $locations = array() ) {
 	if ( empty( $rows ) ) {
 		$rows = zelo_ops_default_shifts();
 	}
+	if ( ! is_array( $locations ) ) {
+		$locations = array();
+	}
 	$body = '';
 	foreach ( $rows as $idx => $r ) {
-		$body .= zelo_ops_catalog_shift_row_html( $r, $idx );
+		$body .= zelo_ops_catalog_shift_row_html( $r, $idx, $locations );
 	}
 	return '<table class="widefat striped"><thead><tr>'
 		. '<th>' . esc_html__( 'Código', 'zelo-assistente' ) . '</th>'
 		. '<th>' . esc_html__( 'Rótulo', 'zelo-assistente' ) . '</th>'
+		. '<th>' . esc_html__( 'Local', 'zelo-assistente' ) . '</th>'
 		. '<th>' . esc_html__( 'Início', 'zelo-assistente' ) . '</th>'
 		. '<th>' . esc_html__( 'Fim', 'zelo-assistente' ) . '</th>'
 		. '<th>' . esc_html__( 'Ativo', 'zelo-assistente' ) . '</th><th></th></tr></thead>'
 		. '<tbody id="zelo-cat-shifts-body">' . $body . '</tbody></table>';
 }
 
-function zelo_ops_catalog_shift_row_html( $r, $idx = 0 ) {
-	$id     = isset( $r['id'] ) ? esc_attr( $r['id'] ) : '';
-	$code   = isset( $r['code'] ) ? esc_attr( $r['code'] ) : '';
-	$label  = isset( $r['label'] ) ? esc_attr( $r['label'] ) : '';
-	$start  = isset( $r['start'] ) ? esc_attr( zelo_ops_time_input_value( $r['start'] ) ) : '';
-	$end    = isset( $r['end'] ) ? esc_attr( zelo_ops_time_input_value( $r['end'] ) ) : '';
-	$active = ! isset( $r['active'] ) || $r['active'];
-	$ix     = esc_attr( (string) $idx );
+function zelo_ops_catalog_shift_row_html( $r, $idx = 0, $locations = array() ) {
+	$id       = isset( $r['id'] ) ? esc_attr( $r['id'] ) : '';
+	$code     = isset( $r['code'] ) ? esc_attr( $r['code'] ) : '';
+	$label    = isset( $r['label'] ) ? esc_attr( $r['label'] ) : '';
+	$start    = isset( $r['start'] ) ? esc_attr( zelo_ops_time_input_value( $r['start'] ) ) : '';
+	$end      = isset( $r['end'] ) ? esc_attr( zelo_ops_time_input_value( $r['end'] ) ) : '';
+	$loc_id   = isset( $r['location_id'] ) ? sanitize_text_field( $r['location_id'] ) : '';
+	$active   = ! isset( $r['active'] ) || $r['active'];
+	$ix       = esc_attr( (string) $idx );
+	$loc_html = '<select name="cat_shift_location_id[]" style="min-width:140px;">' . zelo_ops_location_options_html( $locations, '', $loc_id ) . '</select>';
 	return '<tr>'
 		. '<input type="hidden" name="cat_shift_id[]" value="' . $id . '" />'
 		. '<td><input name="cat_shift_code[]" value="' . $code . '" style="width:70px;" required /></td>'
 		. '<td><input name="cat_shift_label[]" value="' . $label . '" class="regular-text" /></td>'
+		. '<td>' . $loc_html . '</td>'
 		. '<td><input type="time" name="cat_shift_start[]" value="' . $start . '" /></td>'
 		. '<td><input type="time" name="cat_shift_end[]" value="' . $end . '" /></td>'
 		. '<td><input type="checkbox" name="cat_shift_active[' . $ix . ']" value="1"' . ( $active ? ' checked' : '' ) . ' /></td>'

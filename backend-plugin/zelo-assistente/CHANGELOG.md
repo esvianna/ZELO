@@ -2,6 +2,17 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.10.2] - 2026-06-02
+
+### Corrigido
+- Admin escala: coluna **Local** somente leitura (alinhada ao cabeçalho; valor do turno; sem `sched_loc_id`).
+
+## [2.10.1] - 2026-06-02
+
+### Alterado
+- **Turnos:** campo `location_id` (select na aba Turnos). Linhas da escala recebem `location` do turno; coluna Local removida da aba Escala.
+- Migração idempotente: infere `location_id` do turno a partir da escala existente (local mais frequente por código).
+
 ## [2.10.0] - 2026-06-02
 
 ### Adicionado

@@ -232,12 +232,76 @@ function zelo_ops_find_shift_by_code( $catalogs, $code ) {
  */
 function zelo_ops_find_location_by_name( $catalogs, $name ) {
 	$name = sanitize_text_field( $name );
-	foreach ( $catalogs['locations'] as $loc ) {
+	$locations = isset( $catalogs['locations'] ) && is_array( $catalogs['locations'] ) ? $catalogs['locations'] : array();
+	foreach ( $locations as $loc ) {
 		if ( isset( $loc['name'] ) && $loc['name'] === $name ) {
 			return $loc;
 		}
 	}
 	return null;
+}
+
+/**
+ * Encontra local no catálogo por id.
+ *
+ * @param array  $catalogs Catalogs.
+ * @param string $id       Location id.
+ * @return array|null
+ */
+function zelo_ops_find_location_by_id( $catalogs, $id ) {
+	$id = sanitize_text_field( $id );
+	if ( $id === '' || ! is_array( $catalogs ) ) {
+		return null;
+	}
+	$locations = isset( $catalogs['locations'] ) && is_array( $catalogs['locations'] ) ? $catalogs['locations'] : array();
+	foreach ( $locations as $loc ) {
+		if ( isset( $loc['id'] ) && $loc['id'] === $id ) {
+			return $loc;
+		}
+	}
+	return null;
+}
+
+/**
+ * Nome do local a partir do id no catálogo.
+ *
+ * @param array  $catalogs    Catalogs.
+ * @param string $location_id Location id.
+ * @return string
+ */
+function zelo_ops_location_name_by_id( $catalogs, $location_id ) {
+	$loc = zelo_ops_find_location_by_id( $catalogs, $location_id );
+	return ( $loc && ! empty( $loc['name'] ) ) ? sanitize_text_field( $loc['name'] ) : '';
+}
+
+/**
+ * Local associado ao turno no catálogo (nome).
+ *
+ * @param array  $catalogs   Catalogs.
+ * @param string $shift_code Shift code.
+ * @return string
+ */
+function zelo_ops_shift_location_name( $catalogs, $shift_code ) {
+	$sh = zelo_ops_find_shift_by_code( $catalogs, $shift_code );
+	if ( ! $sh || empty( $sh['location_id'] ) ) {
+		return '';
+	}
+	return zelo_ops_location_name_by_id( $catalogs, $sh['location_id'] );
+}
+
+/**
+ * Local efetivo da linha da escala (derivado do turno).
+ *
+ * @param array $row      Schedule row.
+ * @param array $catalogs Catalogs.
+ * @return string
+ */
+function zelo_ops_schedule_row_location( $row, $catalogs ) {
+	$shift = isset( $row['shift'] ) ? sanitize_text_field( $row['shift'] ) : '';
+	if ( $shift === '' ) {
+		return '';
+	}
+	return zelo_ops_shift_location_name( $catalogs, $shift );
 }
 
 /**
@@ -294,13 +358,24 @@ function zelo_migrate_ops_catalogs_from_schedule( $data ) {
 		}
 		$st = isset( $shift_times[ $code ]['start'] ) ? $shift_times[ $code ]['start'] : '';
 		$en = isset( $shift_times[ $code ]['end'] ) ? $shift_times[ $code ]['end'] : '';
+		$loc_id = '';
+		foreach ( $schedule as $row ) {
+			if ( isset( $row['shift'] ) && $row['shift'] === $code && ! empty( $row['location'] ) ) {
+				$found = zelo_ops_find_location_by_name( $catalogs, $row['location'] );
+				if ( $found && ! empty( $found['id'] ) ) {
+					$loc_id = sanitize_text_field( $found['id'] );
+					break;
+				}
+			}
+		}
 		$catalogs['shifts'][] = array(
-			'id'     => 'sh_' . sanitize_key( strtolower( $code ) ),
-			'code'   => $code,
-			'label'  => 'Turno ' . $code,
-			'start'  => $st,
-			'end'    => $en,
-			'active' => true,
+			'id'            => 'sh_' . sanitize_key( strtolower( $code ) ),
+			'code'          => $code,
+			'label'         => 'Turno ' . $code,
+			'start'         => $st,
+			'end'           => $en,
+			'active'        => true,
+			'location_id'   => $loc_id,
 		);
 		$existing_codes[ $code ] = true;
 	}
@@ -394,6 +469,64 @@ function zelo_migrate_ops_catalogs_from_schedule( $data ) {
 	}
 	$data['schedule'] = $schedule;
 	$data['catalogs'] = $catalogs;
+	return zelo_migrate_shift_location_ids( $data );
+}
+
+/**
+ * Associa location_id aos turnos (a partir da escala legada) e alinha location nas linhas.
+ *
+ * @param array $data Ops data.
+ * @return array
+ */
+function zelo_migrate_shift_location_ids( $data ) {
+	$data     = zelo_get_ops_catalogs( $data );
+	$catalogs = $data['catalogs'];
+	$schedule = isset( $data['schedule'] ) && is_array( $data['schedule'] ) ? $data['schedule'] : array();
+
+	$loc_counts = array();
+	foreach ( $schedule as $row ) {
+		$code = isset( $row['shift'] ) ? sanitize_text_field( $row['shift'] ) : '';
+		$loc  = isset( $row['location'] ) ? sanitize_text_field( $row['location'] ) : '';
+		if ( $code === '' || $loc === '' ) {
+			continue;
+		}
+		if ( ! isset( $loc_counts[ $code ] ) ) {
+			$loc_counts[ $code ] = array();
+		}
+		if ( ! isset( $loc_counts[ $code ][ $loc ] ) ) {
+			$loc_counts[ $code ][ $loc ] = 0;
+		}
+		++$loc_counts[ $code ][ $loc ];
+	}
+
+	foreach ( $catalogs['shifts'] as $idx => $sh ) {
+		if ( ! is_array( $sh ) || empty( $sh['code'] ) ) {
+			continue;
+		}
+		if ( ! empty( $sh['location_id'] ) ) {
+			continue;
+		}
+		$code = $sh['code'];
+		if ( empty( $loc_counts[ $code ] ) ) {
+			continue;
+		}
+		arsort( $loc_counts[ $code ] );
+		$top_name = (string) key( $loc_counts[ $code ] );
+		$found    = zelo_ops_find_location_by_name( $catalogs, $top_name );
+		if ( $found && ! empty( $found['id'] ) ) {
+			$catalogs['shifts'][ $idx ]['location_id'] = sanitize_text_field( $found['id'] );
+		}
+	}
+
+	foreach ( $schedule as $sidx => $row ) {
+		$loc = zelo_ops_schedule_row_location( $row, $catalogs );
+		if ( $loc !== '' ) {
+			$schedule[ $sidx ]['location'] = $loc;
+		}
+	}
+
+	$data['catalogs'] = $catalogs;
+	$data['schedule'] = $schedule;
 	return $data;
 }
 
@@ -846,6 +979,7 @@ function zelo_ops_enrich_schedule_for_output( $schedule, $catalogs ) {
 		list( $start, $end ) = zelo_ops_schedule_row_start_end( $row, $catalogs );
 		$row['start']     = $start;
 		$row['end']       = $end;
+		$row['location']  = zelo_ops_schedule_row_location( $row, $catalogs );
 		$wp               = isset( $row['wp_user_id'] ) ? (int) $row['wp_user_id'] : 0;
 		$rv               = isset( $row['roster_volunteer_id'] ) ? sanitize_text_field( $row['roster_volunteer_id'] ) : '';
 		$row['languages'] = zelo_ops_volunteer_language_names( $wp, $rv, $catalogs );
@@ -905,22 +1039,17 @@ function zelo_normalize_schedule_row_with_catalogs( $row, $catalogs ) {
 
 	$day   = sanitize_key( isset( $row['day'] ) ? $row['day'] : '' );
 	$shift = sanitize_text_field( isset( $row['shift'] ) ? $row['shift'] : '' );
-	$loc   = sanitize_text_field( isset( $row['location'] ) ? $row['location'] : '' );
 
 	$name = zelo_ops_resolve_volunteer_name( $wp_uid, $rv_id, $catalogs );
 
 	$languages = zelo_ops_volunteer_language_names( $wp_uid, $rv_id, $catalogs );
 
-	// location: POST may send location_id; resolve to name.
-	if ( ! empty( $row['location_id'] ) ) {
-		$lid = sanitize_text_field( $row['location_id'] );
-		foreach ( $catalogs['locations'] as $loc_row ) {
-			if ( isset( $loc_row['id'] ) && $loc_row['id'] === $lid && ! empty( $loc_row['name'] ) ) {
-				$loc = sanitize_text_field( $loc_row['name'] );
-				break;
-			}
-		}
-	}
+	$loc = zelo_ops_schedule_row_location(
+		array(
+			'shift' => $shift,
+		),
+		$catalogs
+	);
 
 	$normalized = array(
 		'id'                  => $id,
@@ -1019,6 +1148,19 @@ function zelo_validate_schedule_rows( $schedule, $catalogs = null ) {
 			);
 		}
 
+		$loc_name = zelo_ops_shift_location_name( $catalogs, $sh );
+		if ( $loc_name === '' ) {
+			return new WP_Error(
+				'zelo_schedule_shift_no_location',
+				sprintf(
+					/* translators: 1: line number, 2: shift code */
+					__( 'Linha %1$d: o turno «%2$s» não tem local definido na aba Turnos.', 'zelo-assistente' ),
+					$line,
+					$sh
+				)
+			);
+		}
+
 		if ( $wp > 0 ) {
 			$key = $day . '|' . $sh . '|wp|' . $wp . '|' . $st . '|' . $en;
 			if ( isset( $wp_seen[ $key ] ) ) {
@@ -1087,13 +1229,15 @@ function zelo_ops_parse_catalog_shifts_from_post() {
 		if ( $id === '' ) {
 			$id = 'sh_' . sanitize_key( strtolower( $code ) );
 		}
+		$loc_id = isset( $_POST['cat_shift_location_id'][ $i ] ) ? sanitize_text_field( wp_unslash( $_POST['cat_shift_location_id'][ $i ] ) ) : '';
 		$rows[] = array(
-			'id'     => $id,
-			'code'   => $code,
-			'label'  => isset( $_POST['cat_shift_label'][ $i ] ) ? sanitize_text_field( wp_unslash( $_POST['cat_shift_label'][ $i ] ) ) : '',
-			'start'  => zelo_ops_normalize_time( isset( $_POST['cat_shift_start'][ $i ] ) ? wp_unslash( $_POST['cat_shift_start'][ $i ] ) : '' ),
-			'end'    => zelo_ops_normalize_time( isset( $_POST['cat_shift_end'][ $i ] ) ? wp_unslash( $_POST['cat_shift_end'][ $i ] ) : '' ),
-			'active' => zelo_ops_post_row_is_active( 'cat_shift_active', $i ),
+			'id'            => $id,
+			'code'          => $code,
+			'label'         => isset( $_POST['cat_shift_label'][ $i ] ) ? sanitize_text_field( wp_unslash( $_POST['cat_shift_label'][ $i ] ) ) : '',
+			'start'         => zelo_ops_normalize_time( isset( $_POST['cat_shift_start'][ $i ] ) ? wp_unslash( $_POST['cat_shift_start'][ $i ] ) : '' ),
+			'end'           => zelo_ops_normalize_time( isset( $_POST['cat_shift_end'][ $i ] ) ? wp_unslash( $_POST['cat_shift_end'][ $i ] ) : '' ),
+			'location_id'   => $loc_id,
+			'active'        => zelo_ops_post_row_is_active( 'cat_shift_active', $i ),
 		);
 	}
 	return ! empty( $rows ) ? $rows : zelo_ops_default_shifts();

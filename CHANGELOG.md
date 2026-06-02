@@ -9,6 +9,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 ## [Unreleased]
 
 ### Adicionado
+- Plugin **2.10.1**: local do posto associado ao turno (aba Turnos); escala deriva `location` automaticamente.
 - Plugin **2.10.0**: escala com início/fim customizáveis por linha (dentro do turno no catálogo); duplicata por dia+turno+pessoa+horário.
 - PWA build **98**: escala detalhada ordenada por horário de início dentro de cada dia.
 

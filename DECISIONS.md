@@ -6,6 +6,16 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 ---
 
+## ADR-017 — Local vinculado ao turno (2026-06-02)
+
+**Contexto:** Na escala, o mesmo posto físico repete-se para todas as faixas de um turno (A1, B1…); selecionar local em cada linha era redundante.
+
+**Decisão:** `catalogs.shifts[].location_id` referencia `catalogs.locations[]`. Na normalização/API, `schedule[].location` é **sempre derivado** do turno da linha. Admin: select de local na aba Turnos; coluna Local removida da Escala. Migração copia o local mais frequente na escala legada para cada turno sem `location_id`.
+
+**Consequências:** Plugin **2.10.1**; PWA inalterada (campo `location` por linha mantido na API). Salvar escala exige turno com local configurado.
+
+---
+
 ## ADR-016 — Horário customizado por linha da escala (2026-06-02)
 
 **Contexto:** Operação precisa subdividir turnos macro (A1 07:00–12:30) em faixas (ex. 07:00–08:15) sem novo modelo de slots nem CPT.
