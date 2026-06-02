@@ -23,6 +23,7 @@ function zelo_register_volunteer_roles() {
 			'zelo_view_ops'            => true,
 			'zelo_checkin_ops'         => true,
 			'zelo_reallocate_volunteer'=> true,
+			'zelo_edit_schedule'       => true,
 		)
 	);
 
@@ -35,6 +36,7 @@ function zelo_register_volunteer_roles() {
 			'zelo_checkin_ops'          => true,
 			'zelo_reallocate_volunteer' => true,
 			'zelo_manage_ops'           => true,
+			'zelo_edit_schedule'        => true,
 		)
 	);
 
@@ -48,6 +50,7 @@ function zelo_register_volunteer_roles() {
 			'zelo_reallocate_volunteer' => true,
 			'zelo_manage_ops'           => true,
 			'zelo_manage_roles'         => true,
+			'zelo_edit_schedule'        => true,
 		)
 	);
 
@@ -58,9 +61,29 @@ function zelo_register_volunteer_roles() {
 		$admin->add_cap( 'zelo_reallocate_volunteer' );
 		$admin->add_cap( 'zelo_manage_ops' );
 		$admin->add_cap( 'zelo_manage_roles' );
+		$admin->add_cap( 'zelo_edit_schedule' );
 	}
 }
 add_action( 'init', 'zelo_register_volunteer_roles' );
+
+/**
+ * Garante capability zelo_edit_schedule em roles existentes após upgrade.
+ */
+function zelo_ensure_schedule_edit_caps() {
+	$migrated = get_option( 'zelo_edit_schedule_caps_migrated', '' );
+	if ( $migrated === ZELO_VERSION ) {
+		return;
+	}
+	$roles = array( 'zelo_homem_chave', 'zelo_supervisor_grupo', 'zelo_supervisor_app', 'administrator' );
+	foreach ( $roles as $role_name ) {
+		$role = get_role( $role_name );
+		if ( $role ) {
+			$role->add_cap( 'zelo_edit_schedule' );
+		}
+	}
+	update_option( 'zelo_edit_schedule_caps_migrated', ZELO_VERSION );
+}
+add_action( 'init', 'zelo_ensure_schedule_edit_caps', 25 );
 
 /**
  * Estrutura vazia de governança por dia (copia supervisores da sexta se fornecido).
@@ -391,10 +414,30 @@ function zelo_get_volunteer_ops_payload( $args = array() ) {
 		}
 	}
 
+	$catalogs_out = array( 'languages' => $catalog_langs );
+	$permissions  = array();
+	if ( $uid > 0 && function_exists( 'zelo_ops_schedule_permissions_payload' ) ) {
+		$permissions = zelo_ops_schedule_permissions_payload( $uid );
+		$edit        = isset( $permissions['schedule_edit'] ) ? $permissions['schedule_edit'] : array();
+		$can_edit    = ! empty( $edit['enabled'] );
+		if ( $can_edit && function_exists( 'zelo_ops_schedule_editor_catalogs' ) ) {
+			$editor_cats = zelo_ops_schedule_editor_catalogs( $catalogs );
+			$catalogs_out = array_merge( $catalogs_out, $editor_cats );
+		}
+	}
+
+	$governance_out = $data['governance'];
+	if ( $uid > 0 && ! zelo_is_ops_manager( $uid ) && ! zelo_is_reallocator( $uid ) && ! zelo_user_is_ops_supervisor_role( $uid ) ) {
+		if ( empty( $permissions['supervise_ops'] ) ) {
+			$governance_out = array();
+		}
+	}
+
 	return array(
-		'governance'       => $data['governance'],
+		'governance'       => $governance_out,
 		'schedule'         => $schedule,
-		'catalogs'         => array( 'languages' => $catalog_langs ),
+		'catalogs'         => $catalogs_out,
+		'permissions'      => $permissions,
 		'indoor_map'       => $data['indoor_map'],
 		'settings'         => $data['settings'],
 		'checkins'         => $checkins,

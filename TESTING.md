@@ -79,10 +79,14 @@ Configurar `baseUrl` / `siteUrl` em `frontend-pwa/assets/js/api-v5.js` para o am
 | # | Passo | Perfil | Esperado |
 |---|-------|--------|----------|
 | 1 | GET `/wp-json/zelo/v1/ops/voluntarios` sem auth | — | **401/403** após remover bypass público |
-| 2 | Login voluntário → abrir Escala | view_ops | Minhas designações visíveis |
+| 2 | Login voluntário → abrir Escala (2.11.0+) | view_ops | Bloco **Minhas designações** + **Escala da equipa** (nomes de colegas); badge «Você» na sua linha; filtros dia/turno/local/nome |
+| 2b | Voluntário: filtro «Comigo neste turno» | view_ops | Dia+turno da sua designação aplicados |
+| 2c | Voluntário: `POST /ops/schedule` (devtools) | view_ops | **403** |
 | 3 | Check-in em assignment | checkin_ops | Estado atualizado; persiste após refresh |
 | 4 | Check-out | checkin_ops | Registro de saída |
-| 5 | Realocação | reallocate_ops | Assignment muda; histórico registra |
+| 5 | Realocação em linha que supervisiona | homem-chave / supervisor na governança | Assignment muda; **403** se não for responsável do turno |
+| 5b | Homem-chave na governança → **Montar escala** | `zelo_edit_schedule` + keymen | Editor abre; adicionar/remover linhas; salvar; PWA atualiza |
+| 5c | Horário fora do turno no editor PWA | responsável turno | Erro da API ao salvar |
 | 6 | Pedido de substituição | conforme regra | Criado; gestor aprova/rejeita |
 | 7 | Cron lembretes | admin | `wp cron event list` contém `zelo_volunteer_notify_tick` (se aplicável) |
 

@@ -35,6 +35,7 @@ function zelo_rest_auth_user_payload( $user ) {
 			'checkin_ops'    => user_can( $user, 'zelo_checkin_ops' ),
 			'reallocate_ops' => user_can( $user, 'zelo_reallocate_volunteer' ),
 			'manage_ops'     => user_can( $user, 'zelo_manage_ops' ),
+			'edit_schedule'  => user_can( $user, 'zelo_edit_schedule' ) || user_can( $user, 'zelo_manage_ops' ),
 		),
 	);
 }

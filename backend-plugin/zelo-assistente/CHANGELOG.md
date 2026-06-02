@@ -2,6 +2,18 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.11.0] - 2026-06-02
+
+### Adicionado
+- REST `POST /zelo/v1/ops/schedule` — merge escopado por dia+turno; validação `zelo_validate_schedule_rows`; limpeza de compromissos/check-ins de linhas removidas; histórico `schedule_patch`.
+- Capability `zelo_edit_schedule` (homem-chave, supervisores, administrator); migração em `init`.
+- Payload `/ops/voluntarios`: `permissions` (`schedule_view`, `schedule_edit`, `supervise_ops`); catálogos de editor (`shifts`, `locations`, `roster_volunteers`, `wp_users`) só para quem pode editar.
+- Escala completa no GET para utilizadores com `zelo_view_ops` (parâmetro `?mine=1` mantido para dashboard leve).
+
+### Alterado
+- `POST /ops/reallocate` exige `zelo_user_can_supervise_assignment` na designação.
+- Governança oculta no payload para voluntários sem papel de supervisão.
+
 ## [2.10.2] - 2026-06-02
 
 ### Corrigido

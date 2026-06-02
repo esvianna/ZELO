@@ -6,6 +6,16 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 ---
 
+## ADR-018 — Escala na PWA: leitura para voluntários e edição escopada (2026-06-02)
+
+**Contexto:** Responsáveis de turno precisam montar a escala no evento sem wp-admin; voluntários logados precisam ver a equipa (não só as próprias linhas).
+
+**Decisão:** `POST /zelo/v1/ops/schedule` faz merge por `day`+`shift` com validação existente (`zelo_validate_schedule_rows`). Permissão: `zelo_edit_schedule` + `zelo_user_can_supervise_assignment` por turno (governança); gestores (`zelo_manage_ops`) editam tudo. Payload inclui `permissions.schedule_edit`, `permissions.schedule_view: full` e catálogos mínimos só para editores. Voluntários com `zelo_view_ops` recebem escala completa em leitura; compromissos/check-ins permanecem só nas próprias designações. PWA: bloco «Minhas designações», filtros, botão «Montar escala», overlay editor. `POST /ops/reallocate` exige supervisão na linha. Concorrência: last-write-wins em `wp_options`.
+
+**Consequências:** Plugin **2.11.0**; PWA build **99**. Governança preenchida no admin é pré-requisito para edição escopada.
+
+---
+
 ## ADR-017 — Local vinculado ao turno (2026-06-02)
 
 **Contexto:** Na escala, o mesmo posto físico repete-se para todas as faixas de um turno (A1, B1…); selecionar local em cada linha era redundante.

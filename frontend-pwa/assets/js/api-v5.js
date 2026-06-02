@@ -415,6 +415,29 @@ const API = {
         return data;
     },
 
+    async saveScheduleScope(day, shift, rows) {
+        const url = `${this.baseUrl}/ops/schedule`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                ...this.getAuthHeaders(),
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({ day, shift, rows })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            const msg = data.message || data.code || 'Falha ao guardar escala';
+            throw new Error(typeof msg === 'string' ? msg : 'Falha ao guardar escala');
+        }
+        if (data.data) {
+            this.cache.volunteerOps = data.data;
+            this.writeSnapshot('zelo_volunteer_ops', data.data);
+        }
+        return data;
+    },
+
     async reallocateVolunteer(assignmentId, newLocation, newShift = '') {
         const url = `${this.baseUrl}/ops/reallocate`;
         const response = await fetch(url, {

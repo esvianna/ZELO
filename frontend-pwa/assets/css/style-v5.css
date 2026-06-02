@@ -2752,3 +2752,88 @@ body {
         color: var(--text-secondary);
     }
 }
+
+.ops-you-badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    background: var(--primary-color);
+    color: #fff;
+    border-radius: 4px;
+    padding: 0.1rem 0.35rem;
+    vertical-align: middle;
+}
+
+.ops-toolbar-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.ops-mine-block--table {
+    border: 2px solid #7dd3fc;
+}
+
+.ops-schedule-editor-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    background: rgba(15, 23, 42, 0.55);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.ops-schedule-editor-panel {
+    background: var(--surface-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    width: 100%;
+    max-width: 640px;
+    padding: 1rem;
+    margin-top: 2rem;
+}
+
+.ops-schedule-editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.ops-schedule-editor-header h2 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.ops-schedule-editor-scope {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    align-items: flex-end;
+}
+
+.ops-schedule-editor-scope label {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.8rem;
+    font-weight: 500;
+    gap: 0.25rem;
+}
+
+.ops-schedule-editor-scope select {
+    min-width: 120px;
+}
+
+.ops-schedule-editor-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}

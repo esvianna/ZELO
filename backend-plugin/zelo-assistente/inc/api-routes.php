@@ -102,6 +102,16 @@ function zelo_register_api_routes() {
 		'callback' => 'zelo_ops_reallocate',
 		'permission_callback' => 'zelo_rest_can_reallocate_ops',
 	) );
+
+	register_rest_route(
+		'zelo/v1',
+		'/ops/schedule',
+		array(
+			'methods'             => 'POST',
+			'callback'            => 'zelo_ops_save_schedule_rest',
+			'permission_callback' => 'zelo_rest_can_edit_schedule_ops',
+		)
+	);
 }
 add_action( 'rest_api_init', 'zelo_register_api_routes' );
 
@@ -408,6 +418,15 @@ function zelo_ops_reallocate( $request ) {
 
 	if ( $new_location === '' && $new_shift === '' ) {
 		return new WP_Error( 'zelo_reallocate_missing_fields', __( 'Informe pelo menos new_location ou new_shift.', 'zelo-assistente' ), array( 'status' => 400 ) );
+	}
+
+	$row = function_exists( 'zelo_get_schedule_row_by_id' ) ? zelo_get_schedule_row_by_id( $assignment_id ) : null;
+	if ( ! $row ) {
+		return new WP_Error( 'zelo_assignment_not_found', __( 'Designação não encontrada.', 'zelo-assistente' ), array( 'status' => 404 ) );
+	}
+	$uid = get_current_user_id();
+	if ( function_exists( 'zelo_user_can_supervise_assignment' ) && ! zelo_user_can_supervise_assignment( $uid, $row ) ) {
+		return new WP_Error( 'zelo_reallocate_forbidden', __( 'Sem permissão para realocar esta designação.', 'zelo-assistente' ), array( 'status' => 403 ) );
 	}
 
 	$data      = zelo_get_volunteer_ops_data();

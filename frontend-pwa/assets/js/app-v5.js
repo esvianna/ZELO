@@ -1813,13 +1813,31 @@ const app = {
     },
 
     usesMineOnlyOps() {
-        return this.canViewOps() && !this.canReallocateOps() && !this.canManageOps() && !this.canSuperviseOps();
+        return false;
     },
 
     canSuperviseOps() {
         if (this.canManageOps() || this.canReallocateOps()) return true;
         const roles = this.auth.user?.roles || [];
-        return roles.includes('zelo_supervisor_grupo') || roles.includes('zelo_supervisor_app');
+        if (roles.includes('zelo_supervisor_grupo') || roles.includes('zelo_supervisor_app')) return true;
+        return !!(this.data.volunteerOps?.permissions?.supervise_ops);
+    },
+
+    canEditSchedule() {
+        if (this.canManageOps()) return true;
+        const edit = this.data.volunteerOps?.permissions?.schedule_edit;
+        return !!(this.auth.user?.caps?.edit_schedule && edit && edit.enabled);
+    },
+
+    canEditScheduleScope(day, shift) {
+        const edit = this.data.volunteerOps?.permissions?.schedule_edit;
+        if (!this.canEditSchedule() || !edit) return false;
+        if (edit.all) return true;
+        return (edit.scopes || []).some((s) => s.day === day && s.shift === shift);
+    },
+
+    canShowOpsGovernance() {
+        return this.canSuperviseOps() || this.canManageOps();
     },
 
     isCommitmentDeadlinePassed() {
@@ -1945,9 +1963,8 @@ const app = {
         if (this._volunteerOpsPromise && !force) {
             return this._volunteerOpsPromise;
         }
-        const mineOnly = this.usesMineOnlyOps();
         this._volunteerOpsPromise = (async () => {
-            const data = await API.getVolunteerOps(mineOnly);
+            const data = await API.getVolunteerOps(false);
             if (data && data.__authError) {
                 this.auth.handleOpsAuthFailure();
                 return null;
@@ -1958,7 +1975,7 @@ const app = {
                 this.syncStaleFlags();
                 app.updateNotificationsBadge();
             } else if (!force) {
-                const fallback = API.readSnapshot(mineOnly ? 'zelo_volunteer_ops_mine' : 'zelo_volunteer_ops');
+                const fallback = API.readSnapshot('zelo_volunteer_ops');
                 if (fallback) {
                     this.data.volunteerOps = fallback;
                     API.lastFetchFromCache.volunteerOps = true;
@@ -2348,6 +2365,283 @@ const app = {
         }
     },
 
+    getMyScheduleRows() {
+        const uid = this.auth.user?.id;
+        if (!uid || !this.data.volunteerOps?.schedule) return [];
+        return this.data.volunteerOps.schedule.filter((i) => Number(i.wp_user_id) === Number(uid));
+    },
+
+    applyOpsFilterMyShift() {
+        const myRows = this.getMyScheduleRows();
+        if (!myRows.length) return;
+        const pick = myRows.slice().sort((a, b) => (a.start || '').localeCompare(b.start || ''))[0];
+        this._opsFilterPreset = { day: pick.day || '', shift: pick.shift || '' };
+        this.renderVolunteerOps();
+    },
+
+    getScheduleEditScopeOptions() {
+        const edit = this.data.volunteerOps?.permissions?.schedule_edit;
+        if (!edit || !edit.enabled) return [];
+        if (edit.all) {
+            const seen = new Set();
+            const out = [];
+            (this.data.volunteerOps.schedule || []).forEach((row) => {
+                const key = `${row.day}|${row.shift}`;
+                if (!row.day || !row.shift || seen.has(key)) return;
+                seen.add(key);
+                out.push({ day: row.day, shift: row.shift });
+            });
+            const shifts = this.data.volunteerOps.catalogs?.shifts || [];
+            ['sexta', 'sabado', 'domingo'].forEach((day) => {
+                shifts.forEach((sh) => {
+                    const code = sh.code || sh.id;
+                    if (!code) return;
+                    const key = `${day}|${code}`;
+                    if (!seen.has(key)) {
+                        seen.add(key);
+                        out.push({ day, shift: code });
+                    }
+                });
+            });
+            return out;
+        }
+        return edit.scopes || [];
+    },
+
+    volunteerRefFromRow(row) {
+        if (row.wp_user_id) return `wp:${row.wp_user_id}`;
+        if (row.roster_volunteer_id) return `rv:${row.roster_volunteer_id}`;
+        return '';
+    },
+
+    openScheduleEditor(prefDay = '', prefShift = '') {
+        if (!this.canEditSchedule()) return;
+        const scopes = this.getScheduleEditScopeOptions();
+        if (!scopes.length) {
+            alert(i18n.t('ops_schedule_edit_no_scope'));
+            return;
+        }
+        let day = prefDay;
+        let shift = prefShift;
+        if (!day || !shift || !this.canEditScheduleScope(day, shift)) {
+            day = scopes[0].day;
+            shift = scopes[0].shift;
+        }
+        const rows = (this.data.volunteerOps.schedule || [])
+            .filter((r) => r.day === day && r.shift === shift)
+            .map((r) => ({
+                id: r.id,
+                start: r.start || '',
+                end: r.end || '',
+                volunteer_ref: this.volunteerRefFromRow(r)
+            }));
+        this._scheduleEditor = { day, shift, rows, scopes };
+        this.renderScheduleEditorOverlay();
+    },
+
+    closeScheduleEditor() {
+        this._scheduleEditor = null;
+        const el = document.getElementById('ops-schedule-editor-overlay');
+        if (el) el.remove();
+    },
+
+    getShiftCatalogEntry(shiftCode) {
+        const shifts = this.data.volunteerOps?.catalogs?.shifts || [];
+        return shifts.find((s) => (s.code || s.id) === shiftCode) || null;
+    },
+
+    resolveLocationNameForShift(shiftCode) {
+        const sh = this.getShiftCatalogEntry(shiftCode);
+        if (!sh || !sh.location_id) return '-';
+        const locs = this.data.volunteerOps?.catalogs?.locations || [];
+        const loc = locs.find((l) => l.id === sh.location_id);
+        return loc ? loc.name : sh.location_id;
+    },
+
+    onScheduleEditorShiftChange() {
+        if (!this._scheduleEditor) return;
+        const sel = document.getElementById('ops-editor-shift');
+        const daySel = document.getElementById('ops-editor-day');
+        if (!sel || !daySel) return;
+        const day = daySel.value;
+        const shift = sel.value;
+        if (!this.canEditScheduleScope(day, shift)) return;
+        this._scheduleEditor.day = day;
+        this._scheduleEditor.shift = shift;
+        const sh = this.getShiftCatalogEntry(shift);
+        this._scheduleEditor.rows = (this.data.volunteerOps.schedule || [])
+            .filter((r) => r.day === day && r.shift === shift)
+            .map((r) => ({
+                id: r.id,
+                start: r.start || sh?.start || '',
+                end: r.end || sh?.end || '',
+                volunteer_ref: this.volunteerRefFromRow(r)
+            }));
+        this.renderScheduleEditorOverlay();
+    },
+
+    addScheduleEditorRow() {
+        if (!this._scheduleEditor) return;
+        const sh = this.getShiftCatalogEntry(this._scheduleEditor.shift);
+        this._scheduleEditor.rows.push({
+            id: '',
+            start: sh?.start || '',
+            end: sh?.end || '',
+            volunteer_ref: ''
+        });
+        this.renderScheduleEditorOverlay();
+    },
+
+    removeScheduleEditorRow(index) {
+        if (!this._scheduleEditor) return;
+        this._scheduleEditor.rows.splice(index, 1);
+        this.renderScheduleEditorOverlay();
+    },
+
+    buildVolunteerRefOptions(selected) {
+        const cats = this.data.volunteerOps?.catalogs || {};
+        let html = `<option value="">${this.escapeHtml(i18n.t('ops_editor_pick_volunteer'))}</option>`;
+        (cats.wp_users || []).forEach((u) => {
+            const ref = `wp:${u.id}`;
+            html += `<option value="${this.escapeHtml(ref)}"${ref === selected ? ' selected' : ''}>${this.escapeHtml(u.name)} (WP)</option>`;
+        });
+        (cats.roster_volunteers || []).forEach((rv) => {
+            const ref = `rv:${rv.id}`;
+            html += `<option value="${this.escapeHtml(ref)}"${ref === selected ? ' selected' : ''}>${this.escapeHtml(rv.name)}</option>`;
+        });
+        return html;
+    },
+
+    renderScheduleEditorOverlay() {
+        const ed = this._scheduleEditor;
+        if (!ed) return;
+        let overlay = document.getElementById('ops-schedule-editor-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'ops-schedule-editor-overlay';
+            overlay.className = 'ops-schedule-editor-overlay';
+            document.body.appendChild(overlay);
+        }
+        const scopeOpts = ed.scopes.map((s) => {
+            const sel = s.day === ed.day && s.shift === ed.shift;
+            return `<option value="${this.escapeHtml(s.day)}|${this.escapeHtml(s.shift)}"${sel ? ' selected' : ''}>${this.escapeHtml(this.getOpsDayLabel(s.day))} — ${this.escapeHtml(s.shift)}</option>`;
+        }).join('');
+        const dayOpts = ['sexta', 'sabado', 'domingo'].map((d) =>
+            `<option value="${d}"${ed.day === d ? ' selected' : ''}>${this.escapeHtml(this.getOpsDayLabel(d))}</option>`
+        ).join('');
+        const shiftOpts = (this.data.volunteerOps.catalogs?.shifts || []).map((sh) => {
+            const code = sh.code || sh.id;
+            return `<option value="${this.escapeHtml(code)}"${ed.shift === code ? ' selected' : ''}>${this.escapeHtml(code)}</option>`;
+        }).join('');
+        const locName = this.resolveLocationNameForShift(ed.shift);
+        const rowHtml = ed.rows.map((row, idx) => `
+            <tr>
+                <td><input type="time" class="ops-editor-start" data-idx="${idx}" value="${this.escapeHtml(row.start || '')}"></td>
+                <td><input type="time" class="ops-editor-end" data-idx="${idx}" value="${this.escapeHtml(row.end || '')}"></td>
+                <td><select class="ops-editor-volunteer" data-idx="${idx}">${this.buildVolunteerRefOptions(row.volunteer_ref || '')}</select></td>
+                <td><button type="button" class="ops-btn" onclick="app.removeScheduleEditorRow(${idx})">${this.escapeHtml(i18n.t('ops_editor_remove_row'))}</button></td>
+            </tr>
+        `).join('');
+        overlay.innerHTML = `
+            <div class="ops-schedule-editor-panel" role="dialog" aria-labelledby="ops-editor-title">
+                <header class="ops-schedule-editor-header">
+                    <h2 id="ops-editor-title">${this.escapeHtml(i18n.t('ops_schedule_editor_title'))}</h2>
+                    <button type="button" class="ops-btn" onclick="app.closeScheduleEditor()">${this.escapeHtml(i18n.t('ops_editor_close'))}</button>
+                </header>
+                <div class="ops-schedule-editor-scope">
+                    <label>${this.escapeHtml(i18n.t('ops_editor_day'))}
+                        <select id="ops-editor-day" onchange="app.onScheduleEditorShiftChange()">${dayOpts}</select>
+                    </label>
+                    <label>${this.escapeHtml(i18n.t('ops_shift_label'))}
+                        <select id="ops-editor-shift" onchange="app.onScheduleEditorShiftChange()">${shiftOpts}</select>
+                    </label>
+                    <p class="text-muted">${this.escapeHtml(i18n.t('ops_location_label'))}: <strong>${this.escapeHtml(locName)}</strong></p>
+                </div>
+                <div class="ops-table-wrap">
+                    <table class="ops-schedule-table">
+                        <thead><tr>
+                            <th>${this.escapeHtml(i18n.t('ops_time_start'))}</th>
+                            <th>${this.escapeHtml(i18n.t('ops_time_end'))}</th>
+                            <th>${this.escapeHtml(i18n.t('ops_volunteer_label'))}</th>
+                            <th></th>
+                        </tr></thead>
+                        <tbody>${rowHtml || `<tr><td colspan="4" class="text-muted">${this.escapeHtml(i18n.t('ops_editor_no_rows'))}</td></tr>`}</tbody>
+                    </table>
+                </div>
+                <div class="ops-schedule-editor-actions">
+                    <button type="button" class="ops-btn" onclick="app.addScheduleEditorRow()">${this.escapeHtml(i18n.t('ops_editor_add_row'))}</button>
+                    <button type="button" class="ops-btn ops-btn--accent" onclick="app.saveScheduleEditor()">${this.escapeHtml(i18n.t('ops_editor_save'))}</button>
+                </div>
+            </div>
+        `;
+    },
+
+    collectScheduleEditorRows() {
+        if (!this._scheduleEditor) return [];
+        return this._scheduleEditor.rows.map((row, idx) => {
+            const startEl = document.querySelector(`.ops-editor-start[data-idx="${idx}"]`);
+            const endEl = document.querySelector(`.ops-editor-end[data-idx="${idx}"]`);
+            const volEl = document.querySelector(`.ops-editor-volunteer[data-idx="${idx}"]`);
+            const out = {
+                start: startEl ? startEl.value : row.start,
+                end: endEl ? endEl.value : row.end,
+                volunteer_ref: volEl ? volEl.value : row.volunteer_ref
+            };
+            if (row.id) out.id = row.id;
+            return out;
+        }).filter((r) => r.volunteer_ref);
+    },
+
+    async saveScheduleEditor() {
+        if (!this._scheduleEditor) return;
+        const { day, shift } = this._scheduleEditor;
+        const rows = this.collectScheduleEditorRows();
+        try {
+            const result = await API.saveScheduleScope(day, shift, rows);
+            if (result.data) this.data.volunteerOps = result.data;
+            this.closeScheduleEditor();
+            this.renderVolunteerOps();
+            if (this.router.currentView === 'home') this.renderHomeVolunteerDashboard();
+            this.updateNotificationsBadge();
+        } catch (err) {
+            alert(err.message || i18n.t('ops_editor_save_fail'));
+        }
+    },
+
+    renderOpsMyAssignmentsBlock(uid) {
+        const myRows = this.getMyScheduleRows();
+        if (!myRows.length) {
+            return `<div class="ops-mine-block"><h3>${this.escapeHtml(i18n.t('ops_my_assignments'))}</h3><p class="text-muted">${this.escapeHtml(i18n.t('ops_no_wp_user'))}</p></div>`;
+        }
+        const sorted = myRows.slice().sort((a, b) => {
+            const da = ['sexta', 'sabado', 'domingo'].indexOf(a.day);
+            const db = ['sexta', 'sabado', 'domingo'].indexOf(b.day);
+            if (da !== db) return da - db;
+            return (a.start || '').localeCompare(b.start || '');
+        });
+        const tableRows = sorted.map((item) => this.renderOpsScheduleRow(item, uid)).join('');
+        return `
+            <section class="ops-mine-block ops-mine-block--table">
+                <h3>${this.escapeHtml(i18n.t('ops_my_assignments'))}</h3>
+                <div class="ops-table-wrap">
+                    <table class="ops-schedule-table">
+                        <thead>
+                            <tr>
+                                <th>${this.escapeHtml(i18n.t('ops_shift_label'))}</th>
+                                <th>${this.escapeHtml(i18n.t('ops_time_label'))}</th>
+                                <th>${this.escapeHtml(i18n.t('ops_location_label'))}</th>
+                                <th>${this.escapeHtml(i18n.t('ops_volunteer_label'))}</th>
+                                <th>${this.escapeHtml(i18n.t('ops_languages_label'))}</th>
+                                <th>${this.escapeHtml(i18n.t('ops_status_label'))}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>${tableRows}</tbody>
+                    </table>
+                </div>
+            </section>`;
+    },
+
     renderOpsGovernanceCard(day, data) {
         const keymen = data.keymen
             ? Object.entries(data.keymen).map(([shift, person]) => `${this.escapeHtml(shift)}: ${this.escapeHtml(person)}`).join(' | ')
@@ -2368,8 +2662,12 @@ const app = {
         const actions = this.renderAssignmentActions(item, supRow);
         const swapBtn = mineRow && this.getCommitmentStatus(item.id) === 'declined'
             ? `<button type="button" class="ops-btn ops-btn--accent" onclick="app.requestSwap('${String(item.id).replace(/'/g, "\\'")}')">${this.escapeHtml(i18n.t('ops_request_swap'))}</button>` : '';
-        const actionCell = (actions || swapBtn)
-            ? `<div class="ops-table-actions">${actions}${this.canReallocateOps() ? `<button type="button" class="ops-btn" onclick="app.doReallocate('${String(item.id).replace(/'/g, "\\'")}')">${this.escapeHtml(i18n.t('ops_reallocate'))}</button>` : ''}${swapBtn}</div>`
+        const canRealloc = this.canReallocateOps() && this.canSuperviseOps() && (mineRow || supRow);
+        const reallocBtn = canRealloc
+            ? `<button type="button" class="ops-btn" onclick="app.doReallocate('${String(item.id).replace(/'/g, "\\'")}')">${this.escapeHtml(i18n.t('ops_reallocate'))}</button>`
+            : '';
+        const actionCell = (actions || swapBtn || reallocBtn)
+            ? `<div class="ops-table-actions">${actions}${reallocBtn}${swapBtn}</div>`
             : '';
         const timeRange = `${item.start || '-'} ${i18n.t('ops_time_to')} ${item.end || '-'}`;
         return `
@@ -2377,7 +2675,7 @@ const app = {
                 <td data-label="${this.escapeHtml(i18n.t('ops_shift_label'))}">${this.escapeHtml(item.shift || '-')}</td>
                 <td data-label="${this.escapeHtml(i18n.t('ops_time_label'))}">${this.escapeHtml(timeRange)}</td>
                 <td data-label="${this.escapeHtml(i18n.t('ops_location_label'))}">${this.escapeHtml(item.location || '-')}</td>
-                <td data-label="${this.escapeHtml(i18n.t('ops_volunteer_label'))}">${this.escapeHtml(item.volunteer_name || i18n.t('ops_volunteer_default'))}</td>
+                <td data-label="${this.escapeHtml(i18n.t('ops_volunteer_label'))}">${mineRow ? `<span class="ops-you-badge">${this.escapeHtml(i18n.t('ops_you_badge'))}</span> ` : ''}${this.escapeHtml(item.volunteer_name || i18n.t('ops_volunteer_default'))}</td>
                 <td data-label="${this.escapeHtml(i18n.t('ops_languages_label'))}">${this.escapeHtml((item.languages || []).join(', ') || '-')}</td>
                 <td data-label="${this.escapeHtml(i18n.t('ops_status_label'))}">${this.getCommitmentBadge(item.id)} ${this.getOpsStatusBadge(item.id)}</td>
                 ${actionCell ? `<td class="ops-table-actions-cell">${actionCell}</td>` : '<td></td>'}
@@ -2474,21 +2772,16 @@ const app = {
         }
 
         const staleBanner = this._dataStale.ops ? `<div class="zelo-stale-banner">${this.renderStaleBadge('ops')}</div>` : '';
-        const mineOnly = this.usesMineOnlyOps();
-        const selectedDay = document.getElementById('ops-day-filter')?.value || '';
-        const selectedShift = document.getElementById('ops-shift-filter')?.value || '';
+        const preset = this._opsFilterPreset || {};
+        const selectedDay = document.getElementById('ops-day-filter')?.value || preset.day || '';
+        const selectedShift = document.getElementById('ops-shift-filter')?.value || preset.shift || '';
         const selectedLanguage = (document.getElementById('ops-language-filter')?.value || '').toLowerCase();
+        const selectedLocation = (document.getElementById('ops-location-filter')?.value || '').trim();
+        const nameQuery = (document.getElementById('ops-name-filter')?.value || '').trim().toLowerCase();
+        if (preset.day || preset.shift) this._opsFilterPreset = null;
 
         const uid = this.auth.user.id;
-        const myRows = ops.schedule.filter((i) => Number(i.wp_user_id) === uid);
-        let myHtml = '';
-        if (!mineOnly) {
-            if (myRows.length) {
-                myHtml = `<div class="ops-mine-block"><h3>${i18n.t('ops_my_assignments')}</h3><ul>${myRows.map((i) => `<li><strong>${this.escapeHtml(this.getOpsDayLabel(i.day))}</strong> ${this.escapeHtml(i.shift)} — ${this.escapeHtml(i.volunteer_name || '')} @ ${this.escapeHtml(i.location || '-')}</li>`).join('')}</ul></div>`;
-            } else {
-                myHtml = `<div class="ops-mine-block text-muted">${i18n.t('ops_no_wp_user')}</div>`;
-            }
-        }
+        const myHtml = this.renderOpsMyAssignmentsBlock(uid);
 
         let swapPanel = '';
         const swaps = ops.swap_requests || [];
@@ -2503,18 +2796,31 @@ const app = {
         }
 
         let items = ops.schedule.slice();
-        if (selectedDay) items = items.filter(i => i.day === selectedDay);
-        if (selectedShift) items = items.filter(i => i.shift === selectedShift);
+        if (selectedDay) items = items.filter((i) => i.day === selectedDay);
+        if (selectedShift) items = items.filter((i) => i.shift === selectedShift);
+        if (selectedLocation) items = items.filter((i) => (i.location || '') === selectedLocation);
+        if (nameQuery) {
+            items = items.filter((i) => String(i.volunteer_name || '').toLowerCase().includes(nameQuery));
+        }
         if (selectedLanguage) {
-            items = items.filter(i => (i.languages || []).some(lang => String(lang).toLowerCase().includes(selectedLanguage)));
+            items = items.filter((i) => (i.languages || []).some((lang) => String(lang).toLowerCase().includes(selectedLanguage)));
         }
 
+        const locations = [...new Set((ops.schedule || []).map((i) => i.location).filter(Boolean))].sort();
+        const locOptions = locations.map((loc) =>
+            `<option value="${this.escapeHtml(loc)}"${selectedLocation === loc ? ' selected' : ''}>${this.escapeHtml(loc)}</option>`
+        ).join('');
+
         const governance = ops.governance || {};
-        const governanceHtml = !mineOnly ? Object.entries(governance).map(([day, data]) => this.renderOpsGovernanceCard(day, data)).join('') : '';
+        const governanceHtml = this.canShowOpsGovernance()
+            ? Object.entries(governance).map(([day, data]) => this.renderOpsGovernanceCard(day, data)).join('')
+            : '';
 
-        const showActions = this.canSuperviseOps() || this.canReallocateOps() || mineOnly;
-        const scheduleHtml = this.renderOpsDayGroups(items, uid, showActions);
+        const scheduleHtml = this.renderOpsDayGroups(items, uid, true);
 
+        const editBtn = this.canEditSchedule()
+            ? `<button type="button" class="ops-btn ops-btn--accent" onclick="app.openScheduleEditor()">${this.escapeHtml(i18n.t('ops_schedule_edit_btn'))}</button>`
+            : '';
         const exportBtn = this.canManageOps()
             ? `<button type="button" id="ops-export-pdf-btn" class="ops-btn ops-btn--accent ops-export-btn" onclick="app.downloadOpsExportPdf()">${this.escapeHtml(i18n.t('ops_export_pdf'))}</button>`
             : '';
@@ -2526,6 +2832,7 @@ const app = {
             ${histBlock}
             <div class="ops-toolbar">
                 <div class="ops-filters">
+                    <button type="button" class="avisos-filter-chip" onclick="app.applyOpsFilterMyShift()">${this.escapeHtml(i18n.t('ops_filter_my_shift'))}</button>
                     <select id="ops-day-filter" onchange="app.renderVolunteerOps()">
                         <option value="">${this.escapeHtml(i18n.t('ops_filter_all_days'))}</option>
                         <option value="sexta" ${selectedDay === 'sexta' ? 'selected' : ''}>${this.escapeHtml(this.getOpsDayLabel('sexta'))}</option>
@@ -2539,12 +2846,17 @@ const app = {
                         <option value="A2" ${selectedShift === 'A2' ? 'selected' : ''}>A2</option>
                         <option value="B2" ${selectedShift === 'B2' ? 'selected' : ''}>B2</option>
                     </select>
+                    <select id="ops-location-filter" onchange="app.renderVolunteerOps()">
+                        <option value="">${this.escapeHtml(i18n.t('ops_filter_all_locations'))}</option>
+                        ${locOptions}
+                    </select>
+                    <input id="ops-name-filter" value="${this.escapeHtml(nameQuery)}" oninput="app.renderVolunteerOps()" placeholder="${this.escapeHtml(i18n.t('ops_filter_name_placeholder'))}">
                     <input id="ops-language-filter" value="${this.escapeHtml(selectedLanguage)}" oninput="app.renderVolunteerOps()" placeholder="${this.escapeHtml(i18n.t('ops_filter_language_placeholder'))}">
                 </div>
-                ${exportBtn}
+                <div class="ops-toolbar-actions">${editBtn}${exportBtn}</div>
             </div>
-            ${!mineOnly ? `<details class="ops-governance-details" open><summary>${this.escapeHtml(i18n.t('ops_governance_title'))}</summary><div class="ops-governance-grid">${governanceHtml || `<p class="text-muted">${this.escapeHtml(i18n.t('ops_no_governance'))}</p>`}</div></details>` : ''}
-            <h3 class="ops-schedule-heading">${mineOnly ? i18n.t('ops_my_schedule') : i18n.t('ops_detailed_schedule')}</h3>
+            ${governanceHtml ? `<details class="ops-governance-details"><summary>${this.escapeHtml(i18n.t('ops_governance_title'))}</summary><div class="ops-governance-grid">${governanceHtml}</div></details>` : ''}
+            <h3 class="ops-schedule-heading">${this.escapeHtml(i18n.t('ops_team_schedule'))}</h3>
             <div class="ops-schedule-by-day">${scheduleHtml}</div>
         `;
     },
