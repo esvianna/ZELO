@@ -12,6 +12,8 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 **Plugin 2.11.0:** `POST /ops/schedule` (edição escopada); escala completa em leitura para voluntários logados; cap `zelo_edit_schedule`; ADR-018.
 
+**PWA build 100:** modal Montar escala refatorado (cards, sheet mobile, rodapé fixo).
+
 **PWA build 99:** «Minhas designações» em destaque; escala da equipa com filtros; editor «Montar escala» para responsáveis.
 
 **Anterior:** 2.10.x local no turno + sub-faixas horárias; build 98 ordenação por `start`.

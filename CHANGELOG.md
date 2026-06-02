@@ -11,6 +11,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 ### Adicionado
 - Plugin **2.11.0**: `POST /ops/schedule` (CRUD escopado por governança); cap `zelo_edit_schedule`; payload `permissions` + catálogos para editor; escala completa em leitura para `zelo_view_ops`; `reallocate` com checagem de supervisão.
 - PWA build **99**: escala da equipa (filtros, destaque «Você»); editor «Montar escala»; API `saveScheduleScope`.
+- PWA build **100**: UX do modal Montar escala (cards mobile, rodapé fixo, confirmação ao guardar).
 - Plugin **2.10.1**: local do posto associado ao turno (aba Turnos); escala deriva `location` automaticamente.
 - Plugin **2.10.0**: escala com início/fim customizáveis por linha (dentro do turno no catálogo); duplicata por dia+turno+pessoa+horário.
 - PWA build **98**: escala detalhada ordenada por horário de início dentro de cada dia.

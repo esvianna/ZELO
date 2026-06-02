@@ -2435,12 +2435,16 @@ const app = {
                 end: r.end || '',
                 volunteer_ref: this.volunteerRefFromRow(r)
             }));
+        this._scheduleEditorSaving = false;
         this._scheduleEditor = { day, shift, rows, scopes };
         this.renderScheduleEditorOverlay();
     },
 
     closeScheduleEditor() {
+        if (this._scheduleEditorSaving) return;
         this._scheduleEditor = null;
+        this._unbindScheduleEditorEscape();
+        document.body.classList.remove('ops-editor-open');
         const el = document.getElementById('ops-schedule-editor-overlay');
         if (el) el.remove();
     },
@@ -2480,8 +2484,26 @@ const app = {
         this.renderScheduleEditorOverlay();
     },
 
+    syncScheduleEditorRowsFromDom() {
+        if (!this._scheduleEditor) return;
+        const root = document.getElementById('ops-schedule-editor-overlay');
+        if (!root) return;
+        this._scheduleEditor.rows = this._scheduleEditor.rows.map((row, idx) => {
+            const startEl = root.querySelector(`.ops-editor-start[data-idx="${idx}"]`);
+            const endEl = root.querySelector(`.ops-editor-end[data-idx="${idx}"]`);
+            const volEl = root.querySelector(`.ops-editor-volunteer[data-idx="${idx}"]`);
+            return {
+                id: row.id || '',
+                start: startEl ? startEl.value : row.start,
+                end: endEl ? endEl.value : row.end,
+                volunteer_ref: volEl ? volEl.value : row.volunteer_ref
+            };
+        });
+    },
+
     addScheduleEditorRow() {
         if (!this._scheduleEditor) return;
+        this.syncScheduleEditorRowsFromDom();
         const sh = this.getShiftCatalogEntry(this._scheduleEditor.shift);
         this._scheduleEditor.rows.push({
             id: '',
@@ -2494,6 +2516,7 @@ const app = {
 
     removeScheduleEditorRow(index) {
         if (!this._scheduleEditor) return;
+        this.syncScheduleEditorRowsFromDom();
         this._scheduleEditor.rows.splice(index, 1);
         this.renderScheduleEditorOverlay();
     },
@@ -2512,6 +2535,50 @@ const app = {
         return html;
     },
 
+    getShiftBoundsLabel(shiftCode) {
+        const sh = this.getShiftCatalogEntry(shiftCode);
+        if (!sh || (!sh.start && !sh.end)) return '';
+        return `${sh.start || '–'} ${i18n.t('ops_time_to')} ${sh.end || '–'}`;
+    },
+
+    renderScheduleEditorRowCard(row, idx) {
+        return `
+            <article class="ops-editor-row-card">
+                <div class="ops-editor-row-times">
+                    <label class="ops-editor-field">
+                        <span class="ops-editor-field-label">${this.escapeHtml(i18n.t('ops_time_start'))}</span>
+                        <input type="time" class="ops-editor-start" data-idx="${idx}" value="${this.escapeHtml(row.start || '')}">
+                    </label>
+                    <label class="ops-editor-field">
+                        <span class="ops-editor-field-label">${this.escapeHtml(i18n.t('ops_time_end'))}</span>
+                        <input type="time" class="ops-editor-end" data-idx="${idx}" value="${this.escapeHtml(row.end || '')}">
+                    </label>
+                </div>
+                <label class="ops-editor-field ops-editor-field--full">
+                    <span class="ops-editor-field-label">${this.escapeHtml(i18n.t('ops_volunteer_label'))}</span>
+                    <select class="ops-editor-volunteer" data-idx="${idx}">${this.buildVolunteerRefOptions(row.volunteer_ref || '')}</select>
+                </label>
+                <button type="button" class="ops-editor-remove-link" onclick="app.removeScheduleEditorRow(${idx})">${this.escapeHtml(i18n.t('ops_editor_remove_line'))}</button>
+            </article>`;
+    },
+
+    _bindScheduleEditorEscape() {
+        if (this._scheduleEditorEscapeBound) return;
+        this._scheduleEditorEscapeHandler = (e) => {
+            if (e.key === 'Escape' && this._scheduleEditor) this.closeScheduleEditor();
+        };
+        document.addEventListener('keydown', this._scheduleEditorEscapeHandler);
+        this._scheduleEditorEscapeBound = true;
+    },
+
+    _unbindScheduleEditorEscape() {
+        if (this._scheduleEditorEscapeHandler) {
+            document.removeEventListener('keydown', this._scheduleEditorEscapeHandler);
+            this._scheduleEditorEscapeHandler = null;
+        }
+        this._scheduleEditorEscapeBound = false;
+    },
+
     renderScheduleEditorOverlay() {
         const ed = this._scheduleEditor;
         if (!ed) return;
@@ -2520,12 +2587,11 @@ const app = {
             overlay = document.createElement('div');
             overlay.id = 'ops-schedule-editor-overlay';
             overlay.className = 'ops-schedule-editor-overlay';
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) this.closeScheduleEditor();
+            });
             document.body.appendChild(overlay);
         }
-        const scopeOpts = ed.scopes.map((s) => {
-            const sel = s.day === ed.day && s.shift === ed.shift;
-            return `<option value="${this.escapeHtml(s.day)}|${this.escapeHtml(s.shift)}"${sel ? ' selected' : ''}>${this.escapeHtml(this.getOpsDayLabel(s.day))} — ${this.escapeHtml(s.shift)}</option>`;
-        }).join('');
         const dayOpts = ['sexta', 'sabado', 'domingo'].map((d) =>
             `<option value="${d}"${ed.day === d ? ' selected' : ''}>${this.escapeHtml(this.getOpsDayLabel(d))}</option>`
         ).join('');
@@ -2534,54 +2600,56 @@ const app = {
             return `<option value="${this.escapeHtml(code)}"${ed.shift === code ? ' selected' : ''}>${this.escapeHtml(code)}</option>`;
         }).join('');
         const locName = this.resolveLocationNameForShift(ed.shift);
-        const rowHtml = ed.rows.map((row, idx) => `
-            <tr>
-                <td><input type="time" class="ops-editor-start" data-idx="${idx}" value="${this.escapeHtml(row.start || '')}"></td>
-                <td><input type="time" class="ops-editor-end" data-idx="${idx}" value="${this.escapeHtml(row.end || '')}"></td>
-                <td><select class="ops-editor-volunteer" data-idx="${idx}">${this.buildVolunteerRefOptions(row.volunteer_ref || '')}</select></td>
-                <td><button type="button" class="ops-btn" onclick="app.removeScheduleEditorRow(${idx})">${this.escapeHtml(i18n.t('ops_editor_remove_row'))}</button></td>
-            </tr>
-        `).join('');
+        const bounds = this.getShiftBoundsLabel(ed.shift);
+        const rowCount = ed.rows.length;
+        const countLabel = rowCount === 1
+            ? i18n.t('ops_editor_row_count_one')
+            : i18n.t('ops_editor_row_count').replace('{0}', String(rowCount));
+        const rowsHtml = rowCount
+            ? ed.rows.map((row, idx) => this.renderScheduleEditorRowCard(row, idx)).join('')
+            : `<p class="ops-editor-empty text-muted">${this.escapeHtml(i18n.t('ops_editor_no_rows'))}</p>`;
+        const saving = !!this._scheduleEditorSaving;
+        const contextParts = [locName !== '-' ? locName : '', bounds].filter(Boolean).join(' · ');
         overlay.innerHTML = `
-            <div class="ops-schedule-editor-panel" role="dialog" aria-labelledby="ops-editor-title">
+            <div class="ops-schedule-editor-panel" role="dialog" aria-modal="true" aria-labelledby="ops-editor-title">
                 <header class="ops-schedule-editor-header">
                     <h2 id="ops-editor-title">${this.escapeHtml(i18n.t('ops_schedule_editor_title'))}</h2>
-                    <button type="button" class="ops-btn" onclick="app.closeScheduleEditor()">${this.escapeHtml(i18n.t('ops_editor_close'))}</button>
+                    <button type="button" class="ops-editor-close-btn" onclick="app.closeScheduleEditor()" aria-label="${this.escapeHtml(i18n.t('ops_editor_close_aria'))}">×</button>
                 </header>
-                <div class="ops-schedule-editor-scope">
-                    <label>${this.escapeHtml(i18n.t('ops_editor_day'))}
-                        <select id="ops-editor-day" onchange="app.onScheduleEditorShiftChange()">${dayOpts}</select>
-                    </label>
-                    <label>${this.escapeHtml(i18n.t('ops_shift_label'))}
-                        <select id="ops-editor-shift" onchange="app.onScheduleEditorShiftChange()">${shiftOpts}</select>
-                    </label>
-                    <p class="text-muted">${this.escapeHtml(i18n.t('ops_location_label'))}: <strong>${this.escapeHtml(locName)}</strong></p>
+                <div class="ops-schedule-editor-body">
+                    <div class="ops-schedule-editor-scope-bar">
+                        <div class="ops-editor-field-grid">
+                            <label class="ops-editor-field">
+                                <span class="ops-editor-field-label">${this.escapeHtml(i18n.t('ops_editor_day'))}</span>
+                                <select id="ops-editor-day" class="ops-editor-select" onchange="app.onScheduleEditorShiftChange()">${dayOpts}</select>
+                            </label>
+                            <label class="ops-editor-field">
+                                <span class="ops-editor-field-label">${this.escapeHtml(i18n.t('ops_shift_label'))}</span>
+                                <select id="ops-editor-shift" class="ops-editor-select" onchange="app.onScheduleEditorShiftChange()">${shiftOpts}</select>
+                            </label>
+                        </div>
+                        ${contextParts ? `<p class="ops-editor-context-chip">${this.escapeHtml(contextParts)}</p>` : ''}
+                        <p class="ops-editor-row-count">${this.escapeHtml(countLabel)}</p>
+                    </div>
+                    <div class="ops-schedule-editor-rows">${rowsHtml}</div>
+                    <button type="button" class="btn-block outline ops-editor-add-btn" onclick="app.addScheduleEditorRow()" ${saving ? 'disabled' : ''}>${this.escapeHtml(i18n.t('ops_editor_add_row'))}</button>
                 </div>
-                <div class="ops-table-wrap">
-                    <table class="ops-schedule-table">
-                        <thead><tr>
-                            <th>${this.escapeHtml(i18n.t('ops_time_start'))}</th>
-                            <th>${this.escapeHtml(i18n.t('ops_time_end'))}</th>
-                            <th>${this.escapeHtml(i18n.t('ops_volunteer_label'))}</th>
-                            <th></th>
-                        </tr></thead>
-                        <tbody>${rowHtml || `<tr><td colspan="4" class="text-muted">${this.escapeHtml(i18n.t('ops_editor_no_rows'))}</td></tr>`}</tbody>
-                    </table>
-                </div>
-                <div class="ops-schedule-editor-actions">
-                    <button type="button" class="ops-btn" onclick="app.addScheduleEditorRow()">${this.escapeHtml(i18n.t('ops_editor_add_row'))}</button>
-                    <button type="button" class="ops-btn ops-btn--accent" onclick="app.saveScheduleEditor()">${this.escapeHtml(i18n.t('ops_editor_save'))}</button>
-                </div>
+                <footer class="ops-schedule-editor-footer">
+                    <button type="button" class="btn-block ops-editor-save-btn" onclick="app.saveScheduleEditor()" ${saving ? 'disabled' : ''}>${this.escapeHtml(saving ? i18n.t('ops_editor_saving') : i18n.t('ops_editor_save'))}</button>
+                </footer>
             </div>
         `;
+        document.body.classList.add('ops-editor-open');
+        this._bindScheduleEditorEscape();
     },
 
     collectScheduleEditorRows() {
         if (!this._scheduleEditor) return [];
+        const root = document.getElementById('ops-schedule-editor-overlay');
         return this._scheduleEditor.rows.map((row, idx) => {
-            const startEl = document.querySelector(`.ops-editor-start[data-idx="${idx}"]`);
-            const endEl = document.querySelector(`.ops-editor-end[data-idx="${idx}"]`);
-            const volEl = document.querySelector(`.ops-editor-volunteer[data-idx="${idx}"]`);
+            const startEl = root ? root.querySelector(`.ops-editor-start[data-idx="${idx}"]`) : null;
+            const endEl = root ? root.querySelector(`.ops-editor-end[data-idx="${idx}"]`) : null;
+            const volEl = root ? root.querySelector(`.ops-editor-volunteer[data-idx="${idx}"]`) : null;
             const out = {
                 start: startEl ? startEl.value : row.start,
                 end: endEl ? endEl.value : row.end,
@@ -2593,17 +2661,28 @@ const app = {
     },
 
     async saveScheduleEditor() {
-        if (!this._scheduleEditor) return;
+        if (!this._scheduleEditor || this._scheduleEditorSaving) return;
         const { day, shift } = this._scheduleEditor;
         const rows = this.collectScheduleEditorRows();
+        const dayLabel = this.getOpsDayLabel(day);
+        const msg = i18n.t('ops_editor_save_confirm')
+            .replace('{0}', dayLabel)
+            .replace('{1}', shift)
+            .replace('{2}', String(rows.length));
+        if (!window.confirm(msg)) return;
+        this._scheduleEditorSaving = true;
+        this.renderScheduleEditorOverlay();
         try {
             const result = await API.saveScheduleScope(day, shift, rows);
             if (result.data) this.data.volunteerOps = result.data;
+            this._scheduleEditorSaving = false;
             this.closeScheduleEditor();
             this.renderVolunteerOps();
             if (this.router.currentView === 'home') this.renderHomeVolunteerDashboard();
             this.updateNotificationsBadge();
         } catch (err) {
+            this._scheduleEditorSaving = false;
+            this.renderScheduleEditorOverlay();
             alert(err.message || i18n.t('ops_editor_save_fail'));
         }
     },
