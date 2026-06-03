@@ -858,12 +858,20 @@ const app = {
 
                 if (commitSt === 'pending' && this.canCommitAssignment(item)) {
                     const dl = ops.settings?.commitment_deadline || '';
+                    const scheduleChanged = this.getCommitmentPendingReason(item.id) === 'schedule_changed';
+                    const timePart = `${item.start || ''}${item.end ? ' – ' + item.end : ''}`;
                     items.push({
-                        id: `commitment-${item.id}`,
+                        id: scheduleChanged ? `schedule-changed-${item.id}` : `commitment-${item.id}`,
                         category: 'personal',
-                        icon: '📌',
-                        title: i18n.t('avisos_commitment_pending'),
-                        summary: `${this.getOpsDayLabel(item.day)} · ${item.shift || ''} — ${item.location || ''}${dl ? ` (até ${dl})` : ''}`,
+                        icon: scheduleChanged ? '🔄' : '📌',
+                        title: i18n.t(scheduleChanged ? 'avisos_schedule_changed' : 'avisos_commitment_pending'),
+                        summary: scheduleChanged
+                            ? i18n.t('avisos_schedule_changed_summary')
+                                .replace('{0}', this.getOpsDayLabel(item.day))
+                                .replace('{1}', item.shift || '')
+                                .replace('{2}', item.location || '')
+                                .replace('{3}', timePart)
+                            : `${this.getOpsDayLabel(item.day)} · ${item.shift || ''} — ${item.location || ''}${dl ? ` (até ${dl})` : ''}`,
                         time: item.start || '',
                         action: 'escala'
                     });
@@ -1849,9 +1857,17 @@ const app = {
         return (c && c.status) ? c.status : 'pending';
     },
 
-    getCommitmentLabel(status) {
+    getCommitmentPendingReason(assignmentId) {
+        const c = this.data.volunteerOps?.commitments?.[assignmentId];
+        return (c && c.pending_reason) ? String(c.pending_reason) : '';
+    },
+
+    getCommitmentLabel(status, assignmentId) {
         if (status === 'accepted') return i18n.t('ops_commitment_accepted');
         if (status === 'declined') return i18n.t('ops_commitment_declined');
+        if (status === 'pending' && assignmentId && this.getCommitmentPendingReason(assignmentId) === 'schedule_changed') {
+            return i18n.t('ops_schedule_changed_confirm');
+        }
         return i18n.t('ops_commitment_pending');
     },
 
@@ -2031,7 +2047,7 @@ const app = {
     getCommitmentBadge(assignmentId) {
         const st = this.getCommitmentStatus(assignmentId);
         const cls = st === 'accepted' ? 'ops-commit-accepted' : st === 'declined' ? 'ops-commit-declined' : 'ops-commit-pending';
-        return `<span class="ops-status-badge ${cls}">${this.escapeHtml(this.getCommitmentLabel(st))}</span>`;
+        return `<span class="ops-status-badge ${cls}">${this.escapeHtml(this.getCommitmentLabel(st, assignmentId))}</span>`;
     },
 
     renderAssignmentActions(item, forSupervisorRow, compactRow = false) {
@@ -2045,6 +2061,9 @@ const app = {
 
         if (commitSt === 'pending') {
             if (this.canCommitAssignment(item)) {
+                if (!onBehalf && this.getCommitmentPendingReason(item.id) === 'schedule_changed') {
+                    html += `<p class="text-muted home-assignment-note">${this.escapeHtml(i18n.t('ops_schedule_changed_hint'))}</p>`;
+                }
                 html += `<button type="button" class="${btnPrimary}" onclick="app.doCommit('${idEsc}', true, ${onBehalf})">${i18n.t(onBehalf ? 'ops_commit_on_behalf' : 'ops_commit_accept')}</button>`;
                 if (!onBehalf) {
                     html += `<button type="button" class="${btnMuted}" onclick="app.doCommit('${idEsc}', false, false)">${i18n.t('ops_commit_decline')}</button>`;

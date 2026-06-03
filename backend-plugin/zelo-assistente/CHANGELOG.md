@@ -2,6 +2,15 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.11.1] - 2026-06-02
+
+### Corrigido
+- `zelo_ops_apply_schedule_scope`: reconciliação por fingerprint em vez de limpar compromissos de todo o turno; histórico `schedule_patch` com campo `reconcile`.
+
+### Adicionado
+- `zelo_commitment_mark_schedule_changed`, `zelo_get_commitment_pending_reason`, `pending_reason` / `schedule_changed_at` no compromisso.
+- Cron: e-mail «Sua escala mudou — confirme no Zelo» (`schedule_changed`, dedup por designação).
+
 ## [2.11.0] - 2026-06-02
 
 ### Adicionado

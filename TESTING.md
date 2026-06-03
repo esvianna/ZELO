@@ -87,6 +87,10 @@ Configurar `baseUrl` / `siteUrl` em `frontend-pwa/assets/js/api-v5.js` para o am
 | 5 | Realocação em linha que supervisiona | homem-chave / supervisor na governança | Assignment muda; **403** se não for responsável do turno |
 | 5b | Homem-chave na governança → **Montar escala** | `zelo_edit_schedule` + keymen | Editor abre; adicionar/remover linhas; salvar; PWA atualiza |
 | 5c | Horário fora do turno no editor PWA | responsável turno | Erro da API ao salvar |
+| 5d | Montar escala: guardar **sem** alterar linhas | homem-chave | Voluntários com `accepted` **permanecem** accepted; sem aviso «escala mudou» |
+| 5e | Montar escala: alterar só horário de **uma** linha | homem-chave + 2 voluntários no turno | Só o afetado fica `pending` + `pending_reason: schedule_changed`; outro mantém `accepted`; PWA sino → «A sua escala mudou — confirme» |
+| 5f | Troca de voluntário na mesma linha (`id` preservado) | homem-chave | Antigo: compromisso removido (sem reconfirmar); novo: `pending` + aviso schedule_changed |
+| 5g | E-mail escala alterada | voluntário com e-mail verificado | Após 5e: no próximo `zelo_volunteer_notify_tick` (≤1h), e-mail «Sua escala mudou»; dedup — não reenvia após aceitar |
 | 6 | Pedido de substituição | conforme regra | Criado; gestor aprova/rejeita |
 | 7 | Cron lembretes | admin | `wp cron event list` contém `zelo_volunteer_notify_tick` (se aplicável) |
 

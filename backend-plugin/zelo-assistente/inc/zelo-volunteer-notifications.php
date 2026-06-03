@@ -133,6 +133,32 @@ function zelo_volunteer_notify_run() {
 
 		$commit_st = function_exists( 'zelo_get_commitment_status' ) ? zelo_get_commitment_status( $row['id'] ) : 'accepted';
 
+		// Escala alterada: pedir reconfirmação (cron, dedup schedule_changed).
+		if ( $commit_st === 'pending' && function_exists( 'zelo_get_commitment_pending_reason' ) && zelo_get_commitment_pending_reason( $row['id'] ) === 'schedule_changed' ) {
+			if ( ! zelo_volunteer_notify_already_sent( $uid, $row['id'], 'schedule_changed' ) ) {
+				$day_lbl = (string) $row['day'];
+				$shift_l = isset( $row['shift'] ) ? (string) $row['shift'] : '';
+				$loc     = isset( $row['location'] ) ? (string) $row['location'] : '';
+				list( $st, $en ) = zelo_ops_schedule_row_start_end( $row, $catalogs );
+				$subject = sprintf( '[%s] %s', wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ), __( 'Sua escala mudou — confirme no Zelo', 'zelo-assistente' ) );
+				$body    = sprintf(
+					"%s\n\n%s: %s / %s\n%s: %s\n%s: %s – %s\n",
+					__( 'A sua designação foi alterada. Aceda ao app Zelo e confirme se vai participar.', 'zelo-assistente' ),
+					__( 'Turno', 'zelo-assistente' ),
+					$day_lbl,
+					$shift_l,
+					__( 'Local', 'zelo-assistente' ),
+					$loc !== '' ? $loc : '—',
+					__( 'Horário', 'zelo-assistente' ),
+					$st,
+					$en
+				);
+				if ( wp_mail( $user->user_email, $subject, $body ) ) {
+					zelo_volunteer_notify_mark_sent( $uid, $row['id'], 'schedule_changed' );
+				}
+			}
+		}
+
 		// Lembrete: confirmar participação (pendente) antes do deadline.
 		if ( $commit_st === 'pending' && $deadline !== '' && preg_match( '/^\d{4}-\d{2}-\d{2}$/', $deadline ) ) {
 			try {

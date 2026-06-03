@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-02** (escala PWA: leitura equipa + edição por responsáveis).
+> Última atualização: **2026-06-02** (reconciliação compromissos ao editar escala + aviso «escala mudou»).
 
 ---
 
@@ -10,29 +10,36 @@
 
 O projeto está em **produção funcional** com foco operacional para o **departamento de informações** (voluntários), mantendo o app **público para visitantes ocasionais**.
 
-**Plugin 2.11.0:** `POST /ops/schedule` (edição escopada); escala completa em leitura para voluntários logados; cap `zelo_edit_schedule`; ADR-018.
+**Plugin 2.11.1:** reconciliação de compromissos ao `POST /ops/schedule` (preserva aceites inalterados); `pending_reason: schedule_changed`; e-mail cron; ADR-019.
 
-**PWA build 100:** modal Montar escala refatorado (cards, sheet mobile, rodapé fixo).
+**PWA build 101:** aviso «A sua escala mudou — confirme» (sino + badge escala).
 
-**PWA build 99:** «Minhas designações» em destaque; escala da equipa com filtros; editor «Montar escala» para responsáveis.
+**Plugin 2.11.0 / PWA 99–100:** edição escala, modal Montar escala (ADR-018).
 
-**Anterior:** 2.10.x local no turno + sub-faixas horárias; build 98 ordenação por `start`.
-
-**Próximo:** deploy **plugin 2.11.0** + **PWA build 99**; smoke TESTING §4 (2b–5c); Web Push VAPID.
+**Próximo:** deploy **plugin 2.11.1** + **PWA build 101**; smoke TESTING §4 (5d–5g); Web Push VAPID.
 
 ---
 
 ## O que já foi implementado
 
+### Backend (`zelo-assistente` v2.11.1)
+
+- [x] `POST /zelo/v1/ops/schedule` — reconciliação por fingerprint; `schedule_changed` só quando a designação mudou
+- [x] E-mail cron `schedule_changed` para reconfirmação
+
 ### Backend (`zelo-assistente` v2.11.0)
 
-- [x] `POST /zelo/v1/ops/schedule` — merge por dia+turno, validação, histórico, limpeza compromissos/check-ins
+- [x] `POST /zelo/v1/ops/schedule` — merge por dia+turno, validação, histórico
 - [x] `zelo_edit_schedule` + escopos via governança (`zelo_user_can_supervise_assignment`)
 - [x] Payload `permissions` + catálogos editor; escala completa para `zelo_view_ops`
 - [x] `reallocate` com checagem de supervisão na linha
 - [x] Tudo de 2.10.x (local no turno, horários por linha, export PDF, etc.)
 
-### Frontend (PWA build 99)
+### Frontend (PWA build 101)
+
+- [x] Avisos e badge «escala alterada — confirme» quando `pending_reason === schedule_changed`
+
+### Frontend (PWA build 99–100)
 
 - [x] Voluntário logado: escala completa só leitura + destaque nas próprias linhas
 - [x] Filtros: dia, turno, local, nome, «Comigo neste turno»

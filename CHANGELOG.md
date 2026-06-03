@@ -8,6 +8,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Corrigido
+- Plugin **2.11.1**: ao guardar turno na PWA, compromissos inalterados são preservados; só linhas novas/alteradas exigem reconfirmação (`pending_reason: schedule_changed`).
+- PWA build **101**: aviso «A sua escala mudou — confirme»; e-mail no cron (`schedule_changed`).
+
 ### Adicionado
 - Plugin **2.11.0**: `POST /ops/schedule` (CRUD escopado por governança); cap `zelo_edit_schedule`; payload `permissions` + catálogos para editor; escala completa em leitura para `zelo_view_ops`; `reallocate` com checagem de supervisão.
 - PWA build **99**: escala da equipa (filtros, destaque «Você»); editor «Montar escala»; API `saveScheduleScope`.

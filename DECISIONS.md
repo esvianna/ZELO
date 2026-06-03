@@ -6,6 +6,16 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 ---
 
+## ADR-019 — Reconciliação de compromissos ao editar escala (2026-06-02)
+
+**Contexto:** Guardar um turno na PWA (`POST /ops/schedule`) apagava compromissos de todas as linhas do scope, obrigando reconfirmação mesmo sem alteração; não havia aviso «escala mudou».
+
+**Decisão:** Após normalizar linhas do scope, `zelo_ops_reconcile_schedule_scope` compara fingerprint por `assignment_id` (`wp_user_id`, `roster_volunteer_id`, `start`, `end`). Linha inalterada mantém compromisso e check-in. Linha nova ou fingerprint diferente → `zelo_commitment_mark_schedule_changed` (`pending_reason: schedule_changed`) e limpeza de check-in. Linha removida → `zelo_ops_cleanup_orphan_assignment_data` só para IDs ausentes na nova escala. PWA: aviso dedicado nos Avisos; e-mail no cron horário (`schedule_changed`, dedup). Aceitar/recusar substitui o registo de compromisso (limpa motivo). Admin WP (save aba Escala) fora do escopo v1.
+
+**Consequências:** Plugin **2.11.1**; PWA build **101**. Histórico `schedule_patch` inclui `reconcile` (contagens).
+
+---
+
 ## ADR-018 — Escala na PWA: leitura para voluntários e edição escopada (2026-06-02)
 
 **Contexto:** Responsáveis de turno precisam montar a escala no evento sem wp-admin; voluntários logados precisam ver a equipa (não só as próprias linhas).

@@ -252,6 +252,111 @@ function zelo_ops_cleanup_orphan_assignment_data( $assignment_ids ) {
 }
 
 /**
+ * Remove check-in de uma designação.
+ *
+ * @param string $assignment_id ID.
+ */
+function zelo_ops_clear_assignment_checkin( $assignment_id ) {
+	$assignment_id = sanitize_text_field( $assignment_id );
+	if ( $assignment_id === '' ) {
+		return;
+	}
+	$checkins = zelo_get_volunteer_checkins();
+	if ( ! isset( $checkins[ $assignment_id ] ) ) {
+		return;
+	}
+	unset( $checkins[ $assignment_id ] );
+	update_option( 'zelo_volunteer_checkins', $checkins );
+}
+
+/**
+ * Fingerprint da designação pessoal (voluntário + horário) dentro do mesmo turno.
+ *
+ * @param array $row Normalized schedule row.
+ * @return string
+ */
+function zelo_ops_schedule_assignment_fingerprint( $row ) {
+	$wp = isset( $row['wp_user_id'] ) ? (int) $row['wp_user_id'] : 0;
+	$rv = isset( $row['roster_volunteer_id'] ) ? sanitize_text_field( $row['roster_volunteer_id'] ) : '';
+	$st = isset( $row['start'] ) ? $row['start'] : '';
+	$en = isset( $row['end'] ) ? $row['end'] : '';
+	if ( function_exists( 'zelo_ops_normalize_time' ) ) {
+		$st = zelo_ops_normalize_time( $st );
+		$en = zelo_ops_normalize_time( $en );
+	} else {
+		$st = trim( (string) $st );
+		$en = trim( (string) $en );
+	}
+	return $wp . '|' . $rv . '|' . $st . '|' . $en;
+}
+
+/**
+ * Reconcilia compromissos/check-ins após edição de um turno (day+shift).
+ *
+ * @param array $old_rows Linhas antigas do scope (normalizadas).
+ * @param array $new_rows Linhas novas do scope (normalizadas).
+ * @return array{unchanged_count: int, changed_count: int, removed_count: int, new_count: int}
+ */
+function zelo_ops_reconcile_schedule_scope( $old_rows, $new_rows ) {
+	$stats = array(
+		'unchanged_count' => 0,
+		'changed_count'   => 0,
+		'removed_count'   => 0,
+		'new_count'       => 0,
+	);
+
+	$old_by_id = array();
+	foreach ( $old_rows as $row ) {
+		if ( ! is_array( $row ) || empty( $row['id'] ) ) {
+			continue;
+		}
+		$old_by_id[ (string) $row['id'] ] = $row;
+	}
+	$new_by_id = array();
+	foreach ( $new_rows as $row ) {
+		if ( ! is_array( $row ) || empty( $row['id'] ) ) {
+			continue;
+		}
+		$new_by_id[ (string) $row['id'] ] = $row;
+	}
+
+	$orphan_ids = array();
+	foreach ( $old_by_id as $id => $old_row ) {
+		if ( ! isset( $new_by_id[ $id ] ) ) {
+			$orphan_ids[] = $id;
+			++$stats['removed_count'];
+		}
+	}
+	if ( ! empty( $orphan_ids ) ) {
+		zelo_ops_cleanup_orphan_assignment_data( $orphan_ids );
+	}
+
+	foreach ( $new_by_id as $id => $new_row ) {
+		if ( ! isset( $old_by_id[ $id ] ) ) {
+			++$stats['new_count'];
+			if ( function_exists( 'zelo_commitment_mark_schedule_changed' ) ) {
+				zelo_commitment_mark_schedule_changed( $id );
+			}
+			zelo_ops_clear_assignment_checkin( $id );
+			continue;
+		}
+		$old_fp = zelo_ops_schedule_assignment_fingerprint( $old_by_id[ $id ] );
+		$new_fp = zelo_ops_schedule_assignment_fingerprint( $new_row );
+		if ( $old_fp === $new_fp ) {
+			++$stats['unchanged_count'];
+			continue;
+		}
+		++$stats['changed_count'];
+		if ( function_exists( 'zelo_commitment_mark_schedule_changed' ) ) {
+			zelo_commitment_mark_schedule_changed( $id );
+		}
+		zelo_ops_clear_assignment_checkin( $id );
+	}
+
+	return $stats;
+}
+
+/**
  * Substitui linhas day+shift na escala.
  *
  * @param string $day       Day.
@@ -285,15 +390,13 @@ function zelo_ops_apply_schedule_scope( $day, $shift, $rows_raw, $user_id ) {
 		$new_rows[]   = zelo_normalize_schedule_row_with_catalogs( $raw, $catalogs );
 	}
 
-	$removed_ids = array();
-	$kept        = array();
+	$scope_old_rows = array();
+	$kept           = array();
 	foreach ( $data['schedule'] as $row ) {
 		$row_day   = isset( $row['day'] ) ? sanitize_key( $row['day'] ) : '';
 		$row_shift = isset( $row['shift'] ) ? sanitize_text_field( $row['shift'] ) : '';
 		if ( $row_day === $day && $row_shift === $shift ) {
-			if ( ! empty( $row['id'] ) ) {
-				$removed_ids[] = $row['id'];
-			}
+			$scope_old_rows[] = $row;
 			continue;
 		}
 		$kept[] = $row;
@@ -305,7 +408,7 @@ function zelo_ops_apply_schedule_scope( $day, $shift, $rows_raw, $user_id ) {
 		return $valid;
 	}
 
-	zelo_ops_cleanup_orphan_assignment_data( $removed_ids );
+	$reconcile = zelo_ops_reconcile_schedule_scope( $scope_old_rows, $new_rows );
 
 	if ( ! isset( $data['history'] ) || ! is_array( $data['history'] ) ) {
 		$data['history'] = array();
@@ -315,6 +418,7 @@ function zelo_ops_apply_schedule_scope( $day, $shift, $rows_raw, $user_id ) {
 		'day'        => $day,
 		'shift'      => $shift,
 		'row_count'  => count( $new_rows ),
+		'reconcile'  => $reconcile,
 		'user_id'    => (int) $user_id,
 		'at'         => current_time( 'mysql' ),
 	);

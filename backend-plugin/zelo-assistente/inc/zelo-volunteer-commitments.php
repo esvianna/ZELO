@@ -89,6 +89,41 @@ function zelo_get_commitment_status( $assignment_id ) {
 }
 
 /**
+ * Motivo de pendência (ex.: schedule_changed após edição da escala).
+ *
+ * @param string $assignment_id ID.
+ * @return string
+ */
+function zelo_get_commitment_pending_reason( $assignment_id ) {
+	$r = zelo_get_commitment_record( $assignment_id );
+	return isset( $r['pending_reason'] ) ? sanitize_key( (string) $r['pending_reason'] ) : '';
+}
+
+/**
+ * Marca designação como pendente por alteração na escala (reconfirmação).
+ *
+ * @param string $assignment_id ID.
+ */
+function zelo_commitment_mark_schedule_changed( $assignment_id ) {
+	$assignment_id = sanitize_text_field( $assignment_id );
+	if ( $assignment_id === '' ) {
+		return;
+	}
+	$all = zelo_get_volunteer_commitments();
+	$all[ $assignment_id ] = array(
+		'status'                 => 'pending',
+		'pending_reason'         => 'schedule_changed',
+		'schedule_changed_at'    => current_time( 'mysql' ),
+		'committed_at'           => '',
+		'committed_by'           => 0,
+		'on_behalf'              => false,
+		'decline_reason'         => '',
+		'supervisor_notified_at' => '',
+	);
+	zelo_save_volunteer_commitments( $all );
+}
+
+/**
  * Garante entrada pending para cada linha da escala sem registo.
  */
 function zelo_migrate_commitments_for_schedule() {
