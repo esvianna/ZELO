@@ -10,9 +10,9 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 **Contexto:** Guardar um turno na PWA (`POST /ops/schedule`) apagava compromissos de todas as linhas do scope, obrigando reconfirmação mesmo sem alteração; não havia aviso «escala mudou».
 
-**Decisão:** Após normalizar linhas do scope, `zelo_ops_reconcile_schedule_scope` compara fingerprint por `assignment_id` (`wp_user_id`, `roster_volunteer_id`, `start`, `end`). Linha inalterada mantém compromisso e check-in. Linha nova ou fingerprint diferente → `zelo_commitment_mark_schedule_changed` (`pending_reason: schedule_changed`) e limpeza de check-in. Linha removida → `zelo_ops_cleanup_orphan_assignment_data` só para IDs ausentes na nova escala. PWA: aviso dedicado nos Avisos; e-mail no cron horário (`schedule_changed`, dedup). Aceitar/recusar substitui o registo de compromisso (limpa motivo). Admin WP (save aba Escala) fora do escopo v1.
+**Decisão:** Após normalizar linhas do scope, `zelo_ops_reconcile_schedule_scope` compara fingerprint por `assignment_id` (`wp_user_id`, `roster_volunteer_id`, `start`, `end`). Linha inalterada mantém compromisso e check-in. Linha nova ou fingerprint diferente → `zelo_commitment_mark_schedule_changed` (`pending_reason: schedule_changed`) e limpeza de check-in; snapshot `prior_commitment` preserva aceite/recusa anterior (2.11.2). Linha removida → `zelo_ops_cleanup_orphan_assignment_data` só para IDs ausentes na nova escala. PWA: aviso dedicado nos Avisos; e-mail no cron horário (`schedule_changed`, dedup). Aceitar/recusar substitui o registo de compromisso (limpa motivo). Admin WP (save aba Escala) fora do escopo v1.
 
-**Consequências:** Plugin **2.11.1**; PWA build **101**. Histórico `schedule_patch` inclui `reconcile` (contagens).
+**Consequências:** Plugin **2.11.1+**; PWA build **101**. Histórico `schedule_patch` inclui `reconcile` (contagens).
 
 ---
 

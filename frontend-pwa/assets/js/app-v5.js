@@ -2706,37 +2706,223 @@ const app = {
         }
     },
 
+    getOpsScheduleViewMode() {
+        if (this._opsScheduleViewMode === 'list' || this._opsScheduleViewMode === 'shift') {
+            return this._opsScheduleViewMode;
+        }
+        try {
+            const stored = localStorage.getItem('zelo_ops_schedule_view');
+            if (stored === 'list' || stored === 'shift') {
+                this._opsScheduleViewMode = stored;
+                return stored;
+            }
+        } catch (e) { /* ignore */ }
+        this._opsScheduleViewMode = 'shift';
+        return 'shift';
+    },
+
+    setOpsScheduleViewMode(mode) {
+        this._opsScheduleViewMode = mode === 'list' ? 'list' : 'shift';
+        try {
+            localStorage.setItem('zelo_ops_schedule_view', this._opsScheduleViewMode);
+        } catch (e) { /* ignore */ }
+        this.renderVolunteerOps();
+    },
+
+    opsSlotKey(row) {
+        return `${row.start || ''}|${row.end || ''}`;
+    },
+
+    _parseTimeToMinutes(t) {
+        const m = String(t || '').match(/^(\d{1,2}):(\d{2})$/);
+        if (!m) return null;
+        return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+    },
+
+    formatSlotDuration(start, end) {
+        const a = this._parseTimeToMinutes(start);
+        const b = this._parseTimeToMinutes(end);
+        if (a == null || b == null) return '';
+        let diff = b - a;
+        if (diff <= 0) diff += 24 * 60;
+        const h = Math.floor(diff / 60);
+        const min = diff % 60;
+        if (h && min) return `${h}h${min < 10 ? '0' : ''}${min}`;
+        if (h) return `${h}h`;
+        return `${min}min`;
+    },
+
+    getShiftDisplayBounds(day, shift, rows) {
+        let loc = '';
+        if (rows.length && rows[0].location) {
+            loc = rows[0].location;
+        } else {
+            const resolved = this.resolveLocationNameForShift(shift);
+            if (resolved && resolved !== '-') loc = resolved;
+        }
+        const sh = this.getShiftCatalogEntry(shift);
+        let minStart = '';
+        let maxEnd = '';
+        rows.forEach((r) => {
+            if (r.start && (!minStart || r.start < minStart)) minStart = r.start;
+            if (r.end && (!maxEnd || r.end > maxEnd)) maxEnd = r.end;
+        });
+        if (sh && sh.start && sh.end && !minStart) {
+            minStart = sh.start;
+            maxEnd = sh.end;
+        }
+        const bounds = (minStart && maxEnd)
+            ? `${minStart} ${i18n.t('ops_time_to')} ${maxEnd}`
+            : '';
+        return {
+            location: loc,
+            bounds,
+            label: [shift, loc, bounds].filter(Boolean).join(' · ')
+        };
+    },
+
+    groupScheduleForShiftView(items) {
+        const grouped = {};
+        items.forEach((item) => {
+            const day = item.day || 'outros';
+            const shift = item.shift || '-';
+            const sk = this.opsSlotKey(item);
+            if (!grouped[day]) grouped[day] = {};
+            if (!grouped[day][shift]) grouped[day][shift] = {};
+            if (!grouped[day][shift][sk]) grouped[day][shift][sk] = [];
+            grouped[day][shift][sk].push(item);
+        });
+        return grouped;
+    },
+
+    sortSlotKeys(slotMap) {
+        return Object.keys(slotMap).sort((a, b) => {
+            const sa = a.split('|')[0] || '';
+            const sb = b.split('|')[0] || '';
+            return sa.localeCompare(sb);
+        });
+    },
+
+    _opsShiftSortIndex(code) {
+        const order = ['A1', 'B1', 'A2', 'B2'];
+        const i = order.indexOf(code);
+        return i >= 0 ? i : 99;
+    },
+
+    renderOpsVolunteerInSlot(item, uid, showActions) {
+        const mineRow = Number(item.wp_user_id) === Number(uid);
+        const supRow = showActions && this.canSuperviseOps() && !mineRow;
+        const actions = showActions ? this.renderAssignmentActions(item, supRow, true) : '';
+        const idEsc = String(item.id).replace(/'/g, "\\'");
+        const swapBtn = mineRow && this.getCommitmentStatus(item.id) === 'declined'
+            ? `<button type="button" class="ops-btn ops-btn--accent" onclick="app.requestSwap('${idEsc}')">${this.escapeHtml(i18n.t('ops_request_swap'))}</button>` : '';
+        const canRealloc = showActions && this.canReallocateOps() && this.canSuperviseOps() && (mineRow || supRow);
+        const reallocBtn = canRealloc
+            ? `<button type="button" class="ops-btn" onclick="app.doReallocate('${idEsc}')">${this.escapeHtml(i18n.t('ops_reallocate'))}</button>` : '';
+        const extraActions = (swapBtn || reallocBtn)
+            ? `<div class="ops-volunteer-extra-actions">${reallocBtn}${swapBtn}</div>` : '';
+        const langs = (item.languages || []).join(', ');
+        return `
+            <li class="ops-volunteer-row${mineRow ? ' ops-volunteer-row--mine' : ''}">
+                <div class="ops-volunteer-main">
+                    <span class="ops-volunteer-name">${mineRow ? `<span class="ops-you-badge">${this.escapeHtml(i18n.t('ops_you_badge'))}</span> ` : ''}${this.escapeHtml(item.volunteer_name || i18n.t('ops_volunteer_default'))}</span>
+                    ${langs ? `<span class="ops-volunteer-langs text-muted">${this.escapeHtml(langs)}</span>` : ''}
+                </div>
+                <div class="ops-volunteer-status">${this.getCommitmentBadge(item.id)} ${this.getOpsStatusBadge(item.id)}</div>
+                ${(actions || extraActions) ? `<div class="ops-volunteer-actions">${actions}${extraActions}</div>` : ''}
+            </li>`;
+    },
+
+    renderOpsShiftCard(day, shift, slotMap, uid, showActions) {
+        const allRows = [];
+        Object.values(slotMap).forEach((arr) => { allRows.push(...arr); });
+        const display = this.getShiftDisplayBounds(day, shift, allRows);
+        const slotKeys = this.sortSlotKeys(slotMap);
+        const slotsHtml = slotKeys.map((sk, idx) => {
+            const rows = slotMap[sk];
+            const parts = sk.split('|');
+            const start = parts[0] || (rows[0] && rows[0].start) || '';
+            const end = parts[1] || (rows[0] && rows[0].end) || '';
+            const dur = this.formatSlotDuration(start, end);
+            const vols = rows
+                .slice()
+                .sort((a, b) => String(a.volunteer_name || '').localeCompare(String(b.volunteer_name || '')))
+                .map((item) => this.renderOpsVolunteerInSlot(item, uid, showActions))
+                .join('');
+            const timeLine = `${start || '-'} ${i18n.t('ops_time_to')} ${end || '-'}`;
+            return `
+                <div class="ops-slot ops-slot--${idx % 4}">
+                    <div class="ops-slot-meta">
+                        <span class="ops-slot-time">${this.escapeHtml(timeLine)}</span>
+                        ${dur ? `<span class="ops-slot-duration">${this.escapeHtml(i18n.t('ops_slot_duration'))}: ${this.escapeHtml(dur)}</span>` : ''}
+                    </div>
+                    <ul class="ops-slot-volunteers">${vols}</ul>
+                </div>`;
+        }).join('');
+        const dayEsc = String(day).replace(/'/g, "\\'");
+        const shiftEsc = String(shift).replace(/'/g, "\\'");
+        const editBtn = showActions && this.canEditScheduleScope(day, shift)
+            ? `<button type="button" class="ops-btn ops-shift-edit-btn" onclick="app.openScheduleEditor('${dayEsc}','${shiftEsc}')">${this.escapeHtml(i18n.t('ops_edit_this_shift'))}</button>`
+            : '';
+        return `
+            <article class="ops-shift-card">
+                <header class="ops-shift-card-header">
+                    <div class="ops-shift-card-title">
+                        <strong class="ops-shift-code">${this.escapeHtml(shift)}</strong>
+                        <span class="ops-shift-meta text-muted">${this.escapeHtml([display.location, display.bounds].filter(Boolean).join(' · '))}</span>
+                    </div>
+                    ${editBtn}
+                </header>
+                <div class="ops-shift-card-body">${slotsHtml}</div>
+            </article>`;
+    },
+
+    renderOpsShiftSchedule(items, uid, showActions, options = {}) {
+        const grouped = this.groupScheduleForShiftView(items);
+        const dayOrder = ['sexta', 'sabado', 'domingo'];
+        const wrapClass = options.wrapClass || 'ops-schedule-shift-view';
+        const sections = [];
+        dayOrder.forEach((day) => {
+            const shifts = grouped[day];
+            if (!shifts) return;
+            const shiftCodes = Object.keys(shifts).sort((a, b) => this._opsShiftSortIndex(a) - this._opsShiftSortIndex(b));
+            const cards = shiftCodes.map((shift) => this.renderOpsShiftCard(day, shift, shifts[shift], uid, showActions)).join('');
+            if (!cards) return;
+            sections.push(`
+                <section class="ops-day-group">
+                    <h3 class="ops-day-group-title">${this.escapeHtml(this.getOpsDayLabel(day))}</h3>
+                    <div class="ops-shift-cards">${cards}</div>
+                </section>`);
+        });
+        Object.keys(grouped).forEach((day) => {
+            if (dayOrder.includes(day)) return;
+            const shifts = grouped[day];
+            const shiftCodes = Object.keys(shifts).sort();
+            const cards = shiftCodes.map((shift) => this.renderOpsShiftCard(day, shift, shifts[shift], uid, showActions)).join('');
+            if (!cards) return;
+            sections.push(`
+                <section class="ops-day-group">
+                    <h3 class="ops-day-group-title">${this.escapeHtml(this.getOpsDayLabel(day))}</h3>
+                    <div class="ops-shift-cards">${cards}</div>
+                </section>`);
+        });
+        const inner = sections.join('') || `<div class="loading">${this.escapeHtml(i18n.t('ops_no_schedule_filtered'))}</div>`;
+        return `<div class="${wrapClass}${options.compact ? ' ops-schedule-shift-view--compact' : ''}">${inner}</div>`;
+    },
+
     renderOpsMyAssignmentsBlock(uid) {
         const myRows = this.getMyScheduleRows();
         if (!myRows.length) {
             return `<div class="ops-mine-block"><h3>${this.escapeHtml(i18n.t('ops_my_assignments'))}</h3><p class="text-muted">${this.escapeHtml(i18n.t('ops_no_wp_user'))}</p></div>`;
         }
-        const sorted = myRows.slice().sort((a, b) => {
-            const da = ['sexta', 'sabado', 'domingo'].indexOf(a.day);
-            const db = ['sexta', 'sabado', 'domingo'].indexOf(b.day);
-            if (da !== db) return da - db;
-            return (a.start || '').localeCompare(b.start || '');
+        const scheduleHtml = this.renderOpsShiftSchedule(myRows, uid, true, {
+            compact: true,
+            wrapClass: 'ops-schedule-shift-view ops-schedule-shift-view--mine'
         });
-        const tableRows = sorted.map((item) => this.renderOpsScheduleRow(item, uid)).join('');
         return `
-            <section class="ops-mine-block ops-mine-block--table">
+            <section class="ops-mine-block ops-mine-block--shift">
                 <h3>${this.escapeHtml(i18n.t('ops_my_assignments'))}</h3>
-                <div class="ops-table-wrap">
-                    <table class="ops-schedule-table">
-                        <thead>
-                            <tr>
-                                <th>${this.escapeHtml(i18n.t('ops_shift_label'))}</th>
-                                <th>${this.escapeHtml(i18n.t('ops_time_label'))}</th>
-                                <th>${this.escapeHtml(i18n.t('ops_location_label'))}</th>
-                                <th>${this.escapeHtml(i18n.t('ops_volunteer_label'))}</th>
-                                <th>${this.escapeHtml(i18n.t('ops_languages_label'))}</th>
-                                <th>${this.escapeHtml(i18n.t('ops_status_label'))}</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>${tableRows}</tbody>
-                    </table>
-                </div>
+                ${scheduleHtml}
             </section>`;
     },
 
@@ -2871,11 +3057,22 @@ const app = {
 
         const staleBanner = this._dataStale.ops ? `<div class="zelo-stale-banner">${this.renderStaleBadge('ops')}</div>` : '';
         const preset = this._opsFilterPreset || {};
-        const selectedDay = document.getElementById('ops-day-filter')?.value || preset.day || '';
-        const selectedShift = document.getElementById('ops-shift-filter')?.value || preset.shift || '';
-        const selectedLanguage = (document.getElementById('ops-language-filter')?.value || '').toLowerCase();
-        const selectedLocation = (document.getElementById('ops-location-filter')?.value || '').trim();
-        const nameQuery = (document.getElementById('ops-name-filter')?.value || '').trim().toLowerCase();
+        const dayEl = document.getElementById('ops-day-filter');
+        if (dayEl) {
+            this._opsLastFilters = {
+                day: dayEl.value || '',
+                shift: document.getElementById('ops-shift-filter')?.value || '',
+                location: document.getElementById('ops-location-filter')?.value || '',
+                name: document.getElementById('ops-name-filter')?.value || '',
+                language: document.getElementById('ops-language-filter')?.value || ''
+            };
+        }
+        const lf = this._opsLastFilters || {};
+        const selectedDay = dayEl?.value || preset.day || lf.day || '';
+        const selectedShift = document.getElementById('ops-shift-filter')?.value || preset.shift || lf.shift || '';
+        const selectedLanguage = (document.getElementById('ops-language-filter')?.value || lf.language || '').toLowerCase();
+        const selectedLocation = (document.getElementById('ops-location-filter')?.value || lf.location || '').trim();
+        const nameQuery = (document.getElementById('ops-name-filter')?.value || lf.name || '').trim().toLowerCase();
         if (preset.day || preset.shift) this._opsFilterPreset = null;
 
         const uid = this.auth.user.id;
@@ -2914,7 +3111,10 @@ const app = {
             ? Object.entries(governance).map(([day, data]) => this.renderOpsGovernanceCard(day, data)).join('')
             : '';
 
-        const scheduleHtml = this.renderOpsDayGroups(items, uid, true);
+        const viewMode = this.getOpsScheduleViewMode();
+        const scheduleHtml = viewMode === 'list'
+            ? this.renderOpsDayGroups(items, uid, true)
+            : this.renderOpsShiftSchedule(items, uid, true);
 
         const editBtn = this.canEditSchedule()
             ? `<button type="button" class="ops-btn ops-btn--accent" onclick="app.openScheduleEditor()">${this.escapeHtml(i18n.t('ops_schedule_edit_btn'))}</button>`
@@ -2930,6 +3130,10 @@ const app = {
             ${histBlock}
             <div class="ops-toolbar">
                 <div class="ops-filters">
+                    <span class="ops-view-toggle" role="group" aria-label="${this.escapeHtml(i18n.t('ops_view_mode_label'))}">
+                        <button type="button" class="avisos-filter-chip${viewMode === 'shift' ? ' active' : ''}" onclick="app.setOpsScheduleViewMode('shift')">${this.escapeHtml(i18n.t('ops_view_by_shift'))}</button>
+                        <button type="button" class="avisos-filter-chip${viewMode === 'list' ? ' active' : ''}" onclick="app.setOpsScheduleViewMode('list')">${this.escapeHtml(i18n.t('ops_view_list'))}</button>
+                    </span>
                     <button type="button" class="avisos-filter-chip" onclick="app.applyOpsFilterMyShift()">${this.escapeHtml(i18n.t('ops_filter_my_shift'))}</button>
                     <select id="ops-day-filter" onchange="app.renderVolunteerOps()">
                         <option value="">${this.escapeHtml(i18n.t('ops_filter_all_days'))}</option>

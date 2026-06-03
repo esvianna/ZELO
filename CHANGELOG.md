@@ -8,7 +8,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Adicionado
+- PWA build **102**: escala da equipa em vista **Por turno** (dia → turno → faixa → voluntários); toggle Lista; «Montar este turno» no card; Minhas designações no mesmo layout.
+
 ### Corrigido
+- Plugin **2.11.2**: `schedule_changed` guarda `prior_commitment` com data/utilizador do aceite anterior (auditoria).
 - Plugin **2.11.1**: ao guardar turno na PWA, compromissos inalterados são preservados; só linhas novas/alteradas exigem reconfirmação (`pending_reason: schedule_changed`).
 - PWA build **101**: aviso «A sua escala mudou — confirme»; e-mail no cron (`schedule_changed`).
 

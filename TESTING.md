@@ -89,8 +89,13 @@ Configurar `baseUrl` / `siteUrl` em `frontend-pwa/assets/js/api-v5.js` para o am
 | 5c | Horário fora do turno no editor PWA | responsável turno | Erro da API ao salvar |
 | 5d | Montar escala: guardar **sem** alterar linhas | homem-chave | Voluntários com `accepted` **permanecem** accepted; sem aviso «escala mudou» |
 | 5e | Montar escala: alterar só horário de **uma** linha | homem-chave + 2 voluntários no turno | Só o afetado fica `pending` + `pending_reason: schedule_changed`; outro mantém `accepted`; PWA sino → «A sua escala mudou — confirme» |
+| 5e2 | Voluntário já tinha **accepted** → alterar horário da linha | homem-chave | Em `wp_options` / payload: `prior_commitment.committed_at` e `committed_by` do aceite anterior permanecem; `status` = `pending` |
 | 5f | Troca de voluntário na mesma linha (`id` preservado) | homem-chave | Antigo: compromisso removido (sem reconfirmar); novo: `pending` + aviso schedule_changed |
 | 5g | E-mail escala alterada | voluntário com e-mail verificado | Após 5e: no próximo `zelo_volunteer_notify_tick` (≤1h), e-mail «Sua escala mudou»; dedup — não reenvia após aceitar |
+| 5h | Vista **Por turno** (padrão) | view_ops | Mesma faixa horária mostra vários voluntários num bloco; cores por faixa; turno A1/B1 em cards separados |
+| 5i | Toggle **Lista** | view_ops | Volta à tabela linha a linha; preferência persiste após refresh (`zelo_ops_schedule_view`) |
+| 5j | **Montar este turno** no card | homem-chave | Abre editor com dia+turno corretos |
+| 5k | **Minhas designações** | voluntário | Cards por turno/faixa (não tabela); aceitar/recusar OK |
 | 6 | Pedido de substituição | conforme regra | Criado; gestor aprova/rejeita |
 | 7 | Cron lembretes | admin | `wp cron event list` contém `zelo_volunteer_notify_tick` (se aplicável) |
 

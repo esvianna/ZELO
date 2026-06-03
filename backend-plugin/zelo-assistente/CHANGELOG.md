@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.11.2] - 2026-06-02
+
+### Corrigido
+- `zelo_commitment_mark_schedule_changed`: ao exigir reconfirmação, preserva `prior_commitment` (status, `committed_at`, `committed_by`, etc.) do aceite/recusa anterior em vez de apagar o histórico.
+
 ## [2.11.1] - 2026-06-02
 
 ### Corrigido

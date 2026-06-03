@@ -100,7 +100,32 @@ function zelo_get_commitment_pending_reason( $assignment_id ) {
 }
 
 /**
+ * Extrai snapshot auditável do último compromisso aceite/recusado.
+ *
+ * @param array $record Registo de compromisso.
+ * @return array<string, mixed>
+ */
+function zelo_commitment_prior_snapshot( $record ) {
+	if ( ! is_array( $record ) ) {
+		return array();
+	}
+	$status = isset( $record['status'] ) ? (string) $record['status'] : '';
+	if ( ! in_array( $status, array( 'accepted', 'declined' ), true ) ) {
+		return array();
+	}
+	return array(
+		'status'         => $status,
+		'committed_at'   => isset( $record['committed_at'] ) ? (string) $record['committed_at'] : '',
+		'committed_by'   => isset( $record['committed_by'] ) ? (int) $record['committed_by'] : 0,
+		'on_behalf'      => ! empty( $record['on_behalf'] ),
+		'decline_reason' => isset( $record['decline_reason'] ) ? (string) $record['decline_reason'] : '',
+	);
+}
+
+/**
  * Marca designação como pendente por alteração na escala (reconfirmação).
+ *
+ * Preserva `prior_commitment` quando já existia aceite/recusa, para auditoria.
  *
  * @param string $assignment_id ID.
  */
@@ -109,8 +134,15 @@ function zelo_commitment_mark_schedule_changed( $assignment_id ) {
 	if ( $assignment_id === '' ) {
 		return;
 	}
-	$all = zelo_get_volunteer_commitments();
-	$all[ $assignment_id ] = array(
+	$all  = zelo_get_volunteer_commitments();
+	$prev = isset( $all[ $assignment_id ] ) && is_array( $all[ $assignment_id ] ) ? $all[ $assignment_id ] : array();
+
+	$prior = zelo_commitment_prior_snapshot( $prev );
+	if ( empty( $prior ) && ! empty( $prev['prior_commitment'] ) && is_array( $prev['prior_commitment'] ) ) {
+		$prior = $prev['prior_commitment'];
+	}
+
+	$entry = array(
 		'status'                 => 'pending',
 		'pending_reason'         => 'schedule_changed',
 		'schedule_changed_at'    => current_time( 'mysql' ),
@@ -120,6 +152,11 @@ function zelo_commitment_mark_schedule_changed( $assignment_id ) {
 		'decline_reason'         => '',
 		'supervisor_notified_at' => '',
 	);
+	if ( ! empty( $prior ) ) {
+		$entry['prior_commitment'] = $prior;
+	}
+
+	$all[ $assignment_id ] = $entry;
 	zelo_save_volunteer_commitments( $all );
 }
 

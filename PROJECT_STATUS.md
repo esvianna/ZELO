@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-02** (reconciliação compromissos ao editar escala + aviso «escala mudou»).
+> Última atualização: **2026-06-02** (vista escala por turno na PWA).
 
 ---
 
@@ -10,13 +10,15 @@
 
 O projeto está em **produção funcional** com foco operacional para o **departamento de informações** (voluntários), mantendo o app **público para visitantes ocasionais**.
 
-**Plugin 2.11.1:** reconciliação de compromissos ao `POST /ops/schedule` (preserva aceites inalterados); `pending_reason: schedule_changed`; e-mail cron; ADR-019.
+**PWA build 102:** escala «Por turno» (faixas horárias + voluntários juntos); toggle Lista; Minhas designações em cards; «Montar este turno».
 
-**PWA build 101:** aviso «A sua escala mudou — confirme» (sino + badge escala).
+**Plugin 2.11.2:** `prior_commitment` preservado ao marcar `schedule_changed` (auditoria do aceite anterior).
+
+**Plugin 2.11.1 / PWA 101:** reconciliação compromissos + aviso «escala mudou» (ADR-019).
 
 **Plugin 2.11.0 / PWA 99–100:** edição escala, modal Montar escala (ADR-018).
 
-**Próximo:** deploy **plugin 2.11.1** + **PWA build 101**; smoke TESTING §4 (5d–5g); Web Push VAPID.
+**Próximo:** deploy **plugin 2.11.1** + **PWA build 102**; smoke TESTING §4 (5h–5k); Web Push VAPID. Backlog: PDF export agrupado por faixa.
 
 ---
 
@@ -34,6 +36,10 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 - [x] Payload `permissions` + catálogos editor; escala completa para `zelo_view_ops`
 - [x] `reallocate` com checagem de supervisão na linha
 - [x] Tudo de 2.10.x (local no turno, horários por linha, export PDF, etc.)
+
+### Frontend (PWA build 102)
+
+- [x] Vista escala por turno (dia → turno → faixa → voluntários); toggle Lista; Montar este turno no card
 
 ### Frontend (PWA build 101)
 
