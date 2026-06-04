@@ -313,6 +313,25 @@ const API = {
         return data;
     },
 
+    async uploadProfileAvatar(file) {
+        const url = `${this.baseUrl}/auth/profile/avatar`;
+        const form = new FormData();
+        form.append('avatar', file);
+        const headers = { ...this.getAuthHeaders() };
+        delete headers['Content-Type'];
+        const r = await fetch(url, {
+            method: 'POST',
+            headers,
+            credentials: 'include',
+            body: form
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) {
+            throw new Error(data.message || 'Falha ao enviar foto');
+        }
+        return data;
+    },
+
     async registerVolunteer(payload) {
         const url = `${this.baseUrl}/auth/register`;
         const r = await fetch(url, {

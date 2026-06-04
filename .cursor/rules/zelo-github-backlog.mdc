@@ -28,9 +28,11 @@ Se o usuário pedir código imediato sem issue: criar a issue em Backlog, aprese
 
 ## Durante e após o trabalho
 
-- Mover status no Project conforme avanço (ex.: **In progress** ao codificar, **In review** após PR ou antes de deploy/smoke).
-- PR/commit: referenciar `Closes #N` ou comentar na issue.
-- Ao concluir: **Done** no Project + atualizar `PROJECT_STATUS.md` / `CHANGELOG.md` conforme `zelo-pos-alteracao.mdc`.
+- Mover status no Project conforme avanço: **In progress** ao codificar.
+- **Ao concluir implementação:** mover para **In review** (não Done); comentar na issue com resumo, versões plugin/PWA e passos de teste (`TESTING.md`). **Não fechar** a issue.
+- **Done** + fechar issue: **somente** se o usuário pedir explicitamente ou confirmar que testou («OK», «pode fechar», «validado em produção»).
+- PR/commit: referenciar `Closes #N` só quando o merge/fechamento for intencional após validação.
+- Atualizar `PROJECT_STATUS.md` / `CHANGELOG.md` conforme `zelo-pos-alteracao.mdc` (entrega técnica; status canônico de validação = Project).
 - `PROJECT_STATUS.md` e `ROADMAP.md` complementam o GitHub; pendências ativas devem existir como issues no Project.
 
 ## CLI útil

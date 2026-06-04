@@ -17,6 +17,7 @@ Solução **Backend (plugin WordPress) + Frontend (PWA estática)** para assisti
 - **Backlog oficial:** [GitHub Project — Projeto ZELO](https://github.com/users/esvianna/projects/3), issues no repositório **`esvianna/ZELO`**.
 - **Nova tarefa:** criar issue → adicionar ao Project em **Backlog** → elaborar **plano para aprovação** → **não codificar** em Backlog.
 - **Codificação permitida** apenas com issue em **Ready**, **In progress**, **In review** ou **Done**, ou após aprovação explícita do plano pelo usuário.
+- **Ao terminar implementação:** mover issue para **In review** no Project; comentar como testar. **Não** mover para **Done** nem fechar a issue — isso é do responsável após validar.
 - Detalhes: **`docs/GITHUB-WORKFLOW.md`**; regra Cursor: **`.cursor/rules/zelo-github-backlog.mdc`**.
 
 ## Antes de alterar código (obrigatório)

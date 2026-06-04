@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-04** (plugin 2.11.8 — auditoria permissões, ZELO#13).
+> Última atualização: **2026-06-04** (fluxo In review; #24/#25 aguardando validação).
 
 ---
 
@@ -12,8 +12,8 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Referência no repo | Versão |
 |--------------------|--------|
-| Plugin WordPress (`zelo-assistente.php`) | **2.11.8** |
-| PWA (`zelo-build.js` / `sw.js`) | **build 107** |
+| Plugin WordPress (`zelo-assistente.php`) | **2.11.9** |
+| PWA (`zelo-build.js` / `sw.js`) | **build 108** |
 
 **Backlog oficial:** [GitHub Project — Projeto ZELO](https://github.com/users/esvianna/projects/3) — issues em [`esvianna/ZELO`](https://github.com/esvianna/ZELO) (ADR-020, `docs/GITHUB-WORKFLOW.md`). Este arquivo **complementa** o quadro; status canônico das tarefas está no Project.
 
@@ -31,6 +31,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | [#23](https://github.com/esvianna/ZELO/issues/23) | Docs PROJECT_STATUS + ROADMAP alinhados |
 | [#27](https://github.com/esvianna/ZELO/issues/27) | Persistir última view após F5 (PWA 107) |
 | [#13](https://github.com/esvianna/ZELO/issues/13) | Auditoria permissões ops/swaps (2.11.8) |
+| [#12](https://github.com/esvianna/ZELO/issues/12) | WhatsApp na escala — links wa.me (2.11.4 / PWA 105) |
 
 ### Destaques técnicos por versão
 
@@ -90,8 +91,6 @@ Priorização via [Project 3](https://github.com/users/esvianna/projects/3). Pri
 | **Alta** | Web Push VAPID + subscribe real (stub 501 hoje) | [#8](https://github.com/esvianna/ZELO/issues/8) |
 | **Média** | Painel cobertura posto/idioma | [#10](https://github.com/esvianna/ZELO/issues/10) |
 | **Média** | Motor notificações + inbox servidor | [#9](https://github.com/esvianna/ZELO/issues/9) |
-| **Baixa** | WhatsApp escala — melhorias além dos links (105) | [#12](https://github.com/esvianna/ZELO/issues/12) |
-| **Baixa** | Perfil PWA — editar dados pessoais | [#25](https://github.com/esvianna/ZELO/issues/25) |
 | **Infra** | Rate limit REST, testes, env API | [#22](https://github.com/esvianna/ZELO/issues/22) … [#20](https://github.com/esvianna/ZELO/issues/20) |
 | **UX visitante** | Programação, carrossel, branding, emergência | [#14](https://github.com/esvianna/ZELO/issues/14) … [#17](https://github.com/esvianna/ZELO/issues/17) |
 
@@ -108,8 +107,9 @@ Priorização via [Project 3](https://github.com/users/esvianna/projects/3). Pri
 
 ## Última sessão (2026-06-04)
 
+- **Fluxo Project:** agentes param em **In review** após implementar; **Done** só após OK do responsável (`docs/GITHUB-WORKFLOW.md`, regras Cursor).
+- **#24 / #25:** PWA 108 + plugin 2.11.9 entregues — **In review** (validar olho senha + perfil editável).
 - **ZELO#13:** Plugin 2.11.8 — matriz `docs/OPS-PERMISSIONS.md`; supervisão por governança; swaps filtrados (ADR-021).
-- **ZELO#27:** PWA build 107 — persistência de rota.
 
 **Como testar:** abrir este arquivo e `ROADMAP.md`; confirmar versões batem com `zelo-assistente.php` e `zelo-build.js`; cruzar pendências com cards **Backlog** no Project 3.
 

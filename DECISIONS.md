@@ -24,6 +24,8 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 **Consequências:** Issues migradas: SITE-NOVO-VTIS#1/#2 fechadas → ZELO#1/#2. Template `.github/ISSUE_TEMPLATE/tarefa.yml`.
 
+**Atualização (2026-06-04):** agentes movem entregas para **In review**; **Done** só após validação humana (ver `docs/GITHUB-WORKFLOW.md`).
+
 ---
 
 ## ADR-019 — Reconciliação de compromissos ao editar escala (2026-06-02)

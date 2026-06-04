@@ -9,13 +9,16 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 ## [Unreleased]
 
 ### Adicionado
-- Plugin **2.11.8**: auditoria permissões ops/swaps (ZELO#13) — supervisão por governança; swaps filtrados; matriz `docs/OPS-PERMISSIONS.md`.
+- PWA build **108**: ícone olho nos campos senha (login, cadastro, perfil) — ZELO#24; formulário de perfil (nome, e-mail, telefone, senha, idiomas, foto) — ZELO#25.
+- Plugin **2.11.9**: `PATCH /auth/profile` ampliado + `POST /auth/profile/avatar`.
+- **Docs:** fluxo GitHub — agentes param em **In review**; Done só após validação humana.
+- Plugin **2.11.9**: `PATCH /auth/profile` ampliado + `POST /auth/profile/avatar`.
 - PWA build **107**: persistência da última view após F5 (`sessionStorage` + hash `#viewId`; guardas auth escala/perfil; ZELO#27).
 - **Infra (ZELO#19):** `.gitignore` na raiz — PHP/Composer, IDE, OS, segredos; exceções PWA e FPDF em `README.md`.
 - **Docs (ZELO#23):** `PROJECT_STATUS.md` e `ROADMAP.md` alinhados com plugin **2.11.7**, PWA **106**, issues Done/Backlog do Project 3 (ADR-020).
 - PWA build **106**: filtro por **responsável do turno** na escala (select a partir de `shift_contacts`; combinável com dia/turno/local/nome/idioma) — ZELO#11 (fechada).
 - Backlog [#27](https://github.com/esvianna/ZELO/issues/27): persistir última view da PWA após refresh.
-- Plugin **2.11.4** + PWA **105**: links WhatsApp no nome dos voluntários e do responsável do turno (só com telefone cadastrado).
+- Plugin **2.11.4** + PWA **105**: links WhatsApp no nome dos voluntários e do responsável do turno (só com telefone cadastrado) — ZELO#12 (fechada).
 
 ### Adicionado
 - Plugin **2.11.7**: fix export PDF FPDF margens (PHP 8.2); rate limit só após export OK.

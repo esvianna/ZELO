@@ -2,6 +2,12 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.11.9] - 2026-06-04
+
+### Adicionado
+- `PATCH /auth/profile` — nome, telefone, e-mail (re-verificação), senha, idiomas (ZELO#25).
+- `POST /auth/profile/avatar` — upload JPEG/PNG/WebP (máx. 2 MB); meta `zelo_avatar_id`.
+
 ## [2.11.8] - 2026-06-04
 
 ### Corrigido

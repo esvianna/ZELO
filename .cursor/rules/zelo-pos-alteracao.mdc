@@ -11,6 +11,7 @@ alwaysApply: true
 4. Impacto de segurança → `SECURITY.md` ou nota em PROJECT_STATUS.
 5. Descreva **como testar** (itens de `TESTING.md` aplicáveis).
 6. Indique **próximo passo lógico** em PROJECT_STATUS ou ROADMAP.
+7. Se a entrega veio de issue do GitHub Project: mover card para **In review** (não Done); comentar na issue — fechar só após OK do responsável (`docs/GITHUB-WORKFLOW.md`).
 
 Se alterou frontend (CSS/JS/HTML):
 - Siga `DEPLOYMENT_RULES.md`: alinhar `zelo-build.js`, `?v=` em `index.html`, `ASSETS_TO_CACHE` e `CACHE_NAME` em `sw.js`.

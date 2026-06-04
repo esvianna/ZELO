@@ -80,7 +80,9 @@ Configurar `baseUrl` / `siteUrl` em `frontend-pwa/assets/js/api-v5.js` para o am
 |---|-------|--------|----------|
 | 1 | GET `/wp-json/zelo/v1/ops/voluntarios` sem auth | — | **401/403** após remover bypass público |
 | 2 | Login voluntário → abrir Escala (2.11.0+) | view_ops | Bloco **Minhas designações** + **Escala da equipa** (nomes de colegas); badge «Você» na sua linha; filtros dia/turno/local/**responsável**/nome/idioma (build 106+) |
+| 2p | Perfil → alterar nome/telefone/idiomas; upload foto; senha (108+) | logado | Salvar OK; e-mail novo exige verificação; olho mostra/oculta senha (login/cadastro/perfil) |
 | 2f | Escala aberta → **F5** (build 107+) | view_ops | Permanece em **Escala**; hash `#escala`; nav Operação ativo |
+| 2w | Nome voluntário/responsável com telefone cadastrado (105+) | view_ops | Nome é link `wa.me`; sem telefone → texto sem link; offline: cache ops; abrir WhatsApp exige rede |
 | 2g | Visitante em **Mapa** → F5 (107+) | — | Permanece em Mapa; hash `#mapa` |
 | 2h | Abrir URL com `#escala` sem login | — | Redireciona **Login** (sem loop infinito) |
 | 2i | `?zelo_verified=1` após cadastro | — | Tela e-mail verificado (prioridade sobre última view) |

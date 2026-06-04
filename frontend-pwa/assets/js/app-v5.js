@@ -284,6 +284,7 @@ const app = {
                     app.loadRegisterLanguages();
                 } else if (viewId === 'profile') {
                     app.renderProfileLanguages();
+                    app.populateProfileForm();
                 }
 
                 // Render Home components if on home
@@ -524,15 +525,11 @@ const app = {
                 iconContainer.setAttribute('title', i18n.t('auth_sign_in'));
             }
 
-            const pName = document.getElementById('profile-name');
-            const pEmail = document.getElementById('profile-email');
             const pRole = document.getElementById('profile-role');
             const pAvatar = document.getElementById('profile-avatar');
 
             if (this.user) {
                 const avatarUrl = app.getAvatarUrl();
-                if (pName) pName.textContent = this.user.name;
-                if (pEmail) pEmail.textContent = this.user.email;
                 if (pRole) pRole.textContent = app.getOpsRoleLabel() || this.user.roles[0] || i18n.t('visitor_role');
                 if (pAvatar) {
                     pAvatar.src = avatarUrl;
@@ -541,6 +538,7 @@ const app = {
                         this.src = 'images/default-avatar.png';
                     };
                 }
+                app.populateProfileForm();
             }
 
             app.updateBottomNavForVolunteer();
@@ -654,40 +652,143 @@ const app = {
         await this.fillLanguageCheckboxes(container, ids);
     },
 
-    async saveProfileLanguages() {
-        const container = document.getElementById('profile-languages');
-        const msg = document.getElementById('profile-languages-msg');
-        const btn = document.getElementById('profile-languages-save');
-        const ids = this.getSelectedLanguageIdsFromContainer(container);
-        if (msg) {
-            msg.style.display = 'none';
-        }
-        if (btn) {
-            btn.disabled = true;
-        }
-        try {
-            const res = await API.patchProfile({ language_ids: ids });
-            if (res.user) {
-                this.auth.user = res.user;
-                localStorage.setItem('zelo_user', JSON.stringify(res.user));
-                this.auth.refreshAuthChrome();
+    togglePasswordVisibility(inputId, btn) {
+        const input = document.getElementById(inputId);
+        if (!input || !btn) return;
+        const reveal = input.type === 'password';
+        input.type = reveal ? 'text' : 'password';
+        const openIcon = btn.querySelector('.icon-eye-open');
+        const closedIcon = btn.querySelector('.icon-eye-closed');
+        if (openIcon) openIcon.hidden = reveal;
+        if (closedIcon) closedIcon.hidden = !reveal;
+        btn.setAttribute('aria-label', i18n.t(reveal ? 'password_hide' : 'password_show'));
+    },
+
+    applyProfileApiResponse(res) {
+        if (res.user) {
+            this.auth.user = res.user;
+            if (res.nonce) {
+                this.auth.user.token = res.nonce;
             }
-            if (msg) {
-                msg.style.display = 'block';
-                msg.className = 'text-success';
-                msg.textContent = i18n.t('profile_languages_saved');
+            localStorage.setItem('zelo_user', JSON.stringify(this.auth.user));
+            if (res.user.avatar) {
+                this.cacheUserAvatar(res.user.avatar);
+            }
+            this.auth.refreshAuthChrome();
+        }
+    },
+
+    populateProfileForm() {
+        const user = this.auth.user;
+        if (!user) return;
+        const nameEl = document.getElementById('profile-input-name');
+        const emailEl = document.getElementById('profile-input-email');
+        const phoneEl = document.getElementById('profile-input-phone');
+        if (nameEl) nameEl.value = user.name || '';
+        if (emailEl) emailEl.value = user.email || '';
+        if (phoneEl) phoneEl.value = user.phone || '';
+        const curPass = document.getElementById('profile-current-password');
+        const newPass = document.getElementById('profile-new-password');
+        if (curPass) curPass.value = '';
+        if (newPass) newPass.value = '';
+        this.bindProfileAvatarInput();
+        this.renderProfileLanguages();
+    },
+
+    bindProfileAvatarInput() {
+        const input = document.getElementById('profile-avatar-input');
+        if (!input || input._zeloAvatarBound) return;
+        input._zeloAvatarBound = true;
+        input.addEventListener('change', () => this.uploadProfileAvatar(input));
+    },
+
+    showProfileFormMessage(text, type = 'info') {
+        const msg = document.getElementById('profile-form-msg');
+        if (!msg) return;
+        msg.style.display = text ? 'block' : 'none';
+        msg.className = 'profile-form-msg' + (type ? ' ' + type : '');
+        msg.textContent = text || '';
+    },
+
+    async uploadProfileAvatar(inputEl) {
+        const file = inputEl && inputEl.files ? inputEl.files[0] : null;
+        if (!file) return;
+        this.showProfileFormMessage(i18n.t('profile_avatar_uploading'), 'info');
+        try {
+            const res = await API.uploadProfileAvatar(file);
+            this.applyProfileApiResponse(res);
+            this.showProfileFormMessage(i18n.t('profile_avatar_saved'), 'success');
+        } catch (e) {
+            this.showProfileFormMessage(e.message || i18n.t('error_generic'), 'error');
+        } finally {
+            inputEl.value = '';
+        }
+    },
+
+    async saveProfile(event) {
+        if (event) event.preventDefault();
+        const user = this.auth.user;
+        if (!user) {
+            this.router.navigate('login');
+            return;
+        }
+
+        const btn = document.getElementById('profile-save-btn');
+        const name = (document.getElementById('profile-input-name')?.value || '').trim();
+        const email = (document.getElementById('profile-input-email')?.value || '').trim();
+        const phone = (document.getElementById('profile-input-phone')?.value || '').trim();
+        const currentPassword = document.getElementById('profile-current-password')?.value || '';
+        const newPassword = document.getElementById('profile-new-password')?.value || '';
+        const langContainer = document.getElementById('profile-languages');
+        const language_ids = this.getSelectedLanguageIdsFromContainer(langContainer);
+
+        if (!name || !email) {
+            this.showProfileFormMessage(i18n.t('profile_required_fields'), 'error');
+            return;
+        }
+        if (newPassword && newPassword.length < 8) {
+            this.showProfileFormMessage(i18n.t('profile_password_min'), 'error');
+            return;
+        }
+        if (newPassword && !currentPassword) {
+            this.showProfileFormMessage(i18n.t('profile_current_password_required'), 'error');
+            return;
+        }
+
+        const payload = { language_ids };
+        if (name !== (user.name || '')) payload.display_name = name;
+        if (email !== (user.email || '')) payload.email = email;
+        if (phone !== (user.phone || '')) payload.phone = phone;
+        if (newPassword) {
+            payload.current_password = currentPassword;
+            payload.new_password = newPassword;
+        }
+
+        const hasExtra = payload.display_name || payload.email || payload.phone || payload.new_password;
+        if (!hasExtra && JSON.stringify(language_ids) === JSON.stringify(user.language_ids || [])) {
+            this.showProfileFormMessage(i18n.t('profile_nothing_changed'), 'info');
+            return;
+        }
+
+        if (btn) btn.disabled = true;
+        this.showProfileFormMessage('', 'info');
+        try {
+            const res = await API.patchProfile(payload);
+            this.applyProfileApiResponse(res);
+            if (res.email_pending_verification) {
+                this.showProfileFormMessage(i18n.t('profile_email_verify_sent'), 'info');
+            } else {
+                this.showProfileFormMessage(i18n.t('profile_saved'), 'success');
             }
         } catch (e) {
-            if (msg) {
-                msg.style.display = 'block';
-                msg.className = 'text-danger';
-                msg.textContent = e.message || 'Erro';
-            }
+            this.showProfileFormMessage(e.message || i18n.t('error_generic'), 'error');
         } finally {
-            if (btn) {
-                btn.disabled = false;
-            }
+            if (btn) btn.disabled = false;
         }
+    },
+
+    async saveProfileLanguages() {
+        return this.saveProfile();
     },
 
     async init() {
@@ -846,7 +947,7 @@ const app = {
                 this.renderIndoorEventMap();
                 break;
             case 'profile':
-                this.renderProfileLanguages();
+                this.populateProfileForm();
                 break;
             case 'register':
                 this.loadRegisterLanguages();
@@ -3821,11 +3922,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Update External Links
     const linkLostPwd = document.getElementById('link-lost-password');
-    const linkEditProfile = document.getElementById('link-edit-profile');
     if (linkLostPwd && API.siteUrl) {
         linkLostPwd.href = `${API.siteUrl}/wp-login.php?action=lostpassword`;
-    }
-    if (linkEditProfile && API.siteUrl) {
-        linkEditProfile.href = `${API.siteUrl}/wp-admin/profile.php`;
     }
 });

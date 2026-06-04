@@ -14,8 +14,30 @@ Backlog oficial do ZELO a partir de **2026-06-04**.
 | **Backlog** | Demanda registrada; priorização e plano pendentes | **Não** |
 | **Ready** | Plano aprovado; pode iniciar implementação | **Sim** |
 | **In progress** | Em desenvolvimento | **Sim** |
-| **In review** | PR, revisão ou smoke (`TESTING.md`) | **Sim** |
-| **Done** | Entregue e validada | — |
+| **In review** | Implementação entregue; **aguarda validação/smoke** do responsável (`TESTING.md`) | **Sim** (agente para aqui) |
+| **Done** | Entregue **e validada** pelo responsável (ou PR mergeado + smoke OK) | — (só humano após OK) |
+
+## Ciclo de vida de uma issue (agente / Cursor)
+
+```
+Backlog → Ready → In progress → In review → Done
+                                    ↑
+                         agente para AQUI após implementar
+                         (não mover para Done sozinho)
+```
+
+1. **Backlog** — issue criada; plano pendente.
+2. **Ready** — plano aprovado; pode codificar.
+3. **In progress** — agente ou dev a implementar.
+4. **In review** — código/docs entregues; comentário na issue com **como testar** e versões (plugin/PWA). **Issue permanece aberta.** Aguardar OK do responsável.
+5. **Done** — responsável validou em staging/produção e move no Project (ou fecha a issue).
+
+### Regras para agentes de IA
+
+- **Nunca** mover para **Done** nem **fechar** a issue após implementar — salvo pedido explícito do usuário («pode fechar», «testado OK», etc.).
+- **Sempre** mover para **In review** ao terminar o código/docs.
+- Comentar na issue: resumo da entrega, versões deploy, passos de `TESTING.md`.
+- **Done** + fechar issue: apenas quando o usuário confirmar testes ou pedir explicitamente.
 
 ## Nova tarefa
 
