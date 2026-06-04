@@ -12,6 +12,13 @@ Solução **Backend (plugin WordPress) + Frontend (PWA estática)** para assisti
 | Frontend | `frontend-pwa/` | HTML/CSS/JS vanilla, Leaflet, Service Worker |
 | Docs operacionais | `docs/`, raiz | Deploy, PRD UX, regras de cache |
 
+## Backlog e issues (obrigatório desde 2026-06-04)
+
+- **Backlog oficial:** [GitHub Project — Projeto ZELO](https://github.com/users/esvianna/projects/3), issues no repositório **`esvianna/ZELO`**.
+- **Nova tarefa:** criar issue → adicionar ao Project em **Backlog** → elaborar **plano para aprovação** → **não codificar** em Backlog.
+- **Codificação permitida** apenas com issue em **Ready**, **In progress**, **In review** ou **Done**, ou após aprovação explícita do plano pelo usuário.
+- Detalhes: **`docs/GITHUB-WORKFLOW.md`**; regra Cursor: **`.cursor/rules/zelo-github-backlog.mdc`**.
+
 ## Antes de alterar código (obrigatório)
 
 1. Leia **`PROJECT_STATUS.md`** — onde paramos, pendências e próximos passos.
@@ -44,6 +51,7 @@ Solução **Backend (plugin WordPress) + Frontend (PWA estática)** para assisti
 | `DECISIONS.md` | ADRs — decisões técnicas |
 | `SECURITY.md` | Princípios e checklist de segurança |
 | `TESTING.md` | Como validar mudanças |
+| `docs/GITHUB-WORKFLOW.md` | Issues, Project, status e gate Ready |
 | `.cursor/rules/*.mdc` | Regras automáticas no Cursor |
 
 ## Convenções do código

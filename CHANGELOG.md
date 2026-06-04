@@ -9,6 +9,20 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 ## [Unreleased]
 
 ### Adicionado
+- Plugin **2.11.4** + PWA **105**: links WhatsApp no nome dos voluntários e do responsável do turno (só com telefone cadastrado).
+
+### Corrigido
+- Plugin **2.11.3**: payload `/ops/voluntarios` — voluntário vê status de compromisso dos colegas na escala da equipa (alinhado ao responsável).
+
+### Adicionado
+- PWA build **104**: ícones da escala por turno mais compactos (32px); nome alinhado ao centro vertical dos botões.
+- PWA build **103**: escala por turno — ações (confirmar, check-in/out, realocar, swap) em **ícones** na linha do nome, para voluntário e responsável; `aria-label`/`title` i18n; vista lista inalterada.
+
+### Adicionado
+- Governança de backlog: GitHub [Project ZELO](https://github.com/users/esvianna/projects/3), issues em `esvianna/ZELO`, gate **Ready** antes de codificar; `docs/GITHUB-WORKFLOW.md`, ADR-020, regra Cursor `zelo-github-backlog.mdc`, template de issue.
+- Migração de tarefas: SITE-NOVO-VTIS#1/#2 → ZELO#1/#2 (issues antigas fechadas com referência).
+
+### Adicionado
 - PWA build **102**: escala da equipa em vista **Por turno** (dia → turno → faixa → voluntários); toggle Lista; «Montar este turno» no card; Minhas designações no mesmo layout.
 
 ### Corrigido

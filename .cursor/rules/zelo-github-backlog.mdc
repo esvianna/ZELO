@@ -1,0 +1,41 @@
+---
+description: Backlog e fluxo de trabalho via GitHub Issues + Project ZELO
+alwaysApply: true
+---
+
+# Backlog GitHub (ZELO)
+
+**Project:** https://github.com/users/esvianna/projects/3  
+**Repositório de issues:** `esvianna/ZELO` (código plugin + PWA). Não abrir tarefas de desenvolvimento em outros repos.
+
+## Nova tarefa solicitada pelo usuário
+
+1. **Criar issue** em `esvianna/ZELO` com título claro, contexto, critérios de aceite e links (`PROJECT_STATUS`, ADR, etc.).
+2. **Adicionar ao Project 3** com **Status = Backlog** (via UI ou `gh project item-add 3 --owner esvianna --url <issue-url>`).
+3. **Plano para aprovação** — antes de qualquer alteração de código:
+   - Apresentar plano (escopo, arquivos tocados, riscos, como testar).
+   - Aguardar aprovação explícita do usuário **ou** confirmação de que a issue foi movida para **Ready** no Project.
+4. **Não codificar** enquanto a issue estiver em **Backlog**.
+
+## Quando pode codificar
+
+Somente se **uma** destas condições for verdadeira:
+
+- Status no Project = **Ready**, **In progress**, **In review** ou **Done**; ou
+- O usuário aprovar o plano **e** pedir explicitamente para iniciar (equivale a autorizar passagem a Ready).
+
+Se o usuário pedir código imediato sem issue: criar a issue em Backlog, apresentar o plano e só então implementar após aprovação / Ready.
+
+## Durante e após o trabalho
+
+- Mover status no Project conforme avanço (ex.: **In progress** ao codificar, **In review** após PR ou antes de deploy/smoke).
+- PR/commit: referenciar `Closes #N` ou comentar na issue.
+- Ao concluir: **Done** no Project + atualizar `PROJECT_STATUS.md` / `CHANGELOG.md` conforme `zelo-pos-alteracao.mdc`.
+- `PROJECT_STATUS.md` e `ROADMAP.md` complementam o GitHub; pendências ativas devem existir como issues no Project.
+
+## CLI útil
+
+```powershell
+gh issue create -R esvianna/ZELO --title "..." --body "..."
+gh project item-add 3 --owner esvianna --url https://github.com/esvianna/ZELO/issues/N
+```

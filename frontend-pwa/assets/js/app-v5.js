@@ -2050,34 +2050,78 @@ const app = {
         return `<span class="ops-status-badge ${cls}">${this.escapeHtml(this.getCommitmentLabel(st, assignmentId))}</span>`;
     },
 
-    renderAssignmentActions(item, forSupervisorRow, compactRow = false) {
+    opsActionIconSvg(kind) {
+        const stroke = 'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
+        const icons = {
+            accept: `<svg class="ops-icon-btn__svg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" ${stroke} aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
+            decline: `<svg class="ops-icon-btn__svg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" ${stroke} aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`,
+            checkin: `<svg class="ops-icon-btn__svg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" ${stroke} aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>`,
+            checkout: `<svg class="ops-icon-btn__svg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" ${stroke} aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>`,
+            reallocate: `<svg class="ops-icon-btn__svg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" ${stroke} aria-hidden="true"><path d="M16 3h5v5"></path><path d="M8 21H3v-5"></path><path d="M21 8l-9 9"></path><path d="M3 16l9-9"></path></svg>`,
+            swap: `<svg class="ops-icon-btn__svg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" ${stroke} aria-hidden="true"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 5h18"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 19H3"></path></svg>`
+        };
+        return icons[kind] || icons.accept;
+    },
+
+    renderOpsIconButton(i18nKey, onclick, iconKind, variant = 'primary') {
+        const label = this.escapeHtml(i18n.t(i18nKey));
+        return `<button type="button" class="ops-icon-btn ops-icon-btn--${variant}" aria-label="${label}" title="${label}" onclick="${onclick}">${this.opsActionIconSvg(iconKind)}</button>`;
+    },
+
+    renderAssignmentActions(item, forSupervisorRow, layout = false) {
         const idEsc = String(item.id).replace(/'/g, "\\'");
         const commitSt = this.getCommitmentStatus(item.id);
         const presenceSt = this.getCheckinStatus(item.id).status || 'pending';
         const onBehalf = forSupervisorRow && this.canSuperviseOps() && Number(item.wp_user_id) !== Number(this.auth.user?.id);
+        const iconBar = layout === 'icons';
+        const compactRow = iconBar || layout === 'compact' || layout === true;
         const btnPrimary = compactRow ? 'btn-assignment-action' : 'btn-block btn-block--compact';
         const btnMuted = compactRow ? 'btn-assignment-action btn-assignment-action--muted' : 'btn-block btn-block--compact btn-block--muted';
         let html = '';
+        let hintHtml = '';
 
         if (commitSt === 'pending') {
             if (this.canCommitAssignment(item)) {
                 if (!onBehalf && this.getCommitmentPendingReason(item.id) === 'schedule_changed') {
-                    html += `<p class="text-muted home-assignment-note">${this.escapeHtml(i18n.t('ops_schedule_changed_hint'))}</p>`;
+                    const note = `<p class="text-muted ops-volunteer-hint">${this.escapeHtml(i18n.t('ops_schedule_changed_hint'))}</p>`;
+                    if (iconBar) hintHtml += note;
+                    else html += `<p class="text-muted home-assignment-note">${this.escapeHtml(i18n.t('ops_schedule_changed_hint'))}</p>`;
                 }
-                html += `<button type="button" class="${btnPrimary}" onclick="app.doCommit('${idEsc}', true, ${onBehalf})">${i18n.t(onBehalf ? 'ops_commit_on_behalf' : 'ops_commit_accept')}</button>`;
-                if (!onBehalf) {
-                    html += `<button type="button" class="${btnMuted}" onclick="app.doCommit('${idEsc}', false, false)">${i18n.t('ops_commit_decline')}</button>`;
+                const acceptKey = onBehalf ? 'ops_commit_on_behalf' : 'ops_commit_accept';
+                if (iconBar) {
+                    html += this.renderOpsIconButton(acceptKey, `app.doCommit('${idEsc}', true, ${onBehalf})`, 'accept', 'primary');
+                    if (!onBehalf) {
+                        html += this.renderOpsIconButton('ops_commit_decline', `app.doCommit('${idEsc}', false, false)`, 'decline', 'muted');
+                    }
+                } else {
+                    html += `<button type="button" class="${btnPrimary}" onclick="app.doCommit('${idEsc}', true, ${onBehalf})">${i18n.t(acceptKey)}</button>`;
+                    if (!onBehalf) {
+                        html += `<button type="button" class="${btnMuted}" onclick="app.doCommit('${idEsc}', false, false)">${i18n.t('ops_commit_decline')}</button>`;
+                    }
                 }
             } else if (this.isCommitmentDeadlinePassed()) {
-                html += `<p class="text-muted home-assignment-note">${this.escapeHtml(i18n.t('ops_commitment_deadline_passed'))}</p>`;
+                const note = `<p class="text-muted ops-volunteer-hint">${this.escapeHtml(i18n.t('ops_commitment_deadline_passed'))}</p>`;
+                if (iconBar) hintHtml += note;
+                else html += `<p class="text-muted home-assignment-note">${this.escapeHtml(i18n.t('ops_commitment_deadline_passed'))}</p>`;
             }
         }
 
         if (commitSt === 'accepted' && presenceSt === 'pending' && this.canCheckinAssignment(item) && this.canActPresenceOn(item, onBehalf)) {
-            html += `<button type="button" class="${btnPrimary}" onclick="app.doCheckin('${idEsc}', ${onBehalf})">${i18n.t('ops_quick_checkin')}</button>`;
+            if (iconBar) {
+                html += this.renderOpsIconButton('ops_quick_checkin', `app.doCheckin('${idEsc}', ${onBehalf})`, 'checkin', 'primary');
+            } else {
+                html += `<button type="button" class="${btnPrimary}" onclick="app.doCheckin('${idEsc}', ${onBehalf})">${i18n.t('ops_quick_checkin')}</button>`;
+            }
         }
         if (commitSt === 'accepted' && presenceSt === 'checked_in' && this.canCheckoutAssignment(item) && this.canActPresenceOn(item, onBehalf)) {
-            html += `<button type="button" class="${btnPrimary}" onclick="app.doCheckout('${idEsc}', ${onBehalf})">${i18n.t('ops_status_checked_out')}</button>`;
+            if (iconBar) {
+                html += this.renderOpsIconButton('ops_status_checked_out', `app.doCheckout('${idEsc}', ${onBehalf})`, 'checkout', 'primary');
+            } else {
+                html += `<button type="button" class="${btnPrimary}" onclick="app.doCheckout('${idEsc}', ${onBehalf})">${i18n.t('ops_status_checked_out')}</button>`;
+            }
+        }
+        if (iconBar) {
+            return { actions: html, hint: hintHtml };
         }
         if (compactRow && html) {
             return `<div class="home-assignment-actions">${html}</div>`;
@@ -2752,6 +2796,48 @@ const app = {
         return `${min}min`;
     },
 
+    normalizeWhatsAppPhone(phone) {
+        const digits = String(phone || '').replace(/\D/g, '');
+        if (!digits) return '';
+        if (digits.length <= 11 && !digits.startsWith('55')) {
+            return '55' + digits.replace(/^0+/, '');
+        }
+        return digits;
+    },
+
+    buildWhatsAppUrl(phone) {
+        const n = this.normalizeWhatsAppPhone(phone);
+        return n ? `https://wa.me/${n}` : '';
+    },
+
+    renderOpsWhatsAppNameLink(name, phone, className = 'ops-volunteer-name') {
+        const label = this.escapeHtml(name || '');
+        if (!label) return '';
+        const url = this.buildWhatsAppUrl(phone);
+        const title = this.escapeHtml(i18n.t('ops_whatsapp_open'));
+        if (!url) {
+            return `<span class="${className}">${label}</span>`;
+        }
+        return `<a href="${url}" class="ops-whatsapp-link ${className}" target="_blank" rel="noopener noreferrer" title="${title}">${label}</a>`;
+    },
+
+    getShiftContact(day, shift) {
+        const map = this.data.volunteerOps?.shift_contacts;
+        if (!map || !day || !shift) return null;
+        const dayKey = String(day);
+        const dayMap = map[dayKey] || map[dayKey.toLowerCase()];
+        if (!dayMap) return null;
+        return dayMap[shift] || dayMap[String(shift).toUpperCase()] || null;
+    },
+
+    renderOpsShiftResponsibleLine(day, shift) {
+        const contact = this.getShiftContact(day, shift);
+        if (!contact || !contact.name) return '';
+        const label = this.escapeHtml(i18n.t('ops_shift_responsible'));
+        const nameHtml = this.renderOpsWhatsAppNameLink(contact.name, contact.phone, 'ops-shift-responsible-name');
+        return `<p class="ops-shift-responsible">${label} ${nameHtml}</p>`;
+    },
+
     getShiftDisplayBounds(day, shift, rows) {
         let loc = '';
         if (rows.length && rows[0].location) {
@@ -2812,24 +2898,36 @@ const app = {
     renderOpsVolunteerInSlot(item, uid, showActions) {
         const mineRow = Number(item.wp_user_id) === Number(uid);
         const supRow = showActions && this.canSuperviseOps() && !mineRow;
-        const actions = showActions ? this.renderAssignmentActions(item, supRow, true) : '';
         const idEsc = String(item.id).replace(/'/g, "\\'");
-        const swapBtn = mineRow && this.getCommitmentStatus(item.id) === 'declined'
-            ? `<button type="button" class="ops-btn ops-btn--accent" onclick="app.requestSwap('${idEsc}')">${this.escapeHtml(i18n.t('ops_request_swap'))}</button>` : '';
-        const canRealloc = showActions && this.canReallocateOps() && this.canSuperviseOps() && (mineRow || supRow);
-        const reallocBtn = canRealloc
-            ? `<button type="button" class="ops-btn" onclick="app.doReallocate('${idEsc}')">${this.escapeHtml(i18n.t('ops_reallocate'))}</button>` : '';
-        const extraActions = (swapBtn || reallocBtn)
-            ? `<div class="ops-volunteer-extra-actions">${reallocBtn}${swapBtn}</div>` : '';
+        let inlineActions = '';
+        let hintHtml = '';
+        if (showActions) {
+            const act = this.renderAssignmentActions(item, supRow, 'icons');
+            inlineActions += act.actions || '';
+            hintHtml = act.hint || '';
+            const canRealloc = this.canReallocateOps() && this.canSuperviseOps() && (mineRow || supRow);
+            if (canRealloc) {
+                inlineActions += this.renderOpsIconButton('ops_reallocate', `app.doReallocate('${idEsc}')`, 'reallocate', 'outline');
+            }
+            if (mineRow && this.getCommitmentStatus(item.id) === 'declined') {
+                inlineActions += this.renderOpsIconButton('ops_request_swap', `app.requestSwap('${idEsc}')`, 'swap', 'accent');
+            }
+        }
         const langs = (item.languages || []).join(', ');
+        const volName = item.volunteer_name || i18n.t('ops_volunteer_default');
+        const nameLink = this.renderOpsWhatsAppNameLink(volName, item.volunteer_phone);
+        const youPrefix = mineRow ? `<span class="ops-you-badge">${this.escapeHtml(i18n.t('ops_you_badge'))}</span> ` : '';
         return `
-            <li class="ops-volunteer-row${mineRow ? ' ops-volunteer-row--mine' : ''}">
-                <div class="ops-volunteer-main">
-                    <span class="ops-volunteer-name">${mineRow ? `<span class="ops-you-badge">${this.escapeHtml(i18n.t('ops_you_badge'))}</span> ` : ''}${this.escapeHtml(item.volunteer_name || i18n.t('ops_volunteer_default'))}</span>
-                    ${langs ? `<span class="ops-volunteer-langs text-muted">${this.escapeHtml(langs)}</span>` : ''}
+            <li class="ops-volunteer-row ops-volunteer-row--compact${mineRow ? ' ops-volunteer-row--mine' : ''}">
+                <div class="ops-volunteer-head">
+                    <div class="ops-volunteer-ident">
+                        ${youPrefix}${nameLink}
+                        ${langs ? `<span class="ops-volunteer-langs text-muted">${this.escapeHtml(langs)}</span>` : ''}
+                    </div>
+                    ${inlineActions ? `<div class="ops-volunteer-inline-actions" role="group" aria-label="${this.escapeHtml(i18n.t('ops_assignment_actions_group'))}">${inlineActions}</div>` : ''}
                 </div>
                 <div class="ops-volunteer-status">${this.getCommitmentBadge(item.id)} ${this.getOpsStatusBadge(item.id)}</div>
-                ${(actions || extraActions) ? `<div class="ops-volunteer-actions">${actions}${extraActions}</div>` : ''}
+                ${hintHtml}
             </li>`;
     },
 
@@ -2864,12 +2962,14 @@ const app = {
         const editBtn = showActions && this.canEditScheduleScope(day, shift)
             ? `<button type="button" class="ops-btn ops-shift-edit-btn" onclick="app.openScheduleEditor('${dayEsc}','${shiftEsc}')">${this.escapeHtml(i18n.t('ops_edit_this_shift'))}</button>`
             : '';
+        const responsibleLine = this.renderOpsShiftResponsibleLine(day, shift);
         return `
             <article class="ops-shift-card">
                 <header class="ops-shift-card-header">
                     <div class="ops-shift-card-title">
                         <strong class="ops-shift-code">${this.escapeHtml(shift)}</strong>
                         <span class="ops-shift-meta text-muted">${this.escapeHtml([display.location, display.bounds].filter(Boolean).join(' · '))}</span>
+                        ${responsibleLine}
                     </div>
                     ${editBtn}
                 </header>
@@ -2959,7 +3059,7 @@ const app = {
                 <td data-label="${this.escapeHtml(i18n.t('ops_shift_label'))}">${this.escapeHtml(item.shift || '-')}</td>
                 <td data-label="${this.escapeHtml(i18n.t('ops_time_label'))}">${this.escapeHtml(timeRange)}</td>
                 <td data-label="${this.escapeHtml(i18n.t('ops_location_label'))}">${this.escapeHtml(item.location || '-')}</td>
-                <td data-label="${this.escapeHtml(i18n.t('ops_volunteer_label'))}">${mineRow ? `<span class="ops-you-badge">${this.escapeHtml(i18n.t('ops_you_badge'))}</span> ` : ''}${this.escapeHtml(item.volunteer_name || i18n.t('ops_volunteer_default'))}</td>
+                <td data-label="${this.escapeHtml(i18n.t('ops_volunteer_label'))}">${mineRow ? `<span class="ops-you-badge">${this.escapeHtml(i18n.t('ops_you_badge'))}</span> ` : ''}${this.renderOpsWhatsAppNameLink(item.volunteer_name || i18n.t('ops_volunteer_default'), item.volunteer_phone)}</td>
                 <td data-label="${this.escapeHtml(i18n.t('ops_languages_label'))}">${this.escapeHtml((item.languages || []).join(', ') || '-')}</td>
                 <td data-label="${this.escapeHtml(i18n.t('ops_status_label'))}">${this.getCommitmentBadge(item.id)} ${this.getOpsStatusBadge(item.id)}</td>
                 ${actionCell ? `<td class="ops-table-actions-cell">${actionCell}</td>` : '<td></td>'}

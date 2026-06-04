@@ -2,6 +2,16 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.11.4] - 2026-06-04
+
+### Adicionado
+- Payload `/ops/voluntarios`: `shift_contacts` (homem-chave por dia/turno) e `volunteer_phone` em cada linha da escala (WP `zelo_phone` ou roster).
+
+## [2.11.3] - 2026-06-04
+
+### Corrigido
+- `zelo_get_volunteer_ops_payload`: voluntário com escala da equipa recebe `status` de compromisso de colegas (antes só as próprias linhas → badge «Aguardando confirmação» incorreto na equipa).
+
 ## [2.11.2] - 2026-06-02
 
 ### Corrigido

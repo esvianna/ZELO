@@ -5,6 +5,7 @@ alwaysApply: true
 
 # Antes de alterar código (ZELO)
 
+0. **Backlog GitHub:** tarefa nova → issue em `esvianna/ZELO` + [Project 3](https://github.com/users/esvianna/projects/3) em **Backlog**; plano para aprovação; **só codificar** com status **Ready** ou superior (ver `zelo-github-backlog.mdc`, `docs/GITHUB-WORKFLOW.md`).
 1. Leia `PROJECT_STATUS.md` (onde paramos, pendências, riscos).
 2. Leia `AGENTS.md` e `DECISIONS.md` para decisões já tomadas.
 3. Para deploy PWA: `DEPLOYMENT_RULES.md`; para auth/ops: `docs/DEPLOY-ZELO-PWA.md`.

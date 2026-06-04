@@ -365,13 +365,28 @@ function zelo_get_volunteer_ops_payload( $args = array() ) {
 		$visible_ids = wp_list_pluck( $schedule, 'id' );
 		$commitments_out = array_intersect_key( $commitments, array_flip( $visible_ids ) );
 	} elseif ( $uid > 0 && ! zelo_is_ops_manager( $uid ) && ! zelo_is_reallocator( $uid ) && ! zelo_user_is_ops_supervisor_role( $uid ) ) {
-		$visible_ids = array();
-		foreach ( $data['schedule'] as $row ) {
-			if ( isset( $row['wp_user_id'] ) && (int) $row['wp_user_id'] === $uid && ! empty( $row['id'] ) ) {
-				$visible_ids[] = $row['id'];
+		// Escala da equipa: expor status de compromisso de todas as linhas devolvidas (leitura),
+		// para badges coerentes com a visão do responsável. Registo completo só nas linhas do próprio utilizador.
+		$commitments_out = array();
+		foreach ( $schedule as $row ) {
+			if ( empty( $row['id'] ) || ! isset( $commitments[ $row['id'] ] ) ) {
+				continue;
 			}
+			$aid     = $row['id'];
+			$record  = $commitments[ $aid ];
+			$is_mine = isset( $row['wp_user_id'] ) && (int) $row['wp_user_id'] === $uid;
+			if ( $is_mine ) {
+				$commitments_out[ $aid ] = $record;
+				continue;
+			}
+			$public = array(
+				'status' => isset( $record['status'] ) ? (string) $record['status'] : 'pending',
+			);
+			if ( ! empty( $record['pending_reason'] ) ) {
+				$public['pending_reason'] = sanitize_key( (string) $record['pending_reason'] );
+			}
+			$commitments_out[ $aid ] = $public;
 		}
-		$commitments_out = array_intersect_key( $commitments, array_flip( $visible_ids ) );
 	}
 
 	$link_pending = $uid > 0 && function_exists( 'zelo_user_has_pending_link_request' ) && zelo_user_has_pending_link_request( $uid );
@@ -433,8 +448,13 @@ function zelo_get_volunteer_ops_payload( $args = array() ) {
 		}
 	}
 
+	$shift_contacts = function_exists( 'zelo_ops_build_shift_contacts_from_governance' )
+		? zelo_ops_build_shift_contacts_from_governance( $data['governance'], $catalogs )
+		: array();
+
 	return array(
 		'governance'       => $governance_out,
+		'shift_contacts'   => $shift_contacts,
 		'schedule'         => $schedule,
 		'catalogs'         => $catalogs_out,
 		'permissions'      => $permissions,

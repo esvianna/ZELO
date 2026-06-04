@@ -2,13 +2,15 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-02** (vista escala por turno na PWA).
+> Última atualização: **2026-06-04** (backlog GitHub Project + migração issues).
 
 ---
 
 ## Onde paramos
 
 O projeto está em **produção funcional** com foco operacional para o **departamento de informações** (voluntários), mantendo o app **público para visitantes ocasionais**.
+
+**PWA build 103:** escala por turno — ações em ícones compactos na linha do nome (ZELO#1).
 
 **PWA build 102:** escala «Por turno» (faixas horárias + voluntários juntos); toggle Lista; Minhas designações em cards; «Montar este turno».
 
@@ -18,7 +20,9 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 **Plugin 2.11.0 / PWA 99–100:** edição escala, modal Montar escala (ADR-018).
 
-**Próximo:** deploy **plugin 2.11.1** + **PWA build 102**; smoke TESTING §4 (5h–5k); Web Push VAPID. Backlog: PDF export agrupado por faixa.
+**Backlog operacional:** [GitHub Project — Projeto ZELO](https://github.com/users/esvianna/projects/3) (`esvianna/ZELO` issues). Issues ativas: [#1 escala](https://github.com/esvianna/ZELO/issues/1), [#2 e-mails](https://github.com/esvianna/ZELO/issues/2) — ambas **In progress** no quadro.
+
+**Próximo:** deploy **plugin 2.11.1** + **PWA build 102**; smoke TESTING §4 (5h–5k); Web Push VAPID. Backlog: PDF export agrupado por faixa (registrar como issue no Project).
 
 ---
 
@@ -76,6 +80,13 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 4. Smoke export PDF como gestor.
 
 ---
+
+## Última sessão (2026-06-04)
+
+- Backlog oficial no GitHub Project 3; fluxo Backlog → plano → **Ready** → código (`docs/GITHUB-WORKFLOW.md`, ADR-020).
+- Issues migradas de `SITE-NOVO-VTIS` para `esvianna/ZELO` (#1 escala, #2 e-mails); regras em `AGENTS.md` e `.cursor/rules/zelo-github-backlog.mdc`.
+
+**Como testar:** abrir Project 3 e confirmar cards ZELO#1/#2 em **In progress**; criar issue teste em Backlog e validar template em GitHub.
 
 ## Última sessão (2026-06-02)
 

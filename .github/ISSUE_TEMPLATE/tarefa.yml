@@ -1,0 +1,41 @@
+name: Tarefa ZELO
+description: Nova demanda para o backlog (Project ZELO)
+title: "[Tarefa] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A issue será adicionada ao [Projeto ZELO](https://github.com/users/esvianna/projects/3) em **Backlog**.
+        Codificação só após plano aprovado e status **Ready** (ver `docs/GITHUB-WORKFLOW.md`).
+  - type: textarea
+    id: objetivo
+    attributes:
+      label: Objetivo
+      description: O que precisa ser resolvido?
+    validations:
+      required: true
+  - type: textarea
+    id: criterios
+    attributes:
+      label: Critérios de aceite
+      description: Checklist do que define "pronto"
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: dropdown
+    id: tipo
+    attributes:
+      label: Tipo
+      options:
+        - bug
+        - feature
+        - deploy
+        - docs
+        - suporte/ops
+  - type: textarea
+    id: contexto
+    attributes:
+      label: Contexto / links
+      description: PROJECT_STATUS, ADR, prints, etc.

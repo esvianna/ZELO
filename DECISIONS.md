@@ -6,6 +6,16 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 ---
 
+## ADR-020 — Backlog no GitHub Project (2026-06-04)
+
+**Contexto:** Tarefas estavam em `SITE-NOVO-VTIS` (repo privado do site); código vive em `esvianna/ZELO` (público). Transferência nativa de issues privado→público é bloqueada pelo GitHub.
+
+**Decisão:** Backlog oficial no [Project 3](https://github.com/users/esvianna/projects/3) com issues em **`esvianna/ZELO`**. Nova demanda → issue em **Backlog** + plano para aprovação; codificação (humano ou agente) só com status **Ready** ou superior, salvo aprovação explícita do plano. `PROJECT_STATUS.md` / `ROADMAP.md` complementam, não substituem o quadro. Regras em `.cursor/rules/zelo-github-backlog.mdc` e `docs/GITHUB-WORKFLOW.md`.
+
+**Consequências:** Issues migradas: SITE-NOVO-VTIS#1/#2 fechadas → ZELO#1/#2. Template `.github/ISSUE_TEMPLATE/tarefa.yml`.
+
+---
+
 ## ADR-019 — Reconciliação de compromissos ao editar escala (2026-06-02)
 
 **Contexto:** Guardar um turno na PWA (`POST /ops/schedule`) apagava compromissos de todas as linhas do scope, obrigando reconfirmação mesmo sem alteração; não havia aviso «escala mudou».

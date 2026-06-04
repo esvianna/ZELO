@@ -982,8 +982,9 @@ function zelo_ops_enrich_schedule_for_output( $schedule, $catalogs ) {
 		$row['location']  = zelo_ops_schedule_row_location( $row, $catalogs );
 		$wp               = isset( $row['wp_user_id'] ) ? (int) $row['wp_user_id'] : 0;
 		$rv               = isset( $row['roster_volunteer_id'] ) ? sanitize_text_field( $row['roster_volunteer_id'] ) : '';
-		$row['languages'] = zelo_ops_volunteer_language_names( $wp, $rv, $catalogs );
-		$out[]            = $row;
+		$row['languages']       = zelo_ops_volunteer_language_names( $wp, $rv, $catalogs );
+		$row['volunteer_phone'] = zelo_ops_resolve_volunteer_phone( $wp, $rv, $catalogs );
+		$out[]                  = $row;
 	}
 	return $out;
 }
@@ -996,6 +997,94 @@ function zelo_ops_enrich_schedule_for_output( $schedule, $catalogs ) {
  * @param array  $catalogs Catalogs.
  * @return string
  */
+/**
+ * Telefone do voluntário (user_meta zelo_phone ou roster).
+ *
+ * @param int    $wp_uid   WP user id.
+ * @param string $rv_id    Roster id.
+ * @param array  $catalogs Catalogs.
+ * @return string
+ */
+function zelo_ops_resolve_volunteer_phone( $wp_uid, $rv_id, $catalogs ) {
+	if ( $wp_uid > 0 ) {
+		$p = get_user_meta( $wp_uid, 'zelo_phone', true );
+		if ( is_string( $p ) && trim( $p ) !== '' ) {
+			return sanitize_text_field( trim( $p ) );
+		}
+	}
+	if ( $rv_id !== '' && ! empty( $catalogs['roster_volunteers'] ) && is_array( $catalogs['roster_volunteers'] ) ) {
+		foreach ( $catalogs['roster_volunteers'] as $rv ) {
+			if ( isset( $rv['id'] ) && $rv['id'] === $rv_id && ! empty( $rv['phone'] ) ) {
+				return sanitize_text_field( trim( (string) $rv['phone'] ) );
+			}
+		}
+	}
+	return '';
+}
+
+/**
+ * Telefone do roster por nome (homem-chave só com texto).
+ *
+ * @param string $name     Nome.
+ * @param array  $catalogs Catalogs.
+ * @return string
+ */
+function zelo_ops_resolve_phone_by_roster_name( $name, $catalogs ) {
+	$name = trim( (string) $name );
+	if ( $name === '' || empty( $catalogs['roster_volunteers'] ) || ! is_array( $catalogs['roster_volunteers'] ) ) {
+		return '';
+	}
+	$key = zelo_ops_normalize_roster_name_key( $name );
+	foreach ( $catalogs['roster_volunteers'] as $rv ) {
+		if ( ! isset( $rv['name'] ) || ! isset( $rv['phone'] ) || trim( (string) $rv['phone'] ) === '' ) {
+			continue;
+		}
+		if ( zelo_ops_normalize_roster_name_key( $rv['name'] ) === $key ) {
+			return sanitize_text_field( trim( (string) $rv['phone'] ) );
+		}
+	}
+	return '';
+}
+
+/**
+ * Homens-chave por dia/turno para contacto (nome + telefone).
+ *
+ * @param array $governance Governance map.
+ * @param array $catalogs   Catalogs completos.
+ * @return array<string, array<string, array{name: string, phone: string}>>
+ */
+function zelo_ops_build_shift_contacts_from_governance( $governance, $catalogs ) {
+	$out = array();
+	if ( ! is_array( $governance ) ) {
+		return $out;
+	}
+	foreach ( $governance as $day => $gov ) {
+		if ( ! is_array( $gov ) ) {
+			continue;
+		}
+		$day_key = sanitize_key( (string) $day );
+		$keymen  = isset( $gov['keymen'] ) && is_array( $gov['keymen'] ) ? $gov['keymen'] : array();
+		$km_ids  = isset( $gov['keymen_user_ids'] ) && is_array( $gov['keymen_user_ids'] ) ? $gov['keymen_user_ids'] : array();
+		foreach ( $keymen as $shift => $name ) {
+			$shift_code = sanitize_text_field( (string) $shift );
+			$name       = sanitize_text_field( (string) $name );
+			$wp         = isset( $km_ids[ $shift ] ) ? (int) $km_ids[ $shift ] : 0;
+			$phone      = zelo_ops_resolve_volunteer_phone( $wp, '', $catalogs );
+			if ( $phone === '' && $name !== '' ) {
+				$phone = zelo_ops_resolve_phone_by_roster_name( $name, $catalogs );
+			}
+			if ( ! isset( $out[ $day_key ] ) ) {
+				$out[ $day_key ] = array();
+			}
+			$out[ $day_key ][ $shift_code ] = array(
+				'name'  => $name,
+				'phone' => $phone,
+			);
+		}
+	}
+	return $out;
+}
+
 function zelo_ops_resolve_volunteer_name( $wp_uid, $rv_id, $catalogs ) {
 	if ( $wp_uid > 0 ) {
 		$u = get_userdata( $wp_uid );
