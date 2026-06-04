@@ -2,6 +2,15 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.11.8] - 2026-06-04
+
+### Corrigido
+- **Supervisão por governança:** `zelo_user_can_supervise_assignment` deixa de conceder acesso global a qualquer `zelo_reallocate_volunteer`; homem-chave actua só nos turnos da governança (alinhado a ADR-018 e TESTING §4.5).
+- **Swaps:** `GET/PATCH /ops/swap-requests` filtrados por turno supervisionado; gestores (`zelo_manage_ops`) mantêm acesso global.
+
+### Documentação
+- Matriz REST ops/swaps: `docs/OPS-PERMISSIONS.md` (ZELO#13).
+
 ## [2.11.7] - 2026-06-04
 
 ### Corrigido

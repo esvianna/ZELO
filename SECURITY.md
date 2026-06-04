@@ -35,14 +35,18 @@ Princípios e checklist de segurança adaptados a **WordPress REST + PWA estáti
 
 ### Autenticação e autorização
 
+Matriz completa (roles, endpoints, IDOR): **[docs/OPS-PERMISSIONS.md](docs/OPS-PERMISSIONS.md)** (ZELO#13, plugin 2.11.8+).
+
 | Endpoint | Regra esperada |
 |----------|----------------|
 | `/auth/login` | Público; falha genérica; verificar e-mail se aplicável |
 | `/auth/register` | Público com rate limit; filtro `zelo_registration_enabled` |
-| `/ops/voluntarios` | **Autenticado + `zelo_view_ops`** (remover bypass público) |
-| `/ops/checkin`, `/checkout` | `zelo_checkin_ops` |
-| `/ops/reallocate` | `zelo_reallocate_volunteer` |
-| `/ops/swap-requests` | gestor/realocador conforme rota |
+| `/ops/voluntarios` | **Autenticado + `zelo_view_ops`** — **não** activar `zelo_ops_voluntarios_public_read` |
+| `/ops/checkin`, `/checkout` | `zelo_checkin_ops` + titular ou supervisão na linha (governança) |
+| `/ops/reallocate` | `zelo_reallocate_volunteer` + supervisão na linha (2.11.8+) |
+| `/ops/schedule` | `zelo_edit_schedule` + escopo dia/turno na governança |
+| `/ops/swap-requests` GET/PATCH | Gestor ou supervisor do turno da designação (2.11.8+) |
+| `/ops/swap-requests` POST | `zelo_checkin_ops` + titular da linha |
 | `/ops/export` | `zelo_manage_ops` ou `manage_options`; rate limit 60 s/usuário |
 | `/clima` | Público; proxy Open-Meteo; sem PII; cache transient 30 min |
 

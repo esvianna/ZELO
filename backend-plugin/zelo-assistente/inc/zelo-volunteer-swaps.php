@@ -18,6 +18,28 @@ function zelo_save_swap_requests( $list ) {
 	update_option( 'zelo_volunteer_swap_requests', array_values( $list ) );
 }
 
+/**
+ * Gestor vê todos os pedidos; homem-chave/supervisor só turnos que supervisiona (governança).
+ *
+ * @param int                 $user_id User.
+ * @param array<string,mixed> $swap_item Swap row.
+ * @return bool
+ */
+function zelo_user_can_resolve_swap_request( $user_id, $swap_item ) {
+	if ( zelo_is_ops_manager( $user_id ) ) {
+		return true;
+	}
+	$assignment_id = isset( $swap_item['assignment_id'] ) ? sanitize_text_field( $swap_item['assignment_id'] ) : '';
+	if ( $assignment_id === '' || ! function_exists( 'zelo_get_schedule_row_by_id' ) ) {
+		return false;
+	}
+	$row = zelo_get_schedule_row_by_id( $assignment_id );
+	if ( ! $row || ! function_exists( 'zelo_user_can_supervise_assignment' ) ) {
+		return false;
+	}
+	return zelo_user_can_supervise_assignment( $user_id, $row );
+}
+
 function zelo_register_swap_rest_routes() {
 	register_rest_route(
 		'zelo/v1',
@@ -58,7 +80,18 @@ add_action( 'rest_api_init', 'zelo_register_swap_rest_routes', 12 );
  * @param WP_REST_Request $request Request.
  */
 function zelo_rest_list_swap_requests( $request ) {
-	return rest_ensure_response( zelo_get_swap_requests() );
+	$list = zelo_get_swap_requests();
+	$uid  = get_current_user_id();
+	if ( zelo_is_ops_manager( $uid ) ) {
+		return rest_ensure_response( $list );
+	}
+	$filtered = array();
+	foreach ( $list as $item ) {
+		if ( zelo_user_can_resolve_swap_request( $uid, $item ) ) {
+			$filtered[] = $item;
+		}
+	}
+	return rest_ensure_response( $filtered );
 }
 
 /**
@@ -171,6 +204,20 @@ function zelo_swap_set_status( $id, $status, $resolver, $extra = array() ) {
 function zelo_rest_patch_swap_request( $request ) {
 	$id     = sanitize_text_field( $request->get_param( 'id' ) );
 	$status = sanitize_key( $request->get_param( 'status' ) );
+	$uid    = get_current_user_id();
+	$found  = null;
+	foreach ( zelo_get_swap_requests() as $item ) {
+		if ( isset( $item['id'] ) && $item['id'] === $id ) {
+			$found = $item;
+			break;
+		}
+	}
+	if ( ! $found ) {
+		return new WP_Error( 'zelo_not_found', __( 'Pedido não encontrado.', 'zelo-assistente' ), array( 'status' => 404 ) );
+	}
+	if ( ! zelo_user_can_resolve_swap_request( $uid, $found ) ) {
+		return new WP_Error( 'zelo_swap_forbidden', __( 'Sem permissão para resolver este pedido.', 'zelo-assistente' ), array( 'status' => 403 ) );
+	}
 	$res    = zelo_swap_set_status(
 		$id,
 		$status,

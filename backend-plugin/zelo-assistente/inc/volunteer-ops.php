@@ -364,7 +364,7 @@ function zelo_get_volunteer_ops_payload( $args = array() ) {
 	if ( ! empty( $args['mine_schedule_only'] ) && $uid > 0 ) {
 		$visible_ids = wp_list_pluck( $schedule, 'id' );
 		$commitments_out = array_intersect_key( $commitments, array_flip( $visible_ids ) );
-	} elseif ( $uid > 0 && ! zelo_is_ops_manager( $uid ) && ! zelo_is_reallocator( $uid ) && ! zelo_user_is_ops_supervisor_role( $uid ) ) {
+	} elseif ( $uid > 0 && ! zelo_is_ops_manager( $uid ) && ! zelo_user_is_ops_supervisor_role( $uid ) ) {
 		// Escala da equipa: expor status de compromisso de todas as linhas devolvidas (leitura),
 		// para badges coerentes com a visão do responsável. Registo completo só nas linhas do próprio utilizador.
 		$commitments_out = array();

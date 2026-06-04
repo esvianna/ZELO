@@ -57,7 +57,7 @@ Itens históricos; ver **Fase B** para status atualizado.
 | # | Entrega | Status | Issue |
 |---|---------|--------|-------|
 | A1 | Exportação escala/check-ins (`/ops/export`) | **Concluído** (2.9.0+; ver B1 / #7) | [#7](https://github.com/esvianna/ZELO/issues/7) |
-| A2 | Auditoria de permissões em todos os endpoints ops/swap | Parcial | [#13](https://github.com/esvianna/ZELO/issues/13) |
+| A2 | Auditoria de permissões em todos os endpoints ops/swap | **Concluído** (2.11.8, #13) | [#13](https://github.com/esvianna/ZELO/issues/13) |
 | A3 | Documentar fluxo admin: escala → roles → teste PWA | Em `docs/DEPLOY-ZELO-PWA.md` | — |
 | A4 | Histórico de realocações — retenção/limites | Implementado (slice 15 na UI) | — |
 

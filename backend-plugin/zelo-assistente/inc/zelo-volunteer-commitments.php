@@ -355,7 +355,7 @@ function zelo_user_is_ops_supervisor_role( $user_id = 0 ) {
 	if ( ! $user || ! $user->exists() ) {
 		return false;
 	}
-	return user_can( $user, 'zelo_supervisor_grupo' ) || user_can( $user, 'zelo_supervisor_app' ) || zelo_is_ops_manager( $user_id ) || zelo_is_reallocator( $user_id );
+	return user_can( $user, 'zelo_supervisor_grupo' ) || user_can( $user, 'zelo_supervisor_app' );
 }
 
 /**
@@ -411,7 +411,7 @@ function zelo_resolve_shift_supervisor_user_ids( $row ) {
  * @return bool
  */
 function zelo_user_can_supervise_assignment( $user_id, $row ) {
-	if ( zelo_is_ops_manager( $user_id ) || zelo_is_reallocator( $user_id ) ) {
+	if ( zelo_is_ops_manager( $user_id ) ) {
 		return true;
 	}
 	$targets = zelo_resolve_shift_supervisor_user_ids( $row );

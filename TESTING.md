@@ -262,6 +262,22 @@ Até lá, **checklist manual acima é a fonte de verdade**.
 
 ---
 
+## 14. Auditoria permissões ops (plugin 2.11.8+, ZELO#13)
+
+Referência: [docs/OPS-PERMISSIONS.md](docs/OPS-PERMISSIONS.md).
+
+| # | Passo | Perfil | Esperado |
+|---|-------|--------|----------|
+| 1 | `POST /ops/schedule` sem cap edit | voluntário | **403** |
+| 2 | Homem-chave A1 → `POST /ops/reallocate` linha turno B1 | homem-chave | **403** |
+| 3 | Homem-chave A1 → `PATCH /ops/swap-requests/{id}` pedido turno B1 | homem-chave | **403** |
+| 4 | Homem-chave A1 → `GET /ops/swap-requests` | homem-chave | Só pedidos do(s) turno(s) que supervisiona |
+| 5 | Sem cookie → `GET /ops/voluntarios` | — | **401** (filtro público off) |
+| 6 | Voluntário → `GET /ops/export?format=pdf` | view_ops | **403** |
+| 7 | Gestor → smoke §4 (check-in, escala, export) | manage_ops | Sem regressão |
+
+---
+
 ## Registro de execução
 
 Copie e preencha após cada rodada:

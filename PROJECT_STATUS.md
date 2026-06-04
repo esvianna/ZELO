@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-04** (PWA 107 — persistir view, ZELO#27).
+> Última atualização: **2026-06-04** (plugin 2.11.8 — auditoria permissões, ZELO#13).
 
 ---
 
@@ -12,7 +12,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Referência no repo | Versão |
 |--------------------|--------|
-| Plugin WordPress (`zelo-assistente.php`) | **2.11.7** |
+| Plugin WordPress (`zelo-assistente.php`) | **2.11.8** |
 | PWA (`zelo-build.js` / `sw.js`) | **build 107** |
 
 **Backlog oficial:** [GitHub Project — Projeto ZELO](https://github.com/users/esvianna/projects/3) — issues em [`esvianna/ZELO`](https://github.com/esvianna/ZELO) (ADR-020, `docs/GITHUB-WORKFLOW.md`). Este arquivo **complementa** o quadro; status canônico das tarefas está no Project.
@@ -30,8 +30,11 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | [#19](https://github.com/esvianna/ZELO/issues/19) | `.gitignore` monorepo (C1) |
 | [#23](https://github.com/esvianna/ZELO/issues/23) | Docs PROJECT_STATUS + ROADMAP alinhados |
 | [#27](https://github.com/esvianna/ZELO/issues/27) | Persistir última view após F5 (PWA 107) |
+| [#13](https://github.com/esvianna/ZELO/issues/13) | Auditoria permissões ops/swaps (2.11.8) |
 
 ### Destaques técnicos por versão
+
+**Plugin 2.11.8:** supervisão por governança (fix homem-chave global); swaps filtrados; `docs/OPS-PERMISSIONS.md`.
 
 **PWA 107:** `sessionStorage` + hash — restaura escala/mapa/perfil após F5.
 
@@ -105,9 +108,8 @@ Priorização via [Project 3](https://github.com/users/esvianna/projects/3). Pri
 
 ## Última sessão (2026-06-04)
 
-- **ZELO#27:** PWA build 107 — persistência de rota (`sessionStorage` + hash); smoke `TESTING.md` §4 (2f–2i).
-- **ZELO#19:** `.gitignore` na raiz; exceções em `README.md`.
-- **ZELO#23:** `PROJECT_STATUS.md` e `ROADMAP.md` alinhados com plugin 2.11.7 e Project 3.
+- **ZELO#13:** Plugin 2.11.8 — matriz `docs/OPS-PERMISSIONS.md`; supervisão por governança; swaps filtrados (ADR-021).
+- **ZELO#27:** PWA build 107 — persistência de rota.
 
 **Como testar:** abrir este arquivo e `ROADMAP.md`; confirmar versões batem com `zelo-assistente.php` e `zelo-build.js`; cruzar pendências com cards **Backlog** no Project 3.
 

@@ -53,7 +53,7 @@ function zelo_user_can_edit_schedule_day_shift( $user_id, $day, $shift ) {
  * @return bool
  */
 function zelo_user_can_supervise_any_ops( $user_id ) {
-	if ( zelo_is_ops_manager( $user_id ) || zelo_is_reallocator( $user_id ) ) {
+	if ( zelo_is_ops_manager( $user_id ) ) {
 		return true;
 	}
 	if ( function_exists( 'zelo_user_is_ops_supervisor_role' ) && zelo_user_is_ops_supervisor_role( $user_id ) ) {

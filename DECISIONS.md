@@ -6,6 +6,16 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 ---
 
+## ADR-021 — Supervisão ops restrita à governança (2026-06-04)
+
+**Contexto:** Auditoria ZELO#13: `zelo_user_can_supervise_assignment` devolvia `true` para qualquer utilizador com `zelo_reallocate_volunteer`, permitindo realocação/swap/compromisso em turnos alheios — divergente de ADR-018 e TESTING §4.5.
+
+**Decisão:** Supervisão efectiva = `zelo_manage_ops` **ou** IDs em `zelo_resolve_shift_supervisor_user_ids` (homens-chave do turno, supervisores grupo A/B, supervisor app). Swaps GET/PATCH filtram por `zelo_user_can_resolve_swap_request`. Documentação em `docs/OPS-PERMISSIONS.md`.
+
+**Consequências:** Plugin **2.11.8**; homem-chave fora da governança de um turno recebe **403** em acções de supervisor nesse turno. Gestores e supervisores de grupo/app inalterados.
+
+---
+
 ## ADR-020 — Backlog no GitHub Project (2026-06-04)
 
 **Contexto:** Tarefas estavam em `SITE-NOVO-VTIS` (repo privado do site); código vive em `esvianna/ZELO` (público). Transferência nativa de issues privado→público é bloqueada pelo GitHub.

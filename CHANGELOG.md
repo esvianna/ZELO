@@ -9,6 +9,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 ## [Unreleased]
 
 ### Adicionado
+- Plugin **2.11.8**: auditoria permissões ops/swaps (ZELO#13) — supervisão por governança; swaps filtrados; matriz `docs/OPS-PERMISSIONS.md`.
 - PWA build **107**: persistência da última view após F5 (`sessionStorage` + hash `#viewId`; guardas auth escala/perfil; ZELO#27).
 - **Infra (ZELO#19):** `.gitignore` na raiz — PHP/Composer, IDE, OS, segredos; exceções PWA e FPDF em `README.md`.
 - **Docs (ZELO#23):** `PROJECT_STATUS.md` e `ROADMAP.md` alinhados com plugin **2.11.7**, PWA **106**, issues Done/Backlog do Project 3 (ADR-020).
