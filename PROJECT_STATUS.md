@@ -92,7 +92,7 @@ Priorização via [Project 3](https://github.com/users/esvianna/projects/3). Pri
 | **Média** | Painel cobertura posto/idioma | [#10](https://github.com/esvianna/ZELO/issues/10) |
 | **Média** | Motor notificações + inbox servidor | [#9](https://github.com/esvianna/ZELO/issues/9) |
 | **Infra** | Rate limit REST, testes, env API | [#22](https://github.com/esvianna/ZELO/issues/22) … [#20](https://github.com/esvianna/ZELO/issues/20) |
-| **UX visitante** | Programação, carrossel, branding, emergência | [#14](https://github.com/esvianna/ZELO/issues/14) … [#17](https://github.com/esvianna/ZELO/issues/17) |
+| **UX visitante** | Mapa estádio (#28), programação, carrossel, branding | [#28](https://github.com/esvianna/ZELO/issues/28), [#14](https://github.com/esvianna/ZELO/issues/14) … |
 
 ---
 
@@ -107,7 +107,7 @@ Priorização via [Project 3](https://github.com/users/esvianna/projects/3). Pri
 
 ## Última sessão (2026-06-04)
 
-- **Fluxo Project:** agentes param em **In review** após implementar; **Done** só após OK do responsável (`docs/GITHUB-WORKFLOW.md`, regras Cursor).
+- **#28:** Plano refinado — sequência diagrama → CRUD → balcões A1–B2 → rotas origem→destino (ADR-022); PNG rascunho em `docs/assets/issue-28/`.
 - **#24 / #25:** PWA 108 + plugin 2.11.9 entregues — **In review** (validar olho senha + perfil editável).
 - **ZELO#13:** Plugin 2.11.8 — matriz `docs/OPS-PERMISSIONS.md`; supervisão por governança; swaps filtrados (ADR-021).
 

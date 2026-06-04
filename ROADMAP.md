@@ -67,6 +67,7 @@ Itens históricos; ver **Fase B** para status atualizado.
 
 | # | Entrega | Status | Issue |
 |---|---------|--------|-------|
+| B0 | Mapa indoor estádio + direções (POIs públicos, i18n) | **Planejamento** | [#28](https://github.com/esvianna/ZELO/issues/28) |
 | B1 | Hierarquia visual reforçada (emergência destacada) | Parcial (CSS cards) | [#17](https://github.com/esvianna/ZELO/issues/17) |
 | B2 | Branding evento na splash/home | Parcial (banner evento) | [#18](https://github.com/esvianna/ZELO/issues/18) |
 | B3 | Card visual do mapa | Implementado (`home-map-card`) | — |
@@ -99,6 +100,7 @@ Itens históricos; ver **Fase B** para status atualizado.
 | [#24](https://github.com/esvianna/ZELO/issues/24) | Ícone olho para ver senha |
 | [#25](https://github.com/esvianna/ZELO/issues/25) | Perfil — alterar dados pessoais |
 | [#26](https://github.com/esvianna/ZELO/issues/26) | Posts como notificações |
+| [#28](https://github.com/esvianna/ZELO/issues/28) | Mapa estádio + direções internas (planejamento: `docs/ISSUE-28-STADIUM-MAP.md`) |
 
 ---
 

@@ -6,6 +6,18 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 ---
 
+## ADR-022 — Mapa indoor: diagrama, CRUD e direções por balcão (2026-06-04)
+
+**Contexto:** Issue #28 — voluntários nos balcões (A1–B2) orientam visitantes com diagrama do estádio. Existe stub `indoor_map` + `GET /indoor-map`; catálogo ops tem `locations` e turnos sem coordenadas no plano.
+
+**Decisão:** Sequência: (1) PDF → imagem + pinos → (2) CRUD unificado `places[]` (`kind`: booth | department | facility | amenity | restricted) → (3) editor visual no mapa → (4) matriz **balcão → destino** em pt/en/es. Balcões cadastrados **no mesmo CRUD**, diferenciados por tipo e pin quadrado. Extras (banheiros, entradas…) como `amenity`. Dept. 8–35 = `restricted`. Balcões alinhados a `shift_code` A1–B2. PWA: origem só balcões; destinos = demais kinds públicos.
+
+**Consequências:** Reutiliza infra indoor; separado do Leaflet externo. Matriz de rotas (4×N POIs) exige UX de edição no admin; ver `docs/ISSUE-28-STADIUM-MAP.md`.
+
+**Alternativas consideradas:** pathfinding automático (v1 rejeitado); pinos fixos no PNG (rejeitado); direções sem origem no balcão (rejeitado).
+
+---
+
 ## ADR-021 — Supervisão ops restrita à governança (2026-06-04)
 
 **Contexto:** Auditoria ZELO#13: `zelo_user_can_supervise_assignment` devolvia `true` para qualquer utilizador com `zelo_reallocate_volunteer`, permitindo realocação/swap/compromisso em turnos alheios — divergente de ADR-018 e TESTING §4.5.

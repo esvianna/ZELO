@@ -9,8 +9,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 ## [Unreleased]
 
 ### Adicionado
+- **Docs:** `docs/ISSUE-28-STADIUM-MAP.md` refinado (CRUD, balcões, rotas); ADR-022; PNG rascunho `docs/assets/issue-28/estadio-diagrama.png`.
 - PWA build **108**: ícone olho nos campos senha (login, cadastro, perfil) — ZELO#24; formulário de perfil (nome, e-mail, telefone, senha, idiomas, foto) — ZELO#25.
-- Plugin **2.11.9**: `PATCH /auth/profile` ampliado + `POST /auth/profile/avatar`.
 - **Docs:** fluxo GitHub — agentes param em **In review**; Done só após validação humana.
 - Plugin **2.11.9**: `PATCH /auth/profile` ampliado + `POST /auth/profile/avatar`.
 - PWA build **107**: persistência da última view após F5 (`sessionStorage` + hash `#viewId`; guardas auth escala/perfil; ZELO#27).
