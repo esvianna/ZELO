@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-04** (`.gitignore` — ZELO#19).
+> Última atualização: **2026-06-04** (PWA 107 — persistir view, ZELO#27).
 
 ---
 
@@ -13,7 +13,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | Referência no repo | Versão |
 |--------------------|--------|
 | Plugin WordPress (`zelo-assistente.php`) | **2.11.7** |
-| PWA (`zelo-build.js` / `sw.js`) | **build 106** |
+| PWA (`zelo-build.js` / `sw.js`) | **build 107** |
 
 **Backlog oficial:** [GitHub Project — Projeto ZELO](https://github.com/users/esvianna/projects/3) — issues em [`esvianna/ZELO`](https://github.com/esvianna/ZELO) (ADR-020, `docs/GITHUB-WORKFLOW.md`). Este arquivo **complementa** o quadro; status canônico das tarefas está no Project.
 
@@ -27,8 +27,13 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | [#6](https://github.com/esvianna/ZELO/issues/6) | Smoke `TESTING.md` §4 em produção |
 | [#7](https://github.com/esvianna/ZELO/issues/7) | Export PDF agrupado dia → turno → faixa (2.11.5–2.11.7) |
 | [#11](https://github.com/esvianna/ZELO/issues/11) | Filtros escala: idioma + responsável do turno (PWA 106) |
+| [#19](https://github.com/esvianna/ZELO/issues/19) | `.gitignore` monorepo (C1) |
+| [#23](https://github.com/esvianna/ZELO/issues/23) | Docs PROJECT_STATUS + ROADMAP alinhados |
+| [#27](https://github.com/esvianna/ZELO/issues/27) | Persistir última view após F5 (PWA 107) |
 
 ### Destaques técnicos por versão
+
+**PWA 107:** `sessionStorage` + hash — restaura escala/mapa/perfil após F5.
 
 **Plugin 2.11.7:** fix export PDF (`FPDF` margens PHP 8.2); rate limit só após export OK.
 
@@ -80,7 +85,6 @@ Priorização via [Project 3](https://github.com/users/esvianna/projects/3). Pri
 | Prioridade | Item | Issue |
 |------------|------|-------|
 | **Alta** | Web Push VAPID + subscribe real (stub 501 hoje) | [#8](https://github.com/esvianna/ZELO/issues/8) |
-| **Média** | Persistir última view após F5 | [#27](https://github.com/esvianna/ZELO/issues/27) |
 | **Média** | Painel cobertura posto/idioma | [#10](https://github.com/esvianna/ZELO/issues/10) |
 | **Média** | Motor notificações + inbox servidor | [#9](https://github.com/esvianna/ZELO/issues/9) |
 | **Baixa** | WhatsApp escala — melhorias além dos links (105) | [#12](https://github.com/esvianna/ZELO/issues/12) |
@@ -101,9 +105,9 @@ Priorização via [Project 3](https://github.com/users/esvianna/projects/3). Pri
 
 ## Última sessão (2026-06-04)
 
-- **ZELO#19:** `.gitignore` na raiz (PHP/Composer, IDE, OS, segredos, CI futuro); exceções documentadas em `README.md`.
-- **ZELO#23:** `PROJECT_STATUS.md` e `ROADMAP.md` alinhados com plugin 2.11.7, PWA 106 e issues do Project 3.
-- Entregas anteriores na mesma janela: #7 PDF faixa, #11 filtros responsável (PWA 106), #27 criada (persistir view).
+- **ZELO#27:** PWA build 107 — persistência de rota (`sessionStorage` + hash); smoke `TESTING.md` §4 (2f–2i).
+- **ZELO#19:** `.gitignore` na raiz; exceções em `README.md`.
+- **ZELO#23:** `PROJECT_STATUS.md` e `ROADMAP.md` alinhados com plugin 2.11.7 e Project 3.
 
 **Como testar:** abrir este arquivo e `ROADMAP.md`; confirmar versões batem com `zelo-assistente.php` e `zelo-build.js`; cruzar pendências com cards **Backlog** no Project 3.
 

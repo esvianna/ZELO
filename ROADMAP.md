@@ -46,7 +46,7 @@ Roadmap orientado ao contexto real do projeto (visitante + voluntários + WordPr
 | B4 | Escala PWA — UX listagem por dia / por turno | **Concluído** (build 89→102) | [#1](https://github.com/esvianna/ZELO/issues/1) |
 | B5 | Escala PWA — WhatsApp | Parcial (links 2.11.4 / PWA 105) | [#12](https://github.com/esvianna/ZELO/issues/12) |
 | B6 | Home — «Mais opções» expandido por defeito | Concluído (build 89) | — |
-| B7 | Persistir última view após refresh (F5) | Pendente | [#27](https://github.com/esvianna/ZELO/issues/27) |
+| B7 | Persistir última view após refresh (F5) | **Concluído** (PWA 107) | [#27](https://github.com/esvianna/ZELO/issues/27) |
 
 ---
 

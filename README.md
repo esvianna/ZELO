@@ -29,6 +29,8 @@ O repositório inclui [`.gitignore`](./.gitignore) na raiz (ROADMAP C1, [ZELO#19
 | `backend-plugin/zelo-assistente/inc/lib/fpdf.php` | FPDF vendored para export PDF |
 | `.cursor/rules/**` | Regras Cursor do projeto |
 
+**Deep links (PWA build 107+):** hash na URL (`#escala`, `#mapa`, `#profile`, `#lista?category=…`, `#detalhe?id=…`) restaura a view após F5; ver `TESTING.md` §4 (2f–2i).
+
 ### Regras de Negócio e Lógica
 
 #### 1. Backend (WordPress Plugin)

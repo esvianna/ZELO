@@ -161,8 +161,83 @@ const app = {
     router: {
         currentView: 'home',
         lastParams: {},
+        ROUTE_STORAGE_KEY: 'zelo_last_route',
+        ROUTE_NON_PERSISTENT: new Set(['login', 'register', 'email-verified']),
 
-        navigate(viewId, params = {}) {
+        isPersistableView(viewId) {
+            return !!(viewId && !this.ROUTE_NON_PERSISTENT.has(viewId) && document.getElementById(`view-${viewId}`));
+        },
+
+        canAccessView(viewId) {
+            if (!viewId || !document.getElementById(`view-${viewId}`)) return false;
+            if (viewId === 'escala') {
+                return app.canViewOps() && !app._opsAuthFailed;
+            }
+            if (viewId === 'profile') {
+                return !!app.auth.user;
+            }
+            return this.isPersistableView(viewId);
+        },
+
+        saveRoute(viewId, params) {
+            if (!this.isPersistableView(viewId)) return;
+            try {
+                sessionStorage.setItem(this.ROUTE_STORAGE_KEY, JSON.stringify({
+                    viewId,
+                    params: params || {}
+                }));
+            } catch (e) {
+                console.warn('Route persist', e);
+            }
+            this.syncHash(viewId, params);
+        },
+
+        syncHash(viewId, params) {
+            if (!viewId || this.ROUTE_NON_PERSISTENT.has(viewId)) return;
+            let hash = viewId;
+            const sp = new URLSearchParams();
+            if (params && params.category) sp.set('category', params.category);
+            if (params && params.id != null && params.id !== '') sp.set('id', String(params.id));
+            const qs = sp.toString();
+            if (qs) hash += '?' + qs;
+            const next = '#' + hash;
+            if (window.location.hash !== next) {
+                const url = window.location.pathname + window.location.search + next;
+                history.replaceState(null, '', url);
+            }
+        },
+
+        parseHashRoute() {
+            const raw = (window.location.hash || '').replace(/^#/, '').trim();
+            if (!raw) return null;
+            const qi = raw.indexOf('?');
+            const viewId = (qi >= 0 ? raw.slice(0, qi) : raw).toLowerCase();
+            const params = {};
+            if (qi >= 0) {
+                new URLSearchParams(raw.slice(qi + 1)).forEach((val, key) => {
+                    params[key] = key === 'id' && /^\d+$/.test(val) ? parseInt(val, 10) : val;
+                });
+            }
+            return document.getElementById(`view-${viewId}`) ? { viewId, params } : null;
+        },
+
+        loadStoredRoute() {
+            try {
+                const raw = sessionStorage.getItem(this.ROUTE_STORAGE_KEY);
+                if (!raw) return null;
+                const data = JSON.parse(raw);
+                if (!data || !data.viewId || !document.getElementById(`view-${data.viewId}`)) return null;
+                return { viewId: data.viewId, params: data.params || {} };
+            } catch (e) {
+                return null;
+            }
+        },
+
+        resolveInitialRoute() {
+            return this.parseHashRoute() || this.loadStoredRoute() || { viewId: 'home', params: {} };
+        },
+
+        navigate(viewId, params = {}, options = {}) {
             this.lastParams = params || {};
             // Hide current view
             document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
@@ -220,6 +295,10 @@ const app = {
                     app.renderHomeVolunteerDashboard();
                     app.toggleHomeVisitorExtrasCollapse();
                     app.updateNotificationsBadge();
+                }
+
+                if (options.persist !== false) {
+                    this.saveRoute(viewId, params);
                 }
             }
         },
@@ -678,9 +757,9 @@ const app = {
             const qs = verifyParams.toString();
             const cleanUrl = window.location.pathname + (qs ? `?${qs}` : '') + window.location.hash;
             history.replaceState({}, '', cleanUrl);
-            this.router.navigate('email-verified');
+            this.router.navigate('email-verified', {}, { persist: false });
         } else {
-            this.router.navigate('home');
+            this.resolveInitialNavigation();
         }
 
         // Request location
@@ -693,6 +772,24 @@ const app = {
                 }
             }
         });
+    },
+
+    resolveInitialNavigation() {
+        const route = this.router.resolveInitialRoute();
+        const { viewId, params } = route;
+        if (this.router.canAccessView(viewId)) {
+            this.router.navigate(viewId, params);
+            return;
+        }
+        if (viewId === 'escala' || viewId === 'profile') {
+            if (!this.auth.user) {
+                this.router.navigate('login', {}, { persist: false });
+            } else {
+                this.router.navigate('home', {}, { persist: false });
+            }
+            return;
+        }
+        this.router.navigate('home');
     },
 
     /**
