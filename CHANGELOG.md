@@ -9,6 +9,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 ## [Unreleased]
 
 ### Adicionado
+- PWA build **106**: filtro por **responsável do turno** na escala (select a partir de `shift_contacts`; combinável com dia/turno/local/nome/idioma) — ZELO#11 (fechada).
+- Backlog [#27](https://github.com/esvianna/ZELO/issues/27): persistir última view da PWA após refresh.
 - Plugin **2.11.4** + PWA **105**: links WhatsApp no nome dos voluntários e do responsável do turno (só com telefone cadastrado).
 
 ### Adicionado

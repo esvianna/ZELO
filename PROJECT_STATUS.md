@@ -2,13 +2,17 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-04** (backlog GitHub Project + migração issues).
+> Última atualização: **2026-06-04** (PWA 106 — filtro responsável escala, ZELO#11).
 
 ---
 
 ## Onde paramos
 
 O projeto está em **produção funcional** com foco operacional para o **departamento de informações** (voluntários), mantendo o app **público para visitantes ocasionais**.
+
+**PWA build 106:** escala — filtro por responsável do turno (`shift_contacts`; ZELO#11 **Done**).
+
+**Backlog:** [#27](https://github.com/esvianna/ZELO/issues/27) — persistir última view após F5.
 
 **PWA build 103:** escala por turno — ações em ícones compactos na linha do nome (ZELO#1).
 
@@ -68,7 +72,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 |------------|------|-------|
 | **Alta** | Deploy plugin 2.11.0 + PWA 99 | Governança preenchida antes do evento |
 | **Média** | Web Push VAPID + subscribe real | Stub 501 hoje |
-| **Baixa** | WhatsApp / filtros avançados escala | Backlog UX |
+| **Baixa** | WhatsApp escala (links já em 105) | Melhorias UX opcionais |
 
 ---
 

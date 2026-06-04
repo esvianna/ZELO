@@ -79,7 +79,7 @@ Configurar `baseUrl` / `siteUrl` em `frontend-pwa/assets/js/api-v5.js` para o am
 | # | Passo | Perfil | Esperado |
 |---|-------|--------|----------|
 | 1 | GET `/wp-json/zelo/v1/ops/voluntarios` sem auth | — | **401/403** após remover bypass público |
-| 2 | Login voluntário → abrir Escala (2.11.0+) | view_ops | Bloco **Minhas designações** + **Escala da equipa** (nomes de colegas); badge «Você» na sua linha; filtros dia/turno/local/nome |
+| 2 | Login voluntário → abrir Escala (2.11.0+) | view_ops | Bloco **Minhas designações** + **Escala da equipa** (nomes de colegas); badge «Você» na sua linha; filtros dia/turno/local/**responsável**/nome/idioma (build 106+) |
 | 2b | Voluntário: filtro «Comigo neste turno» | view_ops | Dia+turno da sua designação aplicados |
 | 2c | Voluntário: `POST /ops/schedule` (devtools) | view_ops | **403** |
 | 3 | Check-in em assignment | checkin_ops | Estado atualizado; persiste após refresh |

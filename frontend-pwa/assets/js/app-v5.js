@@ -2830,6 +2830,31 @@ const app = {
         return dayMap[shift] || dayMap[String(shift).toUpperCase()] || null;
     },
 
+    collectOpsShiftResponsibleNames() {
+        const map = this.data.volunteerOps?.shift_contacts;
+        if (!map || typeof map !== 'object') return [];
+        const names = new Set();
+        Object.values(map).forEach((dayMap) => {
+            if (!dayMap || typeof dayMap !== 'object') return;
+            Object.values(dayMap).forEach((contact) => {
+                const n = contact && contact.name ? String(contact.name).trim() : '';
+                if (n) names.add(n);
+            });
+        });
+        return [...names].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+    },
+
+    normalizeOpsResponsibleName(name) {
+        return String(name || '').trim().toLowerCase();
+    },
+
+    itemMatchesOpsResponsibleFilter(item, selectedResponsible) {
+        if (!selectedResponsible) return true;
+        const contact = this.getShiftContact(item.day, item.shift);
+        const name = contact && contact.name ? contact.name : '';
+        return this.normalizeOpsResponsibleName(name) === this.normalizeOpsResponsibleName(selectedResponsible);
+    },
+
     renderOpsShiftResponsibleLine(day, shift) {
         const contact = this.getShiftContact(day, shift);
         if (!contact || !contact.name) return '';
@@ -3164,7 +3189,8 @@ const app = {
                 shift: document.getElementById('ops-shift-filter')?.value || '',
                 location: document.getElementById('ops-location-filter')?.value || '',
                 name: document.getElementById('ops-name-filter')?.value || '',
-                language: document.getElementById('ops-language-filter')?.value || ''
+                language: document.getElementById('ops-language-filter')?.value || '',
+                responsible: document.getElementById('ops-responsible-filter')?.value || ''
             };
         }
         const lf = this._opsLastFilters || {};
@@ -3172,6 +3198,7 @@ const app = {
         const selectedShift = document.getElementById('ops-shift-filter')?.value || preset.shift || lf.shift || '';
         const selectedLanguage = (document.getElementById('ops-language-filter')?.value || lf.language || '').toLowerCase();
         const selectedLocation = (document.getElementById('ops-location-filter')?.value || lf.location || '').trim();
+        const selectedResponsible = (document.getElementById('ops-responsible-filter')?.value || lf.responsible || '').trim();
         const nameQuery = (document.getElementById('ops-name-filter')?.value || lf.name || '').trim().toLowerCase();
         if (preset.day || preset.shift) this._opsFilterPreset = null;
 
@@ -3200,8 +3227,15 @@ const app = {
         if (selectedLanguage) {
             items = items.filter((i) => (i.languages || []).some((lang) => String(lang).toLowerCase().includes(selectedLanguage)));
         }
+        if (selectedResponsible) {
+            items = items.filter((i) => this.itemMatchesOpsResponsibleFilter(i, selectedResponsible));
+        }
 
         const locations = [...new Set((ops.schedule || []).map((i) => i.location).filter(Boolean))].sort();
+        const responsibleNames = this.collectOpsShiftResponsibleNames();
+        const responsibleOptions = responsibleNames.map((name) =>
+            `<option value="${this.escapeHtml(name)}"${selectedResponsible === name ? ' selected' : ''}>${this.escapeHtml(name)}</option>`
+        ).join('');
         const locOptions = locations.map((loc) =>
             `<option value="${this.escapeHtml(loc)}"${selectedLocation === loc ? ' selected' : ''}>${this.escapeHtml(loc)}</option>`
         ).join('');
@@ -3252,6 +3286,10 @@ const app = {
                         <option value="">${this.escapeHtml(i18n.t('ops_filter_all_locations'))}</option>
                         ${locOptions}
                     </select>
+                    ${responsibleNames.length ? `<select id="ops-responsible-filter" onchange="app.renderVolunteerOps()" aria-label="${this.escapeHtml(i18n.t('ops_filter_responsible_label'))}">
+                        <option value="">${this.escapeHtml(i18n.t('ops_filter_all_responsibles'))}</option>
+                        ${responsibleOptions}
+                    </select>` : ''}
                     <input id="ops-name-filter" value="${this.escapeHtml(nameQuery)}" oninput="app.renderVolunteerOps()" placeholder="${this.escapeHtml(i18n.t('ops_filter_name_placeholder'))}">
                     <input id="ops-language-filter" value="${this.escapeHtml(selectedLanguage)}" oninput="app.renderVolunteerOps()" placeholder="${this.escapeHtml(i18n.t('ops_filter_language_placeholder'))}">
                 </div>

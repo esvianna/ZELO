@@ -37,7 +37,7 @@ Roadmap orientado ao contexto real do projeto (visitante + voluntários + WordPr
 | B0 | Check-in restrito à própria designação | **Concluído** (2.7.0 — titular ou supervisor) |
 | B1 | Exportação escala/check-ins (`/ops/export`) | Feito 2.9.0 (PDF) |
 | B2 | Painel de cobertura por posto/idioma | Pendente |
-| B3 | **Escala PWA — filtros** (idioma, responsável, voluntário) | Pendente |
+| B3 | **Escala PWA — filtros** (idioma, responsável, voluntário) | Implementado (PWA 106, ZELO#11) |
 | B4 | **Escala PWA — UX listagem por dia** (referência PDF Congresso) | Feito build 89 |
 | B5 | **Escala PWA — WhatsApp** (responsáveis + voluntários, tel. cadastro) | Pendente |
 | B6 | **Home — «Mais opções» expandido por defeito** | Feito build 89 |
