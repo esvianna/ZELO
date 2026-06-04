@@ -2,6 +2,22 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.11.7] - 2026-06-04
+
+### Corrigido
+- Export PDF: erro PHP 8.2+ `Cannot access protected property FPDF::$lMargin` na governança compacta.
+- Rate limit de export só após sucesso (falha 500 não bloqueia 60 s).
+
+## [2.11.6] - 2026-06-04
+
+### Alterado
+- Export PDF: governança do dia em **duas linhas horizontais** (grupos + homens-chave); **nova página** por dia (sexta/sábado/domingo) para facilitar leitura.
+
+## [2.11.5] - 2026-06-04
+
+### Adicionado
+- Export PDF (`/ops/export`): layout **dia → turno → faixa horária → voluntários**, linha **Responsável** (homem-chave) no cabeçalho do turno; tabela por faixa com Voluntário / Idiomas / Status.
+
 ## [2.11.4] - 2026-06-04
 
 ### Adicionado

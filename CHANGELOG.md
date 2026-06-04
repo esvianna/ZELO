@@ -11,6 +11,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 ### Adicionado
 - Plugin **2.11.4** + PWA **105**: links WhatsApp no nome dos voluntários e do responsável do turno (só com telefone cadastrado).
 
+### Adicionado
+- Plugin **2.11.7**: fix export PDF FPDF margens (PHP 8.2); rate limit só após export OK.
+- Plugin **2.11.6**: PDF export — governança compacta (lado a lado); quebra de página por dia.
+- Plugin **2.11.5**: export PDF agrupado dia → turno → faixa → voluntários; responsável do turno no cabeçalho (ZELO#7).
+
 ### Corrigido
 - Plugin **2.11.3**: payload `/ops/voluntarios` — voluntário vê status de compromisso dos colegas na escala da equipa (alinhado ao responsável).
 
