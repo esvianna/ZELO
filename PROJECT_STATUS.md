@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-04** (PWA 106 — filtro responsável escala, ZELO#11).
+> Última atualização: **2026-06-04** (`.gitignore` — ZELO#19).
 
 ---
 
@@ -10,91 +10,110 @@
 
 O projeto está em **produção funcional** com foco operacional para o **departamento de informações** (voluntários), mantendo o app **público para visitantes ocasionais**.
 
-**PWA build 106:** escala — filtro por responsável do turno (`shift_contacts`; ZELO#11 **Done**).
+| Referência no repo | Versão |
+|--------------------|--------|
+| Plugin WordPress (`zelo-assistente.php`) | **2.11.7** |
+| PWA (`zelo-build.js` / `sw.js`) | **build 106** |
 
-**Backlog:** [#27](https://github.com/esvianna/ZELO/issues/27) — persistir última view após F5.
+**Backlog oficial:** [GitHub Project — Projeto ZELO](https://github.com/users/esvianna/projects/3) — issues em [`esvianna/ZELO`](https://github.com/esvianna/ZELO) (ADR-020, `docs/GITHUB-WORKFLOW.md`). Este arquivo **complementa** o quadro; status canônico das tarefas está no Project.
 
-**PWA build 103:** escala por turno — ações em ícones compactos na linha do nome (ZELO#1).
+### Entregas recentes (Done no Project)
 
-**PWA build 102:** escala «Por turno» (faixas horárias + voluntários juntos); toggle Lista; Minhas designações em cards; «Montar este turno».
+| Issue | Entrega |
+|-------|---------|
+| [#1](https://github.com/esvianna/ZELO/issues/1) | Escala por turno — ícones de ação, UX responsáveis (PWA 103–104) |
+| [#2](https://github.com/esvianna/ZELO/issues/2) | E-mails / recuperação de senha |
+| [#5](https://github.com/esvianna/ZELO/issues/5) | Deploy plugin 2.11.2 + PWA 102 |
+| [#6](https://github.com/esvianna/ZELO/issues/6) | Smoke `TESTING.md` §4 em produção |
+| [#7](https://github.com/esvianna/ZELO/issues/7) | Export PDF agrupado dia → turno → faixa (2.11.5–2.11.7) |
+| [#11](https://github.com/esvianna/ZELO/issues/11) | Filtros escala: idioma + responsável do turno (PWA 106) |
 
-**Plugin 2.11.2:** `prior_commitment` preservado ao marcar `schedule_changed` (auditoria do aceite anterior).
+### Destaques técnicos por versão
 
-**Plugin 2.11.1 / PWA 101:** reconciliação compromissos + aviso «escala mudou» (ADR-019).
+**Plugin 2.11.7:** fix export PDF (`FPDF` margens PHP 8.2); rate limit só após export OK.
+
+**Plugin 2.11.5–2.11.6:** PDF por faixa horária; governança compacta; página por dia.
+
+**Plugin 2.11.4 + PWA 105:** links WhatsApp (voluntário + responsável, se telefone cadastrado).
+
+**Plugin 2.11.3:** status de compromisso dos colegas visível na escala da equipa.
+
+**Plugin 2.11.2:** `prior_commitment` em `schedule_changed` (auditoria).
+
+**Plugin 2.11.1 / PWA 101:** reconciliação de compromissos + aviso «escala mudou» (ADR-019).
 
 **Plugin 2.11.0 / PWA 99–100:** edição escala, modal Montar escala (ADR-018).
 
-**Backlog operacional:** [GitHub Project — Projeto ZELO](https://github.com/users/esvianna/projects/3) (`esvianna/ZELO` issues). Issues ativas: [#1 escala](https://github.com/esvianna/ZELO/issues/1), [#2 e-mails](https://github.com/esvianna/ZELO/issues/2) — ambas **In progress** no quadro.
-
-**Próximo:** deploy **plugin 2.11.1** + **PWA build 102**; smoke TESTING §4 (5h–5k); Web Push VAPID. Backlog: PDF export agrupado por faixa (registrar como issue no Project).
+**PWA 102–106:** vista por turno, filtros combináveis, ícones compactos na linha.
 
 ---
 
 ## O que já foi implementado
 
-### Backend (`zelo-assistente` v2.11.1)
+### Backend (`zelo-assistente` v2.11.7)
 
-- [x] `POST /zelo/v1/ops/schedule` — reconciliação por fingerprint; `schedule_changed` só quando a designação mudou
-- [x] E-mail cron `schedule_changed` para reconfirmação
+- [x] Export PDF/CSV `GET /zelo/v1/ops/export` — agrupamento por faixa; responsável no turno; 3 dias com quebra de página
+- [x] Payload `/ops/voluntarios`: `shift_contacts`, `volunteer_phone`, compromissos de colegas na escala
+- [x] `POST /zelo/v1/ops/schedule` — merge por dia+turno; reconciliação de compromissos (ADR-019)
+- [x] `zelo_edit_schedule` + escopos via governança; `reallocate` com supervisão na linha
+- [x] E-mail cron `schedule_changed`; histórico ops (slice 15 na UI)
+- [x] Tudo de 2.10.x (local no turno, horários por linha, catálogos, etc.)
 
-### Backend (`zelo-assistente` v2.11.0)
+### Frontend (PWA build 106)
 
-- [x] `POST /zelo/v1/ops/schedule` — merge por dia+turno, validação, histórico
-- [x] `zelo_edit_schedule` + escopos via governança (`zelo_user_can_supervise_assignment`)
-- [x] Payload `permissions` + catálogos editor; escala completa para `zelo_view_ops`
-- [x] `reallocate` com checagem de supervisão na linha
-- [x] Tudo de 2.10.x (local no turno, horários por linha, export PDF, etc.)
-
-### Frontend (PWA build 102)
-
-- [x] Vista escala por turno (dia → turno → faixa → voluntários); toggle Lista; Montar este turno no card
-
-### Frontend (PWA build 101)
-
-- [x] Avisos e badge «escala alterada — confirme» quando `pending_reason === schedule_changed`
-
-### Frontend (PWA build 99–100)
-
-- [x] Voluntário logado: escala completa só leitura + destaque nas próprias linhas
-- [x] Filtros: dia, turno, local, nome, «Comigo neste turno»
-- [x] Editor «Montar escala» (responsáveis com `schedule_edit.enabled`)
-- [x] Tudo de build 98 (ordenação, snapshots, export PDF, i18n)
+- [x] Escala: vista **Por turno** e **Lista**; «Montar este turno» / editor Montar escala
+- [x] Filtros: dia, turno, local, nome, idioma, responsável do turno; «Comigo neste turno»
+- [x] Ações em ícones na linha (confirmar, check-in/out, realocar, swap); links WhatsApp
+- [x] Minhas designações; aviso «escala alterada»; export PDF (gestor)
+- [x] Home operacional, nav Operação, hub avisos, widget tempo, mapa indoor
 
 ### Governança docs
 
-- [x] ADR-018; TESTING §4 ampliado; AGENTS.md rota `/ops/schedule`
+- [x] ADR-018, ADR-019, ADR-020; `TESTING.md` §4; `docs/GITHUB-WORKFLOW.md`
 
 ---
 
 ## O que está pendente
 
-| Prioridade | Item | Notas |
+Priorização via [Project 3](https://github.com/users/esvianna/projects/3). Principais itens em **Backlog**:
+
+| Prioridade | Item | Issue |
 |------------|------|-------|
-| **Alta** | Deploy plugin 2.11.0 + PWA 99 | Governança preenchida antes do evento |
-| **Média** | Web Push VAPID + subscribe real | Stub 501 hoje |
-| **Baixa** | WhatsApp escala (links já em 105) | Melhorias UX opcionais |
+| **Alta** | Web Push VAPID + subscribe real (stub 501 hoje) | [#8](https://github.com/esvianna/ZELO/issues/8) |
+| **Média** | Persistir última view após F5 | [#27](https://github.com/esvianna/ZELO/issues/27) |
+| **Média** | Painel cobertura posto/idioma | [#10](https://github.com/esvianna/ZELO/issues/10) |
+| **Média** | Motor notificações + inbox servidor | [#9](https://github.com/esvianna/ZELO/issues/9) |
+| **Baixa** | WhatsApp escala — melhorias além dos links (105) | [#12](https://github.com/esvianna/ZELO/issues/12) |
+| **Baixa** | Perfil PWA — editar dados pessoais | [#25](https://github.com/esvianna/ZELO/issues/25) |
+| **Infra** | Rate limit REST, testes, env API | [#22](https://github.com/esvianna/ZELO/issues/22) … [#20](https://github.com/esvianna/ZELO/issues/20) |
+| **UX visitante** | Programação, carrossel, branding, emergência | [#14](https://github.com/esvianna/ZELO/issues/14) … [#17](https://github.com/esvianna/ZELO/issues/17) |
 
 ---
 
 ## Próximos passos lógicos
 
-1. Publicar plugin 2.11.0 e PWA 99 (`zelo-cache-v99`).
-2. Admin: governança (homens-chave + supervisores) + turnos com local.
-3. Smoke: voluntário vê equipa; homem-chave monta A1 na PWA.
-4. Smoke export PDF como gestor.
+1. Priorizar no Project: **#8** Web Push ou **#27** persistir view (UX rápida, só PWA).
+2. Manter plugin **2.11.7** + PWA **106** alinhados em produção (`DEPLOYMENT_RULES.md`).
+3. Smoke regressão escala + export PDF após cada deploy ops (`TESTING.md` §4).
+4. Fechar itens de infra/UX conforme janela antes do próximo evento.
 
 ---
 
 ## Última sessão (2026-06-04)
 
+- **ZELO#19:** `.gitignore` na raiz (PHP/Composer, IDE, OS, segredos, CI futuro); exceções documentadas em `README.md`.
+- **ZELO#23:** `PROJECT_STATUS.md` e `ROADMAP.md` alinhados com plugin 2.11.7, PWA 106 e issues do Project 3.
+- Entregas anteriores na mesma janela: #7 PDF faixa, #11 filtros responsável (PWA 106), #27 criada (persistir view).
+
+**Como testar:** abrir este arquivo e `ROADMAP.md`; confirmar versões batem com `zelo-assistente.php` e `zelo-build.js`; cruzar pendências com cards **Backlog** no Project 3.
+
+## Sessão anterior (2026-06-04)
+
 - Backlog oficial no GitHub Project 3; fluxo Backlog → plano → **Ready** → código (`docs/GITHUB-WORKFLOW.md`, ADR-020).
-- Issues migradas de `SITE-NOVO-VTIS` para `esvianna/ZELO` (#1 escala, #2 e-mails); regras em `AGENTS.md` e `.cursor/rules/zelo-github-backlog.mdc`.
+- Issues migradas de `SITE-NOVO-VTIS` para `esvianna/ZELO` (#1 escala, #2 e-mails).
 
-**Como testar:** abrir Project 3 e confirmar cards ZELO#1/#2 em **In progress**; criar issue teste em Backlog e validar template em GitHub.
+## Sessão anterior (2026-06-02)
 
-## Última sessão (2026-06-02)
-
-- Plugin 2.11.0: API escala escopada; permissões e leitura completa; `inc/volunteer-ops-schedule.php`.
-- PWA build 99: UX leitura + editor Montar escala; i18n PT/EN/ES.
+- Plugin 2.11.0: API escala escopada; PWA build 99: UX leitura + editor Montar escala.
 
 **Como testar:** `TESTING.md` §4 (2, 2b–2c, 5, 5b–5c).

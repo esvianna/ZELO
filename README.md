@@ -17,6 +17,18 @@ O projeto é dividido em dois módulos principais:
 1.  **Backend (`/backend-plugin`)**: Um plugin WordPress (`zelo-assistente`) que atua como API e painel administrativo.
 2.  **Frontend (`/frontend-pwa`)**: Uma Progressive Web App (PWA) estática que consome a API do plugin.
 
+### Artefatos ignorados (`.gitignore`)
+
+O repositório inclui [`.gitignore`](./.gitignore) na raiz (ROADMAP C1, [ZELO#19](https://github.com/esvianna/ZELO/issues/19)). Ignora segredos (`.env`), `vendor/`, caches de IDE/OS e relatórios de testes futuros.
+
+**Exceções — permanecem versionados:**
+
+| Caminho | Motivo |
+|---------|--------|
+| `frontend-pwa/**` | Deploy estático da PWA (HTML, CSS, JS, `sw.js`, imagens) |
+| `backend-plugin/zelo-assistente/inc/lib/fpdf.php` | FPDF vendored para export PDF |
+| `.cursor/rules/**` | Regras Cursor do projeto |
+
 ### Regras de Negócio e Lógica
 
 #### 1. Backend (WordPress Plugin)

@@ -1,0 +1,77 @@
+# ZELO — monorepo (plugin WordPress + PWA estática)
+# Ver README.md § «Artefatos ignorados» e ROADMAP C1 / ZELO#19.
+
+# --- Segredos e ambiente local (nunca commitar) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets.json
+wp-config-local.php
+
+# --- PHP / Composer (CI futuro: ZELO#20) ---
+/vendor/
+composer.phar
+.phpunit.result.cache
+.phpunit.cache
+/coverage/
+phpunit.xml
+!phpunit.xml.dist
+
+# --- Dumps e backups locais ---
+*.sql
+*.sql.gz
+*.bak
+*.backup
+
+# --- Logs e caches de runtime ---
+*.log
+/logs/
+/cache/
+/tmp/
+
+# --- IDE / editores ---
+.idea/
+*.iml
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json.example
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+.project
+.settings/
+*.code-workspace
+
+# Cursor: manter regras versionadas em .cursor/rules/
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/**
+
+# --- Sistema operacional ---
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# --- Office / temporários ---
+~$*
+*.tmp
+*.temp
+
+# --- Testes E2E (futuro ZELO#20) ---
+/playwright-report/
+/test-results/
+/blob-report/
+/.playwright/
+
+# --- NÃO ignorar (deploy PWA) ---
+# frontend-pwa/** — HTML, CSS, JS, sw.js, manifest, imagens devem permanecer versionados.
+# backend-plugin/zelo-assistente/inc/lib/fpdf.php — FPDF vendored, necessário ao export PDF.

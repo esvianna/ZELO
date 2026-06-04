@@ -9,6 +9,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 ## [Unreleased]
 
 ### Adicionado
+- **Infra (ZELO#19):** `.gitignore` na raiz — PHP/Composer, IDE, OS, segredos; exceções PWA e FPDF em `README.md`.
+- **Docs (ZELO#23):** `PROJECT_STATUS.md` e `ROADMAP.md` alinhados com plugin **2.11.7**, PWA **106**, issues Done/Backlog do Project 3 (ADR-020).
 - PWA build **106**: filtro por **responsável do turno** na escala (select a partir de `shift_contacts`; combinável com dia/turno/local/nome/idioma) — ZELO#11 (fechada).
 - Backlog [#27](https://github.com/esvianna/ZELO/issues/27): persistir última view da PWA após refresh.
 - Plugin **2.11.4** + PWA **105**: links WhatsApp no nome dos voluntários e do responsável do turno (só com telefone cadastrado).
@@ -46,7 +48,6 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 - PWA build **98**: escala detalhada ordenada por horário de início dentro de cada dia.
 
 ### Planejado (backlog UX)
-- Escala: filtros responsável/voluntário; links WhatsApp.
 - Labels de catálogo admin em EN/ES (fase 2b i18n).
 
 ### Corrigido
