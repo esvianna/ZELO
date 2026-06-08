@@ -25,12 +25,18 @@ const app = {
         ops: false,
         clima: false,
         evento: false,
-        news: false
+        news: false,
+        indoorMap: false
     },
 
     // --- Helpers ---
     renderStaleBadge(scope) {
-        const key = scope === 'ops' ? 'data_stale_ops' : scope === 'locais' ? 'data_stale_locais' : 'data_stale_generic';
+        const keyMap = {
+            ops: 'data_stale_ops',
+            locais: 'data_stale_locais',
+            indoor: 'data_stale_indoor'
+        };
+        const key = keyMap[scope] || 'data_stale_generic';
         return `<span class="zelo-stale-badge" role="status">${this.escapeHtml(i18n.t(key))}</span>`;
     },
 
@@ -41,6 +47,7 @@ const app = {
         this._dataStale.clima = !!API.lastFetchFromCache.clima;
         this._dataStale.evento = !!API.lastFetchFromCache.evento;
         this._dataStale.news = !!API.lastFetchFromCache.news;
+        this._dataStale.indoorMap = !!API.lastFetchFromCache.indoorMap;
     },
 
     async cacheUserAvatar(url) {
@@ -846,16 +853,18 @@ const app = {
             }
 
             // Load initial data
-            const [locais, evento, categorias, clima] = await Promise.all([
+            const [locais, evento, categorias, clima, indoorMap] = await Promise.all([
                 API.getLocais(), // Fetch all initially
                 API.getEvento(),
                 API.getCategorias(),
-                API.getClima().catch(() => null)
+                API.getClima().catch(() => null),
+                API.getIndoorMap().catch(() => ({}))
             ]);
 
             this.data.locais = locais || [];
             this.data.evento = evento || {};
             this.data.clima = clima || null;
+            this.data.indoorMap = (indoorMap && indoorMap.image_url) ? indoorMap : null;
             this.data.categoriesMeta = this.buildCategoryMeta(categorias || []);
             this.syncStaleFlags();
 
@@ -2747,10 +2756,14 @@ const app = {
         el.innerHTML = `<div class="loading">${i18n.t('loading')}</div>`;
         const cfg = await API.getIndoorMap();
         this.data.indoorMap = cfg;
+        this.syncStaleFlags();
         if (!cfg || !cfg.image_url) {
             el.innerHTML = `<p class="text-muted indoor-map-empty">${i18n.t('indoor_not_configured')}</p>`;
             return;
         }
+        const staleBanner = this._dataStale.indoorMap
+            ? `<div class="zelo-stale-banner indoor-map-stale">${this.renderStaleBadge('indoor')}</div>`
+            : '';
         if (!this.data.indoorMapUi) {
             this.data.indoorMapUi = { boothId: '', destId: '', tab: 'guide', query: '', comboboxOpen: false, comboboxEditing: false };
         }
@@ -2797,7 +2810,7 @@ const app = {
 
         const legendHtml = this.buildIndoorMapLegendHtml(booths);
 
-        el.innerHTML = `
+        el.innerHTML = staleBanner + `
             <div class="indoor-map-screen">
                 <div class="indoor-map-tabs">
                     <button type="button" class="indoor-map-tab${guideTabActive ? ' active' : ''}" onclick="app.setIndoorTab('guide')">${i18n.t('indoor_tab_guide')}</button>

@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-04** (PWA 121 / plugin 2.13.2).
+> Última atualização: **2026-06-04** (PWA 122 / plugin 2.13.2 — ADR-024 mapa evento offline).
 
 ---
 
@@ -13,7 +13,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | Referência no repo | Versão |
 |--------------------|--------|
 | Plugin WordPress (`zelo-assistente.php`) | **2.13.2** |
-| PWA (`zelo-build.js` / `sw.js`) | **build 121** |
+| PWA (`zelo-build.js` / `sw.js`) | **build 122** |
 
 **Backlog oficial:** [GitHub Project — Projeto ZELO](https://github.com/users/esvianna/projects/3) — issues em [`esvianna/ZELO`](https://github.com/esvianna/ZELO) (ADR-020, `docs/GITHUB-WORKFLOW.md`). Este arquivo **complementa** o quadro; status canônico das tarefas está no Project.
 
@@ -108,6 +108,7 @@ Priorização via [Project 3](https://github.com/users/esvianna/projects/3). Pri
 
 ## Última sessão (2026-06-04)
 
+- **ADR-024 / mapa evento offline:** PWA **122** — snapshot `zelo_indoor_map`, prefetch imagem same-origin no SW, badge stale, carregamento no `init()`; teste `TESTING.md` O5.
 - **UX home designações:** PWA **121** — aviso «escala alterada» acima dos botões; mobile: Aceitar/Não posso empilhados largura total.
 - **#26 UX home:** PWA **120** — rótulo do card na secção Operação: «Novidades».
 - **#26 fix título:** plugin **2.13.2** + PWA **118** — `zelo_news_plain_text()` decodifica entidades e normaliza travessões → `-`; frontend `formatPlainText`/`decodeHtmlEntities`; cache API `v2` + snapshot cliente `zelo_news_v2_*`.
@@ -115,7 +116,7 @@ Priorização via [Project 3](https://github.com/users/esvianna/projects/3). Pri
 - **#26:** plugin **2.13.0** + PWA **116** — blog/notificações implementado (**In review**).
 - **#28** permanece **In review** (PWA 115 / plugin 2.12.3).
 
-**Como testar:** `TESTING.md` §4 (**2aa** novidades; **2x–2z** mapa indoor).
+**Como testar:** `TESTING.md` §4 (**2aa** novidades; **2x–2z** mapa indoor); §12 **O5** offline mapa evento.
 
 ## Sessão anterior (2026-06-04)
 - PWA **115** + plugin **2.12.3**: Balcão 1 (azul) / Balcão 2 (teal), número no pino, legenda.

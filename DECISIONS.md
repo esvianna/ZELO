@@ -6,7 +6,15 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 ---
 
-## ADR-023 — Blog/novidades: logados, PT, entradas home + menu (2026-06-04)
+## ADR-024 — Mapa do evento offline: snapshot + imagem no SW (2026-06-04)
+
+**Contexto:** ADR-002/003 estabelecem PWA offline-first e API pública `/indoor-map`, mas a PWA não persistia JSON nem prefetch da imagem do diagrama — offline mostrava «não configurado» (gap vs. locais/clima/escala, ADR-015).
+
+**Decisão:** Após fetch OK de `GET /indoor-map`, gravar snapshot `zelo_indoor_map` em `localStorage` (fallback em falha de rede). Prefetch same-origin da `image_url` para o `CacheStorage` do SW (build actual). Carregar no `init()` da app (público, como locais). Badge stale na view «Mapa do evento» quando dados vierem do cache. Testes em `TESTING.md` §12 (O5).
+
+**Consequências:** PWA **122+**; alinhado a ADR-022. Admin que altera mapa exige visita online ou «Atualizar App» para refresh. Imagens em CDN externo ficam fora do prefetch (same-origin only).
+
+---
 
 **Contexto:** Issue #26 — publicar Posts WP na PWA como notificações e blog. Hub avisos MVP (ADR-012) usa feed cliente + `localStorage`.
 

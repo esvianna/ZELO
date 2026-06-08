@@ -364,6 +364,7 @@ Fase 1 (imagem + validação pinos com equipe) pode começar **antes** do CRUD, 
 ## Referências
 
 - ADR-022 — mapa indoor e direções por balcão (`DECISIONS.md`)
+- ADR-024 — snapshot offline `zelo_indoor_map` + prefetch imagem (PWA 122+)
 - `frontend-pwa/assets/js/app-v5.js` — `renderIndoorEventMap()`
 - `backend-plugin/zelo-assistente/inc/api-routes.php` — `zelo_get_indoor_map_public()`
 - `backend-plugin/zelo-assistente/inc/volunteer-ops-catalogs.php` — turnos e `locations`

@@ -3863,6 +3863,10 @@ body.indoor-diagram-fullscreen .indoor-map-viewport {
     padding: 1rem;
 }
 
+.indoor-map-stale {
+    margin: 0 1rem 0.75rem;
+}
+
 .ops-editor-save-btn:disabled,
 .ops-editor-add-btn:disabled {
     opacity: 0.65;

@@ -12,7 +12,8 @@ const API = {
         evento: false,
         categorias: false,
         clima: false,
-        news: false
+        news: false,
+        indoorMap: false
     },
 
     readSnapshot(key) {
@@ -42,8 +43,11 @@ const API = {
         categorias: null,
         clima: null,
         volunteerOps: null,
-        news: null
+        news: null,
+        indoorMap: null
     },
+
+    indoorMapSnapshotKey: 'zelo_indoor_map',
 
     newsSnapshotKey(userId) {
         const uid = userId != null ? String(userId) : '0';
@@ -284,13 +288,48 @@ const API = {
         return response.blob();
     },
 
+    async prefetchToSwCache(url) {
+        if (!url || typeof caches === 'undefined') return;
+        try {
+            const u = new URL(url, window.location.href);
+            if (u.origin !== window.location.origin) return;
+            const res = await fetch(url, { mode: 'cors', credentials: 'include' });
+            if (!res.ok) return;
+            const cacheName = 'zelo-cache-v' + (typeof window.ZELO_APP_BUILD !== 'undefined' ? window.ZELO_APP_BUILD : '89');
+            const cache = await caches.open(cacheName);
+            await cache.put(url, res.clone());
+        } catch (e) {
+            console.warn('Prefetch SW cache failed:', url, e);
+        }
+    },
+
     async getIndoorMap() {
         const url = `${this.baseUrl}/indoor-map?_t=${Date.now()}`;
+        const snapKey = this.indoorMapSnapshotKey;
+
         try {
             const r = await fetch(url);
-            if (!r.ok) return {};
-            return await r.json();
-        } catch (e) {
+            if (!r.ok) throw new Error('Network response was not ok');
+            const data = await r.json();
+            if (data && data.image_url) {
+                this.cache.indoorMap = data;
+                this.writeSnapshot(snapKey, data);
+                this.lastFetchFromCache.indoorMap = false;
+                await this.prefetchToSwCache(data.image_url);
+                return data;
+            }
+            this.cache.indoorMap = data || {};
+            this.writeSnapshot(snapKey, data || {});
+            this.lastFetchFromCache.indoorMap = false;
+            return data || {};
+        } catch (error) {
+            console.warn('Fetch indoor-map falhou, tentando cache', error);
+            const cached = this.readSnapshot(snapKey);
+            if (cached && cached.image_url) {
+                this.cache.indoorMap = cached;
+                this.lastFetchFromCache.indoorMap = true;
+                return cached;
+            }
             return {};
         }
     },

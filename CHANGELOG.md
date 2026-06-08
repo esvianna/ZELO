@@ -29,6 +29,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | PWA **110–111** | Mobile: fit-to-screen, pinch-to-zoom, Diagrama em tela cheia, botões Mapa completo / Ir ao destino |
 | PWA **113–114** | Combobox «Para onde?» (filtro sem perder foco iOS); rótulo **Pavim.** na lista de destinos |
 | Plugin **2.12.3** + PWA **115** | Balcão 1 (azul) vs Balcão 2 (teal), número no pino, legenda no diagrama (`booth_slot`) |
+| PWA **122** | ADR-024: snapshot `zelo_indoor_map` + prefetch imagem; mapa do evento offline após 1.ª visita online |
 
 ### Corrigido — mapa indoor (#28)
 

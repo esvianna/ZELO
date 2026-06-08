@@ -253,6 +253,7 @@ Até lá, **checklist manual acima é a fonte de verdade**.
 | O2 | Avatar offline após sessão online | Default local ou último avatar same-origin em cache |
 | O3 | `default-avatar.png` no precache SW | Imagem carrega offline no header/perfil |
 | O4 | Home tempo após visita online | Widget com dados `zelo_clima` + indicador stale se offline |
+| O5 | Abrir **Mapa do evento** online; depois modo avião (122+, ADR-024) | Diagrama + orientações visíveis; badge «Mapa do evento em cache»; imagem JPG carrega do SW |
 
 ---
 
