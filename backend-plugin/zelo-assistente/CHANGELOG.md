@@ -2,6 +2,13 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.12.0] - 2026-06-04
+
+### Adicionado
+- **Mapa do evento (ZELO#28):** aba «Mapa evento» em Operação Voluntários — upload diagrama, CRUD `places[]` (balcão, departamento, serviço, extra), editor de pinos, direções Balcão 1/2 × pt/en/es no formulário de cada destino.
+- `inc/indoor-map.php` — normalização, rotas, payload público filtrado (dept. 8–35 ocultos).
+- `GET /indoor-map` — resposta com `places`, `routes`, `volunteer_notice`.
+
 ## [2.11.9] - 2026-06-04
 
 ### Adicionado

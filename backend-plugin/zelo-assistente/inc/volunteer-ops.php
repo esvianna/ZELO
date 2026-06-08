@@ -250,6 +250,9 @@ function zelo_get_volunteer_ops_data() {
 	$data['governance'] = isset( $data['governance'] ) && is_array( $data['governance'] ) ? $data['governance'] : array();
 	$data['schedule']   = isset( $data['schedule'] ) && is_array( $data['schedule'] ) ? $data['schedule'] : array();
 	$data['indoor_map'] = isset( $data['indoor_map'] ) && is_array( $data['indoor_map'] ) ? $data['indoor_map'] : array();
+	if ( function_exists( 'zelo_normalize_indoor_map' ) ) {
+		$data['indoor_map'] = zelo_normalize_indoor_map( $data['indoor_map'] );
+	}
 	$data['history']    = isset( $data['history'] ) && is_array( $data['history'] ) ? $data['history'] : array();
 	$data['settings'] = isset( $data['settings'] ) && is_array( $data['settings'] ) ? $data['settings'] : array();
 	if ( function_exists( 'zelo_ops_normalize_settings' ) ) {

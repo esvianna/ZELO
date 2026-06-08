@@ -228,6 +228,9 @@ function zelo_ops_save_from_post_tabs() {
 	if ( ! isset( $data['indoor_map'] ) || ! is_array( $data['indoor_map'] ) ) {
 		$data['indoor_map'] = array();
 	}
+	if ( function_exists( 'zelo_indoor_map_parse_from_post' ) && ( isset( $_POST['map_place_id'] ) || isset( $_POST['map_image_url'] ) ) ) {
+		$data['indoor_map'] = zelo_indoor_map_parse_from_post();
+	}
 
 	update_option( 'zelo_volunteer_ops_data', $data );
 	return __( 'Dados operacionais salvos.', 'zelo-assistente' );
@@ -339,6 +342,7 @@ function zelo_render_volunteer_ops_admin_tabs() {
 			<a href="#tab-gov" class="nav-tab" onclick="zeloOpsTab(event,'tab-gov')"><?php esc_html_e( 'Governança', 'zelo-assistente' ); ?></a>
 			<a href="#tab-config" class="nav-tab" onclick="zeloOpsTab(event,'tab-config')"><?php esc_html_e( 'Config', 'zelo-assistente' ); ?></a>
 			<a href="#tab-onboarding" class="nav-tab" onclick="zeloOpsTab(event,'tab-onboarding')"><?php esc_html_e( 'Onboarding', 'zelo-assistente' ); ?></a>
+			<a href="#tab-mapa-evento" class="nav-tab" onclick="zeloOpsTab(event,'tab-mapa-evento')"><?php esc_html_e( 'Mapa evento', 'zelo-assistente' ); ?></a>
 			<a href="#tab-json" class="nav-tab" onclick="zeloOpsTab(event,'tab-json')"><?php esc_html_e( 'JSON avançado', 'zelo-assistente' ); ?></a>
 		</h2>
 
@@ -572,6 +576,15 @@ function zelo_render_volunteer_ops_admin_tabs() {
 				</table>
 				<p class="description"><?php esc_html_e( 'Edite e-mail esperado e status na aba Voluntários. Link de cadastro: /zelo/ → Cadastro.', 'zelo-assistente' ); ?></p>
 			</div>
+
+			<?php
+			if ( function_exists( 'zelo_render_indoor_map_admin_tab' ) ) {
+				zelo_render_indoor_map_admin_tab(
+					isset( $data['indoor_map'] ) ? $data['indoor_map'] : array(),
+					isset( $catalogs['locations'] ) ? $catalogs['locations'] : array()
+				);
+			}
+			?>
 
 			<p class="submit" id="zelo-ops-submit-tabs">
 				<button type="submit" class="button button-primary"><?php esc_html_e( 'Salvar abas', 'zelo-assistente' ); ?></button>

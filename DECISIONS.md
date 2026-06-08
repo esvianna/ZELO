@@ -10,9 +10,9 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 **Contexto:** Issue #28 — voluntários nos balcões (A1–B2) orientam visitantes com diagrama do estádio. Existe stub `indoor_map` + `GET /indoor-map`; catálogo ops tem `locations` e turnos sem coordenadas no plano.
 
-**Decisão:** Sequência: (1) PDF → imagem + pinos → (2) CRUD unificado `places[]` (`kind`: booth | department | facility | amenity | restricted) → (3) editor visual no mapa → (4) matriz **balcão → destino** em pt/en/es. Balcões cadastrados **no mesmo CRUD**, diferenciados por tipo e pin quadrado. Extras (banheiros, entradas…) como `amenity`. Dept. 8–35 = `restricted`. Balcões alinhados a `shift_code` A1–B2. PWA: origem só balcões; destinos = demais kinds públicos.
+**Decisão:** Sequência: (1) imagem + pinos → (2) CRUD `places[]` (`kind`: booth | department | facility | amenity | restricted) → (3) editor visual → (4) **Opção 1:** direções no formulário de cada destino (2 balcões × pt/en/es); **sem CSV**. Máx. **2 balcões**. PWA: origem = booths; destinos = demais kinds públicos.
 
-**Consequências:** Reutiliza infra indoor; separado do Leaflet externo. Matriz de rotas (4×N POIs) exige UX de edição no admin; ver `docs/ISSUE-28-STADIUM-MAP.md`.
+**Consequências:** Reutiliza infra indoor; ver `docs/ISSUE-28-STADIUM-MAP.md`. Rotas normalizadas em `routes[]` ao gravar a partir dos blocos por destino.
 
 **Alternativas consideradas:** pathfinding automático (v1 rejeitado); pinos fixos no PNG (rejeitado); direções sem origem no balcão (rejeitado).
 

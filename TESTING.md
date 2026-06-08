@@ -83,6 +83,8 @@ Configurar `baseUrl` / `siteUrl` em `frontend-pwa/assets/js/api-v5.js` para o am
 | 2p | Perfil → alterar nome/telefone/idiomas; upload foto; senha (108+) | logado | Salvar OK; e-mail novo exige verificação; olho mostra/oculta senha (login/cadastro/perfil) |
 | 2f | Escala aberta → **F5** (build 107+) | view_ops | Permanece em **Escala**; hash `#escala`; nav Operação ativo |
 | 2w | Nome voluntário/responsável com telefone cadastrado (105+) | view_ops | Nome é link `wa.me`; sem telefone → texto sem link; offline: cache ops; abrir WhatsApp exige rede |
+| 2x | **Mapa evento** — admin: upload JPG + 2 balcões + 1 destino com direções (2.12+) | manage_options | Salvar abas; `GET /indoor-map` tem `places`, `routes`; dept. 8+ ausente se cadastrado restricted |
+| 2y | **Mapa evento** PWA: balcão + destino | view_ops ou visitante | Aba Orientar → texto pt/en/es; diagrama com pinos; copiar instruções |
 | 2g | Visitante em **Mapa** → F5 (107+) | — | Permanece em Mapa; hash `#mapa` |
 | 2h | Abrir URL com `#escala` sem login | — | Redireciona **Login** (sem loop infinito) |
 | 2i | `?zelo_verified=1` após cadastro | — | Tela e-mail verificado (prioridade sobre última view) |
@@ -151,7 +153,7 @@ Configurar `baseUrl` / `siteUrl` em `frontend-pwa/assets/js/api-v5.js` para o am
 | # | Área | Esperado |
 |---|------|----------|
 | 1 | Salvar configurações evento | Dados refletidos na API `/evento` |
-| 2 | Importador Places (pequeno lote) | Progresso AJAX; sem fatal error |
+| 3 | Operação Voluntários → **Mapa evento** | Upload diagrama; posicionar pinos; direções Balcão 1/2; coluna Rotas OK |
 | 3 | Categorias CRUD | Reflete em `/categorias` e meta box |
 | 4 | Limpar todos os locais | Só na zona de perigo em configurações |
 

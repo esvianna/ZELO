@@ -4,7 +4,7 @@
 > **Referência visual:** `docs/Departamentos_localizacao.pdf`  
 > **Diagrama para produção (preferido):** `docs/Departamentos_localizacao_page-0001.jpg` — recorte sem margens, **4184×3374 px** (~1,8 MB)  
 > **Export automático (legado):** `docs/assets/issue-28/estadio-diagrama.png` (2978×2105 — usar só se o JPG não estiver disponível)  
-> **Status:** Planejamento — sequência acordada com responsável  
+> **Status:** Opção 1 aprovada — CRUD com direções no formulário do destino; **Ready** para implementação  
 > **Última atualização:** 2026-06-04
 
 ---
@@ -157,13 +157,13 @@ Aba **«Mapa do evento»** em Zelo Assistente → Operação de voluntários.
 6. Se **departamento**: opcional `dept_number` (1–6); ≥ 8 bloqueia como restrito.  
 7. Salvar → aparece na lista e no diagrama (se público).
 
-### 6.5 Cadastro de direções — só CRUD (sem CSV)
+### 6.5 Cadastro de direções — **Opção 1** (decidido)
 
-Com **2 balcões**, o volume é modesto (≈ 2 textos × N destinos × 3 idiomas). **Não** usaremos import CSV.
+Com **2 balcões**, todo o conteúdo é cadastrado **só no CRUD** — **sem CSV**.
 
-**Abordagem recomendada — rotas no formulário do destino**
+**Implementação v1:** rotas no **formulário de cada destino** (`department`, `facility`, `amenity`).
 
-Ao editar um local (`department`, `facility`, `amenity`), o admin mostra:
+Ao editar um destino, o admin mostra:
 
 ```
 ┌─ Direções desde o Balcão 1 ─────────────────────┐
@@ -176,17 +176,11 @@ Ao editar um local (`department`, `facility`, `amenity`), o admin mostra:
 └────────────────────────────────────────────────┘
 ```
 
-- Balcões cadastrados uma vez (`kind: booth` + pin no mapa).
-- Cada destino guarda `routes_from_booth[]` inline (ou `routes` normalizados no save).
-- Lista de destinos com coluna «Rotas OK?» (2/2 preenchidas).
+- Balcões: cadastro único (`kind: booth` + pin no mapa); máximo **2** activos na v1.
+- Cada destino persiste `directions_from_booths[]` (2 entradas × 3 idiomas); normalizado para `routes[]` no save.
+- Lista de destinos: coluna **«Rotas OK?»** (0/2 · 1/2 · 2/2).
 
-**Alternativa complementar — grelha no browser (opcional)**
-
-Sub-aba «Visão geral de rotas»: tabela HTML no wp-admin (destinos × 2 colunas de balcão), edição inline — **sem ficheiro**, só UI tipo planilha dentro do WordPress. Útil para rever tudo num ecrã; a persistência continua via CRUD/API.
-
-**Alternativa mais simples (se textos forem iguais)**
-
-Um único bloco de direção por destino + frase introdutória gerada na PWA («A partir do balcão onde se encontra…»). Só adoptar se a equipa confirmar que os dois balcões partilham as mesmas instruções na prática — **não** assumir por defeito.
+**Fora de escopo v1:** import CSV; grelha tipo planilha (opção 2); direção única genérica (opção 3).
 
 ### 6.3 Funcionalidades mínimas
 

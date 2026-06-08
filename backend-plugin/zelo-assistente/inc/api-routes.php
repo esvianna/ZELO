@@ -254,7 +254,10 @@ function zelo_get_locais( $request ) {
 
 function zelo_get_indoor_map_public() {
 	$data = zelo_get_volunteer_ops_data();
-	$map   = isset( $data['indoor_map'] ) && is_array( $data['indoor_map'] ) ? $data['indoor_map'] : array();
+	$map  = isset( $data['indoor_map'] ) && is_array( $data['indoor_map'] ) ? $data['indoor_map'] : array();
+	if ( function_exists( 'zelo_indoor_map_public_payload' ) ) {
+		return rest_ensure_response( zelo_indoor_map_public_payload( $map ) );
+	}
 	return rest_ensure_response( $map );
 }
 

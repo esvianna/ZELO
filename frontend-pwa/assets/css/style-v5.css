@@ -3396,6 +3396,155 @@ body.ops-editor-open {
     margin-bottom: 0;
 }
 
+/* --- Indoor event map (ZELO#28) --- */
+.indoor-map-screen {
+    padding: 0 1rem 1.5rem;
+}
+
+.indoor-map-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.indoor-map-tab {
+    flex: 1;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.indoor-map-tab.active {
+    background: var(--primary-color, #137fec);
+    border-color: var(--primary-color, #137fec);
+    color: #fff;
+}
+
+.indoor-panel.hidden {
+    display: none;
+}
+
+.indoor-field-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin: 0.75rem 0 0.35rem;
+    color: #334155;
+}
+
+.indoor-dest-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0.75rem 0 1rem;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.indoor-dest-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 0.85rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    text-align: left;
+}
+
+.indoor-dest-item.indoor-dest-active {
+    border-color: var(--primary-color, #137fec);
+    background: #eff6ff;
+}
+
+.indoor-dest-name {
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.indoor-dest-floor {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.indoor-directions-panel {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 1rem;
+}
+
+.indoor-directions-title {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+}
+
+.indoor-directions-text {
+    margin: 0;
+    line-height: 1.55;
+    font-size: 1.05rem;
+    color: #0f172a;
+}
+
+.indoor-notice {
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    color: #b45309;
+    line-height: 1.4;
+}
+
+.indoor-map-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+}
+
+.indoor-map-img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px;
+}
+
+.indoor-pins-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.indoor-pin {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    width: 12px;
+    height: 12px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: #ea580c;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+    pointer-events: auto;
+    padding: 0;
+}
+
+.indoor-pin.booth {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    background: #1e40af;
+}
+
+.indoor-pin.selected {
+    outline: 2px solid #facc15;
+    outline-offset: 1px;
+}
+
+.indoor-map-empty {
+    padding: 1rem;
+}
+
 .ops-editor-save-btn:disabled,
 .ops-editor-add-btn:disabled {
     opacity: 0.65;

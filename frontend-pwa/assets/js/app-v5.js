@@ -2468,26 +2468,159 @@ const app = {
     async renderIndoorEventMap() {
         const el = document.getElementById('indoor-map-container');
         if (!el) return;
-        el.innerHTML = '<div class="loading">Carregando mapa interno...</div>';
+        el.innerHTML = `<div class="loading">${i18n.t('loading')}</div>`;
         const cfg = await API.getIndoorMap();
         this.data.indoorMap = cfg;
         if (!cfg || !cfg.image_url) {
-            el.innerHTML = '<p class="text-muted" style="padding:1rem;">Mapa interno ainda não configurado (admin: JSON avançado ou campo indoor_map).</p>';
+            el.innerHTML = `<p class="text-muted indoor-map-empty">${i18n.t('indoor_not_configured')}</p>`;
             return;
         }
-        const pts = Array.isArray(cfg.points) ? cfg.points : [];
-        const w = cfg.width || 1000;
-        const h = cfg.height || 700;
-        let html = `<div class="indoor-map-wrap" style="position:relative;width:100%;max-width:100%;">`;
-        html += `<img src="${cfg.image_url}" alt="Mapa" style="width:100%;height:auto;display:block;border-radius:8px;" />`;
-        pts.forEach((p) => {
+        if (!this.data.indoorMapUi) {
+            this.data.indoorMapUi = { boothId: '', destId: '', tab: 'guide', query: '' };
+        }
+        const ui = this.data.indoorMapUi;
+        const places = Array.isArray(cfg.places) ? cfg.places : [];
+        const booths = places.filter((p) => p.kind === 'booth');
+        const dests = places.filter((p) => p.kind !== 'booth');
+        if (!ui.boothId && booths.length) ui.boothId = booths[0].id;
+        if (ui.destId && !dests.find((d) => d.id === ui.destId)) ui.destId = '';
+
+        const boothOpts = booths.map((b) => {
+            const lab = this.indoorPlaceLabel(b);
+            const sel = b.id === ui.boothId ? ' selected' : '';
+            return `<option value="${this.escapeAttr(b.id)}"${sel}>${this.escapeHtml(lab)}</option>`;
+        }).join('');
+
+        const q = (ui.query || '').toLowerCase();
+        const filtered = dests.filter((d) => {
+            if (!q) return true;
+            const lab = this.indoorPlaceLabel(d).toLowerCase();
+            const kws = Array.isArray(d.keywords) ? d.keywords.join(' ').toLowerCase() : '';
+            return lab.includes(q) || kws.includes(q);
+        });
+
+        const listHtml = filtered.length ? filtered.map((d) => {
+            const lab = this.indoorPlaceLabel(d);
+            const active = d.id === ui.destId ? ' indoor-dest-active' : '';
+            return `<button type="button" class="indoor-dest-item${active}" data-dest-id="${this.escapeAttr(d.id)}" onclick="app.selectIndoorDest('${this.escapeAttr(d.id)}')">
+                <span class="indoor-dest-name">${this.escapeHtml(lab)}</span>
+                ${d.floor ? `<span class="indoor-dest-floor">${this.escapeHtml(d.floor)}</span>` : ''}
+            </button>`;
+        }).join('') : `<p class="text-muted">${i18n.t('indoor_no_destinations')}</p>`;
+
+        const dirText = this.getIndoorDirections(cfg, ui.boothId, ui.destId);
+        const notice = cfg.volunteer_notice || {};
+        const lang = i18n.current || 'pt_br';
+        const noticeText = notice[lang] || notice.pt_br || '';
+
+        const guideTabActive = ui.tab === 'guide';
+        const mapTabActive = ui.tab === 'map';
+
+        let pinsHtml = '';
+        places.forEach((p) => {
             const x = typeof p.x === 'number' ? p.x : parseFloat(p.x) || 0;
             const y = typeof p.y === 'number' ? p.y : parseFloat(p.y) || 0;
-            const label = (p.label || p.type || '').replace(/</g, '');
-            html += `<button type="button" class="indoor-dot" title="${label}" style="position:absolute;left:${x * 100}%;top:${y * 100}%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;background:#137fec;border:2px solid #fff;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.3);" onclick="alert('${label.replace(/'/g, "\\'")}')"></button>`;
+            const isBooth = p.kind === 'booth';
+            const isSel = p.id === ui.destId || p.id === ui.boothId;
+            const lab = this.indoorPlaceLabel(p);
+            const cls = isBooth ? 'indoor-pin booth' : 'indoor-pin dest';
+            pinsHtml += `<button type="button" class="${cls}${isSel ? ' selected' : ''}" style="left:${x * 100}%;top:${y * 100}%;" title="${this.escapeAttr(lab)}" onclick="app.onIndoorPinClick('${this.escapeAttr(p.id)}','${isBooth ? 'booth' : 'dest'}')"></button>`;
         });
-        html += `</div><p class="text-muted" style="font-size:0.8rem;margin-top:0.5rem;">${w}×${h}px · ${pts.length} pontos</p>`;
-        el.innerHTML = html;
+
+        el.innerHTML = `
+            <div class="indoor-map-screen">
+                <div class="indoor-map-tabs">
+                    <button type="button" class="indoor-map-tab${guideTabActive ? ' active' : ''}" onclick="app.setIndoorTab('guide')">${i18n.t('indoor_tab_guide')}</button>
+                    <button type="button" class="indoor-map-tab${mapTabActive ? ' active' : ''}" onclick="app.setIndoorTab('map')">${i18n.t('indoor_tab_map')}</button>
+                </div>
+                <div class="indoor-panel"${guideTabActive ? '' : ' hidden'}>
+                    <label class="indoor-field-label">${i18n.t('indoor_booth_from')}</label>
+                    <select class="form-input indoor-booth-select" onchange="app.setIndoorBooth(this.value)">${boothOpts || `<option value="">${i18n.t('indoor_select_booth')}</option>`}</select>
+                    <label class="indoor-field-label">${i18n.t('indoor_dest_search')}</label>
+                    <input type="search" class="form-input" placeholder="${this.escapeAttr(i18n.t('indoor_dest_search'))}" value="${this.escapeAttr(ui.query || '')}" oninput="app.setIndoorSearch(this.value)" />
+                    <div class="indoor-dest-list">${listHtml}</div>
+                    <div class="indoor-directions-panel">
+                        <h3 class="indoor-directions-title">${i18n.t('indoor_directions')}</h3>
+                        <p class="indoor-directions-text">${dirText ? this.escapeHtml(dirText).replace(/\n/g, '<br>') : i18n.t('indoor_no_route')}</p>
+                        ${dirText ? `<button type="button" class="btn-block outline" style="margin-top:0.75rem;" onclick="app.copyIndoorDirections()">${i18n.t('indoor_copy_directions')}</button>` : ''}
+                    </div>
+                    ${noticeText ? `<p class="indoor-notice">${this.escapeHtml(noticeText)}</p>` : ''}
+                </div>
+                <div class="indoor-panel indoor-diagram-panel${mapTabActive ? '' : ' hidden'}">
+                    <div class="indoor-map-wrap">
+                        <img src="${cfg.image_url}" alt="" class="indoor-map-img" />
+                        <div class="indoor-pins-layer">${pinsHtml}</div>
+                    </div>
+                </div>
+            </div>`;
+        this._indoorDirectionsText = dirText || '';
+    },
+
+    indoorPlaceLabel(place) {
+        if (!place) return '';
+        const lang = i18n.current || 'pt_br';
+        const labels = place.labels || {};
+        return labels[lang] || labels.pt_br || labels.en || labels.es || place.id || '';
+    },
+
+    getIndoorDirections(cfg, boothId, destId) {
+        if (!boothId || !destId || !cfg || !Array.isArray(cfg.routes)) return '';
+        const lang = i18n.current || 'pt_br';
+        const route = cfg.routes.find((r) => r.from_place_id === boothId && r.to_place_id === destId);
+        if (!route || !route.directions) return '';
+        const d = route.directions;
+        return d[lang] || d.pt_br || d.en || d.es || '';
+    },
+
+    escapeHtml(str) {
+        return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    },
+
+    escapeAttr(str) {
+        return String(str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    },
+
+    setIndoorTab(tab) {
+        if (!this.data.indoorMapUi) this.data.indoorMapUi = {};
+        this.data.indoorMapUi.tab = tab;
+        this.renderIndoorEventMap();
+    },
+
+    setIndoorBooth(boothId) {
+        if (!this.data.indoorMapUi) this.data.indoorMapUi = {};
+        this.data.indoorMapUi.boothId = boothId;
+        this.renderIndoorEventMap();
+    },
+
+    setIndoorSearch(q) {
+        if (!this.data.indoorMapUi) this.data.indoorMapUi = {};
+        this.data.indoorMapUi.query = q;
+        this.renderIndoorEventMap();
+    },
+
+    selectIndoorDest(destId) {
+        if (!this.data.indoorMapUi) this.data.indoorMapUi = {};
+        this.data.indoorMapUi.destId = destId;
+        this.renderIndoorEventMap();
+    },
+
+    onIndoorPinClick(id, kind) {
+        if (!this.data.indoorMapUi) this.data.indoorMapUi = {};
+        if (kind === 'booth') {
+            this.data.indoorMapUi.boothId = id;
+        } else {
+            this.data.indoorMapUi.destId = id;
+            this.data.indoorMapUi.tab = 'guide';
+        }
+        this.renderIndoorEventMap();
+    },
+
+    copyIndoorDirections() {
+        const text = this._indoorDirectionsText || '';
+        if (!text) return;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => alert(i18n.t('indoor_copied'))).catch(() => {});
+        }
     },
 
     async requestSwap(assignmentId) {

@@ -9,7 +9,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 ## [Unreleased]
 
 ### Adicionado
-- **Docs:** `docs/ISSUE-28-STADIUM-MAP.md` refinado (CRUD, balcões, rotas); ADR-022; PNG rascunho `docs/assets/issue-28/estadio-diagrama.png`.
+- Plugin **2.12.0** + PWA **109**: mapa indoor — CRUD admin, API `/indoor-map`, PWA orientar (balcão → destino) — ZELO#28 **In review**.
 - PWA build **108**: ícone olho nos campos senha (login, cadastro, perfil) — ZELO#24; formulário de perfil (nome, e-mail, telefone, senha, idiomas, foto) — ZELO#25.
 - **Docs:** fluxo GitHub — agentes param em **In review**; Done só após validação humana.
 - Plugin **2.11.9**: `PATCH /auth/profile` ampliado + `POST /auth/profile/avatar`.

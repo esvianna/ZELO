@@ -12,8 +12,8 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Referência no repo | Versão |
 |--------------------|--------|
-| Plugin WordPress (`zelo-assistente.php`) | **2.11.9** |
-| PWA (`zelo-build.js` / `sw.js`) | **build 108** |
+| Plugin WordPress (`zelo-assistente.php`) | **2.12.0** |
+| PWA (`zelo-build.js` / `sw.js`) | **build 109** |
 
 **Backlog oficial:** [GitHub Project — Projeto ZELO](https://github.com/users/esvianna/projects/3) — issues em [`esvianna/ZELO`](https://github.com/esvianna/ZELO) (ADR-020, `docs/GITHUB-WORKFLOW.md`). Este arquivo **complementa** o quadro; status canônico das tarefas está no Project.
 
@@ -107,9 +107,8 @@ Priorização via [Project 3](https://github.com/users/esvianna/projects/3). Pri
 
 ## Última sessão (2026-06-04)
 
-- **#28:** Plano refinado — sequência diagrama → CRUD → balcões A1–B2 → rotas origem→destino (ADR-022); PNG rascunho em `docs/assets/issue-28/`.
-- **#24 / #25:** PWA 108 + plugin 2.11.9 entregues — **In review** (validar olho senha + perfil editável).
-- **ZELO#13:** Plugin 2.11.8 — matriz `docs/OPS-PERMISSIONS.md`; supervisão por governança; swaps filtrados (ADR-021).
+- **#28 In review:** Plugin **2.12.0** — aba Mapa evento (CRUD, pinos, direções Balcão 1/2); PWA **109** — fluxo orientar + diagrama.
+- **#24 / #25:** PWA 108 + plugin 2.11.9 — **In review** (validar olho senha + perfil editável).
 
 **Como testar:** abrir este arquivo e `ROADMAP.md`; confirmar versões batem com `zelo-assistente.php` e `zelo-build.js`; cruzar pendências com cards **Backlog** no Project 3.
 
