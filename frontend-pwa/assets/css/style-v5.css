@@ -3923,6 +3923,10 @@ body.indoor-diagram-fullscreen .indoor-map-viewport {
     padding: 0 1rem 2rem;
 }
 
+.blog-post-stale {
+    margin-bottom: 0.75rem;
+}
+
 .blog-list {
     display: flex;
     flex-direction: column;

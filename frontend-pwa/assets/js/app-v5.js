@@ -34,7 +34,8 @@ const app = {
         const keyMap = {
             ops: 'data_stale_ops',
             locais: 'data_stale_locais',
-            indoor: 'data_stale_indoor'
+            indoor: 'data_stale_indoor',
+            news: 'data_stale_news'
         };
         const key = keyMap[scope] || 'data_stale_generic';
         return `<span class="zelo-stale-badge" role="status">${this.escapeHtml(i18n.t(key))}</span>`;
@@ -529,6 +530,7 @@ const app = {
             localStorage.removeItem('zelo_volunteer_ops_mine');
             if (uid != null) {
                 localStorage.removeItem(API.newsSnapshotKey(uid));
+                API.clearNewsItemSnapshots(uid);
             }
             app.data.volunteerOps = null;
             app.data.news = null;
@@ -884,7 +886,7 @@ const app = {
                 }
             }
 
-            if (this.auth.user && sessionOk) {
+            if (this.auth.user) {
                 await this.loadNews();
             }
 
@@ -1234,16 +1236,21 @@ const app = {
 
         container.innerHTML = `<div class="loading">${this.escapeHtml(i18n.t('loading'))}</div>`;
         try {
-            const post = await API.getNewsItem(id);
+            const uid = this.auth.user.id;
+            const post = await API.getNewsItem(id, uid);
             if (!post) {
                 container.innerHTML = `<div class="blog-empty">${this.escapeHtml(i18n.t('news_not_found'))}</div>`;
                 return;
             }
+            this.syncStaleFlags();
+            const staleBanner = API.lastFetchFromCache.newsDetail
+                ? `<div class="zelo-stale-banner blog-post-stale">${this.renderStaleBadge('news')}</div>`
+                : '';
             this.markAvisoRead(`post-${post.id}`);
             const img = post.featured_image
                 ? `<div class="blog-post-hero" style="background-image:url('${this.escapeHtml(post.featured_image)}')"></div>`
                 : '';
-            container.innerHTML = `
+            container.innerHTML = staleBanner + `
                 <article class="blog-post">
                     ${img}
                     <div class="blog-post-header">
@@ -1255,7 +1262,10 @@ const app = {
                 </article>
             `;
         } catch (e) {
-            container.innerHTML = `<div class="blog-empty">${this.escapeHtml(e.message || i18n.t('error_generic'))}</div>`;
+            const msg = (e && (e.code === 'news_offline_unavailable' || e.message === 'news_offline_unavailable'))
+                ? i18n.t('news_offline_unavailable')
+                : (e.message || i18n.t('error_generic'));
+            container.innerHTML = `<div class="blog-empty">${this.escapeHtml(msg)}</div>`;
         }
     },
 

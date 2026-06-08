@@ -145,7 +145,7 @@ Campos sugeridos (post meta):
 
 - `fetchNews({ page, notificationsOnly })`
 - `fetchNewsItem(id)`
-- Cache + snapshot `zelo_news` (offline: última lista conhecida)
+- Cache + snapshot `zelo_news` (offline: última lista conhecida); detalhe por post — ADR-025 / PWA 123+ (`zelo_news_item_v1_*`)
 
 ### 7.2 Hub avisos (`buildAvisosFeed`)
 

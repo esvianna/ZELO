@@ -13,6 +13,7 @@ const API = {
         categorias: false,
         clima: false,
         news: false,
+        newsDetail: false,
         indoorMap: false
     },
 
@@ -52,6 +53,25 @@ const API = {
     newsSnapshotKey(userId) {
         const uid = userId != null ? String(userId) : '0';
         return `zelo_news_v2_${uid}`;
+    },
+
+    newsItemSnapshotKey(userId, postId) {
+        const uid = userId != null ? String(userId) : '0';
+        return `zelo_news_item_v1_${uid}_${String(postId)}`;
+    },
+
+    clearNewsItemSnapshots(userId) {
+        const prefix = `zelo_news_item_v1_${userId != null ? String(userId) : '0'}_`;
+        try {
+            const keys = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith(prefix)) keys.push(key);
+            }
+            keys.forEach((key) => localStorage.removeItem(key));
+        } catch (e) {
+            console.warn('Falha ao limpar snapshots de novidades', e);
+        }
     },
 
     getAuthHeaders() {
@@ -547,6 +567,9 @@ const API = {
             this.cache.news = data;
             this.writeSnapshot(snapKey, data);
             this.lastFetchFromCache.news = false;
+            if (userId != null && Array.isArray(data.items) && data.items.length) {
+                this.prefetchNewsItemDetails(data.items, userId);
+            }
             return data;
         } catch (error) {
             console.warn('Fetch news falhou, tentando cache', error);
@@ -560,20 +583,55 @@ const API = {
         }
     },
 
-    async getNewsItem(id) {
-        const url = `${this.baseUrl}/news/${encodeURIComponent(id)}?_t=${Date.now()}`;
-        const response = await fetch(url, {
-            method: 'GET',
-            credentials: 'include',
-            headers: this.getAuthHeaders()
-        });
-        const data = await response.json().catch(() => ({}));
-        if (response.status === 401 || response.status === 403) {
-            return null;
+    async prefetchNewsItemDetails(items, userId) {
+        if (!Array.isArray(items) || !items.length) return;
+        const slice = items.slice(0, 20);
+        for (const item of slice) {
+            if (!item || item.id == null) continue;
+            try {
+                await this.getNewsItem(item.id, userId);
+            } catch (e) {
+                /* prefetch best-effort */
+            }
         }
-        if (!response.ok) {
-            throw new Error(data.message || 'Novidade não encontrada');
+    },
+
+    async getNewsItem(id, userId = null) {
+        const postId = String(id);
+        const snapKey = this.newsItemSnapshotKey(userId, postId);
+        const url = `${this.baseUrl}/news/${encodeURIComponent(postId)}?_t=${Date.now()}`;
+
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                credentials: 'include',
+                headers: this.getAuthHeaders()
+            });
+            const data = await response.json().catch(() => ({}));
+            if (response.status === 401 || response.status === 403) {
+                this.lastFetchFromCache.newsDetail = false;
+                return null;
+            }
+            if (!response.ok) {
+                throw new Error(data.message || 'Novidade não encontrada');
+            }
+            this.writeSnapshot(snapKey, data);
+            this.lastFetchFromCache.newsDetail = false;
+            if (data.featured_image) {
+                await this.prefetchToSwCache(data.featured_image);
+            }
+            return data;
+        } catch (error) {
+            console.warn('Fetch news item falhou, tentando cache', error);
+            const cached = this.readSnapshot(snapKey);
+            if (cached) {
+                this.lastFetchFromCache.newsDetail = true;
+                return cached;
+            }
+            this.lastFetchFromCache.newsDetail = false;
+            const err = new Error('news_offline_unavailable');
+            err.code = 'news_offline_unavailable';
+            throw err;
         }
-        return data;
     }
 };

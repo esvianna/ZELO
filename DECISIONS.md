@@ -6,6 +6,16 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 ---
 
+## ADR-025 — Novidades: detalhe offline por post (2026-06-04)
+
+**Contexto:** ADR-023 / issue #26 — lista `/news` já tinha snapshot `zelo_news_v2_*`, mas `GET /news/{id}` falhava offline com «Failed to fetch» ao abrir o artigo (só preview na listagem).
+
+**Decisão:** Snapshot por post `zelo_news_item_v1_{userId}_{id}` após fetch OK; fallback offline; prefetch em background dos itens da página ao carregar lista online; prefetch da imagem destacada same-origin no SW; badge stale no detalhe; mensagem i18n `news_offline_unavailable` se nunca foi aberto online. Limpar snapshots de detalhe no logout. `loadNews()` no `init()` mesmo sem sessão WP renovada (lista em cache). Teste `TESTING.md` O6.
+
+**Consequências:** PWA **123+**; media embutida no HTML (vídeos externos) pode falhar offline; posts nunca abertos online continuam indisponíveis offline.
+
+---
+
 ## ADR-024 — Mapa do evento offline: snapshot + imagem no SW (2026-06-04)
 
 **Contexto:** ADR-002/003 estabelecem PWA offline-first e API pública `/indoor-map`, mas a PWA não persistia JSON nem prefetch da imagem do diagrama — offline mostrava «não configurado» (gap vs. locais/clima/escala, ADR-015).
@@ -15,6 +25,8 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 **Consequências:** PWA **122+**; alinhado a ADR-022. Admin que altera mapa exige visita online ou «Atualizar App» para refresh. Imagens em CDN externo ficam fora do prefetch (same-origin only).
 
 ---
+
+## ADR-023 — Blog/novidades: logados, PT, entradas home + menu (2026-06-04)
 
 **Contexto:** Issue #26 — publicar Posts WP na PWA como notificações e blog. Hub avisos MVP (ADR-012) usa feed cliente + `localStorage`.
 

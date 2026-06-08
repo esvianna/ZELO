@@ -18,8 +18,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | PWA **119** | Card «Novidades» na secção Operação de Voluntários (home) |
 | PWA **120** | Rótulo do card: «Novidades» (sem «/Blog») |
 | PWA **121** | Home «Minhas designações»: texto explicativo fora do flex; botões empilhados no mobile |
+| PWA **123** | ADR-025: detalhe novidades offline (`zelo_news_item_v1_*` + prefetch ao listar) |
 
-**Testes:** `TESTING.md` §4 — item **2aa**.
+**Testes:** `TESTING.md` §4 — item **2aa**; §12 **O6**.
 
 ### Adicionado — mapa indoor (#28, **In review**)
 
