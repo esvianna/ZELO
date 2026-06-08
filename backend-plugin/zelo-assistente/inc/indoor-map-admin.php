@@ -49,6 +49,21 @@ function zelo_indoor_map_admin_place_row_html( $place, $idx, $booths, $locations
 	$loc_id  = esc_attr( $place['location_id'] ?? '' );
 	$ix      = (int) $idx;
 	$is_booth = ( $place['kind'] ?? '' ) === 'booth';
+	$booth_slot = 0;
+	if ( $is_booth ) {
+		$booth_slot = isset( $place['booth_slot'] ) ? (int) $place['booth_slot'] : 0;
+		if ( $booth_slot < 1 || $booth_slot > 2 ) {
+			foreach ( $booths as $bi => $b ) {
+				if ( ( $b['id'] ?? '' ) === $id ) {
+					$booth_slot = $bi + 1;
+					break;
+				}
+			}
+		}
+		if ( $booth_slot < 1 ) {
+			$booth_slot = 1;
+		}
+	}
 
 	$routes_ok = zelo_indoor_map_routes_ok_count( $place, $booths );
 	$routes_label = $is_booth ? '—' : $routes_ok . '/2';
@@ -100,7 +115,7 @@ function zelo_indoor_map_admin_place_row_html( $place, $idx, $booths, $locations
 		$loc_opts .= '<option value="' . esc_attr( $lid ) . '"' . selected( $loc_id, $lid, false ) . '>' . esc_html( $ln ) . '</option>';
 	}
 
-	$row  = '<tr class="zelo-map-place-row" data-place-id="' . esc_attr( $id ) . '">';
+	$row  = '<tr class="zelo-map-place-row" data-place-id="' . esc_attr( $id ) . '"' . ( $is_booth ? ' data-booth-slot="' . esc_attr( (string) $booth_slot ) . '"' : '' ) . '>';
 	$row .= '<td><input type="hidden" name="map_place_id[]" value="' . esc_attr( $id ) . '" />';
 	$row .= '<select name="map_place_kind[]" class="map-place-kind" onchange="zeloMapKindChanged(this)">' . $kind_opts . '</select></td>';
 	$row .= '<td><input name="map_place_name_pt[]" value="' . $name_pt . '" class="regular-text" required placeholder="PT" /></td>';
@@ -173,7 +188,20 @@ function zelo_render_indoor_map_admin_tab( $indoor_map, $locations = array(), $a
 		</table>
 
 		<div id="zelo-map-editor-wrap" style="margin:1rem 0;max-width:100%;<?php echo $map['image_url'] ? '' : 'display:none;'; ?>">
-			<p class="description"><?php esc_html_e( 'Selecione «Posicionar» num local e clique no diagrama. Balcões = quadrado azul; destinos = círculo.', 'zelo-assistente' ); ?></p>
+			<p class="description"><?php esc_html_e( 'Selecione «Posicionar» num local e clique no diagrama. Balcão 1 = quadrado azul; Balcão 2 = quadrado teal; destinos = círculo laranja.', 'zelo-assistente' ); ?></p>
+			<div class="zelo-map-legend" style="display:flex;flex-wrap:wrap;gap:0.65rem 1rem;margin:0.5rem 0;font-size:12px;color:#50575e;">
+				<?php
+				$b1 = isset( $booths[0] ) ? $booths[0] : null;
+				$b2 = isset( $booths[1] ) ? $booths[1] : null;
+				$lab1 = $b1 ? zelo_indoor_map_place_label( $b1, 'pt_br' ) : __( 'Balcão 1', 'zelo-assistente' );
+				$lab2 = $b2 ? zelo_indoor_map_place_label( $b2, 'pt_br' ) : __( 'Balcão 2', 'zelo-assistente' );
+				?>
+				<span><span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:3px;background:#1e40af;color:#fff;font-size:9px;font-weight:700;border:2px solid #fff;vertical-align:middle;margin-right:4px;">1</span><?php echo esc_html( $lab1 ); ?></span>
+				<?php if ( $b2 ) : ?>
+					<span><span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:3px;background:#0d9488;color:#fff;font-size:9px;font-weight:700;border:2px solid #fff;vertical-align:middle;margin-right:4px;">2</span><?php echo esc_html( $lab2 ); ?></span>
+				<?php endif; ?>
+				<span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#ea580c;border:2px solid #fff;vertical-align:middle;margin-right:4px;"></span><?php esc_html_e( 'Destino', 'zelo-assistente' ); ?></span>
+			</div>
 			<p><strong><?php esc_html_e( 'Local seleccionado:', 'zelo-assistente' ); ?></strong> <span id="zelo-map-selected-label">—</span></p>
 			<div id="zelo-map-canvas" style="position:relative;display:inline-block;max-width:100%;cursor:crosshair;border:1px solid #ccd0d4;background:#f6f7f7;">
 				<img id="zelo-map-editor-img" src="<?php echo esc_url( $map['image_url'] ); ?>" alt="" style="max-width:100%;height:auto;display:block;" />
@@ -228,6 +256,21 @@ function zelo_render_indoor_map_admin_tab( $indoor_map, $locations = array(), $a
 	var ZELO_MAP_PLACE_TPL = <?php echo wp_json_encode( $tpl_place ); ?>;
 	var zeloMapSelectedPlaceId = '';
 
+	function zeloMapBoothPinStyle(kind, tr) {
+		if (kind !== 'booth') {
+			return { bg: '#ea580c', w: 12, h: 12, br: '50%', label: '' };
+		}
+		var slot = tr ? parseInt(tr.getAttribute('data-booth-slot') || '1', 10) : 1;
+		if (slot !== 2) slot = 1;
+		return {
+			bg: slot === 2 ? '#0d9488' : '#1e40af',
+			w: 16,
+			h: 16,
+			br: '2px',
+			label: String(slot)
+		};
+	}
+
 	function zeloMapRefreshPins() {
 		var overlay = document.getElementById('zelo-map-pins-overlay');
 		if (!overlay) return;
@@ -238,9 +281,11 @@ function zelo_render_indoor_map_admin_tab( $indoor_map, $locations = array(), $a
 			var x = parseFloat(tr.querySelector('.map-place-x').value || '0');
 			var y = parseFloat(tr.querySelector('.map-place-y').value || '0');
 			var name = tr.querySelector('input[name="map_place_name_pt[]"]') ? tr.querySelector('input[name="map_place_name_pt[]"]').value : '';
+			var pin = zeloMapBoothPinStyle(kind, tr);
 			var dot = document.createElement('span');
 			dot.title = name || id;
-			dot.style.cssText = 'position:absolute;left:' + (x * 100) + '%;top:' + (y * 100) + '%;transform:translate(-50%,-50%);width:' + (kind === 'booth' ? '14px' : '12px') + ';height:' + (kind === 'booth' ? '14px' : '12px') + ';border-radius:' + (kind === 'booth' ? '2px' : '50%') + ';background:' + (kind === 'booth' ? '#1e40af' : '#ea580c') + ';border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.35);pointer-events:auto;';
+			dot.style.cssText = 'position:absolute;left:' + (x * 100) + '%;top:' + (y * 100) + '%;transform:translate(-50%,-50%);width:' + pin.w + 'px;height:' + pin.h + 'px;border-radius:' + pin.br + ';background:' + pin.bg + ';border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.35);pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:9px;font-weight:700;line-height:1;';
+			if (pin.label) dot.textContent = pin.label;
 			if (id === zeloMapSelectedPlaceId) dot.style.outline = '2px solid #facc15';
 			overlay.appendChild(dot);
 		});
@@ -286,6 +331,17 @@ function zelo_render_indoor_map_admin_tab( $indoor_map, $locations = array(), $a
 	}
 
 	function zeloMapKindChanged(sel) {
+		var tr = sel.closest('tr.zelo-map-place-row');
+		if (tr && sel.value === 'booth') {
+			var count = 0;
+			document.querySelectorAll('#zelo-map-places-body tr.zelo-map-place-row').forEach(function(row) {
+				var k = row.querySelector('.map-place-kind');
+				if (k && k.value === 'booth') count++;
+			});
+			tr.setAttribute('data-booth-slot', String(Math.min(Math.max(count, 1), 2)));
+		} else if (tr) {
+			tr.removeAttribute('data-booth-slot');
+		}
 		zeloMapRefreshPins();
 	}
 

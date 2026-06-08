@@ -246,6 +246,9 @@ const i18n = {
             "indoor_map_pinch_hint": "Use dois dedos para ampliar e arrastar o diagrama.",
             "indoor_map_fit_all": "Mapa completo",
             "indoor_map_go_dest": "Ir ao destino",
+            "indoor_legend_booth_1": "Balcão 1",
+            "indoor_legend_booth_2": "Balcão 2",
+            "indoor_legend_dest": "Destino",
             "auth_create_volunteer_link": "Criar conta de voluntário",
             
             // Map/List Filters
@@ -536,6 +539,9 @@ const i18n = {
             "indoor_map_pinch_hint": "Pinch with two fingers to zoom and drag the diagram.",
             "indoor_map_fit_all": "Full map",
             "indoor_map_go_dest": "Go to destination",
+            "indoor_legend_booth_1": "Counter 1",
+            "indoor_legend_booth_2": "Counter 2",
+            "indoor_legend_dest": "Destination",
             "auth_create_volunteer_link": "Create volunteer account",
             
             "near_me": "Near me",
@@ -824,6 +830,9 @@ const i18n = {
             "indoor_map_pinch_hint": "Use dos dedos para ampliar y arrastrar el diagrama.",
             "indoor_map_fit_all": "Mapa completo",
             "indoor_map_go_dest": "Ir al destino",
+            "indoor_legend_booth_1": "Mostrador 1",
+            "indoor_legend_booth_2": "Mostrador 2",
+            "indoor_legend_dest": "Destino",
             "auth_create_volunteer_link": "Crear cuenta de voluntario",
             
             "near_me": "Cerca de mí",

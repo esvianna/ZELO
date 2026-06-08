@@ -12,8 +12,8 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Referência no repo | Versão |
 |--------------------|--------|
-| Plugin WordPress (`zelo-assistente.php`) | **2.12.2** |
-| PWA (`zelo-build.js` / `sw.js`) | **build 114** |
+| Plugin WordPress (`zelo-assistente.php`) | **2.12.3** |
+| PWA (`zelo-build.js` / `sw.js`) | **build 115** |
 
 **Backlog oficial:** [GitHub Project — Projeto ZELO](https://github.com/users/esvianna/projects/3) — issues em [`esvianna/ZELO`](https://github.com/esvianna/ZELO) (ADR-020, `docs/GITHUB-WORKFLOW.md`). Este arquivo **complementa** o quadro; status canônico das tarefas está no Project.
 
@@ -107,7 +107,7 @@ Priorização via [Project 3](https://github.com/users/esvianna/projects/3). Pri
 
 ## Última sessão (2026-06-04)
 
-- **#28 (plugin 2.12.2):** fix tela branca ao Salvar abas (remove redirect).
+- PWA **115** + plugin **2.12.3**: pinos Balcão 1 (azul) / Balcão 2 (teal) + legenda no diagrama.
 - **#28 (PWA 113–114):** combobox destinos; rótulo Pavim.
 - **#28 (PWA 109 + plugin 2.12.0):** CRUD admin, API, fluxo orientar + diagrama.
 - **#24 / #25:** PWA 108 + plugin 2.11.9 — **In review**.

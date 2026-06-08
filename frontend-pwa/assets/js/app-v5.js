@@ -2523,9 +2523,14 @@ const app = {
             const isBooth = p.kind === 'booth';
             const isSel = p.id === ui.destId || p.id === ui.boothId;
             const lab = this.indoorPlaceLabel(p);
-            const cls = isBooth ? 'indoor-pin booth' : 'indoor-pin dest';
-            pinsHtml += `<button type="button" class="${cls}${isSel ? ' selected' : ''}" style="left:${x * 100}%;top:${y * 100}%;" title="${this.escapeAttr(lab)}" onclick="app.onIndoorPinClick('${this.escapeAttr(p.id)}','${isBooth ? 'booth' : 'dest'}')"></button>`;
+            const pinCls = isBooth ? this.indoorBoothPinClasses(p, booths) : 'indoor-pin dest';
+            const boothSlot = isBooth ? this.indoorBoothSlot(p, booths) : 0;
+            const pinLabel = isBooth && boothSlot ? `<span class="indoor-pin-label" aria-hidden="true">${boothSlot}</span>` : '';
+            const ariaLabel = isBooth && boothSlot ? `${lab} (${i18n.t('indoor_legend_booth_' + boothSlot)})` : lab;
+            pinsHtml += `<button type="button" class="${pinCls}${isSel ? ' selected' : ''}" style="left:${x * 100}%;top:${y * 100}%;" title="${this.escapeAttr(lab)}" aria-label="${this.escapeAttr(ariaLabel)}" onclick="app.onIndoorPinClick('${this.escapeAttr(p.id)}','${isBooth ? 'booth' : 'dest'}')">${pinLabel}</button>`;
         });
+
+        const legendHtml = this.buildIndoorMapLegendHtml(booths);
 
         el.innerHTML = `
             <div class="indoor-map-screen">
@@ -2557,6 +2562,7 @@ const app = {
                         <button type="button" class="indoor-diagram-btn primary"${ui.destId || ui.boothId ? '' : ' disabled'} onclick="app.indoorDiagramGoToDest()">${i18n.t('indoor_map_go_dest')}</button>
                     </div>
                     <p class="indoor-map-hint">${i18n.t('indoor_map_pinch_hint')}</p>
+                    ${legendHtml}
                     <div class="indoor-map-viewport" id="indoor-map-viewport">
                         <div class="indoor-map-transform" id="indoor-map-transform">
                             <div class="indoor-map-wrap">
@@ -2577,6 +2583,35 @@ const app = {
                 requestAnimationFrame(() => this.initIndoorDiagramGestures(cfg, places));
             });
         }
+    },
+
+    indoorBoothSlot(place, booths) {
+        if (!place || place.kind !== 'booth') return 0;
+        const slot = parseInt(place.booth_slot, 10);
+        if (slot === 1 || slot === 2) return slot;
+        const list = Array.isArray(booths) ? booths : [];
+        const idx = list.findIndex((b) => b.id === place.id);
+        return idx >= 0 ? idx + 1 : 1;
+    },
+
+    indoorBoothPinClasses(place, booths) {
+        const slot = this.indoorBoothSlot(place, booths);
+        if (slot === 2) return 'indoor-pin booth booth-2';
+        return 'indoor-pin booth booth-1';
+    },
+
+    buildIndoorMapLegendHtml(booths) {
+        const list = Array.isArray(booths) ? booths : [];
+        const b1 = list.find((b) => this.indoorBoothSlot(b, list) === 1) || list[0];
+        const b2 = list.find((b) => this.indoorBoothSlot(b, list) === 2) || list[1];
+        const lab1 = b1 ? this.escapeHtml(this.indoorPlaceLabel(b1)) : i18n.t('indoor_legend_booth_1');
+        const lab2 = b2 ? this.escapeHtml(this.indoorPlaceLabel(b2)) : i18n.t('indoor_legend_booth_2');
+        let items = `<span class="indoor-legend-item"><span class="indoor-legend-swatch booth-1" aria-hidden="true">1</span>${lab1}</span>`;
+        if (b2) {
+            items += `<span class="indoor-legend-item"><span class="indoor-legend-swatch booth-2" aria-hidden="true">2</span>${lab2}</span>`;
+        }
+        items += `<span class="indoor-legend-item"><span class="indoor-legend-swatch dest" aria-hidden="true"></span>${i18n.t('indoor_legend_dest')}</span>`;
+        return `<div class="indoor-map-legend" role="note">${items}</div>`;
     },
 
     filterIndoorDestinations(dests, query) {

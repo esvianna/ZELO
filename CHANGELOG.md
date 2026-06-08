@@ -8,8 +8,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Adicionado
+- PWA **115** + plugin **2.12.3**: Balcão 1 (azul) / Balcão 2 (teal), número no pino, legenda no diagrama (#28).
+
 ### Corrigido
-- Plugin **2.12.2**: admin ops — tela branca após «Salvar abas».
 - Plugin **2.12.1**: admin mapa evento — direções por destino gravam; aba activa persiste após «Salvar abas».
 - PWA **109–114**: mapa indoor orientar/diagrama/combobox — ZELO#28 **In review**.
 

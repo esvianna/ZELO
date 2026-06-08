@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.12.3] - 2026-06-04
+
+### Adicionado
+- **Mapa evento:** pinos Balcão 1 (azul) vs Balcão 2 (teal) com número + legenda no admin e PWA (`booth_slot`).
+
 ## [2.12.2] - 2026-06-04
 
 ### Corrigido
