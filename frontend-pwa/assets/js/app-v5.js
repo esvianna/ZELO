@@ -2549,12 +2549,14 @@ const app = {
         const btnMuted = compactRow ? 'btn-assignment-action btn-assignment-action--muted' : 'btn-block btn-block--compact btn-block--muted';
         let html = '';
         let hintHtml = '';
+        let noteHtml = '';
 
         if (commitSt === 'pending') {
             if (this.canCommitAssignment(item)) {
                 if (!onBehalf && this.getCommitmentPendingReason(item.id) === 'schedule_changed') {
                     const note = `<p class="text-muted ops-volunteer-hint">${this.escapeHtml(i18n.t('ops_schedule_changed_hint'))}</p>`;
                     if (iconBar) hintHtml += note;
+                    else if (compactRow) noteHtml += `<p class="text-muted home-assignment-note">${this.escapeHtml(i18n.t('ops_schedule_changed_hint'))}</p>`;
                     else html += `<p class="text-muted home-assignment-note">${this.escapeHtml(i18n.t('ops_schedule_changed_hint'))}</p>`;
                 }
                 const acceptKey = onBehalf ? 'ops_commit_on_behalf' : 'ops_commit_accept';
@@ -2572,6 +2574,7 @@ const app = {
             } else if (this.isCommitmentDeadlinePassed()) {
                 const note = `<p class="text-muted ops-volunteer-hint">${this.escapeHtml(i18n.t('ops_commitment_deadline_passed'))}</p>`;
                 if (iconBar) hintHtml += note;
+                else if (compactRow) noteHtml += `<p class="text-muted home-assignment-note">${this.escapeHtml(i18n.t('ops_commitment_deadline_passed'))}</p>`;
                 else html += `<p class="text-muted home-assignment-note">${this.escapeHtml(i18n.t('ops_commitment_deadline_passed'))}</p>`;
             }
         }
@@ -2593,8 +2596,9 @@ const app = {
         if (iconBar) {
             return { actions: html, hint: hintHtml };
         }
-        if (compactRow && html) {
-            return `<div class="home-assignment-actions">${html}</div>`;
+        if (compactRow && (noteHtml || html)) {
+            const actionsPart = html ? `<div class="home-assignment-actions">${html}</div>` : '';
+            return `${noteHtml}${actionsPart}`;
         }
         return html;
     },

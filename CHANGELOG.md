@@ -17,6 +17,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | Plugin **2.13.2** + PWA **118** | Título/resumo: decode completo + hífen ASCII; cache API v2 + snapshot cliente |
 | PWA **119** | Card «Novidades» na secção Operação de Voluntários (home) |
 | PWA **120** | Rótulo do card: «Novidades» (sem «/Blog») |
+| PWA **121** | Home «Minhas designações»: texto explicativo fora do flex; botões empilhados no mobile |
 
 **Testes:** `TESTING.md` §4 — item **2aa**.
 

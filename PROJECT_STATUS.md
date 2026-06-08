@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-04** (#26 In review — PWA 120 / plugin 2.13.2).
+> Última atualização: **2026-06-04** (PWA 121 / plugin 2.13.2).
 
 ---
 
@@ -13,7 +13,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | Referência no repo | Versão |
 |--------------------|--------|
 | Plugin WordPress (`zelo-assistente.php`) | **2.13.2** |
-| PWA (`zelo-build.js` / `sw.js`) | **build 120** |
+| PWA (`zelo-build.js` / `sw.js`) | **build 121** |
 
 **Backlog oficial:** [GitHub Project — Projeto ZELO](https://github.com/users/esvianna/projects/3) — issues em [`esvianna/ZELO`](https://github.com/esvianna/ZELO) (ADR-020, `docs/GITHUB-WORKFLOW.md`). Este arquivo **complementa** o quadro; status canônico das tarefas está no Project.
 
@@ -108,6 +108,7 @@ Priorização via [Project 3](https://github.com/users/esvianna/projects/3). Pri
 
 ## Última sessão (2026-06-04)
 
+- **UX home designações:** PWA **121** — aviso «escala alterada» acima dos botões; mobile: Aceitar/Não posso empilhados largura total.
 - **#26 UX home:** PWA **120** — rótulo do card na secção Operação: «Novidades».
 - **#26 fix título:** plugin **2.13.2** + PWA **118** — `zelo_news_plain_text()` decodifica entidades e normaliza travessões → `-`; frontend `formatPlainText`/`decodeHtmlEntities`; cache API `v2` + snapshot cliente `zelo_news_v2_*`.
 - **#26 fix anterior:** plugin **2.13.1** + PWA **117** — vídeos responsivos; cache `/news` ao gravar post.
