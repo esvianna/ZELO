@@ -84,6 +84,75 @@ function zelo_normalize_schedule_row( $row, $catalogs = null ) {
 	return zelo_normalize_schedule_row_with_catalogs( $row, $catalogs );
 }
 
+/**
+ * Abas permitidas na página Operação Voluntários.
+ *
+ * @return array<int, string>
+ */
+function zelo_ops_allowed_admin_tabs() {
+	return array(
+		'tab-escala',
+		'tab-turnos',
+		'tab-locais',
+		'tab-idiomas',
+		'tab-voluntarios',
+		'tab-gov',
+		'tab-config',
+		'tab-onboarding',
+		'tab-mapa-evento',
+		'tab-json',
+	);
+}
+
+/**
+ * Resolve aba activa (POST, GET ou padrão).
+ *
+ * @return string
+ */
+function zelo_ops_resolve_active_tab() {
+	$allowed = zelo_ops_allowed_admin_tabs();
+	if ( isset( $_POST['zelo_ops_active_tab'] ) ) {
+		$tab = sanitize_key( wp_unslash( $_POST['zelo_ops_active_tab'] ) );
+		if ( in_array( $tab, $allowed, true ) ) {
+			return $tab;
+		}
+	}
+	if ( isset( $_GET['ops_tab'] ) ) {
+		$tab = sanitize_key( wp_unslash( $_GET['ops_tab'] ) );
+		if ( in_array( $tab, $allowed, true ) ) {
+			return $tab;
+		}
+	}
+	$user_id = get_current_user_id();
+	if ( $user_id ) {
+		$saved = get_user_meta( $user_id, 'zelo_ops_active_tab', true );
+		if ( is_string( $saved ) && in_array( $saved, $allowed, true ) ) {
+			return $saved;
+		}
+	}
+	return 'tab-escala';
+}
+
+/**
+ * Link de aba no admin ops.
+ *
+ * @param string $id         Tab id.
+ * @param string $label      Label.
+ * @param string $active_tab Active tab id.
+ */
+function zelo_ops_nav_tab_link( $id, $label, $active_tab ) {
+	$class = 'nav-tab';
+	if ( $active_tab === $id ) {
+		$class .= ' nav-tab-active';
+	}
+	printf(
+		'<a href="#%1$s" class="%2$s" onclick="zeloOpsTab(event,\'%1$s\')">%3$s</a>',
+		esc_attr( $id ),
+		esc_attr( $class ),
+		esc_html( $label )
+	);
+}
+
 function zelo_ops_save_from_post_tabs() {
 	if ( ! isset( $_POST['zelo_ops_tabs_save'] ) || ! check_admin_referer( 'zelo_ops_tabs_nonce' ) ) {
 		return '';
@@ -233,6 +302,13 @@ function zelo_ops_save_from_post_tabs() {
 	}
 
 	update_option( 'zelo_volunteer_ops_data', $data );
+
+	$tab = zelo_ops_resolve_active_tab();
+	$user_id = get_current_user_id();
+	if ( $user_id && in_array( $tab, zelo_ops_allowed_admin_tabs(), true ) ) {
+		update_user_meta( $user_id, 'zelo_ops_active_tab', $tab );
+	}
+
 	return __( 'Dados operacionais salvos.', 'zelo-assistente' );
 }
 
@@ -326,6 +402,7 @@ function zelo_render_volunteer_ops_admin_tabs() {
 	if ( $msg && ( strpos( $msg, 'Linha' ) !== false || strpos( $msg, 'utilizador' ) !== false || strpos( $msg, 'voluntário' ) !== false ) ) {
 		$notice_class = 'notice-error';
 	}
+	$active_tab = zelo_ops_resolve_active_tab();
 	?>
 	<div class="wrap">
 		<h1><?php esc_html_e( 'Operação de Voluntários', 'zelo-assistente' ); ?></h1>
@@ -334,23 +411,26 @@ function zelo_render_volunteer_ops_admin_tabs() {
 		<?php endif; ?>
 
 		<h2 class="nav-tab-wrapper">
-			<a href="#tab-escala" class="nav-tab nav-tab-active" onclick="zeloOpsTab(event,'tab-escala')"><?php esc_html_e( 'Escala', 'zelo-assistente' ); ?></a>
-			<a href="#tab-turnos" class="nav-tab" onclick="zeloOpsTab(event,'tab-turnos')"><?php esc_html_e( 'Turnos', 'zelo-assistente' ); ?></a>
-			<a href="#tab-locais" class="nav-tab" onclick="zeloOpsTab(event,'tab-locais')"><?php esc_html_e( 'Locais', 'zelo-assistente' ); ?></a>
-			<a href="#tab-idiomas" class="nav-tab" onclick="zeloOpsTab(event,'tab-idiomas')"><?php esc_html_e( 'Idiomas', 'zelo-assistente' ); ?></a>
-			<a href="#tab-voluntarios" class="nav-tab" onclick="zeloOpsTab(event,'tab-voluntarios')"><?php esc_html_e( 'Voluntários', 'zelo-assistente' ); ?></a>
-			<a href="#tab-gov" class="nav-tab" onclick="zeloOpsTab(event,'tab-gov')"><?php esc_html_e( 'Governança', 'zelo-assistente' ); ?></a>
-			<a href="#tab-config" class="nav-tab" onclick="zeloOpsTab(event,'tab-config')"><?php esc_html_e( 'Config', 'zelo-assistente' ); ?></a>
-			<a href="#tab-onboarding" class="nav-tab" onclick="zeloOpsTab(event,'tab-onboarding')"><?php esc_html_e( 'Onboarding', 'zelo-assistente' ); ?></a>
-			<a href="#tab-mapa-evento" class="nav-tab" onclick="zeloOpsTab(event,'tab-mapa-evento')"><?php esc_html_e( 'Mapa evento', 'zelo-assistente' ); ?></a>
-			<a href="#tab-json" class="nav-tab" onclick="zeloOpsTab(event,'tab-json')"><?php esc_html_e( 'JSON avançado', 'zelo-assistente' ); ?></a>
+			<?php
+			zelo_ops_nav_tab_link( 'tab-escala', __( 'Escala', 'zelo-assistente' ), $active_tab );
+			zelo_ops_nav_tab_link( 'tab-turnos', __( 'Turnos', 'zelo-assistente' ), $active_tab );
+			zelo_ops_nav_tab_link( 'tab-locais', __( 'Locais', 'zelo-assistente' ), $active_tab );
+			zelo_ops_nav_tab_link( 'tab-idiomas', __( 'Idiomas', 'zelo-assistente' ), $active_tab );
+			zelo_ops_nav_tab_link( 'tab-voluntarios', __( 'Voluntários', 'zelo-assistente' ), $active_tab );
+			zelo_ops_nav_tab_link( 'tab-gov', __( 'Governança', 'zelo-assistente' ), $active_tab );
+			zelo_ops_nav_tab_link( 'tab-config', __( 'Config', 'zelo-assistente' ), $active_tab );
+			zelo_ops_nav_tab_link( 'tab-onboarding', __( 'Onboarding', 'zelo-assistente' ), $active_tab );
+			zelo_ops_nav_tab_link( 'tab-mapa-evento', __( 'Mapa evento', 'zelo-assistente' ), $active_tab );
+			zelo_ops_nav_tab_link( 'tab-json', __( 'JSON avançado', 'zelo-assistente' ), $active_tab );
+			?>
 		</h2>
 
 		<form method="post" id="zelo-ops-tabs-form">
 			<?php wp_nonce_field( 'zelo_ops_tabs_nonce' ); ?>
 			<input type="hidden" name="zelo_ops_tabs_save" value="1" />
+			<input type="hidden" name="zelo_ops_active_tab" id="zelo_ops_active_tab" value="<?php echo esc_attr( $active_tab ); ?>" />
 
-			<div id="tab-escala" class="zelo-ops-tab" style="display:block;">
+			<div id="tab-escala" class="zelo-ops-tab" style="display:<?php echo $active_tab === 'tab-escala' ? 'block' : 'none'; ?>;">
 				<p class="description"><?php esc_html_e( 'Cada linha = um dia + um turno (A1/B1/A2/B2) + um voluntário + faixa horária. Repita linhas para Sexta, Sábado e Domingo. A coluna Local é só leitura (definida na aba Turnos).', 'zelo-assistente' ); ?></p>
 				<p class="description"><?php esc_html_e( 'Início e fim são preenchidos ao selecionar o turno (limites da aba Turnos). Pode ajustar a faixa dentro desse intervalo. Várias linhas no mesmo turno com horários diferentes são permitidas.', 'zelo-assistente' ); ?></p>
 				<p class="description"><?php esc_html_e( 'Idiomas vêm do perfil do voluntário (aba Voluntários ou cadastro no app), não desta tabela.', 'zelo-assistente' ); ?></p>
@@ -382,29 +462,29 @@ function zelo_render_volunteer_ops_admin_tabs() {
 				<p><button type="button" class="button" onclick="zeloAddSchedRow()"><?php esc_html_e( 'Adicionar linha', 'zelo-assistente' ); ?></button></p>
 			</div>
 
-			<div id="tab-turnos" class="zelo-ops-tab" style="display:none;">
+			<div id="tab-turnos" class="zelo-ops-tab" style="display:<?php echo $active_tab === 'tab-turnos' ? 'block' : 'none'; ?>;">
 				<p class="description"><?php esc_html_e( 'Códigos de turno (ex.: A1) são usados na escala e na governança. O local de cada turno aplica-se a todas as linhas da escala com esse código.', 'zelo-assistente' ); ?></p>
 				<?php echo zelo_ops_catalog_shifts_table_html( $catalogs['shifts'], $catalogs['locations'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 				<p><button type="button" class="button" onclick="zeloAddCatalogRow('zelo-cat-shifts-body','shift')"><?php esc_html_e( 'Adicionar turno', 'zelo-assistente' ); ?></button></p>
 			</div>
 
-			<div id="tab-locais" class="zelo-ops-tab" style="display:none;">
+			<div id="tab-locais" class="zelo-ops-tab" style="display:<?php echo $active_tab === 'tab-locais' ? 'block' : 'none'; ?>;">
 				<?php echo zelo_ops_catalog_locations_table_html( $catalogs['locations'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 				<p><button type="button" class="button" onclick="zeloAddCatalogRow('zelo-cat-locs-body','loc')"><?php esc_html_e( 'Adicionar local', 'zelo-assistente' ); ?></button></p>
 			</div>
 
-			<div id="tab-idiomas" class="zelo-ops-tab" style="display:none;">
+			<div id="tab-idiomas" class="zelo-ops-tab" style="display:<?php echo $active_tab === 'tab-idiomas' ? 'block' : 'none'; ?>;">
 				<?php echo zelo_ops_catalog_languages_table_html( $catalogs['languages'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 				<p><button type="button" class="button" onclick="zeloAddCatalogRow('zelo-cat-langs-body','lang')"><?php esc_html_e( 'Adicionar idioma', 'zelo-assistente' ); ?></button></p>
 			</div>
 
-			<div id="tab-voluntarios" class="zelo-ops-tab" style="display:none;">
+			<div id="tab-voluntarios" class="zelo-ops-tab" style="display:<?php echo $active_tab === 'tab-voluntarios' ? 'block' : 'none'; ?>;">
 				<p class="description"><?php esc_html_e( 'Voluntários sem conta WordPress (nome e telefone para contacto). Idiomas podem ser pré-preenchidos aqui ou pelo voluntário no app.', 'zelo-assistente' ); ?></p>
 				<?php echo zelo_ops_catalog_roster_table_html( $catalogs['roster_volunteers'], $catalogs ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 				<p><button type="button" class="button" onclick="zeloAddCatalogRow('zelo-cat-vols-body','vol')"><?php esc_html_e( 'Adicionar voluntário', 'zelo-assistente' ); ?></button></p>
 			</div>
 
-			<div id="tab-gov" class="zelo-ops-tab" style="display:none;">
+			<div id="tab-gov" class="zelo-ops-tab" style="display:<?php echo $active_tab === 'tab-gov' ? 'block' : 'none'; ?>;">
 				<p class="description"><?php esc_html_e( 'Supervisores e homens-chave podem mudar a cada dia do evento. Configure Sexta, Sábado e Domingo separadamente (conforme a programação do departamento).', 'zelo-assistente' ); ?></p>
 				<?php
 				$gov_days = array( 'sexta', 'sabado', 'domingo' );
@@ -435,7 +515,7 @@ function zelo_render_volunteer_ops_admin_tabs() {
 				?>
 			</div>
 
-			<div id="tab-config" class="zelo-ops-tab" style="display:none;">
+			<div id="tab-config" class="zelo-ops-tab" style="display:<?php echo $active_tab === 'tab-config' ? 'block' : 'none'; ?>;">
 				<?php
 				$presence = isset( $set['presence'] ) && is_array( $set['presence'] ) ? $set['presence'] : array();
 				?>
@@ -458,7 +538,7 @@ function zelo_render_volunteer_ops_admin_tabs() {
 				</table>
 			</div>
 
-			<div id="tab-onboarding" class="zelo-ops-tab" style="display:none;">
+			<div id="tab-onboarding" class="zelo-ops-tab" style="display:<?php echo $active_tab === 'tab-onboarding' ? 'block' : 'none'; ?>;">
 				<?php
 				$onboard       = function_exists( 'zelo_build_onboarding_report' ) ? zelo_build_onboarding_report() : array( 'items' => array(), 'link_requests' => array(), 'commitment_stats' => array() );
 				$stats         = isset( $onboard['commitment_stats'] ) ? $onboard['commitment_stats'] : array();
@@ -581,17 +661,18 @@ function zelo_render_volunteer_ops_admin_tabs() {
 			if ( function_exists( 'zelo_render_indoor_map_admin_tab' ) ) {
 				zelo_render_indoor_map_admin_tab(
 					isset( $data['indoor_map'] ) ? $data['indoor_map'] : array(),
-					isset( $catalogs['locations'] ) ? $catalogs['locations'] : array()
+					isset( $catalogs['locations'] ) ? $catalogs['locations'] : array(),
+					$active_tab
 				);
 			}
 			?>
 
-			<p class="submit" id="zelo-ops-submit-tabs">
+			<p class="submit" id="zelo-ops-submit-tabs" style="display:<?php echo $active_tab === 'tab-json' ? 'none' : 'block'; ?>;">
 				<button type="submit" class="button button-primary"><?php esc_html_e( 'Salvar abas', 'zelo-assistente' ); ?></button>
 			</p>
 		</form>
 
-		<div id="tab-json" class="zelo-ops-tab" style="display:none;">
+		<div id="tab-json" class="zelo-ops-tab" style="display:<?php echo $active_tab === 'tab-json' ? 'block' : 'none'; ?>;">
 			<form method="post">
 				<?php wp_nonce_field( 'zelo_save_ops_json_adv_nonce' ); ?>
 				<input type="hidden" name="zelo_save_ops_json_adv" value="1" />
@@ -613,7 +694,7 @@ function zelo_render_volunteer_ops_admin_tabs() {
 	var ZELO_CAT_LOC_TPL=<?php echo wp_json_encode( $cat_loc_tpl ); ?>;
 	var ZELO_CAT_LANG_TPL=<?php echo wp_json_encode( $cat_lang_tpl ); ?>;
 	var ZELO_CAT_VOL_TPL=<?php echo wp_json_encode( $cat_vol_tpl ); ?>;
-	function zeloOpsTab(e,id){e.preventDefault();document.querySelectorAll('.zelo-ops-tab').forEach(function(el){el.style.display='none';});document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('nav-tab-active');});e.target.classList.add('nav-tab-active');document.getElementById(id).style.display='block';var sb=document.getElementById('zelo-ops-submit-tabs');if(sb)sb.style.display=(id==='tab-json')?'none':'block';}
+	function zeloOpsTab(e,id){e.preventDefault();document.querySelectorAll('.zelo-ops-tab').forEach(function(el){el.style.display='none';});document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('nav-tab-active');});if(e&&e.target)e.target.classList.add('nav-tab-active');document.getElementById(id).style.display='block';var hf=document.getElementById('zelo_ops_active_tab');if(hf)hf.value=id;var sb=document.getElementById('zelo-ops-submit-tabs');if(sb)sb.style.display=(id==='tab-json')?'none':'block';}
 	function zeloAddSchedRow(){var tb=document.getElementById('zelo-sched-body');var tr=document.createElement('tr');var idx=String(tb.querySelectorAll('tr').length);tr.innerHTML=ZELO_SCHED_ROW_TPL.split('__ROW_INDEX__').join(idx);tb.appendChild(tr);zeloBindSchedRow(tr);}
 	function zeloAddCatalogRow(bodyId,type){var tb=document.getElementById(bodyId);var tr=document.createElement('tr');var tpl='';var idx=String(tb.querySelectorAll('tr').length);if(type==='shift')tpl=ZELO_CAT_SHIFT_TPL;else if(type==='loc')tpl=ZELO_CAT_LOC_TPL;else if(type==='lang')tpl=ZELO_CAT_LANG_TPL;else if(type==='vol')tpl=ZELO_CAT_VOL_TPL;tr.innerHTML=tpl.split('__IDX__').join(idx);tb.appendChild(tr);}
 	function zeloOnShiftChange(sel){var tr=sel.closest('tr');if(!tr)return;var opt=sel.options[sel.selectedIndex];var st=opt?opt.getAttribute('data-start'):'';var en=opt?opt.getAttribute('data-end'):'';var loc=opt?opt.getAttribute('data-location'):'';var si=tr.querySelector('.sched-time-start');var ei=tr.querySelector('.sched-time-end');var ld=tr.querySelector('.sched-loc-display');if(si){si.value=st||'';}if(ei){ei.value=en||'';}if(ld){ld.textContent=loc||'—';}}

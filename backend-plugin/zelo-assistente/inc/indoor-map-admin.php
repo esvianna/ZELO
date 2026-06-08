@@ -86,9 +86,9 @@ function zelo_indoor_map_admin_place_row_html( $place, $idx, $booths, $locations
 			$des  = esc_textarea( $dirs['es'] ?? '' );
 			$dir_blocks .= '<fieldset class="zelo-map-dir-block" style="margin:0.75rem 0;padding:0.75rem;border:1px solid #ccd0d4;">';
 			$dir_blocks .= '<legend><strong>' . esc_html( $blab ) . '</strong></legend>';
-			$dir_blocks .= '<p><label>' . esc_html__( 'Português', 'zelo-assistente' ) . '<br><textarea name="map_place_dir_pt_' . (int) $bix . '[]" rows="2" class="large-text">' . $dpt . '</textarea></label></p>';
-			$dir_blocks .= '<p><label>' . esc_html__( 'English', 'zelo-assistente' ) . '<br><textarea name="map_place_dir_en_' . (int) $bix . '[]" rows="2" class="large-text">' . $den . '</textarea></label></p>';
-			$dir_blocks .= '<p><label>' . esc_html__( 'Español', 'zelo-assistente' ) . '<br><textarea name="map_place_dir_es_' . (int) $bix . '[]" rows="2" class="large-text">' . $des . '</textarea></label></p>';
+			$dir_blocks .= '<p><label>' . esc_html__( 'Português', 'zelo-assistente' ) . '<br><textarea name="map_place_dir_pt_' . (int) $bix . '[' . esc_attr( $id ) . ']" rows="2" class="large-text">' . $dpt . '</textarea></label></p>';
+			$dir_blocks .= '<p><label>' . esc_html__( 'English', 'zelo-assistente' ) . '<br><textarea name="map_place_dir_en_' . (int) $bix . '[' . esc_attr( $id ) . ']" rows="2" class="large-text">' . $den . '</textarea></label></p>';
+			$dir_blocks .= '<p><label>' . esc_html__( 'Español', 'zelo-assistente' ) . '<br><textarea name="map_place_dir_es_' . (int) $bix . '[' . esc_attr( $id ) . ']" rows="2" class="large-text">' . $des . '</textarea></label></p>';
 			$dir_blocks .= '</fieldset>';
 		}
 	}
@@ -109,7 +109,7 @@ function zelo_indoor_map_admin_place_row_html( $place, $idx, $booths, $locations
 	$row .= '<input type="hidden" name="map_place_x[]" class="map-place-x" value="' . $x . '" />';
 	$row .= '<input type="hidden" name="map_place_y[]" class="map-place-y" value="' . $y . '" /></td>';
 	$row .= '<td><span class="map-routes-ok">' . esc_html( $routes_label ) . '</span></td>';
-	$row .= '<td><input type="checkbox" name="map_place_active[' . $ix . ']" value="1"' . ( $active ? ' checked' : '' ) . ' /></td>';
+	$row .= '<td><input type="checkbox" name="map_place_active[' . esc_attr( $id ) . ']" value="1"' . ( $active ? ' checked' : '' ) . ' /></td>';
 	$row .= '<td><button type="button" class="button-link" onclick="zeloMapSelectPlace(this)">' . esc_html__( 'Posicionar', 'zelo-assistente' ) . '</button> ';
 	$row .= '<button type="button" class="button-link" onclick="zeloMapToggleDetails(this)">' . esc_html__( 'Detalhes', 'zelo-assistente' ) . '</button> ';
 	$row .= '<button type="button" class="button-link-delete" onclick="zeloMapRemovePlace(this)">&times;</button></td>';
@@ -117,15 +117,15 @@ function zelo_indoor_map_admin_place_row_html( $place, $idx, $booths, $locations
 
 	$details  = '<tr class="zelo-map-place-details" data-place-id="' . esc_attr( $id ) . '" style="display:none;"><td colspan="7">';
 	$details .= '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;max-width:960px;">';
-	$details .= '<div><p><label>' . esc_html__( 'Nome EN', 'zelo-assistente' ) . '<br><input name="map_place_name_en[]" value="' . $name_en . '" class="regular-text" /></label></p>';
-	$details .= '<p><label>' . esc_html__( 'Nome ES', 'zelo-assistente' ) . '<br><input name="map_place_name_es[]" value="' . $name_es . '" class="regular-text" /></label></p>';
-	$details .= '<p><label>' . esc_html__( 'Categoria', 'zelo-assistente' ) . '<br><select name="map_place_category[]">' . $cat_opts . '</select></label></p>';
-	$details .= '<p><label>' . esc_html__( 'Dept. nº', 'zelo-assistente' ) . '<br><input name="map_place_dept[]" value="' . $dept . '" type="number" min="0" max="99" style="width:80px;" /></label></p>';
-	$details .= '<p><label>' . esc_html__( 'Palavras-chave', 'zelo-assistente' ) . '<br><input name="map_place_keywords[]" value="' . $kw . '" class="regular-text" placeholder="banheiro, wc" /></label></p>';
+	$details .= '<div><p><label>' . esc_html__( 'Nome EN', 'zelo-assistente' ) . '<br><input name="map_place_name_en[' . esc_attr( $id ) . ']" value="' . $name_en . '" class="regular-text" /></label></p>';
+	$details .= '<p><label>' . esc_html__( 'Nome ES', 'zelo-assistente' ) . '<br><input name="map_place_name_es[' . esc_attr( $id ) . ']" value="' . $name_es . '" class="regular-text" /></label></p>';
+	$details .= '<p><label>' . esc_html__( 'Categoria', 'zelo-assistente' ) . '<br><select name="map_place_category[' . esc_attr( $id ) . ']">' . $cat_opts . '</select></label></p>';
+	$details .= '<p><label>' . esc_html__( 'Dept. nº', 'zelo-assistente' ) . '<br><input name="map_place_dept[' . esc_attr( $id ) . ']" value="' . $dept . '" type="number" min="0" max="99" style="width:80px;" /></label></p>';
+	$details .= '<p><label>' . esc_html__( 'Palavras-chave', 'zelo-assistente' ) . '<br><input name="map_place_keywords[' . esc_attr( $id ) . ']" value="' . $kw . '" class="regular-text" placeholder="banheiro, wc" /></label></p>';
 	if ( $is_booth ) {
-		$details .= '<p><label>' . esc_html__( 'Local escala (opcional)', 'zelo-assistente' ) . '<br><select name="map_place_location_id[]">' . $loc_opts . '</select></label></p>';
+		$details .= '<p><label>' . esc_html__( 'Local escala (opcional)', 'zelo-assistente' ) . '<br><select name="map_place_location_id[' . esc_attr( $id ) . ']">' . $loc_opts . '</select></label></p>';
 	} else {
-		$details .= '<input type="hidden" name="map_place_location_id[]" value="" />';
+		$details .= '<input type="hidden" name="map_place_location_id[' . esc_attr( $id ) . ']" value="" />';
 	}
 	$details .= '</div><div class="zelo-map-dir-wrap">' . $dir_blocks . '</div></div></td></tr>';
 
@@ -135,10 +135,11 @@ function zelo_indoor_map_admin_place_row_html( $place, $idx, $booths, $locations
 /**
  * Renderiza aba Mapa do evento.
  *
- * @param array<string, mixed> $indoor_map  Stored map.
- * @param array<int, array<string, mixed>> $locations Catalog locations.
+ * @param array<string, mixed>             $indoor_map  Stored map.
+ * @param array<int, array<string, mixed>> $locations   Catalog locations.
+ * @param string                           $active_tab  Active admin tab id.
  */
-function zelo_render_indoor_map_admin_tab( $indoor_map, $locations = array() ) {
+function zelo_render_indoor_map_admin_tab( $indoor_map, $locations = array(), $active_tab = 'tab-escala' ) {
 	$map    = zelo_normalize_indoor_map( $indoor_map );
 	$booths = zelo_indoor_map_get_booths( $map );
 	$places = isset( $map['places'] ) ? $map['places'] : array();
@@ -156,7 +157,7 @@ function zelo_render_indoor_map_admin_tab( $indoor_map, $locations = array() ) {
 	}
 	$notice = $map['volunteer_notice'];
 	?>
-	<div id="tab-mapa-evento" class="zelo-ops-tab" style="display:none;">
+	<div id="tab-mapa-evento" class="zelo-ops-tab" style="display:<?php echo $active_tab === 'tab-mapa-evento' ? 'block' : 'none'; ?>;">
 		<p class="description"><?php esc_html_e( 'Diagrama do estádio, locais públicos (máx. 2 balcões) e direções por destino. Dept. 8–35 ficam ocultos na API.', 'zelo-assistente' ); ?></p>
 
 		<table class="form-table" role="presentation">

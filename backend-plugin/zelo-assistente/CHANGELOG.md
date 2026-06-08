@@ -2,6 +2,17 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.12.2] - 2026-06-04
+
+### Corrigido
+- **Operação Voluntários:** «Salvar abas» deixava tela em branco (redirect HTTP após output no admin); aba activa persiste via POST + `user_meta`.
+
+## [2.12.1] - 2026-06-04
+
+### Corrigido
+- **Mapa evento admin:** direções por destino passam a gravar correctamente (campos indexados pelo `id` do local; balcões já não desalinhavam o POST).
+- **Operação Voluntários:** «Salvar abas» mantém a aba activa (`ops_tab` na URL + redirect PRG).
+
 ## [2.12.0] - 2026-06-04
 
 ### Adicionado

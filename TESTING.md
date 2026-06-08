@@ -83,7 +83,7 @@ Configurar `baseUrl` / `siteUrl` em `frontend-pwa/assets/js/api-v5.js` para o am
 | 2p | Perfil → alterar nome/telefone/idiomas; upload foto; senha (108+) | logado | Salvar OK; e-mail novo exige verificação; olho mostra/oculta senha (login/cadastro/perfil) |
 | 2f | Escala aberta → **F5** (build 107+) | view_ops | Permanece em **Escala**; hash `#escala`; nav Operação ativo |
 | 2w | Nome voluntário/responsável com telefone cadastrado (105+) | view_ops | Nome é link `wa.me`; sem telefone → texto sem link; offline: cache ops; abrir WhatsApp exige rede |
-| 2x | **Mapa evento** — admin: upload JPG + 2 balcões + 1 destino com direções (2.12+) | manage_options | Salvar abas; `GET /indoor-map` tem `places`, `routes`; dept. 8+ ausente se cadastrado restricted |
+| 2x | **Mapa evento** — admin: upload JPG + 2 balcões + 1 destino com direções (2.12+) | manage_options | Detalhes → direções Balcão 1/2; **Salvar abas** permanece na aba Mapa evento; `GET /indoor-map` tem `routes` com texto |
 | 2y | **Mapa evento** PWA: balcão + destino | view_ops ou visitante | Combobox «Para onde?» (113+): digitar várias letras, lista suspensa, setas/Enter; Orientar → texto pt/en/es; copiar instruções |
 | 2z | **Mapa evento** PWA mobile (110+) | iPhone / ≤768px | Abre em **Orientar**; aba Diagrama: tela cheia (111+); pinch até mapa completo; botões **Mapa completo** / **Ir ao destino** |
 | 2g | Visitante em **Mapa** → F5 (107+) | — | Permanece em Mapa; hash `#mapa` |

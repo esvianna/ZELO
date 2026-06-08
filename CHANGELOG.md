@@ -8,8 +8,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Corrigido
+- Plugin **2.12.2**: admin ops — tela branca após «Salvar abas».
+- Plugin **2.12.1**: admin mapa evento — direções por destino gravam; aba activa persiste após «Salvar abas».
+- PWA **109–114**: mapa indoor orientar/diagrama/combobox — ZELO#28 **In review**.
+
 ### Adicionado
-- Plugin **2.12.0** + PWA **109–114**: mapa indoor — CRUD admin, API, PWA orientar; combobox destinos; rótulo **Pavim.** no lugar de tipo Dept. (114) — ZELO#28 **In review**.
 - PWA build **108**: ícone olho nos campos senha (login, cadastro, perfil) — ZELO#24; formulário de perfil (nome, e-mail, telefone, senha, idiomas, foto) — ZELO#25.
 - **Docs:** fluxo GitHub — agentes param em **In review**; Done só após validação humana.
 - Plugin **2.11.9**: `PATCH /auth/profile` ampliado + `POST /auth/profile/avatar`.

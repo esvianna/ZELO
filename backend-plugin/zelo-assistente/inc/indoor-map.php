@@ -510,38 +510,45 @@ function zelo_indoor_map_parse_from_post() {
 		$n = count( $_POST['map_place_id'] );
 		for ( $i = 0; $i < $n; $i++ ) {
 			$kind = isset( $_POST['map_place_kind'][ $i ] ) ? sanitize_key( wp_unslash( $_POST['map_place_kind'][ $i ] ) ) : 'amenity';
+			$pid  = isset( $_POST['map_place_id'][ $i ] ) ? sanitize_key( wp_unslash( $_POST['map_place_id'][ $i ] ) ) : '';
 			$labels = array(
 				'pt_br' => isset( $_POST['map_place_name_pt'][ $i ] ) ? sanitize_text_field( wp_unslash( $_POST['map_place_name_pt'][ $i ] ) ) : '',
-				'en'    => isset( $_POST['map_place_name_en'][ $i ] ) ? sanitize_text_field( wp_unslash( $_POST['map_place_name_en'][ $i ] ) ) : '',
-				'es'    => isset( $_POST['map_place_name_es'][ $i ] ) ? sanitize_text_field( wp_unslash( $_POST['map_place_name_es'][ $i ] ) ) : '',
+				'en'    => ( $pid !== '' && isset( $_POST['map_place_name_en'][ $pid ] ) ) ? sanitize_text_field( wp_unslash( $_POST['map_place_name_en'][ $pid ] ) ) : '',
+				'es'    => ( $pid !== '' && isset( $_POST['map_place_name_es'][ $pid ] ) ) ? sanitize_text_field( wp_unslash( $_POST['map_place_name_es'][ $pid ] ) ) : '',
 			);
 			$raw = array(
-				'id'          => isset( $_POST['map_place_id'][ $i ] ) ? sanitize_key( wp_unslash( $_POST['map_place_id'][ $i ] ) ) : '',
+				'id'          => $pid,
 				'kind'        => $kind,
 				'labels'      => $labels,
 				'floor'       => isset( $_POST['map_place_floor'][ $i ] ) ? sanitize_text_field( wp_unslash( $_POST['map_place_floor'][ $i ] ) ) : '',
-				'category'    => isset( $_POST['map_place_category'][ $i ] ) ? sanitize_key( wp_unslash( $_POST['map_place_category'][ $i ] ) ) : '',
-				'dept_number' => isset( $_POST['map_place_dept'][ $i ] ) ? (int) $_POST['map_place_dept'][ $i ] : 0,
+				'category'    => ( $pid !== '' && isset( $_POST['map_place_category'][ $pid ] ) ) ? sanitize_key( wp_unslash( $_POST['map_place_category'][ $pid ] ) ) : '',
+				'dept_number' => ( $pid !== '' && isset( $_POST['map_place_dept'][ $pid ] ) ) ? (int) $_POST['map_place_dept'][ $pid ] : 0,
 				'x'           => isset( $_POST['map_place_x'][ $i ] ) ? wp_unslash( $_POST['map_place_x'][ $i ] ) : 0,
 				'y'           => isset( $_POST['map_place_y'][ $i ] ) ? wp_unslash( $_POST['map_place_y'][ $i ] ) : 0,
-				'active'      => ! empty( $_POST['map_place_active'][ $i ] ),
-				'keywords'    => isset( $_POST['map_place_keywords'][ $i ] ) ? sanitize_text_field( wp_unslash( $_POST['map_place_keywords'][ $i ] ) ) : '',
-				'location_id' => isset( $_POST['map_place_location_id'][ $i ] ) ? sanitize_text_field( wp_unslash( $_POST['map_place_location_id'][ $i ] ) ) : '',
+				'active'      => ( $pid !== '' && ! empty( $_POST['map_place_active'][ $pid ] ) ),
+				'keywords'    => ( $pid !== '' && isset( $_POST['map_place_keywords'][ $pid ] ) ) ? sanitize_text_field( wp_unslash( $_POST['map_place_keywords'][ $pid ] ) ) : '',
+				'location_id' => ( $pid !== '' && isset( $_POST['map_place_location_id'][ $pid ] ) ) ? sanitize_text_field( wp_unslash( $_POST['map_place_location_id'][ $pid ] ) ) : '',
 			);
 
 			if ( $kind !== 'booth' ) {
 				$raw['directions_from_booths'] = array();
 				for ( $bix = 0; $bix < 2; $bix++ ) {
 					$booth_id = isset( $booth_ids_post[ $bix ] ) ? $booth_ids_post[ $bix ] : '';
-					if ( $booth_id === '' ) {
+					if ( $booth_id === '' || $pid === '' ) {
+						continue;
+					}
+					$dir_pt = isset( $_POST[ 'map_place_dir_pt_' . $bix ][ $pid ] ) ? sanitize_textarea_field( wp_unslash( $_POST[ 'map_place_dir_pt_' . $bix ][ $pid ] ) ) : '';
+					$dir_en = isset( $_POST[ 'map_place_dir_en_' . $bix ][ $pid ] ) ? sanitize_textarea_field( wp_unslash( $_POST[ 'map_place_dir_en_' . $bix ][ $pid ] ) ) : '';
+					$dir_es = isset( $_POST[ 'map_place_dir_es_' . $bix ][ $pid ] ) ? sanitize_textarea_field( wp_unslash( $_POST[ 'map_place_dir_es_' . $bix ][ $pid ] ) ) : '';
+					if ( $dir_pt === '' && $dir_en === '' && $dir_es === '' ) {
 						continue;
 					}
 					$raw['directions_from_booths'][] = array(
 						'booth_id'   => $booth_id,
 						'directions' => array(
-							'pt_br' => isset( $_POST[ 'map_place_dir_pt_' . $bix ][ $i ] ) ? sanitize_textarea_field( wp_unslash( $_POST[ 'map_place_dir_pt_' . $bix ][ $i ] ) ) : '',
-							'en'    => isset( $_POST[ 'map_place_dir_en_' . $bix ][ $i ] ) ? sanitize_textarea_field( wp_unslash( $_POST[ 'map_place_dir_en_' . $bix ][ $i ] ) ) : '',
-							'es'    => isset( $_POST[ 'map_place_dir_es_' . $bix ][ $i ] ) ? sanitize_textarea_field( wp_unslash( $_POST[ 'map_place_dir_es_' . $bix ][ $i ] ) ) : '',
+							'pt_br' => $dir_pt,
+							'en'    => $dir_en,
+							'es'    => $dir_es,
 						),
 					);
 				}
