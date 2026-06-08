@@ -6,6 +6,46 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 ---
 
+## ADR-029 — Programação visitante (#14) descartada (2026-06-04)
+
+**Contexto:** Issue [#14](https://github.com/esvianna/ZELO/issues/14) / ROADMAP B5 previa botão «Programação» na home visitante. Análise em `docs/ISSUE-14-PROGRAMACAO-VISITANTE.md`. Hoje a view Info só referencia «Consulte a programação» sem destino in-app.
+
+**Decisão:** **Não implementar** área Programação na PWA. O programa oficial do evento estará no **app JW Library** e em **formato impresso** no local; fora do escopo do ZELO.
+
+**Consequências:** Issue #14 fechada como *won't fix* / descartada. B5 no ROADMAP marcado descartado. Texto placeholder em credenciamento pode permanecer ou ser ajustado numa sessão futura menor (sem feature dedicada).
+
+---
+
+## ADR-028 — Motor notificações (#9) e inbox servidor (#16) descartados (2026-06-04)
+
+**Contexto:** Issues [#9](https://github.com/esvianna/ZELO/issues/9) (C5) e [#16](https://github.com/esvianna/ZELO/issues/16) (B10) previam inbox REST + motor unificado via `zelo_notification_dispatch`. Análise em `docs/ISSUE-09-MOTOR-NOTIFICACOES.md`. Já existem hub sino (`buildAvisosFeed`, ADR-012), «lido» em `localStorage`, posts no feed (#26), cron e-mail (`zelo-volunteer-notifications.php`) e hook dispatch sem listeners.
+
+**Decisão:** **Não implementar** motor unificado nem inbox persistido no servidor. Manter agregação cliente + e-mail cron + `localStorage` para «lido». Hook `zelo_notification_dispatch` permanece extensível sem evolução obrigatória.
+
+**Consequências:** Issues #9 e #16 fechadas como *won't fix* / descartadas. ROADMAP C5 e B10 marcados descartados. #26 continua com `localStorage` para lido (decisão definitiva, não pendência #16).
+
+---
+
+## ADR-027 — Painel cobertura posto/idioma (#10) descartado (2026-06-04)
+
+**Contexto:** Issue [#10](https://github.com/esvianna/ZELO/issues/10) / ROADMAP B2 previa painel agregado posto × idioma (lacunas/excesso). Análise em `docs/ISSUE-10-COBERTURA-POSTO-IDIOMA.md`. Já existem escala PWA com filtros local/idioma (#11), vista por turno, export PDF, check-in e admin «Cobertura escala» (designados vs presença por dia+turno).
+
+**Decisão:** **Não implementar** painel dedicado posto×idioma. A equipa acede às informações com os recursos actuais. Manter admin parcial e filtros na PWA sem evolução até nova decisão explícita.
+
+**Consequências:** Issue #10 fechada como *won't fix* / descartada. B2 no ROADMAP marcado como descartado. Metas configuráveis por idioma/posto ficam fora de escopo.
+
+---
+
+## ADR-026 — Web Push (#8) descartado; notificações in-app na PWA (2026-06-04)
+
+**Contexto:** Issue [#8](https://github.com/esvianna/ZELO/issues/8) previa VAPID + `POST /ops/push/subscribe` real (hoje stub **501**). O pacote de confirmação voluntários (C4 no ROADMAP) incluía push nativo do browser.
+
+**Decisão:** **Não implementar** Web Push como prioridade de produto. Voluntários terão acesso à PWA e verão avisos **in-app** (hub/sino + Novidades #26, badge stale, offline parcial ADR-025). Manter stub 501 e handlers `push`/`notificationclick` no SW sem evolução até nova decisão explícita.
+
+**Consequências:** Issue #8 fechada como *won't fix* / descartada. Motor unificado (#9) e inbox servidor (#16) permanecem no backlog sem dependência de push. E-mail cron (`schedule_changed`) continua como canal assíncrono fora da PWA.
+
+---
+
 ## ADR-025 — Novidades: detalhe offline por post (2026-06-04)
 
 **Contexto:** ADR-023 / issue #26 — lista `/news` já tinha snapshot `zelo_news_v2_*`, mas `GET /news/{id}` falhava offline com «Failed to fetch» ao abrir o artigo (só preview na listagem).

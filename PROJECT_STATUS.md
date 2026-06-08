@@ -32,6 +32,18 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | [#27](https://github.com/esvianna/ZELO/issues/27) | Persistir última view após F5 (PWA 107) |
 | [#13](https://github.com/esvianna/ZELO/issues/13) | Auditoria permissões ops/swaps (2.11.8) |
 | [#12](https://github.com/esvianna/ZELO/issues/12) | WhatsApp na escala — links wa.me (2.11.4 / PWA 105) |
+| [#26](https://github.com/esvianna/ZELO/issues/26) | Novidades/blog WP — card Operação, offline detalhe (2.13.x, PWA 116–125) |
+| [#28](https://github.com/esvianna/ZELO/issues/28) | Mapa do evento — admin + PWA diagrama, offline (2.12.x, PWA 110–125) |
+
+### Descartado (decisão de produto)
+
+| Issue | Motivo |
+|-------|--------|
+| [#8](https://github.com/esvianna/ZELO/issues/8) Web Push VAPID | Voluntários usam a PWA; avisos in-app (#26) bastam — ADR-026. Stub 501 mantido. |
+| [#10](https://github.com/esvianna/ZELO/issues/10) Cobertura posto/idioma | Escala + filtros (#11), export PDF e admin presença bastam — ADR-027. |
+| [#9](https://github.com/esvianna/ZELO/issues/9) Motor notificações | Hub sino + e-mail cron + localStorage bastam — ADR-028. |
+| [#16](https://github.com/esvianna/ZELO/issues/16) Inbox servidor | Descartado com #9 — ADR-028. |
+| [#14](https://github.com/esvianna/ZELO/issues/14) Programação visitante | JW Library + impresso no evento — ADR-029. |
 
 ### Destaques técnicos por versão
 
@@ -88,26 +100,27 @@ Priorização via [Project 3](https://github.com/users/esvianna/projects/3). Pri
 
 | Prioridade | Item | Issue |
 |------------|------|-------|
-| **Alta** | Web Push VAPID + subscribe real (stub 501 hoje) | [#8](https://github.com/esvianna/ZELO/issues/8) |
-| **Média** | Painel cobertura posto/idioma | [#10](https://github.com/esvianna/ZELO/issues/10) |
-| **Média** | Motor notificações + inbox servidor | [#9](https://github.com/esvianna/ZELO/issues/9) |
 | **Infra** | Rate limit REST, testes, env API | [#22](https://github.com/esvianna/ZELO/issues/22) … [#20](https://github.com/esvianna/ZELO/issues/20) |
-| **UX visitante** | Mapa estádio (#28 **In review** — PWA 115), programação, carrossel, branding | [#28](https://github.com/esvianna/ZELO/issues/28), [#14](https://github.com/esvianna/ZELO/issues/14) … |
-| **Conteúdo** | Posts WP → blog/notificações — **In review** (#26, PWA 118) | [#26](https://github.com/esvianna/ZELO/issues/26) |
+| **UX visitante** | Carrossel — plano `docs/ISSUE-15-CARROSSEL-HOME.md` | [#15](https://github.com/esvianna/ZELO/issues/15) |
+| **UX visitante** | Emergência, branding | [#17](https://github.com/esvianna/ZELO/issues/17), [#18](https://github.com/esvianna/ZELO/issues/18) |
 
 ---
 
 ## Próximos passos lógicos
 
-1. **Validar #28** (PWA 115 + plugin 2.12.3) → mover para **Done** no Project após smoke `TESTING.md` §4 (2x–2z).
-2. Deploy alinhado: plugin **2.12.3** + PWA **115** (`DEPLOYMENT_RULES.md`).
-3. Próxima feature no backlog: **#8** Web Push (alta) ou **#10** cobertura posto/idioma (média, ops).
-4. UX visitante rápida: **#14** Programação; **#26** blog/notificações (**Ready** — logados, PT).
+1. Smoke humano **#26** e **#28** (PWA 125 + plugin 2.13.2) — `TESTING.md` §4 (2aa, 2x–2z) e §12 (O5, O6).
+2. Deploy alinhado plugin **2.13.2** + PWA **125** (`DEPLOYMENT_RULES.md`); utilizadores limpar cache PWA se necessário.
+3. Próxima feature sugerida: **#15** carrossel home ou infra **#22** rate limit.
 
 ---
 
 ## Última sessão (2026-06-04)
 
+- **#15 análise:** plano `docs/ISSUE-15-CARROSSEL-HOME.md` — banner único hoje; MVP slides admin; D1–D3 pendentes.
+- **#14 Programação descartada (ADR-029):** JW Library + impresso; **Done** no Project.
+- **#9 / #16 descartados (ADR-028):** hub sino + cron e-mail + localStorage; issues fechadas; **Done** no Project.
+- **#10 cobertura descartado (ADR-027):** filtros escala + export + admin presença bastam; issue fechada; **Done** no Project.
+- **#8 Web Push descartado (ADR-026):** notificações via PWA in-app (#26); issue fechada; **Done** no Project; stub `/ops/push/subscribe` mantido.
 - **Mapa evento UX:** PWA **125** — viewport do diagrama edge-to-edge; **124** — header/bottom nav no Diagrama.
 - **ADR-025 / novidades detalhe offline:** PWA **123** — snapshot `zelo_news_item_v1_*`, prefetch ao listar, badge stale, mensagem amigável; teste O6.
 - **ADR-024 / mapa evento offline:** PWA **122** — snapshot `zelo_indoor_map`, prefetch imagem same-origin no SW, badge stale, carregamento no `init()`; teste `TESTING.md` O5.

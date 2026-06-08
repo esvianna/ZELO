@@ -8,7 +8,27 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
-### Adicionado — blog/notificações (#26, **In review**)
+### Planejamento — carrossel home (#15)
+
+- Análise em `docs/ISSUE-15-CARROSSEL-HOME.md` (banner 1 slide; overlap #26 logados).
+
+### Decisão — Programação visitante descartada (#14, ADR-029)
+
+- Issue [#14](https://github.com/esvianna/ZELO/issues/14) fechada; **Done** no Project 3: programa no **JW Library** e **impresso** no evento; sem área Programação na PWA.
+
+### Decisão — motor notificações descartado (#9 + #16, ADR-028)
+
+- Issues [#9](https://github.com/esvianna/ZELO/issues/9) e [#16](https://github.com/esvianna/ZELO/issues/16) fechadas; **Done** no Project 3: hub sino + cron e-mail + `localStorage` para «lido»; sem inbox REST.
+
+### Decisão — cobertura posto/idioma descartada (#10, ADR-027)
+
+- Issue [#10](https://github.com/esvianna/ZELO/issues/10) fechada; **Done** no Project 3: escala PWA (filtros local/idioma #11), export PDF e admin «Cobertura escala» (presença) cobrem a operação; sem painel matriz dedicado.
+
+### Decisão — Web Push descartado (#8, ADR-026)
+
+- Issue [#8](https://github.com/esvianna/ZELO/issues/8) fechada; **Done** no Project 3: voluntários veem avisos **in-app** na PWA (Novidades #26); sem VAPID/subscribe real. Stub `POST /ops/push/subscribe` (501) mantido.
+
+### Adicionado — blog/notificações (#26)
 
 | Versão | Entrega |
 |--------|---------|

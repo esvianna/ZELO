@@ -2,7 +2,7 @@
 
 Roadmap orientado ao contexto real do projeto (visitante + voluntários + WordPress). **Backlog operacional e priorização:** [GitHub Project 3](https://github.com/users/esvianna/projects/3) (ADR-020). Atualize este arquivo quando fases mudarem; issues linkadas são a fonte de tarefas.
 
-**Versão de referência no repo:** plugin **2.11.7**, PWA **build 106**.
+**Versão de referência no repo:** plugin **2.13.2**, PWA **build 125**.
 
 ---
 
@@ -30,8 +30,8 @@ Roadmap orientado ao contexto real do projeto (visitante + voluntários + WordPr
 | C1 | Compromisso antecipado + prazo admin | Implementado (2.7.0) | — |
 | C2 | Janelas check-in/out + validação API | Implementado | — |
 | C3 | Onboarding roster + fila vínculos | Implementado | — |
-| C4 | Web Push completo (VAPID + subscribe) | Pendente (stub 501) | [#8](https://github.com/esvianna/ZELO/issues/8) |
-| C5 | Motor notificações unificado + inbox servidor | Parcial (hook + e-mail) | [#9](https://github.com/esvianna/ZELO/issues/9) |
+| C4 | Web Push completo (VAPID + subscribe) | **Descartado** (ADR-026; avisos in-app #26) | [#8](https://github.com/esvianna/ZELO/issues/8) |
+| C5 | Motor notificações unificado + inbox servidor | **Descartado** (ADR-028; hub + e-mail + localStorage) | [#9](https://github.com/esvianna/ZELO/issues/9) |
 
 ---
 
@@ -41,7 +41,7 @@ Roadmap orientado ao contexto real do projeto (visitante + voluntários + WordPr
 |---|---------|--------|-------|
 | B0 | Check-in restrito à própria designação | **Concluído** (2.7.0) | — |
 | B1 | Exportação escala (`/ops/export`) PDF/CSV | **Concluído** (2.9.0+; faixa 2.11.5–7) | [#7](https://github.com/esvianna/ZELO/issues/7) |
-| B2 | Painel de cobertura por posto/idioma | Pendente | [#10](https://github.com/esvianna/ZELO/issues/10) |
+| B2 | Painel de cobertura por posto/idioma | **Descartado** (ADR-027; escala + filtros #11) | [#10](https://github.com/esvianna/ZELO/issues/10) |
 | B3 | Escala PWA — filtros (idioma, responsável, voluntário) | **Concluído** (PWA 106) | [#11](https://github.com/esvianna/ZELO/issues/11) |
 | B4 | Escala PWA — UX listagem por dia / por turno | **Concluído** (build 89→102) | [#1](https://github.com/esvianna/ZELO/issues/1) |
 | B5 | Escala PWA — WhatsApp | **Concluído** (2.11.4 / PWA 105) | [#12](https://github.com/esvianna/ZELO/issues/12) |
@@ -72,12 +72,12 @@ Itens históricos; ver **Fase B** para status atualizado.
 | B2 | Branding evento na splash/home | Parcial (banner evento) | [#18](https://github.com/esvianna/ZELO/issues/18) |
 | B3 | Card visual do mapa | Implementado (`home-map-card`) | — |
 | B4 | Bottom navigation | Implementado | — |
-| B5 | Botão / área “Programação” | Não implementado | [#14](https://github.com/esvianna/ZELO/issues/14) |
+| B5 | Botão / área “Programação” | **Descartado** (ADR-029; JW Library + impresso) | [#14](https://github.com/esvianna/ZELO/issues/14) |
 | B6 | Protótipos `docs/stitch_zelo/` → telas reais | Referência de design | — |
 | B7 | Hub avisos unificado (sino) | Implementado MVP (build 78) | — |
 | B8 | Widget tempo na home | Implementado (build 78) | — |
 | B9 | Carrossel destaques na home | Pendente | [#15](https://github.com/esvianna/ZELO/issues/15) |
-| B10 | Inbox avisos com persistência servidor | Pendente | [#16](https://github.com/esvianna/ZELO/issues/16) |
+| B10 | Inbox avisos com persistência servidor | **Descartado** (ADR-028; com #9) | [#16](https://github.com/esvianna/ZELO/issues/16) |
 
 ---
 
