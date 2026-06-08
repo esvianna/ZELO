@@ -5,6 +5,7 @@ const app = {
         clima: null,
         categoriesMeta: {},
         volunteerOps: null,
+        news: null,
         indoorMap: null,
         currentCategory: null,
         // Pagination & Filter State
@@ -23,7 +24,8 @@ const app = {
         locais: false,
         ops: false,
         clima: false,
-        evento: false
+        evento: false,
+        news: false
     },
 
     // --- Helpers ---
@@ -38,6 +40,7 @@ const app = {
         this._dataStale.ops = !!API.lastFetchFromCache.volunteerOps;
         this._dataStale.clima = !!API.lastFetchFromCache.clima;
         this._dataStale.evento = !!API.lastFetchFromCache.evento;
+        this._dataStale.news = !!API.lastFetchFromCache.news;
     },
 
     async cacheUserAvatar(url) {
@@ -176,6 +179,9 @@ const app = {
             if (viewId === 'profile') {
                 return !!app.auth.user;
             }
+            if (viewId === 'blog' || viewId === 'blog-post') {
+                return !!app.auth.user;
+            }
             return this.isPersistableView(viewId);
         },
 
@@ -296,6 +302,10 @@ const app = {
                 } else if (viewId === 'profile') {
                     app.renderProfileLanguages();
                     app.populateProfileForm();
+                } else if (viewId === 'blog') {
+                    app.renderBlog();
+                } else if (viewId === 'blog-post') {
+                    app.renderBlogPost(params.id);
                 }
 
                 // Render Home components if on home
@@ -305,6 +315,7 @@ const app = {
                     app.renderEventBanner();
                     app.renderHomeMap();
                     app.renderHomeVolunteerDashboard();
+                    app.renderHomeNewsCard();
                     app.toggleHomeVisitorExtrasCollapse();
                     app.updateNotificationsBadge();
                 }
@@ -446,6 +457,8 @@ const app = {
                         app.data.volunteerOps = null;
                     }
 
+                    await app.loadNews();
+
                     app.router.navigate('home');
 
                     // Clear form
@@ -502,11 +515,16 @@ const app = {
         },
 
         logout() {
+            const uid = this.user && this.user.id;
             this.user = null;
             localStorage.removeItem('zelo_user');
             localStorage.removeItem('zelo_volunteer_ops');
             localStorage.removeItem('zelo_volunteer_ops_mine');
+            if (uid != null) {
+                localStorage.removeItem(API.newsSnapshotKey(uid));
+            }
             app.data.volunteerOps = null;
+            app.data.news = null;
             this.clearOpsAuthFailure();
             this.refreshAuthChrome();
             app.router.navigate('home');
@@ -553,6 +571,8 @@ const app = {
             }
 
             app.updateBottomNavForVolunteer();
+            app.updateNewsMenuItem();
+            app.renderHomeNewsCard();
             app.updateNotificationsBadge();
             app.renderProfileLanguages();
         },
@@ -815,6 +835,16 @@ const app = {
             // Init Auth
             this.auth.init();
 
+            let sessionSynced = false;
+            if (this.auth.user) {
+                const synced = await API.refreshSession();
+                if (synced) {
+                    this.auth.user = synced;
+                    app.cacheUserAvatar(synced.avatar);
+                    sessionSynced = true;
+                }
+            }
+
             // Load initial data
             const [locais, evento, categorias, clima] = await Promise.all([
                 API.getLocais(), // Fetch all initially
@@ -829,12 +859,10 @@ const app = {
             this.data.categoriesMeta = this.buildCategoryMeta(categorias || []);
             this.syncStaleFlags();
 
+            const sessionOk = sessionSynced;
+
             if (this.auth.user && this.auth.user.caps && this.auth.user.caps.view_ops) {
-                const synced = await API.refreshSession();
-                if (synced) {
-                    this.auth.user = synced;
-                    app.cacheUserAvatar(synced.avatar);
-                    // force=true: após refreshSession ok, ignorar _opsAuthFailed de tentativa anterior
+                if (sessionOk) {
                     this.data.volunteerOps = await this.loadVolunteerOps(true);
                     if (!this._opsAuthFailed) {
                         this.auth.clearOpsAuthFailure();
@@ -847,6 +875,10 @@ const app = {
                 }
             }
 
+            if (this.auth.user && sessionOk) {
+                await this.loadNews();
+            }
+
             console.log('Data loaded', this.data);
 
             this.auth.refreshAuthChrome();
@@ -854,6 +886,7 @@ const app = {
             this.renderEventBanner();
             this.renderHomeMap();
             this.renderHomeVolunteerDashboard();
+            this.renderHomeNewsCard();
             this.renderHomeWeatherWidget();
             this.toggleHomeVisitorExtrasCollapse();
             this.updateNotificationsBadge();
@@ -893,7 +926,7 @@ const app = {
             this.router.navigate(viewId, params);
             return;
         }
-        if (viewId === 'escala' || viewId === 'profile') {
+        if (viewId === 'escala' || viewId === 'profile' || viewId === 'blog' || viewId === 'blog-post') {
             if (!this.auth.user) {
                 this.router.navigate('login', {}, { persist: false });
             } else {
@@ -918,6 +951,7 @@ const app = {
                 this.renderEventBanner();
                 this.renderHomeMap();
                 this.renderHomeVolunteerDashboard();
+                this.renderHomeNewsCard();
                 this.toggleHomeVisitorExtrasCollapse();
                 this.updateNotificationsBadge();
                 break;
@@ -962,6 +996,12 @@ const app = {
                 break;
             case 'register':
                 this.loadRegisterLanguages();
+                break;
+            case 'blog':
+                this.renderBlog({ keepPage: true });
+                break;
+            case 'blog-post':
+                this.renderBlogPost(params.id);
                 break;
             default:
                 break;
@@ -1025,6 +1065,183 @@ const app = {
         return ymd === todayYmd;
     },
 
+    async loadNews(page = 1, append = false) {
+        if (!this.auth.user) {
+            this.data.news = null;
+            return null;
+        }
+        const data = await API.getNews({ page, per_page: 20 }, this.auth.user.id);
+        if (!data) {
+            if (!append) {
+                this.data.news = null;
+            }
+            this.syncStaleFlags();
+            return data;
+        }
+        if (append && this.data.news && Array.isArray(this.data.news.items)) {
+            this.data.news = {
+                ...data,
+                items: this.data.news.items.concat(data.items || [])
+            };
+        } else {
+            this.data.news = data;
+        }
+        this.syncStaleFlags();
+        this.updateNotificationsBadge();
+        return this.data.news;
+    },
+
+    formatNewsDate(iso) {
+        if (!iso) return '';
+        try {
+            const d = new Date(iso);
+            if (Number.isNaN(d.getTime())) return '';
+            return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+        } catch (e) {
+            return '';
+        }
+    },
+
+    getNewsNotificationItems() {
+        const items = (this.data.news && Array.isArray(this.data.news.items)) ? this.data.news.items : [];
+        return items.filter((p) => p.as_notification);
+    },
+
+    updateNewsMenuItem() {
+        const item = document.getElementById('header-menu-news');
+        if (!item) return;
+        item.hidden = !this.auth.user;
+    },
+
+    renderHomeNewsCard() {
+        const el = document.getElementById('home-news-card');
+        if (!el) return;
+        if (!this.auth.user) {
+            el.hidden = true;
+            el.innerHTML = '';
+            return;
+        }
+        el.hidden = false;
+        const stale = this._dataStale.news ? this.renderStaleBadge('news') : '';
+        el.innerHTML = `
+            <div class="home-section-title">${this.escapeHtml(i18n.t('news_section_title'))}</div>
+            <button type="button" class="home-news-card" onclick="app.router.navigate('blog'); return false;">
+                <span class="home-news-card-icon">📰</span>
+                <span class="home-news-card-body">
+                    <span class="home-news-card-title">${this.escapeHtml(i18n.t('news_home_card_title'))}</span>
+                    <span class="home-news-card-desc">${this.escapeHtml(i18n.t('news_home_card_desc'))}</span>
+                </span>
+                ${stale}
+                <span class="home-news-card-chevron">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </span>
+            </button>
+        `;
+    },
+
+    _blogPage: 1,
+
+    async renderBlog(options = {}) {
+        const container = document.getElementById('blog-container');
+        if (!container) return;
+        if (!this.auth.user) {
+            this.router.navigate('login');
+            return;
+        }
+
+        if (!options.keepPage) {
+            container.innerHTML = `<div class="loading">${this.escapeHtml(i18n.t('loading'))}</div>`;
+            this._blogPage = 1;
+            await this.loadNews(1, false);
+        }
+
+        const stale = this._dataStale.news ? this.renderStaleBadge('news') : '';
+        const items = (this.data.news && this.data.news.items) || [];
+        const total = (this.data.news && this.data.news.total) || 0;
+
+        if (!items.length) {
+            container.innerHTML = stale + `<div class="blog-empty">${this.escapeHtml(i18n.t('news_empty'))}</div>`;
+            return;
+        }
+
+        const list = items.map((post) => this.buildBlogCardHtml(post)).join('');
+        const hasMore = items.length < total;
+        container.innerHTML = stale + `<div class="blog-list">${list}</div>` +
+            (hasMore ? `<button type="button" class="blog-load-more" onclick="app.loadMoreBlog()">${this.escapeHtml(i18n.t('news_load_more'))}</button>` : '');
+    },
+
+    buildBlogCardHtml(post) {
+        const img = post.featured_image
+            ? `<div class="blog-card-image" style="background-image:url('${this.escapeHtml(post.featured_image)}')"></div>`
+            : `<div class="blog-card-image blog-card-image--placeholder">📰</div>`;
+        return `
+            <button type="button" class="blog-card" onclick="app.openBlogPost(${Number(post.id)})">
+                ${img}
+                <span class="blog-card-body">
+                    <span class="blog-card-date">${this.escapeHtml(this.formatNewsDate(post.published_at))}</span>
+                    <span class="blog-card-title">${this.formatPlainText(post.title || '')}</span>
+                    <span class="blog-card-excerpt">${this.formatPlainText(post.excerpt || '')}</span>
+                </span>
+            </button>
+        `;
+    },
+
+    async loadMoreBlog() {
+        const btn = document.querySelector('.blog-load-more');
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = i18n.t('loading');
+        }
+        this._blogPage += 1;
+        await this.loadNews(this._blogPage, true);
+        if (this.router.currentView === 'blog') {
+            this.renderBlog({ keepPage: true });
+        }
+    },
+
+    openBlogPost(id) {
+        this.router.navigate('blog-post', { id });
+    },
+
+    async renderBlogPost(id) {
+        const container = document.getElementById('blog-post-container');
+        if (!container) return;
+        if (!this.auth.user) {
+            this.router.navigate('login');
+            return;
+        }
+        if (!id) {
+            this.router.navigate('blog');
+            return;
+        }
+
+        container.innerHTML = `<div class="loading">${this.escapeHtml(i18n.t('loading'))}</div>`;
+        try {
+            const post = await API.getNewsItem(id);
+            if (!post) {
+                container.innerHTML = `<div class="blog-empty">${this.escapeHtml(i18n.t('news_not_found'))}</div>`;
+                return;
+            }
+            this.markAvisoRead(`post-${post.id}`);
+            const img = post.featured_image
+                ? `<div class="blog-post-hero" style="background-image:url('${this.escapeHtml(post.featured_image)}')"></div>`
+                : '';
+            container.innerHTML = `
+                <article class="blog-post">
+                    ${img}
+                    <div class="blog-post-header">
+                        <time class="blog-post-date">${this.escapeHtml(this.formatNewsDate(post.published_at))}</time>
+                        <h1 class="blog-post-title">${this.formatPlainText(post.title || '')}</h1>
+                        ${post.author_name ? `<p class="blog-post-author">${this.escapeHtml(post.author_name)}</p>` : ''}
+                    </div>
+                    <div class="blog-post-body">${post.content_html || ''}</div>
+                </article>
+            `;
+        } catch (e) {
+            container.innerHTML = `<div class="blog-empty">${this.escapeHtml(e.message || i18n.t('error_generic'))}</div>`;
+        }
+    },
+
     buildAvisosFeed() {
         const items = [];
         const noticeData = this.data.evento?.info_uteis?.home_notice;
@@ -1039,6 +1256,21 @@ const app = {
                 time: '',
                 action: 'event_notice',
                 link: noticeData.link || ''
+            });
+        }
+
+        if (this.auth.user) {
+            this.getNewsNotificationItems().forEach((post) => {
+                items.push({
+                    id: `post-${post.id}`,
+                    category: 'news',
+                    icon: post.priority === 'important' ? '📣' : '📰',
+                    title: this.decodeHtmlEntities(post.title || ''),
+                    summary: this.decodeHtmlEntities(post.excerpt || ''),
+                    time: this.formatNewsDate(post.published_at),
+                    action: 'news',
+                    postId: post.id
+                });
             });
         }
 
@@ -1183,6 +1415,8 @@ const app = {
             } else {
                 this.router.navigate('evento');
             }
+        } else if (item.action === 'news' && item.postId) {
+            this.router.navigate('blog-post', { id: item.postId });
         }
     },
 
@@ -1198,15 +1432,21 @@ const app = {
             items = items.filter((i) => i.category === 'personal');
         } else if (this._avisosFilter === 'event') {
             items = items.filter((i) => i.category === 'event');
+        } else if (this._avisosFilter === 'news') {
+            items = items.filter((i) => i.category === 'news');
         }
+
+        const showNewsFilter = !!this.auth.user;
 
         const chips = `
             <div class="avisos-toolbar">
                 <button type="button" class="avisos-filter-chip ${this._avisosFilter === 'all' ? 'active' : ''}" onclick="app._avisosFilter='all';app.renderAvisos();">${this.escapeHtml(i18n.t('avisos_filter_all'))}</button>
+                ${showNewsFilter ? `<button type="button" class="avisos-filter-chip ${this._avisosFilter === 'news' ? 'active' : ''}" onclick="app._avisosFilter='news';app.renderAvisos();">${this.escapeHtml(i18n.t('avisos_filter_news'))}</button>` : ''}
                 ${showPersonal ? `<button type="button" class="avisos-filter-chip ${this._avisosFilter === 'personal' ? 'active' : ''}" onclick="app._avisosFilter='personal';app.renderAvisos();">${this.escapeHtml(i18n.t('avisos_filter_personal'))}</button>` : ''}
                 <button type="button" class="avisos-filter-chip ${this._avisosFilter === 'event' ? 'active' : ''}" onclick="app._avisosFilter='event';app.renderAvisos();">${this.escapeHtml(i18n.t('avisos_filter_event'))}</button>
                 ${items.length ? `<button type="button" class="avisos-mark-all" onclick="app.markAllAvisosRead()">${this.escapeHtml(i18n.t('avisos_mark_all_read'))}</button>` : ''}
             </div>
+            ${showNewsFilter ? `<p class="avisos-blog-link"><button type="button" class="avisos-blog-link-btn" onclick="app.router.navigate('blog');">${this.escapeHtml(i18n.t('news_view_all'))}</button></p>` : ''}
         `;
 
         if (!items.length) {
@@ -1221,8 +1461,8 @@ const app = {
                 <button type="button" class="avisos-item ${unread ? 'unread' : ''}" onclick="app.handleAvisoClick('${String(item.id).replace(/'/g, "\\'")}')">
                     <span class="avisos-item-icon">${item.icon}</span>
                     <span class="avisos-item-body">
-                        <div class="avisos-item-title">${this.escapeHtml(item.title)}</div>
-                        <div class="avisos-item-summary">${this.escapeHtml(item.summary)}</div>
+                        <div class="avisos-item-title">${item.category === 'news' ? this.formatPlainText(item.title) : this.escapeHtml(item.title)}</div>
+                        <div class="avisos-item-summary">${item.category === 'news' ? this.formatPlainText(item.summary) : this.escapeHtml(item.summary)}</div>
                         ${item.time ? `<div class="avisos-item-meta">${this.escapeHtml(item.time)}</div>` : ''}
                     </span>
                 </button>
@@ -2236,6 +2476,19 @@ const app = {
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;');
+    },
+
+    decodeHtmlEntities(str) {
+        if (str == null || str === '') return '';
+        let s = String(str);
+        s = s.replace(/&#(8211|8212|8210|8722);|&(?:ndash|mdash|minus);/gi, '-');
+        const el = document.createElement('textarea');
+        el.innerHTML = s;
+        return el.value.replace(/[\u2010\u2011\u2012\u2013\u2014\u2212]/g, '-');
+    },
+
+    formatPlainText(str) {
+        return this.escapeHtml(this.decodeHtmlEntities(str));
     },
 
     getOpsStatusLabel(status) {

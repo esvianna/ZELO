@@ -1,14 +1,14 @@
-const CACHE_NAME = 'zelo-cache-v115';
+const CACHE_NAME = 'zelo-cache-v118';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
     './manifest.json',
-    './assets/js/zelo-build.js?v=115',
-    './assets/css/style-v5.css?v=115',
-    './assets/js/i18n.js?v=115',
-    './assets/js/app-v5.js?v=115',
-    './assets/js/api-v5.js?v=115',
-    './assets/js/map-manager.js?v=115',
+    './assets/js/zelo-build.js?v=118',
+    './assets/css/style-v5.css?v=118',
+    './assets/js/i18n.js?v=118',
+    './assets/js/app-v5.js?v=118',
+    './assets/js/api-v5.js?v=118',
+    './assets/js/map-manager.js?v=118',
     './images/logo-zelo.png',
     './images/default-avatar.png',
     'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',

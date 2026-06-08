@@ -2,6 +2,22 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.13.2] - 2026-06-04
+
+### Corrigido
+- **Novidades:** `html_entity_decode` + normalização de travessões (–, &#8211;, etc.) → hífen `-` na API.
+
+## [2.13.1] - 2026-06-04
+
+### Corrigido
+- **Novidades API:** título/resumo com entidades HTML (`&#8211;` → travessão UTF-8).
+- **Novidades cache:** invalidação de transients `zelo_news_list_v1_*` ao gravar post.
+
+## [2.13.0] - 2026-06-04
+
+### Adicionado
+- **Novidades / blog (ZELO#26):** meta box «Zelo — App móvel» em Posts; `GET /zelo/v1/news` e `/news/{id}` (sessão WP); cache transiente 10 min.
+
 ## [2.12.3] - 2026-06-04
 
 ### Adicionado

@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-04** (fluxo In review; #24/#25 aguardando validação).
+> Última atualização: **2026-06-04** (#26 In review — PWA 118 / plugin 2.13.2).
 
 ---
 
@@ -12,8 +12,8 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Referência no repo | Versão |
 |--------------------|--------|
-| Plugin WordPress (`zelo-assistente.php`) | **2.12.3** |
-| PWA (`zelo-build.js` / `sw.js`) | **build 115** |
+| Plugin WordPress (`zelo-assistente.php`) | **2.13.2** |
+| PWA (`zelo-build.js` / `sw.js`) | **build 118** |
 
 **Backlog oficial:** [GitHub Project — Projeto ZELO](https://github.com/users/esvianna/projects/3) — issues em [`esvianna/ZELO`](https://github.com/esvianna/ZELO) (ADR-020, `docs/GITHUB-WORKFLOW.md`). Este arquivo **complementa** o quadro; status canônico das tarefas está no Project.
 
@@ -92,27 +92,37 @@ Priorização via [Project 3](https://github.com/users/esvianna/projects/3). Pri
 | **Média** | Painel cobertura posto/idioma | [#10](https://github.com/esvianna/ZELO/issues/10) |
 | **Média** | Motor notificações + inbox servidor | [#9](https://github.com/esvianna/ZELO/issues/9) |
 | **Infra** | Rate limit REST, testes, env API | [#22](https://github.com/esvianna/ZELO/issues/22) … [#20](https://github.com/esvianna/ZELO/issues/20) |
-| **UX visitante** | Mapa estádio (#28 **In review** — zoom mobile PWA 110), programação, carrossel, branding | [#28](https://github.com/esvianna/ZELO/issues/28), [#14](https://github.com/esvianna/ZELO/issues/14) … |
+| **UX visitante** | Mapa estádio (#28 **In review** — PWA 115), programação, carrossel, branding | [#28](https://github.com/esvianna/ZELO/issues/28), [#14](https://github.com/esvianna/ZELO/issues/14) … |
+| **Conteúdo** | Posts WP → blog/notificações — **In review** (#26, PWA 118) | [#26](https://github.com/esvianna/ZELO/issues/26) |
 
 ---
 
 ## Próximos passos lógicos
 
-1. Priorizar no Project: **#8** Web Push ou **#27** persistir view (UX rápida, só PWA).
-2. Manter plugin **2.11.7** + PWA **106** alinhados em produção (`DEPLOYMENT_RULES.md`).
-3. Smoke regressão escala + export PDF após cada deploy ops (`TESTING.md` §4).
-4. Fechar itens de infra/UX conforme janela antes do próximo evento.
+1. **Validar #28** (PWA 115 + plugin 2.12.3) → mover para **Done** no Project após smoke `TESTING.md` §4 (2x–2z).
+2. Deploy alinhado: plugin **2.12.3** + PWA **115** (`DEPLOYMENT_RULES.md`).
+3. Próxima feature no backlog: **#8** Web Push (alta) ou **#10** cobertura posto/idioma (média, ops).
+4. UX visitante rápida: **#14** Programação; **#26** blog/notificações (**Ready** — logados, PT).
 
 ---
 
 ## Última sessão (2026-06-04)
 
-- PWA **115** + plugin **2.12.3**: pinos Balcão 1 (azul) / Balcão 2 (teal) + legenda no diagrama.
-- **#28 (PWA 113–114):** combobox destinos; rótulo Pavim.
-- **#28 (PWA 109 + plugin 2.12.0):** CRUD admin, API, fluxo orientar + diagrama.
-- **#24 / #25:** PWA 108 + plugin 2.11.9 — **In review**.
+- **#26 fix título:** plugin **2.13.2** + PWA **118** — `zelo_news_plain_text()` decodifica entidades e normaliza travessões → `-`; frontend `formatPlainText`/`decodeHtmlEntities`; cache API `v2` + snapshot cliente `zelo_news_v2_*`.
+- **#26 fix anterior:** plugin **2.13.1** + PWA **117** — vídeos responsivos; cache `/news` ao gravar post.
+- **#26:** plugin **2.13.0** + PWA **116** — blog/notificações implementado (**In review**).
+- **#28** permanece **In review** (PWA 115 / plugin 2.12.3).
 
-**Como testar:** `TESTING.md` §4 (2x, 2y, **2z**); iPhone — Diagrama em tela cheia; pinch out mostra mapa completo; botões Mapa completo / Ir ao destino.
+**Como testar:** `TESTING.md` §4 (**2aa** novidades; **2x–2z** mapa indoor).
+
+## Sessão anterior (2026-06-04)
+- PWA **115** + plugin **2.12.3**: Balcão 1 (azul) / Balcão 2 (teal), número no pino, legenda.
+- PWA **110–112**: mobile (tela cheia, pinch, mapa completo); fix diagrama em branco iPhone.
+- PWA **113–114**: combobox «Para onde?»; rótulo Pavim.
+- Plugin **2.12.1–2.12.2**: fix direções admin + aba Mapa evento / tela branca Salvar abas.
+- **#24 / #25:** Done no Project (PWA 108 + plugin 2.11.9).
+
+**Como testar:** `TESTING.md` §4 (**2x**, **2y**, **2z**); validação humana → **Done** no Project.
 
 ## Sessão anterior (2026-06-04)
 

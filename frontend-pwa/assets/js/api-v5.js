@@ -11,7 +11,8 @@ const API = {
         volunteerOps: false,
         evento: false,
         categorias: false,
-        clima: false
+        clima: false,
+        news: false
     },
 
     readSnapshot(key) {
@@ -40,7 +41,13 @@ const API = {
         evento: null,
         categorias: null,
         clima: null,
-        volunteerOps: null
+        volunteerOps: null,
+        news: null
+    },
+
+    newsSnapshotKey(userId) {
+        const uid = userId != null ? String(userId) : '0';
+        return `zelo_news_v2_${uid}`;
     },
 
     getAuthHeaders() {
@@ -474,5 +481,60 @@ const API = {
         });
         if (!response.ok) throw new Error('Falha na realocação');
         return response.json();
+    },
+
+    async getNews(params = {}, userId = null) {
+        const sp = new URLSearchParams();
+        sp.set('_t', String(Date.now()));
+        if (params.page) sp.set('page', String(params.page));
+        if (params.per_page) sp.set('per_page', String(params.per_page));
+        if (params.notifications_only) sp.set('notifications_only', '1');
+        const url = `${this.baseUrl}/news?${sp.toString()}`;
+        const snapKey = this.newsSnapshotKey(userId);
+
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                credentials: 'include',
+                headers: this.getAuthHeaders()
+            });
+            if (response.status === 401 || response.status === 403) {
+                this.cache.news = null;
+                this.lastFetchFromCache.news = false;
+                return null;
+            }
+            if (!response.ok) throw new Error('Network response was not ok');
+            const data = await response.json();
+            this.cache.news = data;
+            this.writeSnapshot(snapKey, data);
+            this.lastFetchFromCache.news = false;
+            return data;
+        } catch (error) {
+            console.warn('Fetch news falhou, tentando cache', error);
+            const cached = this.readSnapshot(snapKey);
+            if (cached) {
+                this.cache.news = cached;
+                this.lastFetchFromCache.news = true;
+                return cached;
+            }
+            return null;
+        }
+    },
+
+    async getNewsItem(id) {
+        const url = `${this.baseUrl}/news/${encodeURIComponent(id)}?_t=${Date.now()}`;
+        const response = await fetch(url, {
+            method: 'GET',
+            credentials: 'include',
+            headers: this.getAuthHeaders()
+        });
+        const data = await response.json().catch(() => ({}));
+        if (response.status === 401 || response.status === 403) {
+            return null;
+        }
+        if (!response.ok) {
+            throw new Error(data.message || 'Novidade não encontrada');
+        }
+        return data;
     }
 };

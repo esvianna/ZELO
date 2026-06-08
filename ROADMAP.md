@@ -99,7 +99,7 @@ Itens históricos; ver **Fase B** para status atualizado.
 |-------|--------|
 | [#24](https://github.com/esvianna/ZELO/issues/24) | Ícone olho para ver senha |
 | [#25](https://github.com/esvianna/ZELO/issues/25) | Perfil — alterar dados pessoais |
-| [#26](https://github.com/esvianna/ZELO/issues/26) | Posts como notificações |
+| [#26](https://github.com/esvianna/ZELO/issues/26) | Posts como notificações (`docs/ISSUE-26-BLOG-NOTIFICACOES.md`) |
 | [#28](https://github.com/esvianna/ZELO/issues/28) | Mapa estádio + direções internas (planejamento: `docs/ISSUE-28-STADIUM-MAP.md`) |
 
 ---

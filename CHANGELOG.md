@@ -8,12 +8,35 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
-### Adicionado
-- PWA **115** + plugin **2.12.3**: Balcão 1 (azul) / Balcão 2 (teal), número no pino, legenda no diagrama (#28).
+### Adicionado — blog/notificações (#26, **In review**)
 
-### Corrigido
-- Plugin **2.12.1**: admin mapa evento — direções por destino gravam; aba activa persiste após «Salvar abas».
-- PWA **109–114**: mapa indoor orientar/diagrama/combobox — ZELO#28 **In review**.
+| Versão | Entrega |
+|--------|---------|
+| Plugin **2.13.0** + PWA **116** | Posts WP na PWA: meta box, `/news`, hub avisos, views blog, card home + menu |
+| Plugin **2.13.1** + PWA **117** | Fix título com entidades HTML; vídeos responsivos no detalhe; cache `/news` ao gravar post |
+| Plugin **2.13.2** + PWA **118** | Título/resumo: decode completo + hífen ASCII; cache API v2 + snapshot cliente |
+
+**Testes:** `TESTING.md` §4 — item **2aa**.
+
+### Adicionado — mapa indoor (#28, **In review**)
+
+| Versão | Entrega |
+|--------|---------|
+| Plugin **2.12.0** + PWA **109** | Aba «Mapa evento» (CRUD, editor pinos, direções pt/en/es), `GET /indoor-map`, fluxo Orientar + Diagrama; dept. 8–35 ocultos na API |
+| PWA **110–111** | Mobile: fit-to-screen, pinch-to-zoom, Diagrama em tela cheia, botões Mapa completo / Ir ao destino |
+| PWA **113–114** | Combobox «Para onde?» (filtro sem perder foco iOS); rótulo **Pavim.** na lista de destinos |
+| Plugin **2.12.3** + PWA **115** | Balcão 1 (azul) vs Balcão 2 (teal), número no pino, legenda no diagrama (`booth_slot`) |
+
+### Corrigido — mapa indoor (#28)
+
+| Versão | Fix |
+|--------|-----|
+| PWA **112** | Diagrama em branco no iPhone (viewport h=0 → `scale(0)`); ResizeObserver + retry layout |
+| PWA **113** | Combobox — só uma letra por re-render total do mapa |
+| Plugin **2.12.1** | Admin: direções por destino gravam (POST indexado por `id` do local) |
+| Plugin **2.12.2** | Admin: «Salvar abas» deixava tela branca (redirect após output); aba via POST + `user_meta` |
+
+**Testes:** `TESTING.md` §4 — itens **2x**, **2y**, **2z**.
 
 ### Adicionado
 - PWA build **108**: ícone olho nos campos senha (login, cadastro, perfil) — ZELO#24; formulário de perfil (nome, e-mail, telefone, senha, idiomas, foto) — ZELO#25.

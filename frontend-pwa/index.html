@@ -17,7 +17,7 @@
     <!-- CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <link rel="stylesheet" href="assets/css/style-v5.css?v=115">
+    <link rel="stylesheet" href="assets/css/style-v5.css?v=118">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -52,6 +52,9 @@
     </header>
     <div id="header-menu-backdrop" class="header-menu-backdrop" hidden onclick="app.closeHeaderMenu()"></div>
     <div id="header-menu-sheet" class="header-menu-sheet" hidden role="dialog" aria-label="Menu">
+        <button type="button" id="header-menu-news" class="header-menu-item" hidden onclick="app.router.navigate('blog'); app.closeHeaderMenu();">
+            <span data-i18n="header_menu_news">Novidades</span>
+        </button>
         <button type="button" id="header-menu-install" class="header-menu-item" hidden onclick="app.triggerInstallPwa(); app.closeHeaderMenu();">
             <span data-i18n="header_menu_install">Instalar aplicativo</span>
         </button>
@@ -67,6 +70,8 @@
         <section id="view-home" class="view active">
 
             <div id="home-volunteer-dashboard" class="home-volunteer-dashboard" hidden></div>
+
+            <div id="home-news-card" hidden></div>
 
             <div id="home-weather-widget" class="home-weather-widget" hidden aria-live="polite"></div>
 
@@ -234,6 +239,27 @@
                 <h2 data-i18n="avisos_title">Avisos</h2>
             </div>
             <div id="avisos-container" class="avisos-container">
+                <div class="loading" data-i18n="loading">Carregando...</div>
+            </div>
+        </section>
+
+        <!-- Blog / Novidades -->
+        <section id="view-blog" class="view">
+            <div class="view-header">
+                <button class="back-btn" onclick="app.router.back()" data-i18n="back">Voltar</button>
+                <h2 data-i18n="news_title">Novidades</h2>
+            </div>
+            <div id="blog-container" class="blog-container">
+                <div class="loading" data-i18n="loading">Carregando...</div>
+            </div>
+        </section>
+
+        <section id="view-blog-post" class="view">
+            <div class="view-header">
+                <button class="back-btn" onclick="app.router.navigate('blog')" data-i18n="back">Voltar</button>
+                <h2 data-i18n="news_title">Novidades</h2>
+            </div>
+            <div id="blog-post-container" class="blog-post-container">
                 <div class="loading" data-i18n="loading">Carregando...</div>
             </div>
         </section>
@@ -526,11 +552,11 @@
 
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script src="assets/js/zelo-build.js?v=115"></script>
-    <script src="assets/js/i18n.js?v=115"></script>
-    <script src="assets/js/api-v5.js?v=115"></script>
-    <script src="assets/js/map-manager.js?v=115"></script>
-    <script src="assets/js/app-v5.js?v=115"></script>
+    <script src="assets/js/zelo-build.js?v=118"></script>
+    <script src="assets/js/i18n.js?v=118"></script>
+    <script src="assets/js/api-v5.js?v=118"></script>
+    <script src="assets/js/map-manager.js?v=118"></script>
+    <script src="assets/js/app-v5.js?v=118"></script>
 
     <script>
         // Register Service Worker

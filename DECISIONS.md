@@ -6,6 +6,16 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 ---
 
+## ADR-023 — Blog/novidades: logados, PT, entradas home + menu (2026-06-04)
+
+**Contexto:** Issue #26 — publicar Posts WP na PWA como notificações e blog. Hub avisos MVP (ADR-012) usa feed cliente + `localStorage`.
+
+**Decisão:** Canal **restrito a utilizadores logados** (cookie WP). Conteúdo admin **só PT**. Atalhos: **card na home** + **item no menu hambúrguer** + link no hub avisos. API `GET /news` exige sessão. Sem meta `_zelo_audience` no MVP. Bottom nav inalterada.
+
+**Consequências:** Visitante anónimo não vê novidades de post. Ver `docs/ISSUE-26-BLOG-NOTIFICACOES.md`. Web Push (#8) e inbox servidor (#16) ficam fora do MVP #26.
+
+---
+
 ## ADR-022 — Mapa indoor: diagrama, CRUD e direções por balcão (2026-06-04)
 
 **Contexto:** Issue #28 — voluntários nos balcões (A1–B2) orientam visitantes com diagrama do estádio. Existe stub `indoor_map` + `GET /indoor-map`; catálogo ops tem `locations` e turnos sem coordenadas no plano.
