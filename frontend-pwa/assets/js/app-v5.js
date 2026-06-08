@@ -1115,8 +1115,16 @@ const app = {
 
     renderHomeNewsCard() {
         const el = document.getElementById('home-news-card');
+        const opsBtn = document.getElementById('home-ops-news-btn');
+        const loggedIn = !!this.auth.user;
+        const volunteerOps = loggedIn && this.canViewOps();
+
+        if (opsBtn) {
+            opsBtn.hidden = !loggedIn;
+        }
+
         if (!el) return;
-        if (!this.auth.user) {
+        if (!loggedIn || volunteerOps) {
             el.hidden = true;
             el.innerHTML = '';
             return;

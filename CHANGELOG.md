@@ -15,6 +15,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | Plugin **2.13.0** + PWA **116** | Posts WP na PWA: meta box, `/news`, hub avisos, views blog, card home + menu |
 | Plugin **2.13.1** + PWA **117** | Fix título com entidades HTML; vídeos responsivos no detalhe; cache `/news` ao gravar post |
 | Plugin **2.13.2** + PWA **118** | Título/resumo: decode completo + hífen ASCII; cache API v2 + snapshot cliente |
+| PWA **119** | Card «Novidades» na secção Operação de Voluntários (home) |
+| PWA **120** | Rótulo do card: «Novidades» (sem «/Blog») |
 
 **Testes:** `TESTING.md` §4 — item **2aa**.
 

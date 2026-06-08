@@ -86,7 +86,7 @@ Configurar `baseUrl` / `siteUrl` em `frontend-pwa/assets/js/api-v5.js` para o am
 | 2x | **Mapa evento** — admin: upload JPG + 2 balcões + 1 destino com direções (2.12+) | manage_options | Detalhes → direções Balcão 1/2; **Salvar abas** permanece na aba Mapa evento; `GET /indoor-map` tem `routes` com texto |
 | 2y | **Mapa evento** PWA: balcão + destino | view_ops ou visitante | Diagrama: Balcão 1 azul / Balcão 2 teal + legenda (115+); combobox destinos; copiar instruções |
 | 2z | **Mapa evento** PWA mobile (110+) | iPhone / ≤768px | Abre em **Orientar**; aba Diagrama: tela cheia (111+); pinch até mapa completo; botões **Mapa completo** / **Ir ao destino** |
-| 2aa | **Novidades / blog** (#26, 2.13.0 / PWA 116+) | Logado | Admin: post com «Publicar na PWA» + notificação → `GET /news` OK; sino + badge; card home + menu hambúrguer → lista + detalhe PT; título sem `&#8211;` literal (2.13.1+); vídeo no detalhe sem corte lateral (117+, iPhone); anónimo sem novidades |
+| 2aa | **Novidades / blog** (#26, 2.13.0 / PWA 116+) | Logado | Admin: post com «Publicar na PWA» + notificação → `GET /news` OK; sino + badge; card home + menu hambúrguer → lista + detalhe PT; **voluntário:** card «Novidades» na secção Operação (119+); título sem `&#8211;` literal (2.13.1+); vídeo no detalhe sem corte lateral (117+, iPhone); anónimo sem novidades |
 | 2g | Visitante em **Mapa** → F5 (107+) | — | Permanece em Mapa; hash `#mapa` |
 | 2h | Abrir URL com `#escala` sem login | — | Redireciona **Login** (sem loop infinito) |
 | 2i | `?zelo_verified=1` após cadastro | — | Tela e-mail verificado (prioridade sobre última view) |

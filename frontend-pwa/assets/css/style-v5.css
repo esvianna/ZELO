@@ -543,6 +543,19 @@ body {
     color: #059669;
 }
 
+.news-icon-bg {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.news-icon-bg svg {
+    stroke: #2563eb;
+}
+
+.action-card.news-card {
+    color: #2563eb;
+}
+
 /* Home Map Card */
 .home-map-card {
     background: var(--surface-color);
