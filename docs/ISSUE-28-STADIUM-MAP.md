@@ -342,10 +342,22 @@ Fase 1 (imagem + validação pinos com equipe) pode começar **antes** do CRUD, 
 
 ## 11. Próximos passos imediatos
 
-1. **Equipe evento:** revisar `docs/assets/issue-28/estadio-diagrama.png` e marcar (rascunho) onde ficam A1, B1, A2, B2 e POIs públicos.  
-2. **Confirmar** dept. 7 e lista de infraestrutura pública.  
-3. **Issue #28 → Ready** no Project quando a lista de pinos estiver validada.  
-4. **Implementação:** CRUD → API → PWA → **In review**.
+1. **Validação mobile (PWA 110):** pinch-to-zoom na aba Diagrama; default Orientar no mobile — `TESTING.md` §4 (2z).  
+2. **Equipe evento:** substituir JPG no admin (sem legenda de camarotes); validar pinos.  
+3. **Issue #28:** permanece **In review** até teste humano → **Done**.
+
+---
+
+## 12. Entrega PWA 110–111 (refino mobile)
+
+| Comportamento | Detalhe |
+|---------------|---------|
+| Default mobile | Aba **Orientar** se usuário não trocou de aba |
+| Diagrama (111) | **Tela cheia** no mobile — esconde header, bottom nav, título |
+| Zoom | `minScale` = mapa inteiro cabe na tela; pinch **abaixo de 1×** permitido |
+| Início Diagrama | Abre em **mapa completo** (fit), não zoomado |
+| Botões | **Mapa completo** (fit) · **Ir ao destino** (foco no pino, ~2.5×) |
+| Desktop | Wheel zoom + arrastar; botões iguais; sem tela cheia |
 
 ---
 

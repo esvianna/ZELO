@@ -238,6 +238,13 @@ const app = {
         },
 
         navigate(viewId, params = {}, options = {}) {
+            if (viewId !== 'mapa-evento') {
+                document.body.classList.remove('indoor-diagram-fullscreen');
+            }
+            if (viewId !== 'mapa-evento' && app._indoorComboboxAbort) {
+                app._indoorComboboxAbort();
+                app._indoorComboboxAbort = null;
+            }
             this.lastParams = params || {};
             // Hide current view
             document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
@@ -279,6 +286,10 @@ const app = {
                 } else if (viewId === 'escala') {
                     app.renderVolunteerOps();
                 } else if (viewId === 'mapa-evento') {
+                    if (!app.data.indoorMapUi) app.data.indoorMapUi = {};
+                    if (window.matchMedia('(max-width: 768px)').matches && !app.data.indoorMapUi._userPickedTab) {
+                        app.data.indoorMapUi.tab = 'guide';
+                    }
                     app.renderIndoorEventMap();
                 } else if (viewId === 'register') {
                     app.loadRegisterLanguages();
@@ -2476,9 +2487,11 @@ const app = {
             return;
         }
         if (!this.data.indoorMapUi) {
-            this.data.indoorMapUi = { boothId: '', destId: '', tab: 'guide', query: '' };
+            this.data.indoorMapUi = { boothId: '', destId: '', tab: 'guide', query: '', comboboxOpen: false, comboboxEditing: false };
         }
         const ui = this.data.indoorMapUi;
+        if (ui.comboboxOpen === undefined) ui.comboboxOpen = false;
+        if (ui.comboboxEditing === undefined) ui.comboboxEditing = false;
         const places = Array.isArray(cfg.places) ? cfg.places : [];
         const booths = places.filter((p) => p.kind === 'booth');
         const dests = places.filter((p) => p.kind !== 'booth');
@@ -2491,22 +2504,9 @@ const app = {
             return `<option value="${this.escapeAttr(b.id)}"${sel}>${this.escapeHtml(lab)}</option>`;
         }).join('');
 
-        const q = (ui.query || '').toLowerCase();
-        const filtered = dests.filter((d) => {
-            if (!q) return true;
-            const lab = this.indoorPlaceLabel(d).toLowerCase();
-            const kws = Array.isArray(d.keywords) ? d.keywords.join(' ').toLowerCase() : '';
-            return lab.includes(q) || kws.includes(q);
-        });
-
-        const listHtml = filtered.length ? filtered.map((d) => {
-            const lab = this.indoorPlaceLabel(d);
-            const active = d.id === ui.destId ? ' indoor-dest-active' : '';
-            return `<button type="button" class="indoor-dest-item${active}" data-dest-id="${this.escapeAttr(d.id)}" onclick="app.selectIndoorDest('${this.escapeAttr(d.id)}')">
-                <span class="indoor-dest-name">${this.escapeHtml(lab)}</span>
-                ${d.floor ? `<span class="indoor-dest-floor">${this.escapeHtml(d.floor)}</span>` : ''}
-            </button>`;
-        }).join('') : `<p class="text-muted">${i18n.t('indoor_no_destinations')}</p>`;
+        const destInputValue = this.getIndoorDestInputDisplayValue(ui, dests);
+        const comboboxOpenClass = ui.comboboxOpen ? ' is-open' : '';
+        const listHtml = this.buildIndoorDestDropdownHtml(dests, ui);
 
         const dirText = this.getIndoorDirections(cfg, ui.boothId, ui.destId);
         const notice = cfg.volunteer_notice || {};
@@ -2536,10 +2536,15 @@ const app = {
                 <div class="indoor-panel"${guideTabActive ? '' : ' hidden'}>
                     <label class="indoor-field-label">${i18n.t('indoor_booth_from')}</label>
                     <select class="form-input indoor-booth-select" onchange="app.setIndoorBooth(this.value)">${boothOpts || `<option value="">${i18n.t('indoor_select_booth')}</option>`}</select>
-                    <label class="indoor-field-label">${i18n.t('indoor_dest_search')}</label>
-                    <input type="search" class="form-input" placeholder="${this.escapeAttr(i18n.t('indoor_dest_search'))}" value="${this.escapeAttr(ui.query || '')}" oninput="app.setIndoorSearch(this.value)" />
-                    <div class="indoor-dest-list">${listHtml}</div>
-                    <div class="indoor-directions-panel">
+                    <label class="indoor-field-label" for="indoor-dest-input">${i18n.t('indoor_dest_search')}</label>
+                    <div class="indoor-dest-combobox${comboboxOpenClass}" id="indoor-dest-combobox">
+                        <input type="text" id="indoor-dest-input" class="form-input indoor-dest-input" autocomplete="off" autocorrect="off" spellcheck="false"
+                            role="combobox" aria-expanded="${ui.comboboxOpen ? 'true' : 'false'}" aria-controls="indoor-dest-dropdown" aria-autocomplete="list"
+                            placeholder="${this.escapeAttr(i18n.t('indoor_dest_combobox_placeholder'))}" value="${this.escapeAttr(destInputValue)}" />
+                        <button type="button" class="indoor-dest-combobox-toggle" aria-label="${this.escapeAttr(i18n.t('indoor_dest_combobox_toggle'))}" tabindex="-1">▾</button>
+                        <div class="indoor-dest-dropdown" id="indoor-dest-dropdown" role="listbox">${listHtml}</div>
+                    </div>
+                    <div class="indoor-directions-panel" id="indoor-directions-panel">
                         <h3 class="indoor-directions-title">${i18n.t('indoor_directions')}</h3>
                         <p class="indoor-directions-text">${dirText ? this.escapeHtml(dirText).replace(/\n/g, '<br>') : i18n.t('indoor_no_route')}</p>
                         ${dirText ? `<button type="button" class="btn-block outline" style="margin-top:0.75rem;" onclick="app.copyIndoorDirections()">${i18n.t('indoor_copy_directions')}</button>` : ''}
@@ -2547,13 +2552,493 @@ const app = {
                     ${noticeText ? `<p class="indoor-notice">${this.escapeHtml(noticeText)}</p>` : ''}
                 </div>
                 <div class="indoor-panel indoor-diagram-panel${mapTabActive ? '' : ' hidden'}">
-                    <div class="indoor-map-wrap">
-                        <img src="${cfg.image_url}" alt="" class="indoor-map-img" />
-                        <div class="indoor-pins-layer">${pinsHtml}</div>
+                    <div class="indoor-diagram-actions">
+                        <button type="button" class="indoor-diagram-btn" onclick="app.indoorDiagramFitAll()">${i18n.t('indoor_map_fit_all')}</button>
+                        <button type="button" class="indoor-diagram-btn primary"${ui.destId || ui.boothId ? '' : ' disabled'} onclick="app.indoorDiagramGoToDest()">${i18n.t('indoor_map_go_dest')}</button>
+                    </div>
+                    <p class="indoor-map-hint">${i18n.t('indoor_map_pinch_hint')}</p>
+                    <div class="indoor-map-viewport" id="indoor-map-viewport">
+                        <div class="indoor-map-transform" id="indoor-map-transform">
+                            <div class="indoor-map-wrap">
+                                <img src="${cfg.image_url}" alt="" class="indoor-map-img" id="indoor-map-img" />
+                                <div class="indoor-pins-layer">${pinsHtml}</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>`;
         this._indoorDirectionsText = dirText || '';
+        this._syncIndoorDiagramFullscreen(ui);
+        if (guideTabActive) {
+            this.initIndoorDestCombobox(dests);
+        }
+        if (mapTabActive) {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => this.initIndoorDiagramGestures(cfg, places));
+            });
+        }
+    },
+
+    filterIndoorDestinations(dests, query) {
+        const list = Array.isArray(dests) ? dests : [];
+        const q = (query || '').toLowerCase().trim();
+        if (!q) return list;
+        return list.filter((d) => {
+            const lab = this.indoorPlaceLabel(d).toLowerCase();
+            const kws = Array.isArray(d.keywords) ? d.keywords.join(' ').toLowerCase() : '';
+            return lab.includes(q) || kws.includes(q);
+        });
+    },
+
+    getIndoorDestInputDisplayValue(ui, dests) {
+        if (!ui) return '';
+        if (ui.comboboxEditing || ui.comboboxOpen) {
+            return ui.query || '';
+        }
+        if (ui.destId) {
+            const d = (dests || []).find((x) => x.id === ui.destId);
+            if (d) return this.indoorPlaceLabel(d);
+        }
+        return ui.query || '';
+    },
+
+    buildIndoorDestDropdownHtml(dests, ui) {
+        const filtered = this.filterIndoorDestinations(dests, ui && ui.comboboxOpen ? ui.query : '');
+        if (!filtered.length) {
+            return `<p class="indoor-dest-empty">${i18n.t('indoor_no_destinations_match')}</p>`;
+        }
+        return filtered.map((d) => {
+            const lab = this.indoorPlaceLabel(d);
+            const active = ui && d.id === ui.destId ? ' indoor-dest-active' : '';
+            const floorMeta = d.floor ? `<span class="indoor-dest-floor-label">${this.escapeHtml(i18n.t('indoor_floor_label'))}</span><span class="indoor-dest-floor">${this.escapeHtml(d.floor)}</span>` : '';
+            return `<button type="button" class="indoor-dest-item${active}" role="option" data-dest-id="${this.escapeAttr(d.id)}" aria-selected="${d.id === ui.destId ? 'true' : 'false'}">
+                <span class="indoor-dest-name">${this.escapeHtml(lab)}</span>
+                ${floorMeta ? `<span class="indoor-dest-meta">${floorMeta}</span>` : ''}
+            </button>`;
+        }).join('');
+    },
+
+    refreshIndoorDestDropdown(dests) {
+        const ui = this.data.indoorMapUi || {};
+        const dropdown = document.getElementById('indoor-dest-dropdown');
+        if (!dropdown) return;
+        dropdown.innerHTML = this.buildIndoorDestDropdownHtml(dests, ui);
+    },
+
+    refreshIndoorDirectionsPanel() {
+        const cfg = this.data.indoorMap;
+        const ui = this.data.indoorMapUi || {};
+        const panel = document.getElementById('indoor-directions-panel');
+        if (!panel || !cfg) return;
+        const dirText = this.getIndoorDirections(cfg, ui.boothId, ui.destId);
+        this._indoorDirectionsText = dirText || '';
+        panel.innerHTML = `
+            <h3 class="indoor-directions-title">${i18n.t('indoor_directions')}</h3>
+            <p class="indoor-directions-text">${dirText ? this.escapeHtml(dirText).replace(/\n/g, '<br>') : i18n.t('indoor_no_route')}</p>
+            ${dirText ? `<button type="button" class="btn-block outline" style="margin-top:0.75rem;" onclick="app.copyIndoorDirections()">${i18n.t('indoor_copy_directions')}</button>` : ''}`;
+    },
+
+    openIndoorDestCombobox(dests) {
+        const ui = this.data.indoorMapUi;
+        if (!ui) return;
+        ui.comboboxOpen = true;
+        const wrap = document.getElementById('indoor-dest-combobox');
+        const input = document.getElementById('indoor-dest-input');
+        if (wrap) wrap.classList.add('is-open');
+        if (input) input.setAttribute('aria-expanded', 'true');
+        this.refreshIndoorDestDropdown(dests);
+    },
+
+    closeIndoorDestCombobox(dests, restoreLabel) {
+        const ui = this.data.indoorMapUi;
+        if (!ui) return;
+        ui.comboboxOpen = false;
+        ui.comboboxEditing = false;
+        ui.query = '';
+        const wrap = document.getElementById('indoor-dest-combobox');
+        const input = document.getElementById('indoor-dest-input');
+        if (wrap) wrap.classList.remove('is-open');
+        if (input) {
+            input.setAttribute('aria-expanded', 'false');
+            if (restoreLabel !== false) {
+                input.value = this.getIndoorDestInputDisplayValue(ui, dests);
+            }
+        }
+    },
+
+    initIndoorDestCombobox(dests) {
+        if (this._indoorComboboxAbort) {
+            this._indoorComboboxAbort();
+            this._indoorComboboxAbort = null;
+        }
+        const wrap = document.getElementById('indoor-dest-combobox');
+        const input = document.getElementById('indoor-dest-input');
+        const dropdown = document.getElementById('indoor-dest-dropdown');
+        const toggle = wrap ? wrap.querySelector('.indoor-dest-combobox-toggle') : null;
+        if (!wrap || !input || !dropdown) return;
+
+        const ui = this.data.indoorMapUi;
+        const ac = new AbortController();
+        this._indoorComboboxAbort = () => ac.abort();
+        const opts = { signal: ac.signal };
+        let highlightIndex = -1;
+
+        const getItems = () => Array.from(dropdown.querySelectorAll('.indoor-dest-item'));
+
+        const setHighlight = (index) => {
+            const items = getItems();
+            items.forEach((el, i) => el.classList.toggle('indoor-dest-highlight', i === index));
+            highlightIndex = index;
+            if (items[index]) {
+                items[index].scrollIntoView({ block: 'nearest' });
+            }
+        };
+
+        input.addEventListener('focus', () => {
+            ui.comboboxEditing = true;
+            if (ui.destId && !ui.query) {
+                input.select();
+            }
+            this.openIndoorDestCombobox(dests);
+        }, opts);
+
+        input.addEventListener('input', () => {
+            ui.query = input.value;
+            ui.comboboxEditing = true;
+            highlightIndex = -1;
+            this.openIndoorDestCombobox(dests);
+        }, opts);
+
+        if (toggle) {
+            toggle.addEventListener('mousedown', (e) => e.preventDefault(), opts);
+            toggle.addEventListener('click', () => {
+                if (ui.comboboxOpen) {
+                    this.closeIndoorDestCombobox(dests);
+                } else {
+                    input.focus();
+                    this.openIndoorDestCombobox(dests);
+                }
+            }, opts);
+        }
+
+        dropdown.addEventListener('mousedown', (e) => {
+            const btn = e.target.closest('[data-dest-id]');
+            if (btn) e.preventDefault();
+        }, opts);
+
+        dropdown.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-dest-id]');
+            if (btn) {
+                this.selectIndoorDest(btn.getAttribute('data-dest-id'));
+            }
+        }, opts);
+
+        input.addEventListener('keydown', (e) => {
+            const items = getItems();
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (!ui.comboboxOpen) this.openIndoorDestCombobox(dests);
+                setHighlight(Math.min(highlightIndex + 1, items.length - 1));
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                setHighlight(Math.max(highlightIndex - 1, 0));
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (highlightIndex >= 0 && items[highlightIndex]) {
+                    this.selectIndoorDest(items[highlightIndex].getAttribute('data-dest-id'));
+                } else if (items.length === 1) {
+                    this.selectIndoorDest(items[0].getAttribute('data-dest-id'));
+                }
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                this.closeIndoorDestCombobox(dests);
+                input.blur();
+            }
+        }, opts);
+
+        input.addEventListener('blur', () => {
+            setTimeout(() => {
+                if (!wrap.contains(document.activeElement)) {
+                    this.closeIndoorDestCombobox(dests);
+                }
+            }, 150);
+        }, opts);
+    },
+
+    _syncIndoorDiagramFullscreen(ui) {
+        const on = ui && ui.tab === 'map' && this.isIndoorMobileLayout();
+        document.body.classList.toggle('indoor-diagram-fullscreen', on);
+    },
+
+    _indoorDiagramLayoutReady(viewport, img) {
+        if (!viewport || !img) return false;
+        if (viewport.clientWidth < 40 || viewport.clientHeight < 40) return false;
+        if (!img.offsetWidth || !img.offsetHeight) return false;
+        return true;
+    },
+
+    _getIndoorLayerMetrics(viewport, layer) {
+        const img = layer.querySelector('.indoor-map-img');
+        const lw = img && img.offsetWidth ? img.offsetWidth : 1;
+        const lh = img && img.offsetHeight ? img.offsetHeight : 1;
+        const vw = Math.max(viewport.clientWidth || 1, 1);
+        const vh = Math.max(viewport.clientHeight || 1, 1);
+        const fitScale = Math.min(vw / lw, vh / lh);
+        const safeFit = fitScale > 0 && isFinite(fitScale) ? fitScale : 1;
+        return { lw, lh, vw, vh, fitScale: safeFit, minScale: Math.min(safeFit, 1), maxScale: 4 };
+    },
+
+    _fitIndoorDiagram(viewport, layer, zoom) {
+        if (!viewport || !layer || !zoom) return false;
+        const img = layer.querySelector('.indoor-map-img');
+        if (!this._indoorDiagramLayoutReady(viewport, img)) return false;
+        const { lw, lh, vw, vh, fitScale } = this._getIndoorLayerMetrics(viewport, layer);
+        if (fitScale <= 0 || !isFinite(fitScale)) return false;
+        const scale = fitScale;
+        const sw = lw * scale;
+        const sh = lh * scale;
+        zoom.scale = scale;
+        zoom.tx = (vw - sw) / 2;
+        zoom.ty = (vh - sh) / 2;
+        const clamped = this._clampIndoorPan(scale, zoom.tx, zoom.ty, viewport, layer);
+        zoom.scale = clamped.scale;
+        zoom.tx = clamped.tx;
+        zoom.ty = clamped.ty;
+        return true;
+    },
+
+    isIndoorMobileLayout() {
+        return window.matchMedia('(max-width: 768px)').matches;
+    },
+
+    _clampIndoorPan(scale, tx, ty, viewport, layer) {
+        const vw = viewport.clientWidth;
+        const vh = viewport.clientHeight;
+        const img = layer.querySelector('.indoor-map-img');
+        const lw = img ? img.offsetWidth : layer.offsetWidth;
+        const lh = img ? img.offsetHeight : layer.offsetHeight;
+        const sw = lw * scale;
+        const sh = lh * scale;
+        const minTx = sw <= vw ? (vw - sw) / 2 : vw - sw;
+        const maxTx = sw <= vw ? (vw - sw) / 2 : 0;
+        const minTy = sh <= vh ? (vh - sh) / 2 : vh - sh;
+        const maxTy = sh <= vh ? (vh - sh) / 2 : 0;
+        return {
+            scale,
+            tx: Math.max(minTx, Math.min(maxTx, tx)),
+            ty: Math.max(minTy, Math.min(maxTy, ty))
+        };
+    },
+
+    _applyIndoorDiagramTransform(zoom) {
+        const layer = document.getElementById('indoor-map-transform');
+        if (!layer || !zoom) return;
+        layer.style.transform = `translate(${zoom.tx}px, ${zoom.ty}px) scale(${zoom.scale})`;
+    },
+
+    _focusIndoorDiagramOnPlace(viewport, layer, place, zoom, targetScale) {
+        if (!viewport || !layer || !place || !zoom) return;
+        const img = layer.querySelector('.indoor-map-img');
+        if (!img) return;
+        const metrics = this._getIndoorLayerMetrics(viewport, layer);
+        const lw = metrics.lw;
+        const lh = metrics.lh;
+        const px = (typeof place.x === 'number' ? place.x : parseFloat(place.x) || 0) * lw;
+        const py = (typeof place.y === 'number' ? place.y : parseFloat(place.y) || 0) * lh;
+        const vw = metrics.vw;
+        const vh = metrics.vh;
+        const scale = Math.max(metrics.minScale, Math.min(metrics.maxScale, targetScale));
+        const tx = vw / 2 - px * scale;
+        const ty = vh / 2 - py * scale;
+        const clamped = this._clampIndoorPan(scale, tx, ty, viewport, layer);
+        zoom.scale = clamped.scale;
+        zoom.tx = clamped.tx;
+        zoom.ty = clamped.ty;
+    },
+
+    _getIndoorMinScale(viewport, layer) {
+        return this._getIndoorLayerMetrics(viewport, layer).minScale;
+    },
+
+    initIndoorDiagramGestures(cfg, places) {
+        if (this._indoorGestureAbort) {
+            this._indoorGestureAbort();
+            this._indoorGestureAbort = null;
+        }
+        const viewport = document.getElementById('indoor-map-viewport');
+        const layer = document.getElementById('indoor-map-transform');
+        const img = document.getElementById('indoor-map-img');
+        if (!viewport || !layer) return;
+
+        const ui = this.data.indoorMapUi || {};
+        if (!ui.zoom) ui.zoom = { scale: 1, tx: 0, ty: 0 };
+        const zoom = ui.zoom;
+
+        const ac = new AbortController();
+        this._indoorGestureAbort = () => ac.abort();
+
+        const applyFocusIfNeeded = () => {
+            if (!this._indoorDiagramLayoutReady(viewport, img)) return false;
+            const focusMode = ui._focusDiagram;
+            let applied = false;
+            if (focusMode === 'fit') {
+                applied = this._fitIndoorDiagram(viewport, layer, zoom);
+                if (applied) ui._focusDiagram = false;
+            } else if (focusMode === 'place') {
+                const focusId = ui.destId || ui.boothId;
+                const place = (places || []).find((p) => p.id === focusId);
+                const targetScale = this.isIndoorMobileLayout() ? 2.5 : 2;
+                if (place) {
+                    this._focusIndoorDiagramOnPlace(viewport, layer, place, zoom, targetScale);
+                    applied = true;
+                } else {
+                    applied = this._fitIndoorDiagram(viewport, layer, zoom);
+                }
+                if (applied) ui._focusDiagram = false;
+            } else if (!zoom.scale || zoom.scale <= 0.01 || !isFinite(zoom.scale)) {
+                applied = this._fitIndoorDiagram(viewport, layer, zoom);
+            } else {
+                applied = true;
+            }
+            if (applied) this._applyIndoorDiagramTransform(zoom);
+            return applied;
+        };
+
+        let layoutRetries = 0;
+        const tryApplyLayout = () => {
+            if (applyFocusIfNeeded()) return;
+            layoutRetries += 1;
+            if (layoutRetries < 12 && (ui._focusDiagram === 'fit' || ui._focusDiagram === 'place' || !zoom.scale || zoom.scale <= 0.01)) {
+                requestAnimationFrame(tryApplyLayout);
+            }
+        };
+
+        if (img && img.complete) {
+            tryApplyLayout();
+        } else if (img) {
+            img.onload = () => tryApplyLayout();
+        }
+
+        if (typeof ResizeObserver !== 'undefined') {
+            const ro = new ResizeObserver(() => {
+                if (ui._focusDiagram === 'fit' || ui._focusDiagram === 'place' || !zoom.scale || zoom.scale <= 0.01) {
+                    applyFocusIfNeeded();
+                }
+            });
+            ro.observe(viewport);
+            ac.signal.addEventListener('abort', () => ro.disconnect());
+        }
+
+        const opts = { signal: ac.signal, passive: false };
+        let touchMode = null;
+        let startDist = 0;
+        let startScale = 1;
+        let startTx = 0;
+        let startTy = 0;
+        let startX = 0;
+        let startY = 0;
+        let startMidX = 0;
+        let startMidY = 0;
+
+        const touchPoint = (t, vpRect) => ({
+            x: t.clientX - vpRect.left,
+            y: t.clientY - vpRect.top
+        });
+
+        viewport.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+                touchMode = 'pinch';
+                const rect = viewport.getBoundingClientRect();
+                const p1 = touchPoint(e.touches[0], rect);
+                const p2 = touchPoint(e.touches[1], rect);
+                startDist = Math.hypot(p2.x - p1.x, p2.y - p1.y) || 1;
+                startScale = zoom.scale;
+                startTx = zoom.tx;
+                startTy = zoom.ty;
+                startMidX = (p1.x + p2.x) / 2;
+                startMidY = (p1.y + p2.y) / 2;
+            } else if (e.touches.length === 1) {
+                touchMode = 'pan';
+                startTx = zoom.tx;
+                startTy = zoom.ty;
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+            }
+        }, opts);
+
+        viewport.addEventListener('touchmove', (e) => {
+            if (touchMode === 'pinch' && e.touches.length >= 2) {
+                e.preventDefault();
+                const rect = viewport.getBoundingClientRect();
+                const p1 = touchPoint(e.touches[0], rect);
+                const p2 = touchPoint(e.touches[1], rect);
+                const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y) || 1;
+                const midX = (p1.x + p2.x) / 2;
+                const midY = (p1.y + p2.y) / 2;
+                let newScale = Math.max(this._getIndoorMinScale(viewport, layer), Math.min(4, startScale * (dist / startDist)));
+                const px = (startMidX - startTx) / startScale;
+                const py = (startMidY - startTy) / startScale;
+                let newTx = midX - px * newScale;
+                let newTy = midY - py * newScale;
+                const clamped = this._clampIndoorPan(newScale, newTx, newTy, viewport, layer);
+                zoom.scale = clamped.scale;
+                zoom.tx = clamped.tx;
+                zoom.ty = clamped.ty;
+                this._applyIndoorDiagramTransform(zoom);
+            } else if (touchMode === 'pan' && e.touches.length === 1) {
+                e.preventDefault();
+                const dx = e.touches[0].clientX - startX;
+                const dy = e.touches[0].clientY - startY;
+                const clamped = this._clampIndoorPan(zoom.scale, startTx + dx, startTy + dy, viewport, layer);
+                zoom.tx = clamped.tx;
+                zoom.ty = clamped.ty;
+                this._applyIndoorDiagramTransform(zoom);
+            }
+        }, opts);
+
+        viewport.addEventListener('touchend', () => {
+            touchMode = null;
+        }, opts);
+
+        if (!this.isIndoorMobileLayout()) {
+            let dragging = false;
+            viewport.addEventListener('mousedown', (e) => {
+                if (e.button !== 0) return;
+                dragging = true;
+                startTx = zoom.tx;
+                startTy = zoom.ty;
+                startX = e.clientX;
+                startY = e.clientY;
+                viewport.classList.add('is-dragging');
+            }, opts);
+            window.addEventListener('mousemove', (e) => {
+                if (!dragging) return;
+                const clamped = this._clampIndoorPan(zoom.scale, startTx + e.clientX - startX, startTy + e.clientY - startY, viewport, layer);
+                zoom.tx = clamped.tx;
+                zoom.ty = clamped.ty;
+                this._applyIndoorDiagramTransform(zoom);
+            }, opts);
+            window.addEventListener('mouseup', () => {
+                dragging = false;
+                viewport.classList.remove('is-dragging');
+            }, opts);
+            viewport.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const rect = viewport.getBoundingClientRect();
+                const cx = e.clientX - rect.left;
+                const cy = e.clientY - rect.top;
+                const delta = e.deltaY < 0 ? 1.08 : 0.92;
+                const minScale = this._getIndoorMinScale(viewport, layer);
+                const newScale = Math.max(minScale, Math.min(4, zoom.scale * delta));
+                const px = (cx - zoom.tx) / zoom.scale;
+                const py = (cy - zoom.ty) / zoom.scale;
+                const clamped = this._clampIndoorPan(newScale, cx - px * newScale, cy - py * newScale, viewport, layer);
+                zoom.scale = clamped.scale;
+                zoom.tx = clamped.tx;
+                zoom.ty = clamped.ty;
+                this._applyIndoorDiagramTransform(zoom);
+            }, opts);
+        }
     },
 
     indoorPlaceLabel(place) {
@@ -2580,9 +3065,28 @@ const app = {
         return String(str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     },
 
+    indoorDiagramFitAll() {
+        if (!this.data.indoorMapUi) this.data.indoorMapUi = {};
+        this.data.indoorMapUi._focusDiagram = 'fit';
+        this.renderIndoorEventMap();
+    },
+
+    indoorDiagramGoToDest() {
+        if (!this.data.indoorMapUi) this.data.indoorMapUi = {};
+        if (!this.data.indoorMapUi.destId && !this.data.indoorMapUi.boothId) return;
+        this.data.indoorMapUi._focusDiagram = 'place';
+        this.renderIndoorEventMap();
+    },
+
     setIndoorTab(tab) {
         if (!this.data.indoorMapUi) this.data.indoorMapUi = {};
+        this.data.indoorMapUi._userPickedTab = true;
         this.data.indoorMapUi.tab = tab;
+        if (tab === 'map') {
+            this.data.indoorMapUi._focusDiagram = 'fit';
+        } else {
+            document.body.classList.remove('indoor-diagram-fullscreen');
+        }
         this.renderIndoorEventMap();
     },
 
@@ -2592,25 +3096,28 @@ const app = {
         this.renderIndoorEventMap();
     },
 
-    setIndoorSearch(q) {
-        if (!this.data.indoorMapUi) this.data.indoorMapUi = {};
-        this.data.indoorMapUi.query = q;
-        this.renderIndoorEventMap();
-    },
-
     selectIndoorDest(destId) {
         if (!this.data.indoorMapUi) this.data.indoorMapUi = {};
         this.data.indoorMapUi.destId = destId;
+        this.data.indoorMapUi.query = '';
+        this.data.indoorMapUi.comboboxOpen = false;
+        this.data.indoorMapUi.comboboxEditing = false;
         this.renderIndoorEventMap();
+        requestAnimationFrame(() => {
+            const panel = document.getElementById('indoor-directions-panel');
+            if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
     },
 
     onIndoorPinClick(id, kind) {
         if (!this.data.indoorMapUi) this.data.indoorMapUi = {};
         if (kind === 'booth') {
             this.data.indoorMapUi.boothId = id;
+            this.data.indoorMapUi._focusDiagram = 'place';
         } else {
             this.data.indoorMapUi.destId = id;
-            this.data.indoorMapUi.tab = 'guide';
+            this.data.indoorMapUi._focusDiagram = 'place';
+            this.data.indoorMapUi.tab = 'map';
         }
         this.renderIndoorEventMap();
     },
