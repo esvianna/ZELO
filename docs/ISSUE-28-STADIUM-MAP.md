@@ -353,7 +353,7 @@ Fase 1 (imagem + validação pinos com equipe) pode começar **antes** do CRUD, 
 | Comportamento | Detalhe |
 |---------------|---------|
 | Default mobile | Aba **Orientar** se usuário não trocou de aba |
-| Diagrama (111) | **Tela cheia** no mobile — esconde header, bottom nav, título |
+| Diagrama (124+) | **Header + bottom nav visíveis** no mobile (sem tela cheia automática) |
 | Zoom | `minScale` = mapa inteiro cabe na tela; pinch **abaixo de 1×** permitido |
 | Início Diagrama | Abre em **mapa completo** (fit), não zoomado |
 | Botões | **Mapa completo** (fit) · **Ir ao destino** (foco no pino, ~2.5×) |

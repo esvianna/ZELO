@@ -85,7 +85,7 @@ Configurar `baseUrl` / `siteUrl` em `frontend-pwa/assets/js/api-v5.js` para o am
 | 2w | Nome voluntário/responsável com telefone cadastrado (105+) | view_ops | Nome é link `wa.me`; sem telefone → texto sem link; offline: cache ops; abrir WhatsApp exige rede |
 | 2x | **Mapa evento** — admin: upload JPG + 2 balcões + 1 destino com direções (2.12+) | manage_options | Detalhes → direções Balcão 1/2; **Salvar abas** permanece na aba Mapa evento; `GET /indoor-map` tem `routes` com texto |
 | 2y | **Mapa evento** PWA: balcão + destino | view_ops ou visitante | Diagrama: Balcão 1 azul / Balcão 2 teal + legenda (115+); combobox destinos; copiar instruções |
-| 2z | **Mapa evento** PWA mobile (110+) | iPhone / ≤768px | Abre em **Orientar**; aba Diagrama: tela cheia (111+); pinch até mapa completo; botões **Mapa completo** / **Ir ao destino** |
+| 2z | **Mapa evento** PWA mobile (110+) | iPhone / ≤768px | Abre em **Orientar**; aba Diagrama: **header + bottom nav visíveis** (124+); pinch; botões **Mapa completo** / **Ir ao destino** |
 | 2aa | **Novidades / blog** (#26, 2.13.0 / PWA 116+) | Logado | Admin: post com «Publicar na PWA» → `GET /news` OK; card/menu → lista + detalhe PT; **offline (123+):** detalhe em cache após visita online; **voluntário:** card «Novidades» na secção Operação (119+); anónimo sem novidades |
 | 2g | Visitante em **Mapa** → F5 (107+) | — | Permanece em Mapa; hash `#mapa` |
 | 2h | Abrir URL com `#escala` sem login | — | Redireciona **Login** (sem loop infinito) |

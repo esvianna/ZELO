@@ -3424,6 +3424,10 @@ body.ops-editor-open {
 }
 
 /* --- Indoor event map (ZELO#28) --- */
+#view-mapa-evento {
+    overflow-x: hidden;
+}
+
 .indoor-map-screen {
     padding: 0 1rem 1.5rem;
 }
@@ -3661,10 +3665,6 @@ body.ops-editor-open {
     background: #ea580c;
 }
 
-body.indoor-diagram-fullscreen .indoor-map-legend {
-    flex-shrink: 0;
-}
-
 .indoor-diagram-actions {
     display: flex;
     gap: 0.5rem;
@@ -3704,6 +3704,17 @@ body.indoor-diagram-fullscreen .indoor-map-legend {
     position: relative;
 }
 
+/* Diagrama: mapa edge-to-edge (largura total da tela) */
+#view-mapa-evento .indoor-diagram-panel .indoor-map-viewport {
+    width: 100vw;
+    max-width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+}
+
 .indoor-map-viewport.is-dragging {
     cursor: grabbing;
 }
@@ -3735,6 +3746,11 @@ body.indoor-diagram-fullscreen .indoor-map-legend {
         min-width: 720px;
         max-width: none;
     }
+
+    .indoor-map-viewport {
+        height: min(52vh, calc(100dvh - 420px));
+        min-height: 220px;
+    }
 }
 
 @media (min-width: 769px) {
@@ -3742,71 +3758,6 @@ body.indoor-diagram-fullscreen .indoor-map-legend {
         cursor: grab;
         height: min(75vh, 720px);
     }
-}
-
-/* Mobile: diagrama em tela cheia (ZELO#28, PWA 111+) */
-body.indoor-diagram-fullscreen {
-    overflow: hidden;
-}
-
-body.indoor-diagram-fullscreen .app-header,
-body.indoor-diagram-fullscreen .bottom-nav,
-body.indoor-diagram-fullscreen #view-mapa-evento .view-header {
-    display: none !important;
-}
-
-body.indoor-diagram-fullscreen #view-mapa-evento {
-    min-height: 100dvh;
-    padding: env(safe-area-inset-top, 0) 0 env(safe-area-inset-bottom, 0) !important;
-}
-
-body.indoor-diagram-fullscreen #view-mapa-evento.active {
-    display: flex;
-    flex-direction: column;
-}
-
-body.indoor-diagram-fullscreen #indoor-map-container {
-    padding: 0 !important;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-}
-
-body.indoor-diagram-fullscreen .indoor-map-screen {
-    padding: 0.5rem 0.5rem 0;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-}
-
-body.indoor-diagram-fullscreen .indoor-diagram-panel {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-}
-
-body.indoor-diagram-fullscreen .indoor-map-hint {
-    margin-bottom: 0.35rem;
-    flex-shrink: 0;
-}
-
-body.indoor-diagram-fullscreen .indoor-diagram-actions {
-    flex-shrink: 0;
-}
-
-body.indoor-diagram-fullscreen .indoor-map-tabs {
-    flex-shrink: 0;
-    margin-bottom: 0.5rem;
-}
-
-body.indoor-diagram-fullscreen .indoor-map-viewport {
-    flex: 1 1 auto;
-    height: 0;
-    min-height: calc(100dvh - 11rem);
-    border-radius: 8px 8px 0 0;
 }
 
 .indoor-pins-layer {

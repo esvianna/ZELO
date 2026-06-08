@@ -2862,7 +2862,7 @@ const app = {
                 </div>
             </div>`;
         this._indoorDirectionsText = dirText || '';
-        this._syncIndoorDiagramFullscreen(ui);
+        this._syncIndoorDiagramFullscreen();
         if (guideTabActive) {
             this.initIndoorDestCombobox(dests);
         }
@@ -3088,9 +3088,8 @@ const app = {
         }, opts);
     },
 
-    _syncIndoorDiagramFullscreen(ui) {
-        const on = ui && ui.tab === 'map' && this.isIndoorMobileLayout();
-        document.body.classList.toggle('indoor-diagram-fullscreen', on);
+    _syncIndoorDiagramFullscreen() {
+        document.body.classList.remove('indoor-diagram-fullscreen');
     },
 
     _indoorDiagramLayoutReady(viewport, img) {
@@ -3407,8 +3406,6 @@ const app = {
         this.data.indoorMapUi.tab = tab;
         if (tab === 'map') {
             this.data.indoorMapUi._focusDiagram = 'fit';
-        } else {
-            document.body.classList.remove('indoor-diagram-fullscreen');
         }
         this.renderIndoorEventMap();
     },

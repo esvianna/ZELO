@@ -19,6 +19,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | PWA **120** | Rótulo do card: «Novidades» (sem «/Blog») |
 | PWA **121** | Home «Minhas designações»: texto explicativo fora do flex; botões empilhados no mobile |
 | PWA **123** | ADR-025: detalhe novidades offline (`zelo_news_item_v1_*` + prefetch ao listar) |
+| PWA **124** | Mapa evento: header + bottom nav visíveis no Diagrama (mobile); fim do fullscreen automático |
+| PWA **125** | Diagrama: viewport do mapa em largura total (edge-to-edge) |
 
 **Testes:** `TESTING.md` §4 — item **2aa**; §12 **O6**.
 
@@ -31,6 +33,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | PWA **113–114** | Combobox «Para onde?» (filtro sem perder foco iOS); rótulo **Pavim.** na lista de destinos |
 | Plugin **2.12.3** + PWA **115** | Balcão 1 (azul) vs Balcão 2 (teal), número no pino, legenda no diagrama (`booth_slot`) |
 | PWA **122** | ADR-024: snapshot `zelo_indoor_map` + prefetch imagem; mapa do evento offline após 1.ª visita online |
+| PWA **124** | Diagrama mobile: header, «Voltar» e bottom nav sempre visíveis (sem tela cheia) |
 
 ### Corrigido — mapa indoor (#28)
 
