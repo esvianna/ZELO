@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.13.6] - 2026-06-04
+
+### Corrigido
+- Avatar perfil: fallback `medium` / URL completa se thumbnail em falta (`zelo_get_user_avatar_url`).
+
 ## [2.13.5] - 2026-06-04
 
 ### Adicionado

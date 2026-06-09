@@ -78,7 +78,7 @@ Orientação de testes **manual** (prioritário hoje) e caminho para automação
 |---|-------|--------|----------|
 | 1 | GET `/wp-json/zelo/v1/ops/voluntarios` sem auth | — | **401/403** após remover bypass público |
 | 2 | Login voluntário → abrir Escala (2.11.0+) | view_ops | Bloco **Minhas designações** + **Escala da equipa** (nomes de colegas); badge «Você» na sua linha; filtros dia/turno/local/**responsável**/nome/idioma (build 106+) |
-| 2p | Perfil → alterar nome/telefone/idiomas; upload foto; senha (108+) | logado | Salvar OK; e-mail novo exige verificação; olho mostra/oculta senha (login/cadastro/perfil) |
+| 2p | Perfil → alterar nome/telefone/idiomas; upload foto (130+: preview imediato + msg junto ao avatar); senha (108+) | logado | Salvar OK; foto actualiza header e perfil; e-mail novo exige verificação |
 | 2f | Escala aberta → **F5** (build 107+) | view_ops | Permanece em **Escala**; hash `#escala`; nav Operação ativo |
 | 2w | Nome voluntário/responsável com telefone cadastrado (105+) | view_ops | Nome é link `wa.me`; sem telefone → texto sem link; offline: cache ops; abrir WhatsApp exige rede |
 | 2x | **Mapa evento** — admin: upload JPG + 2 balcões + 1 destino com direções (2.12+) | manage_options | Detalhes → direções Balcão 1/2; **Salvar abas** permanece na aba Mapa evento; `GET /indoor-map` tem `routes` com texto |

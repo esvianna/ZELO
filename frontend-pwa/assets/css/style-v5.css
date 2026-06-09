@@ -2103,6 +2103,25 @@ body {
     text-decoration: underline;
 }
 
+.profile-avatar-msg {
+    font-size: 0.8rem;
+    text-align: center;
+    max-width: 220px;
+    line-height: 1.35;
+}
+
+.profile-avatar-msg.success {
+    color: #15803d;
+}
+
+.profile-avatar-msg.error {
+    color: #b91c1c;
+}
+
+.profile-avatar-msg.info {
+    color: var(--text-muted, #64748b);
+}
+
 .profile-form-msg {
     margin: 0.75rem 0;
     font-size: 0.9rem;

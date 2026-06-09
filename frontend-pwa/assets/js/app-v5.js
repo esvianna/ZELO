@@ -77,6 +77,50 @@ const app = {
         return this.auth.user.avatar;
     },
 
+    _avatarBust: 0,
+    _profileAvatarPreviewUrl: null,
+
+    bustAvatarUrl(url) {
+        if (!url || url.indexOf('blob:') === 0 || url.indexOf('images/') === 0) {
+            return url;
+        }
+        if (!this._avatarBust) {
+            return url;
+        }
+        const sep = url.includes('?') ? '&' : '?';
+        return url + sep + '_v=' + this._avatarBust;
+    },
+
+    setAvatarBust() {
+        this._avatarBust = Date.now();
+    },
+
+    revokeProfileAvatarPreview() {
+        if (this._profileAvatarPreviewUrl) {
+            URL.revokeObjectURL(this._profileAvatarPreviewUrl);
+            this._profileAvatarPreviewUrl = null;
+        }
+    },
+
+    setAvatarImgElement(img, url) {
+        if (!img) return;
+        img.onerror = function () {
+            this.onerror = null;
+            this.src = 'images/default-avatar.png';
+        };
+        img.src = url;
+    },
+
+    updateAvatarDisplays(rawUrl) {
+        const url = this.bustAvatarUrl(rawUrl || this.getAvatarUrl());
+        this.setAvatarImgElement(document.getElementById('profile-avatar'), url);
+        const iconContainer = document.getElementById('user-auth-indicator');
+        if (iconContainer && this.auth.user) {
+            const safe = this.escapeHtml(url);
+            iconContainer.innerHTML = `<img src="${safe}" alt="" onerror="this.onerror=null;this.src='images/default-avatar.png';">`;
+        }
+    },
+
     // --- Helpers ---
     calculateDistance(lat1, lon1, lat2, lon2) {
         const R = 6371; // Radius of the earth in km
@@ -562,10 +606,14 @@ const app = {
         refreshAuthChrome() {
             const iconContainer = document.getElementById('user-auth-indicator');
 
-            if (this.user && iconContainer) {
-                const avatarUrl = app.getAvatarUrl();
-                iconContainer.innerHTML = `<img src="${avatarUrl}" alt="" onerror="this.onerror=null;this.src='images/default-avatar.png';">`;
-                iconContainer.setAttribute('title', this.user.name || i18n.t('my_profile'));
+            if (this.user) {
+                if (iconContainer) {
+                    iconContainer.setAttribute('title', this.user.name || i18n.t('my_profile'));
+                }
+                app.updateAvatarDisplays(app.getAvatarUrl());
+                const pRole = document.getElementById('profile-role');
+                if (pRole) pRole.textContent = app.getOpsRoleLabel() || this.user.roles[0] || i18n.t('visitor_role');
+                app.populateProfileForm();
             } else if (iconContainer) {
                 iconContainer.innerHTML = `
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -573,22 +621,6 @@ const app = {
                             <circle cx="12" cy="7" r="4"></circle>
                         </svg>`;
                 iconContainer.setAttribute('title', i18n.t('auth_sign_in'));
-            }
-
-            const pRole = document.getElementById('profile-role');
-            const pAvatar = document.getElementById('profile-avatar');
-
-            if (this.user) {
-                const avatarUrl = app.getAvatarUrl();
-                if (pRole) pRole.textContent = app.getOpsRoleLabel() || this.user.roles[0] || i18n.t('visitor_role');
-                if (pAvatar) {
-                    pAvatar.src = avatarUrl;
-                    pAvatar.onerror = function () {
-                        this.onerror = null;
-                        this.src = 'images/default-avatar.png';
-                    };
-                }
-                app.populateProfileForm();
             }
 
             app.updateBottomNavForVolunteer();
@@ -718,11 +750,7 @@ const app = {
 
     applyProfileApiResponse(res) {
         if (res.user) {
-            this.auth.user = res.user;
-            if (res.nonce) {
-                this.auth.user.token = res.nonce;
-            }
-            localStorage.setItem('zelo_user', JSON.stringify(this.auth.user));
+            this.auth.user = API.persistAuthUser(res.user, res.nonce);
             if (res.user.avatar) {
                 this.cacheUserAvatar(res.user.avatar);
             }
@@ -754,6 +782,14 @@ const app = {
         input.addEventListener('change', () => this.uploadProfileAvatar(input));
     },
 
+    showProfileAvatarMessage(text, type = 'info') {
+        const msg = document.getElementById('profile-avatar-msg');
+        if (!msg) return;
+        msg.style.display = text ? 'block' : 'none';
+        msg.className = 'profile-avatar-msg' + (type ? ' ' + type : '');
+        msg.textContent = text || '';
+    },
+
     showProfileFormMessage(text, type = 'info') {
         const msg = document.getElementById('profile-form-msg');
         if (!msg) return;
@@ -765,13 +801,22 @@ const app = {
     async uploadProfileAvatar(inputEl) {
         const file = inputEl && inputEl.files ? inputEl.files[0] : null;
         if (!file) return;
-        this.showProfileFormMessage(i18n.t('profile_avatar_uploading'), 'info');
+
+        this.revokeProfileAvatarPreview();
+        this._profileAvatarPreviewUrl = URL.createObjectURL(file);
+        this.updateAvatarDisplays(this._profileAvatarPreviewUrl);
+        this.showProfileAvatarMessage(i18n.t('profile_avatar_uploading'), 'info');
+
         try {
             const res = await API.uploadProfileAvatar(file);
+            this.revokeProfileAvatarPreview();
+            this.setAvatarBust();
             this.applyProfileApiResponse(res);
-            this.showProfileFormMessage(i18n.t('profile_avatar_saved'), 'success');
+            this.showProfileAvatarMessage(i18n.t('profile_avatar_saved'), 'success');
         } catch (e) {
-            this.showProfileFormMessage(e.message || i18n.t('error_generic'), 'error');
+            this.revokeProfileAvatarPreview();
+            this.auth.refreshAuthChrome();
+            this.showProfileAvatarMessage(e.message || i18n.t('error_generic'), 'error');
         } finally {
             inputEl.value = '';
         }

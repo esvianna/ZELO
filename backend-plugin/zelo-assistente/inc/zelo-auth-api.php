@@ -83,6 +83,12 @@ function zelo_get_user_avatar_url( $user_id ) {
 		$attach_id = (int) get_user_meta( $user_id, 'zelo_avatar_id', true );
 		if ( $attach_id > 0 ) {
 			$url = wp_get_attachment_image_url( $attach_id, 'thumbnail' );
+			if ( ! $url ) {
+				$url = wp_get_attachment_image_url( $attach_id, 'medium' );
+			}
+			if ( ! $url ) {
+				$url = wp_get_attachment_url( $attach_id );
+			}
 			if ( $url ) {
 				return $url;
 			}

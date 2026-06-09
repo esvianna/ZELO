@@ -8,6 +8,13 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Corrigido — avatar perfil (PWA 130 + plugin 2.13.6)
+
+| Versão | Entrega |
+|--------|---------|
+| PWA **130** | Pré-visualização imediata; feedback junto ao avatar; cache-bust após upload; nonce via `persistAuthUser` |
+| Plugin **2.13.6** | URL avatar: fallback medium/full se thumbnail em falta |
+
 ### Ajustado — config API escopo mínimo (#21, ADR-034)
 
 | Versão | Entrega |
