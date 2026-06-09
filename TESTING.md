@@ -16,11 +16,9 @@ Orientação de testes **manual** (prioritário hoje) e caminho para automação
 
 | Requisito | Detalhe |
 |-----------|---------|
-| URL | Mesmo domínio PWA + WordPress (HTTPS) |
+| URL | Mesmo domínio PWA + WordPress (HTTPS) — `api-v5.js` usa `window.location.origin`; **não** editar URLs em produção same-origin |
 | Navegador | Chrome Android + Safari iOS (amostra) |
 | Perfis WP | visitante (sem login), voluntário, realocador, gestor ops, admin |
-
-Configurar `baseUrl` / `siteUrl` em `frontend-pwa/assets/js/api-v5.js` para o ambiente testado.
 
 ---
 

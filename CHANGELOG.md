@@ -8,6 +8,16 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Ajustado — config API escopo mínimo (#21, ADR-034)
+
+| Versão | Entrega |
+|--------|---------|
+| PWA **129** | Login usa só `API.baseUrl`; comentário same-origin em `api-v5.js`; `TESTING.md` + `DEPLOY-ZELO-PWA.md` |
+
+### Decisão — testes automatizados descartados (#20, ADR-033)
+
+- Issue [#20](https://github.com/esvianna/ZELO/issues/20) fechada; validação manual via `TESTING.md` permanece fonte de verdade.
+
 ### Adicionado — rate limit login REST (#22)
 
 | Versão | Entrega |

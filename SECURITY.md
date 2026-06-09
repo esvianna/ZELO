@@ -76,7 +76,7 @@ Matriz completa (roles, endpoints, IDOR): **[docs/OPS-PERMISSIONS.md](docs/OPS-P
 | Tópico | Prática |
 |--------|---------|
 | Credenciais | senha só via HTTPS POST; nonce em `localStorage` (`zelo_user`) — risco XSS se houver injeção |
-| API base | `api-v5.js` aponta produção; não commitar credenciais |
+| API base | Same-origin (`window.location.origin` em `api-v5.js`); não commitar credenciais |
 | Offline cache | não cachear respostas autenticadas sensíveis além do necessário |
 | Links externos | `rel="noopener"` em `target="_blank"` quando aplicável |
 

@@ -1,4 +1,6 @@
 const API = {
+    // Same-origin: baseUrl/siteUrl derivam de window.location.origin (produção MVP).
+    // Fallback tenhazelo.com.br só se origin indisponível (ex.: contextos não-browser).
     baseUrl: (typeof window !== 'undefined' && window.location && window.location.origin)
         ? `${window.location.origin}/wp-json/zelo/v1`
         : 'https://tenhazelo.com.br/wp-json/zelo/v1',

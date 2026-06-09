@@ -86,9 +86,9 @@ Itens históricos; ver **Fase B** para status atualizado.
 | # | Entrega | Status | Issue |
 |---|---------|--------|-------|
 | C1 | `.gitignore` para PHP/IDE/OS | **Concluído** | [#19](https://github.com/esvianna/ZELO/issues/19) |
-| C2 | Testes automatizados (PHPUnit REST + smoke E2E) | Não iniciado | [#20](https://github.com/esvianna/ZELO/issues/20) |
-| C3 | Config de ambiente (URL API sem hardcode) | Pendente | [#21](https://github.com/esvianna/ZELO/issues/21) |
-| C4 | Rate limiting REST (login/register) | Login 2.13.5 + register/export | [#22](https://github.com/esvianna/ZELO/issues/22) |
+| C2 | Testes automatizados (PHPUnit REST + smoke E2E) | **Descartado** (ADR-033; `TESTING.md` manual) | [#20](https://github.com/esvianna/ZELO/issues/20) |
+| C3 | Config de ambiente (URL API sem hardcode) | **Escopo mínimo** (PWA 129, ADR-034) | [#21](https://github.com/esvianna/ZELO/issues/21) |
+| C4 | Rate limiting REST (login/register) | **Concluído** (2.13.5) | [#22](https://github.com/esvianna/ZELO/issues/22) |
 | C5 | Cross-domain PWA + JWT | Futuro (ver DECISIONS) | — |
 
 ---

@@ -1,7 +1,7 @@
 # Issue #22 — Rate limiting REST (#22)
 
 > **Issue:** [esvianna/ZELO#22](https://github.com/esvianna/ZELO/issues/22)  
-> **Status:** **In review** — plugin **2.13.5** (2026-06-04)  
+> **Status:** **Done** — plugin **2.13.5** deploy produção (2026-06-04)  
 > **ADR:** ADR-032
 
 ---

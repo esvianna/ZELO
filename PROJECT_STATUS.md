@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-04** (plugin 2.13.5 — rate limit #22).
+> Última atualização: **2026-06-04** (#21 fix mínimo — PWA 129).
 
 ---
 
@@ -13,7 +13,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | Referência no repo | Versão |
 |--------------------|--------|
 | Plugin WordPress (`zelo-assistente.php`) | **2.13.5** |
-| PWA (`zelo-build.js` / `sw.js`) | **build 128** |
+| PWA (`zelo-build.js` / `sw.js`) | **build 129** |
 
 **Backlog oficial:** [GitHub Project — Projeto ZELO](https://github.com/users/esvianna/projects/3) — issues em [`esvianna/ZELO`](https://github.com/esvianna/ZELO) (ADR-020, `docs/GITHUB-WORKFLOW.md`). Este arquivo **complementa** o quadro; status canônico das tarefas está no Project.
 
@@ -36,6 +36,8 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | [#28](https://github.com/esvianna/ZELO/issues/28) | Mapa do evento — admin + PWA diagrama, offline (2.12.x, PWA 110–125) |
 | [#15](https://github.com/esvianna/ZELO/issues/15) | Carrossel novidades home — posts WP + scroll-snap (2.13.3, PWA 126) |
 | [#17](https://github.com/esvianna/ZELO/issues/17) | Emergência — hierarquia + contatos 190/192/193 (2.13.4, PWA 128) |
+| [#22](https://github.com/esvianna/ZELO/issues/22) | Rate limit login REST — 30/15 min IP + 10/15 min user (2.13.5) |
+| [#21](https://github.com/esvianna/ZELO/issues/21) | Config API — login centralizado; docs same-origin (PWA 129) |
 
 ### Descartado (decisão de produto)
 
@@ -47,6 +49,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | [#16](https://github.com/esvianna/ZELO/issues/16) Inbox servidor | Descartado com #9 — ADR-028. |
 | [#14](https://github.com/esvianna/ZELO/issues/14) Programação visitante | JW Library + impresso no evento — ADR-029. |
 | [#18](https://github.com/esvianna/ZELO/issues/18) Branding splash/home | Banner evento + admin logo/foto bastam — ADR-031. |
+| [#20](https://github.com/esvianna/ZELO/issues/20) Testes automatizados | `TESTING.md` manual + smoke pré-evento bastam — ADR-033. |
 
 ### Destaques técnicos por versão
 
@@ -99,25 +102,23 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## O que está pendente
 
-Priorização via [Project 3](https://github.com/users/esvianna/projects/3). Principais itens em **Backlog**:
-
-| Prioridade | Item | Issue |
-|------------|------|-------|
-| **Infra** | Testes, env API | [#20](https://github.com/esvianna/ZELO/issues/20) … |
+Backlog infra concluído (#20 descartado, #21/#22 Done). Próximas demandas via [Project 3](https://github.com/users/esvianna/projects/3) se surgirem.
 
 ---
 
 ## Próximos passos lógicos
 
-1. Smoke **#22** rate limit login — `TESTING.md` §7; deploy plugin **2.13.5**.
-2. Smoke **#26** e **#28** se pendentes.
+1. Deploy PWA **129** (fix login #21).
+2. Manter smoke `TESTING.md` antes de eventos.
 
 ---
 
 ## Última sessão (2026-06-04)
 
+- **#21 Config API (ADR-034):** fix mínimo — login usa `API.baseUrl`; docs same-origin; PWA **129**; issue fechada; **Done** no Project.
+- **#20 Testes automatizados descartado (ADR-033):** `TESTING.md` manual bastam; issue fechada; **Done** no Project.
 - **#18 Branding descartado (ADR-031):** banner + admin bastam; issue fechada; **Done** no Project.
-- **#22 Rate limit:** plugin **2.13.5** — login 30/15 min IP + 10/15 min user; helper `rate-limit.php`. **In review**.
+- **#22 Rate limit:** plugin **2.13.5** deploy OK; issue fechada; **Done** no Project.
 - **#17 Emergência:** plugin **2.13.4** + PWA **128** — smoke OK; **Done** no Project; issue fechada.
 - **#15 Carrossel novidades (ADR-030):** plugin **2.13.3** + PWA **126** — smoke OK; **Done** no Project; issue fechada.
 - **#14 Programação descartada (ADR-029):** JW Library + impresso; **Done** no Project.

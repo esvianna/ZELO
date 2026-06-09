@@ -6,6 +6,26 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 ---
 
+## ADR-034 — Config API (#21) escopo mínimo (2026-06-04)
+
+**Contexto:** Issue [#21](https://github.com/esvianna/ZELO/issues/21) (ROADMAP C3) previa estratégia por ambiente. Análise em `docs/ISSUE-21-CONFIG-AMBIENTE.md`. Produção same-origin já resolve `baseUrl`/`siteUrl` via `window.location.origin`; lacuna: hardcode duplicado no login (`app-v5.js`).
+
+**Decisão:** **Escopo mínimo** — login usa só `API.baseUrl`; comentário em `api-v5.js`; docs `TESTING.md` e `DEPLOY-ZELO-PWA.md` alinhados. **Não** implementar override dev/staging nem `zelo-config.js`. Cross-domain continua fora do MVP.
+
+**Consequências:** PWA **129**; issue #21 fechada. Fallback `tenhazelo.com.br` em `api-v5.js` mantido para edge cases.
+
+---
+
+## ADR-033 — Testes automatizados (#20) descartados (2026-06-04)
+
+**Contexto:** Issue [#20](https://github.com/esvianna/ZELO/issues/20) (ROADMAP C2) previa PHPUnit REST + smoke E2E + GitHub Actions. Hoje só existe validação manual (`TESTING.md`); `.gitignore` já reserva entradas phpunit.
+
+**Decisão:** **Não implementar** suite automatizada nem CI de testes neste ciclo. Manter `TESTING.md` como fonte de verdade; smoke manual antes de deploy/evento.
+
+**Consequências:** Issue #20 fechada como *won't fix* / descartada. ROADMAP C2 marcado descartado. Documento `docs/ISSUE-20-TESTES-DESCARTE.md`.
+
+---
+
 ## ADR-032 — Rate limit login REST (#22) (2026-06-04)
 
 **Contexto:** Issue [#22](https://github.com/esvianna/ZELO/issues/22). Register (8/h/IP) e export (60 s/user) já existiam; `POST /auth/login` público sem throttle (`SECURITY.md`).

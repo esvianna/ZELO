@@ -8,7 +8,7 @@
 
 ## Checklist rápido
 
-1. URL em `frontend-pwa/assets/js/api-v5.js` (`baseUrl` / `siteUrl`) aponta para o site correto.
+1. PWA no **mesmo domínio** que o WordPress — `api-v5.js` resolve `baseUrl`/`siteUrl` pela origem do browser (same-origin); não é necessário editar URLs em produção.
 2. WordPress: utilizadores com roles Zelo atribuídas (menu **Zelo → Roles Zelo**).
 3. Escala preenchida em **Zelo → Operação Voluntários** (abas Escala / Governança / Config). Para e-mails de lembrete, preencha **datas do evento** (Y-m-d) por dia da semana.
 4. Cron WordPress a correr (visitas ao site ou cron do sistema) para `zelo_volunteer_notify_tick` (horário).
