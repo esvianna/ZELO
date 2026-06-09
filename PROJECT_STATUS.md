@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-04** (PWA 125 / plugin 2.13.2).
+> Última atualização: **2026-06-04** (PWA 126 / plugin 2.13.3).
 
 ---
 
@@ -12,8 +12,8 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Referência no repo | Versão |
 |--------------------|--------|
-| Plugin WordPress (`zelo-assistente.php`) | **2.13.2** |
-| PWA (`zelo-build.js` / `sw.js`) | **build 125** |
+| Plugin WordPress (`zelo-assistente.php`) | **2.13.3** |
+| PWA (`zelo-build.js` / `sw.js`) | **build 126** |
 
 **Backlog oficial:** [GitHub Project — Projeto ZELO](https://github.com/users/esvianna/projects/3) — issues em [`esvianna/ZELO`](https://github.com/esvianna/ZELO) (ADR-020, `docs/GITHUB-WORKFLOW.md`). Este arquivo **complementa** o quadro; status canônico das tarefas está no Project.
 
@@ -34,6 +34,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | [#12](https://github.com/esvianna/ZELO/issues/12) | WhatsApp na escala — links wa.me (2.11.4 / PWA 105) |
 | [#26](https://github.com/esvianna/ZELO/issues/26) | Novidades/blog WP — card Operação, offline detalhe (2.13.x, PWA 116–125) |
 | [#28](https://github.com/esvianna/ZELO/issues/28) | Mapa do evento — admin + PWA diagrama, offline (2.12.x, PWA 110–125) |
+| [#15](https://github.com/esvianna/ZELO/issues/15) | Carrossel novidades home — posts WP + scroll-snap (2.13.3, PWA 126) |
 
 ### Descartado (decisão de produto)
 
@@ -101,22 +102,22 @@ Priorização via [Project 3](https://github.com/users/esvianna/projects/3). Pri
 | Prioridade | Item | Issue |
 |------------|------|-------|
 | **Infra** | Rate limit REST, testes, env API | [#22](https://github.com/esvianna/ZELO/issues/22) … [#20](https://github.com/esvianna/ZELO/issues/20) |
-| **UX visitante** | Carrossel — plano `docs/ISSUE-15-CARROSSEL-HOME.md` | [#15](https://github.com/esvianna/ZELO/issues/15) |
 | **UX visitante** | Emergência, branding | [#17](https://github.com/esvianna/ZELO/issues/17), [#18](https://github.com/esvianna/ZELO/issues/18) |
 
 ---
 
 ## Próximos passos lógicos
 
-1. Smoke humano **#26** e **#28** (PWA 125 + plugin 2.13.2) — `TESTING.md` §4 (2aa, 2x–2z) e §12 (O5, O6).
-2. Deploy alinhado plugin **2.13.2** + PWA **125** (`DEPLOYMENT_RULES.md`); utilizadores limpar cache PWA se necessário.
-3. Próxima feature sugerida: **#15** carrossel home ou infra **#22** rate limit.
+1. Smoke humano **#15** carrossel + **#26** e **#28** — `TESTING.md` §4 (**2ac**, **2aa**, **2x–2z**) e §12 (O5, O6).
+2. Deploy alinhado plugin **2.13.3** + PWA **126** (`DEPLOYMENT_RULES.md`); utilizadores limpar cache PWA se necessário.
+3. Próxima feature sugerida: infra **#22** rate limit ou UX **#17** / **#18**.
 
 ---
 
 ## Última sessão (2026-06-04)
 
-- **#15 análise:** plano `docs/ISSUE-15-CARROSSEL-HOME.md` — banner único hoje; MVP slides admin; D1–D3 pendentes.
+- **#15 Carrossel novidades (ADR-030):** plugin **2.13.3** + PWA **126** — meta `_zelo_carousel`; `GET /news?carousel_only=1`; carrossel scroll-snap na home (**logados**); snapshot offline; fallback card novidades; banner evento mantido. **In review** no Project.
+- **#15 análise:** plano `docs/ISSUE-15-CARROSSEL-HOME.md` — decisões D1=logados, D2=posts WP.
 - **#14 Programação descartada (ADR-029):** JW Library + impresso; **Done** no Project.
 - **#9 / #16 descartados (ADR-028):** hub sino + cron e-mail + localStorage; issues fechadas; **Done** no Project.
 - **#10 cobertura descartado (ADR-027):** filtros escala + export + admin presença bastam; issue fechada; **Done** no Project.
@@ -131,7 +132,7 @@ Priorização via [Project 3](https://github.com/users/esvianna/projects/3). Pri
 - **#26:** plugin **2.13.0** + PWA **116** — blog/notificações implementado (**In review**).
 - **#28** permanece **In review** (PWA 115 / plugin 2.12.3).
 
-**Como testar:** `TESTING.md` §4 (**2aa** novidades; **2x–2z** mapa indoor); §12 **O5** offline mapa evento.
+**Como testar:** `TESTING.md` §4 (**2ac** carrossel; **2aa** novidades; **2x–2z** mapa indoor); §12 **O5** offline mapa evento.
 
 ## Sessão anterior (2026-06-04)
 - PWA **115** + plugin **2.12.3**: Balcão 1 (azul) / Balcão 2 (teal), número no pino, legenda.

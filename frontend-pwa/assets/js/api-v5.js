@@ -13,6 +13,7 @@ const API = {
         categorias: false,
         clima: false,
         news: false,
+        newsCarousel: false,
         newsDetail: false,
         indoorMap: false
     },
@@ -53,6 +54,11 @@ const API = {
     newsSnapshotKey(userId) {
         const uid = userId != null ? String(userId) : '0';
         return `zelo_news_v2_${uid}`;
+    },
+
+    newsCarouselSnapshotKey(userId) {
+        const uid = userId != null ? String(userId) : '0';
+        return `zelo_news_carousel_v1_${uid}`;
     },
 
     newsItemSnapshotKey(userId, postId) {
@@ -548,8 +554,11 @@ const API = {
         if (params.page) sp.set('page', String(params.page));
         if (params.per_page) sp.set('per_page', String(params.per_page));
         if (params.notifications_only) sp.set('notifications_only', '1');
+        if (params.carousel_only) sp.set('carousel_only', '1');
         const url = `${this.baseUrl}/news?${sp.toString()}`;
-        const snapKey = this.newsSnapshotKey(userId);
+        const snapKey = params.carousel_only
+            ? this.newsCarouselSnapshotKey(userId)
+            : this.newsSnapshotKey(userId);
 
         try {
             const response = await fetch(url, {
@@ -558,16 +567,24 @@ const API = {
                 headers: this.getAuthHeaders()
             });
             if (response.status === 401 || response.status === 403) {
-                this.cache.news = null;
-                this.lastFetchFromCache.news = false;
+                if (params.carousel_only) {
+                    this.lastFetchFromCache.newsCarousel = false;
+                } else {
+                    this.cache.news = null;
+                    this.lastFetchFromCache.news = false;
+                }
                 return null;
             }
             if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
-            this.cache.news = data;
+            if (params.carousel_only) {
+                this.lastFetchFromCache.newsCarousel = false;
+            } else {
+                this.cache.news = data;
+                this.lastFetchFromCache.news = false;
+            }
             this.writeSnapshot(snapKey, data);
-            this.lastFetchFromCache.news = false;
-            if (userId != null && Array.isArray(data.items) && data.items.length) {
+            if (!params.carousel_only && userId != null && Array.isArray(data.items) && data.items.length) {
                 this.prefetchNewsItemDetails(data.items, userId);
             }
             return data;
@@ -575,9 +592,16 @@ const API = {
             console.warn('Fetch news falhou, tentando cache', error);
             const cached = this.readSnapshot(snapKey);
             if (cached) {
-                this.cache.news = cached;
-                this.lastFetchFromCache.news = true;
+                if (params.carousel_only) {
+                    this.lastFetchFromCache.newsCarousel = true;
+                } else {
+                    this.cache.news = cached;
+                    this.lastFetchFromCache.news = true;
+                }
                 return cached;
+            }
+            if (params.carousel_only) {
+                this.lastFetchFromCache.newsCarousel = false;
             }
             return null;
         }

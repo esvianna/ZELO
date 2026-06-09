@@ -12,6 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 define( 'ZELO_NEWS_META_IN_APP', '_zelo_in_app' );
 define( 'ZELO_NEWS_META_NOTIFY', '_zelo_as_notification' );
 define( 'ZELO_NEWS_META_PRIORITY', '_zelo_notification_priority' );
+define( 'ZELO_NEWS_META_CAROUSEL', '_zelo_carousel' );
 
 /**
  * @return bool
@@ -124,6 +125,17 @@ function zelo_news_query( $args = array() ) {
 		);
 	}
 
+	if ( ! empty( $args['carousel_only'] ) ) {
+		$meta_query[] = array(
+			'key'   => ZELO_NEWS_META_CAROUSEL,
+			'value' => '1',
+		);
+		$meta_query[] = array(
+			'key'     => '_thumbnail_id',
+			'compare' => 'EXISTS',
+		);
+	}
+
 	$defaults = array(
 		'post_type'      => 'post',
 		'post_status'    => 'publish',
@@ -170,8 +182,14 @@ function zelo_get_news_list( $request ) {
 	$page               = max( 1, (int) $request->get_param( 'page' ) );
 	$per_page           = min( 50, max( 1, (int) $request->get_param( 'per_page' ) ?: 20 ) );
 	$notifications_only = rest_sanitize_boolean( $request->get_param( 'notifications_only' ) );
+	$carousel_only      = rest_sanitize_boolean( $request->get_param( 'carousel_only' ) );
 
-	$cache_key = 'zelo_news_list_v2_' . md5( wp_json_encode( array( $page, $per_page, $notifications_only ) ) );
+	if ( $carousel_only ) {
+		$per_page = min( 8, max( 1, $per_page ) );
+		$page     = 1;
+	}
+
+	$cache_key = 'zelo_news_list_v2_' . md5( wp_json_encode( array( $page, $per_page, $notifications_only, $carousel_only ) ) );
 	$cached    = get_transient( $cache_key );
 	if ( is_array( $cached ) ) {
 		return rest_ensure_response( $cached );
@@ -182,6 +200,7 @@ function zelo_get_news_list( $request ) {
 			'paged'              => $page,
 			'per_page'           => $per_page,
 			'notifications_only' => $notifications_only,
+			'carousel_only'      => $carousel_only,
 		)
 	);
 
@@ -244,6 +263,10 @@ function zelo_register_news_routes() {
 					'type'    => 'boolean',
 					'default' => false,
 				),
+				'carousel_only'      => array(
+					'type'    => 'boolean',
+					'default' => false,
+				),
 			),
 		)
 	);
@@ -285,8 +308,9 @@ add_action( 'add_meta_boxes', 'zelo_news_add_meta_boxes' );
 function zelo_news_render_meta_box( $post ) {
 	wp_nonce_field( 'zelo_news_save_meta', 'zelo_news_meta_nonce' );
 
-	$in_app   = get_post_meta( $post->ID, ZELO_NEWS_META_IN_APP, true ) === '1';
-	$notify   = get_post_meta( $post->ID, ZELO_NEWS_META_NOTIFY, true ) === '1';
+	$in_app    = get_post_meta( $post->ID, ZELO_NEWS_META_IN_APP, true ) === '1';
+	$notify    = get_post_meta( $post->ID, ZELO_NEWS_META_NOTIFY, true ) === '1';
+	$carousel  = get_post_meta( $post->ID, ZELO_NEWS_META_CAROUSEL, true ) === '1';
 	$priority = get_post_meta( $post->ID, ZELO_NEWS_META_PRIORITY, true );
 	if ( $priority !== 'important' ) {
 		$priority = 'normal';
@@ -305,6 +329,12 @@ function zelo_news_render_meta_box( $post ) {
 		</label>
 	</p>
 	<p>
+		<label>
+			<input type="checkbox" name="zelo_carousel" value="1" <?php checked( $carousel ); ?> <?php disabled( ! $in_app ); ?> id="zelo_carousel" />
+			<?php esc_html_e( 'Destaque no carrossel da home', 'zelo-assistente' ); ?>
+		</label>
+	</p>
+	<p>
 		<label for="zelo_notification_priority"><?php esc_html_e( 'Destaque', 'zelo-assistente' ); ?></label>
 		<select name="zelo_notification_priority" id="zelo_notification_priority" class="widefat">
 			<option value="normal" <?php selected( $priority, 'normal' ); ?>><?php esc_html_e( 'Normal', 'zelo-assistente' ); ?></option>
@@ -312,17 +342,27 @@ function zelo_news_render_meta_box( $post ) {
 		</select>
 	</p>
 	<p class="description">
-		<?php esc_html_e( 'Conteúdo em português. Visível apenas a utilizadores logados na app.', 'zelo-assistente' ); ?>
+		<?php esc_html_e( 'Conteúdo em português. Visível apenas a utilizadores logados na app. Carrossel exige imagem destacada.', 'zelo-assistente' ); ?>
 	</p>
 	<script>
 	(function () {
 		var inApp = document.querySelector('input[name="zelo_in_app"]');
 		var notify = document.getElementById('zelo_as_notification');
-		if (!inApp || !notify) return;
-		inApp.addEventListener('change', function () {
-			notify.disabled = !inApp.checked;
-			if (!inApp.checked) notify.checked = false;
-		});
+		var carousel = document.getElementById('zelo_carousel');
+		if (!inApp) return;
+		function syncInAppDeps() {
+			var on = inApp.checked;
+			if (notify) {
+				notify.disabled = !on;
+				if (!on) notify.checked = false;
+			}
+			if (carousel) {
+				carousel.disabled = !on;
+				if (!on) carousel.checked = false;
+			}
+		}
+		inApp.addEventListener('change', syncInAppDeps);
+		syncInAppDeps();
 	})();
 	</script>
 	<?php
@@ -351,6 +391,9 @@ function zelo_news_save_meta_box( $post_id ) {
 
 	$notify = $in_app && ! empty( $_POST['zelo_as_notification'] );
 	update_post_meta( $post_id, ZELO_NEWS_META_NOTIFY, $notify ? '1' : '0' );
+
+	$carousel = $in_app && ! empty( $_POST['zelo_carousel'] );
+	update_post_meta( $post_id, ZELO_NEWS_META_CAROUSEL, $carousel ? '1' : '0' );
 
 	$priority = isset( $_POST['zelo_notification_priority'] ) ? sanitize_key( wp_unslash( $_POST['zelo_notification_priority'] ) ) : 'normal';
 	if ( $priority !== 'important' ) {

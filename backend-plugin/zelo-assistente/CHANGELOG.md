@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.13.3] - 2026-06-04
+
+### Adicionado
+- **Carrossel home (#15):** meta `_zelo_carousel` («Destaque no carrossel da home»); checkbox no meta box «Zelo — App móvel»; `GET /news?carousel_only=1` (máx. 8, exige imagem destacada); cache transiente inclui flag `carousel_only`.
+
 ## [2.13.2] - 2026-06-04
 
 ### Corrigido

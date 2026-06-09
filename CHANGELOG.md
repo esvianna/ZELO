@@ -8,9 +8,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
-### Planejamento — carrossel home (#15)
+### Adicionado — carrossel novidades home (#15, ADR-030)
 
-- Análise em `docs/ISSUE-15-CARROSSEL-HOME.md` (banner 1 slide; overlap #26 logados).
+| Versão | Entrega |
+|--------|---------|
+| Plugin **2.13.3** + PWA **126** | Meta `_zelo_carousel`; `GET /news?carousel_only=1`; carrossel scroll-snap na home (logados); snapshot offline; fallback card novidades |
 
 ### Decisão — Programação visitante descartada (#14, ADR-029)
 

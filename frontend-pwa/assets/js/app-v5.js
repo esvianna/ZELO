@@ -26,6 +26,7 @@ const app = {
         clima: false,
         evento: false,
         news: false,
+        newsCarousel: false,
         indoorMap: false
     },
 
@@ -35,7 +36,8 @@ const app = {
             ops: 'data_stale_ops',
             locais: 'data_stale_locais',
             indoor: 'data_stale_indoor',
-            news: 'data_stale_news'
+            news: 'data_stale_news',
+            newsCarousel: 'data_stale_news'
         };
         const key = keyMap[scope] || 'data_stale_generic';
         return `<span class="zelo-stale-badge" role="status">${this.escapeHtml(i18n.t(key))}</span>`;
@@ -48,6 +50,7 @@ const app = {
         this._dataStale.clima = !!API.lastFetchFromCache.clima;
         this._dataStale.evento = !!API.lastFetchFromCache.evento;
         this._dataStale.news = !!API.lastFetchFromCache.news;
+        this._dataStale.newsCarousel = !!API.lastFetchFromCache.newsCarousel;
         this._dataStale.indoorMap = !!API.lastFetchFromCache.indoorMap;
     },
 
@@ -466,6 +469,7 @@ const app = {
                     }
 
                     await app.loadNews();
+                    await app.loadNewsCarousel();
 
                     app.router.navigate('home');
 
@@ -530,10 +534,12 @@ const app = {
             localStorage.removeItem('zelo_volunteer_ops_mine');
             if (uid != null) {
                 localStorage.removeItem(API.newsSnapshotKey(uid));
+                localStorage.removeItem(API.newsCarouselSnapshotKey(uid));
                 API.clearNewsItemSnapshots(uid);
             }
             app.data.volunteerOps = null;
             app.data.news = null;
+            app.data.newsCarousel = null;
             this.clearOpsAuthFailure();
             this.refreshAuthChrome();
             app.router.navigate('home');
@@ -887,7 +893,7 @@ const app = {
             }
 
             if (this.auth.user) {
-                await this.loadNews();
+                await Promise.all([this.loadNews(), this.loadNewsCarousel()]);
             }
 
             console.log('Data loaded', this.data);
@@ -1124,24 +1130,96 @@ const app = {
         item.hidden = !this.auth.user;
     },
 
+    async loadNewsCarousel() {
+        if (!this.auth.user) {
+            this.data.newsCarousel = null;
+            return null;
+        }
+        const data = await API.getNews(
+            { carousel_only: true, per_page: 8, page: 1 },
+            this.auth.user.id
+        );
+        this.data.newsCarousel = data && Array.isArray(data.items) ? data : null;
+        this.syncStaleFlags();
+        return this.data.newsCarousel;
+    },
+
+    getNewsCarouselItems() {
+        return (this.data.newsCarousel && Array.isArray(this.data.newsCarousel.items))
+            ? this.data.newsCarousel.items
+            : [];
+    },
+
+    onHomeNewsCarouselScroll(track) {
+        if (!track || !track.parentElement) return;
+        const dots = track.parentElement.querySelectorAll('.home-news-carousel-dot');
+        if (!dots.length) return;
+        const slideW = track.offsetWidth * 0.88 || 1;
+        let idx = Math.round(track.scrollLeft / slideW);
+        idx = Math.max(0, Math.min(idx, dots.length - 1));
+        dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+    },
+
     renderHomeNewsCard() {
         const el = document.getElementById('home-news-card');
         const opsBtn = document.getElementById('home-ops-news-btn');
         const loggedIn = !!this.auth.user;
-        const volunteerOps = loggedIn && this.canViewOps();
 
         if (opsBtn) {
             opsBtn.hidden = !loggedIn;
         }
 
         if (!el) return;
-        if (!loggedIn || volunteerOps) {
+        if (!loggedIn) {
             el.hidden = true;
             el.innerHTML = '';
             return;
         }
+
+        const carouselItems = this.getNewsCarouselItems().filter((p) => p.featured_image);
+        const stale = this._dataStale.newsCarousel ? this.renderStaleBadge('newsCarousel') : '';
+
+        if (carouselItems.length > 0) {
+            el.hidden = false;
+            const slides = carouselItems.map((post, i) => {
+                const title = this.escapeHtml(this.decodeHtmlEntities(post.title || ''));
+                const date = this.escapeHtml(this.formatNewsDate(post.published_at));
+                const img = this.escapeHtml(post.featured_image);
+                const id = Number(post.id);
+                return `
+                    <article class="home-news-carousel-slide" role="group" aria-roledescription="slide" aria-label="${i + 1} / ${carouselItems.length}">
+                        <button type="button" class="home-news-carousel-slide-btn" onclick="app.router.navigate('blog-post', { id: ${id} }); return false;">
+                            <span class="home-news-carousel-image" style="background-image:url('${img}')"></span>
+                            <span class="home-news-carousel-caption">
+                                <span class="home-news-carousel-title">${title}</span>
+                                <span class="home-news-carousel-date">${date}</span>
+                            </span>
+                        </button>
+                    </article>`;
+            }).join('');
+            const dots = carouselItems.map((_, i) =>
+                `<span class="home-news-carousel-dot${i === 0 ? ' active' : ''}" aria-hidden="true"></span>`
+            ).join('');
+            el.innerHTML = `
+                <div class="home-news-carousel-wrap">
+                    <div class="home-section-title home-news-carousel-heading">
+                        ${this.escapeHtml(i18n.t('news_section_title'))}
+                        ${stale}
+                    </div>
+                    <div class="home-news-carousel-viewport">
+                        <div class="home-news-carousel-track" id="home-news-carousel-track" onscroll="app.onHomeNewsCarouselScroll(this)">
+                            ${slides}
+                        </div>
+                        <div class="home-news-carousel-dots">${dots}</div>
+                    </div>
+                    <button type="button" class="home-news-carousel-all" onclick="app.router.navigate('blog'); return false;">
+                        ${this.escapeHtml(i18n.t('news_carousel_view_all'))}
+                    </button>
+                </div>`;
+            return;
+        }
+
         el.hidden = false;
-        const stale = this._dataStale.news ? this.renderStaleBadge('news') : '';
         el.innerHTML = `
             <div class="home-section-title">${this.escapeHtml(i18n.t('news_section_title'))}</div>
             <button type="button" class="home-news-card" onclick="app.router.navigate('blog'); return false;">
@@ -1150,7 +1228,7 @@ const app = {
                     <span class="home-news-card-title">${this.escapeHtml(i18n.t('news_home_card_title'))}</span>
                     <span class="home-news-card-desc">${this.escapeHtml(i18n.t('news_home_card_desc'))}</span>
                 </span>
-                ${stale}
+                ${this._dataStale.news ? this.renderStaleBadge('news') : ''}
                 <span class="home-news-card-chevron">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
                 </span>

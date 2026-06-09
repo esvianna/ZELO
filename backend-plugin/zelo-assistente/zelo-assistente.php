@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define( 'ZELO_VERSION', '2.13.2' );
+define( 'ZELO_VERSION', '2.13.3' );
 define( 'ZELO_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 
 // Include required files

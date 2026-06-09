@@ -6,6 +6,16 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 ---
 
+## ADR-030 — Carrossel novidades na home (#15) via posts WP (2026-06-04)
+
+**Contexto:** Issue [#15](https://github.com/esvianna/ZELO/issues/15) previa carrossel de destaques na home. Análise em `docs/ISSUE-15-CARROSSEL-HOME.md`. Banner evento único já cobre 1 destaque público; novidades (#26) são só logados.
+
+**Decisão:** Implementar carrossel **horizontal scroll-snap** na home para **utilizadores logados**, alimentado por **posts WP** com meta «Destaque no carrossel da home» (`_zelo_carousel`) + imagem destacada. Endpoint `GET /news?carousel_only=1` (máx. 8). Fallback: card «Novidades» existente se não houver posts flagged. Banner evento **mantido** (público).
+
+**Consequências:** Plugin **2.13.3** + PWA **126**. Snapshot offline `zelo_news_carousel_v1_{userId}`. Visível também para voluntários ops (não oculto). Issue #15 → **In review**.
+
+---
+
 ## ADR-029 — Programação visitante (#14) descartada (2026-06-04)
 
 **Contexto:** Issue [#14](https://github.com/esvianna/ZELO/issues/14) / ROADMAP B5 previa botão «Programação» na home visitante. Análise em `docs/ISSUE-14-PROGRAMACAO-VISITANTE.md`. Hoje a view Info só referencia «Consulte a programação» sem destino in-app.
