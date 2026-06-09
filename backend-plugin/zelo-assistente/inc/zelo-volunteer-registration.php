@@ -20,18 +20,6 @@ function zelo_user_email_verified( $user_id ) {
 	return (string) $v === '1';
 }
 
-function zelo_registration_rate_limit_ok() {
-	$ip   = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : 'unknown';
-	$key  = 'zelo_reg_' . md5( $ip );
-	$data = get_transient( $key );
-	$n    = is_array( $data ) && isset( $data['count'] ) ? (int) $data['count'] : 0;
-	if ( $n >= 8 ) {
-		return false;
-	}
-	set_transient( $key, array( 'count' => $n + 1 ), HOUR_IN_SECONDS );
-	return true;
-}
-
 function zelo_register_volunteer_rest_routes() {
 	register_rest_route(
 		'zelo/v1',

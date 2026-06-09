@@ -22,7 +22,9 @@ Princípios e checklist de segurança adaptados a **WordPress REST + PWA estáti
 |------|---------|
 | REST params | `sanitize_text_field`, `sanitize_email`, validação de tipos nos `args` da rota |
 | Admin POST | nonces WP, `current_user_can` |
-| Cadastro | senha mín. 8 caracteres; rate limit por IP (`zelo_registration_rate_limit_ok`) |
+| Cadastro | senha mín. 8 caracteres; rate limit **8/h/IP** (`zelo_registration_rate_limit_ok`) |
+| Login REST | rate limit **30/15 min/IP** + **10/15 min/username** (`zelo_login_rate_limit_check`); sucesso e falha contam |
+| Export ops | rate limit **60 s/usuário** após export OK |
 | Importadores | validar coordenadas; limitar batch (evitar DoS/timeouts) |
 
 ### Saída (output)
@@ -39,8 +41,8 @@ Matriz completa (roles, endpoints, IDOR): **[docs/OPS-PERMISSIONS.md](docs/OPS-P
 
 | Endpoint | Regra esperada |
 |----------|----------------|
-| `/auth/login` | Público; falha genérica; verificar e-mail se aplicável |
-| `/auth/register` | Público com rate limit; filtro `zelo_registration_enabled` |
+| `/auth/login` | Público; falha genérica; rate limit 30/15 min/IP + 10/15 min/username (429) |
+| `/auth/register` | Público com rate limit 8/h/IP; filtro `zelo_registration_enabled` |
 | `/ops/voluntarios` | **Autenticado + `zelo_view_ops`** — **não** activar `zelo_ops_voluntarios_public_read` |
 | `/ops/checkin`, `/checkout` | `zelo_checkin_ops` + titular ou supervisão na linha (governança) |
 | `/ops/reallocate` | `zelo_reallocate_volunteer` + supervisão na linha (2.11.8+) |
@@ -58,7 +60,7 @@ Matriz completa (roles, endpoints, IDOR): **[docs/OPS-PERMISSIONS.md](docs/OPS-P
 | XSS (admin) | `esc_*` em colunas e notices |
 | XSS (PWA) | preferir `textContent` / templates escapados; cuidado com `innerHTML` dinâmico em `app-v5.js` |
 | CSRF REST | `X-WP-Nonce` após login; cookies same-site |
-| Brute force login | considerar plugin WP ou rate limit futuro |
+| Brute force login | rate limit REST login (#22, 2.13.5); considerar WAF/hosting em produção |
 | Exposição de escala | **remover** filtro `zelo_ops_voluntarios_public_read` |
 | IDOR em ops | validar que usuário só altera assignments permitidos (revisar em mudanças) |
 

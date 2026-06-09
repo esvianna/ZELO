@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-04** (PWA 128 / plugin 2.13.4).
+> Última atualização: **2026-06-04** (plugin 2.13.5 — rate limit #22).
 
 ---
 
@@ -12,7 +12,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Referência no repo | Versão |
 |--------------------|--------|
-| Plugin WordPress (`zelo-assistente.php`) | **2.13.4** |
+| Plugin WordPress (`zelo-assistente.php`) | **2.13.5** |
 | PWA (`zelo-build.js` / `sw.js`) | **build 128** |
 
 **Backlog oficial:** [GitHub Project — Projeto ZELO](https://github.com/users/esvianna/projects/3) — issues em [`esvianna/ZELO`](https://github.com/esvianna/ZELO) (ADR-020, `docs/GITHUB-WORKFLOW.md`). Este arquivo **complementa** o quadro; status canônico das tarefas está no Project.
@@ -35,6 +35,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | [#26](https://github.com/esvianna/ZELO/issues/26) | Novidades/blog WP — card Operação, offline detalhe (2.13.x, PWA 116–125) |
 | [#28](https://github.com/esvianna/ZELO/issues/28) | Mapa do evento — admin + PWA diagrama, offline (2.12.x, PWA 110–125) |
 | [#15](https://github.com/esvianna/ZELO/issues/15) | Carrossel novidades home — posts WP + scroll-snap (2.13.3, PWA 126) |
+| [#17](https://github.com/esvianna/ZELO/issues/17) | Emergência — hierarquia + contatos 190/192/193 (2.13.4, PWA 128) |
 
 ### Descartado (decisão de produto)
 
@@ -45,6 +46,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | [#9](https://github.com/esvianna/ZELO/issues/9) Motor notificações | Hub sino + e-mail cron + localStorage bastam — ADR-028. |
 | [#16](https://github.com/esvianna/ZELO/issues/16) Inbox servidor | Descartado com #9 — ADR-028. |
 | [#14](https://github.com/esvianna/ZELO/issues/14) Programação visitante | JW Library + impresso no evento — ADR-029. |
+| [#18](https://github.com/esvianna/ZELO/issues/18) Branding splash/home | Banner evento + admin logo/foto bastam — ADR-031. |
 
 ### Destaques técnicos por versão
 
@@ -101,23 +103,22 @@ Priorização via [Project 3](https://github.com/users/esvianna/projects/3). Pri
 
 | Prioridade | Item | Issue |
 |------------|------|-------|
-| **Infra** | Rate limit REST, testes, env API | [#22](https://github.com/esvianna/ZELO/issues/22) … [#20](https://github.com/esvianna/ZELO/issues/20) |
-| **UX visitante** | Branding | [#18](https://github.com/esvianna/ZELO/issues/18) |
+| **Infra** | Testes, env API | [#20](https://github.com/esvianna/ZELO/issues/20) … |
 
 ---
 
 ## Próximos passos lógicos
 
-1. Smoke humano **#17** emergência — `TESTING.md` §4 (**2ad**); **#26** e **#28** (**2aa**, **2x–2z**).
-2. Deploy PWA **127** (`DEPLOYMENT_RULES.md`).
-3. Próxima feature: **#18** branding ou infra **#22** rate limit.
+1. Smoke **#22** rate limit login — `TESTING.md` §7; deploy plugin **2.13.5**.
+2. Smoke **#26** e **#28** se pendentes.
 
 ---
 
 ## Última sessão (2026-06-04)
 
-- **#17 Emergência (ajustes):** plugin **2.13.4** + PWA **128** — admin 3 slots multilíngue; discagem directa; tel. interno opcional; home 3 colunas. **In review**.
-- **#17 Hierarquia emergência:** PWA **127** — primeira entrega visual.
+- **#18 Branding descartado (ADR-031):** banner + admin bastam; issue fechada; **Done** no Project.
+- **#22 Rate limit:** plugin **2.13.5** — login 30/15 min IP + 10/15 min user; helper `rate-limit.php`. **In review**.
+- **#17 Emergência:** plugin **2.13.4** + PWA **128** — smoke OK; **Done** no Project; issue fechada.
 - **#15 Carrossel novidades (ADR-030):** plugin **2.13.3** + PWA **126** — smoke OK; **Done** no Project; issue fechada.
 - **#14 Programação descartada (ADR-029):** JW Library + impresso; **Done** no Project.
 - **#9 / #16 descartados (ADR-028):** hub sino + cron e-mail + localStorage; issues fechadas; **Done** no Project.
@@ -133,7 +134,7 @@ Priorização via [Project 3](https://github.com/users/esvianna/projects/3). Pri
 - **#26:** plugin **2.13.0** + PWA **116** — blog/notificações implementado (**In review**).
 - **#28** permanece **In review** (PWA 115 / plugin 2.12.3).
 
-**Como testar:** `TESTING.md` §4 (**2ac** carrossel; **2aa** novidades; **2x–2z** mapa indoor); §12 **O5** offline mapa evento.
+**Como testar:** `TESTING.md` §7 (rate limit login #22); §4 (**2ac** carrossel; **2aa** novidades; **2x–2z** mapa indoor); §12 **O5** offline mapa evento.
 
 ## Sessão anterior (2026-06-04)
 - PWA **115** + plugin **2.12.3**: Balcão 1 (azul) / Balcão 2 (teal), número no pino, legenda.

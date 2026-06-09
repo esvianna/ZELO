@@ -8,6 +8,16 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Adicionado — rate limit login REST (#22)
+
+| Versão | Entrega |
+|--------|---------|
+| Plugin **2.13.5** | `inc/rate-limit.php`; login 30/15 min IP + 10/15 min user; register refactor; filtro `zelo_rate_limit_enabled` |
+
+### Decisão — Branding splash/home descartado (#18, ADR-031)
+
+- Issue [#18](https://github.com/esvianna/ZELO/issues/18) fechada; banner evento + logo/foto admin bastam.
+
 ### Ajustado — emergência (#17)
 
 | Versão | Entrega |

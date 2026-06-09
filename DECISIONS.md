@@ -6,6 +6,26 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 ---
 
+## ADR-032 — Rate limit login REST (#22) (2026-06-04)
+
+**Contexto:** Issue [#22](https://github.com/esvianna/ZELO/issues/22). Register (8/h/IP) e export (60 s/user) já existiam; `POST /auth/login` público sem throttle (`SECURITY.md`).
+
+**Decisão:** Helper `inc/rate-limit.php` com transients WP. Login: **30/15 min/IP** + **10/15 min/username**; sucesso e falha contam. Register mantém 8/h/IP. verify-email e lost password fora do MVP. Filtro `zelo_rate_limit_enabled` para dev.
+
+**Consequências:** Plugin **2.13.5**; sem bump PWA obrigatório (mensagem 429 do servidor). Documentação `SECURITY.md` + `TESTING.md`.
+
+---
+
+## ADR-031 — Branding splash/home (#18) descartado (2026-06-04)
+
+**Contexto:** Issue [#18](https://github.com/esvianna/ZELO/issues/18) / ROADMAP B2 previa splash e branding reforçado na home (PRD §5.2). Análise em `docs/ISSUE-18-BRANDING-DESCARTE.md`. Banner evento + logo/nome no admin já cobrem identificação mínima.
+
+**Decisão:** **Não implementar** splash dedicada nem faixa de branding além do banner actual. Sem evolução de cores/assets custom por evento neste ciclo.
+
+**Consequências:** Issue #18 fechada como *won't fix* / descartada. B2 branding no ROADMAP marcado descartado.
+
+---
+
 ## ADR-030 — Carrossel novidades na home (#15) via posts WP (2026-06-04)
 
 **Contexto:** Issue [#15](https://github.com/esvianna/ZELO/issues/15) previa carrossel de destaques na home. Análise em `docs/ISSUE-15-CARROSSEL-HOME.md`. Banner evento único já cobre 1 destaque público; novidades (#26) são só logados.

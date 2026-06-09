@@ -1,7 +1,7 @@
 # Issue #17 — Hierarquia visual emergência (B1)
 
 > **Issue:** [esvianna/ZELO#17](https://github.com/esvianna/ZELO/issues/17)  
-> **Status:** **In review** — plugin **2.13.4** + PWA **128** (2026-06-04)  
+> **Status:** **Done** — plugin 2.13.4 + PWA 128 (2026-06-04)  
 > **Referências:** PRD §5.1, ROADMAP B1
 
 ---

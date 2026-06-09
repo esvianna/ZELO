@@ -2,6 +2,14 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.13.5] - 2026-06-04
+
+### Adicionado
+- **Rate limit REST (#22):** `inc/rate-limit.php` — helper transients; `POST /auth/login` 30/15 min/IP + 10/15 min/username (sucesso e falha); resposta 429 `zelo_rate_limit`; filtro `zelo_rate_limit_enabled`.
+
+### Alterado
+- Cadastro: `zelo_registration_rate_limit_ok()` usa helper unificado (comportamento 8/h/IP inalterado).
+
 ## [2.13.4] - 2026-06-04
 
 ### Adicionado

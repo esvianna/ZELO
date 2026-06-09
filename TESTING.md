@@ -149,6 +149,7 @@ Configurar `baseUrl` / `siteUrl` em `frontend-pwa/assets/js/api-v5.js` para o am
 | Deploy plugin sem `inc/lib/font/*.php` | JSON `zelo_export_pdf_failed` (helveticab.php, etc.) |
 | Falha FPDF (plugin &lt; 2.9.3) | JSON `zelo_export_pdf_failed`, não página crítica HTML |
 | Rate limit cadastro (8+/hora/IP) | HTTP 429 |
+| Rate limit login (2.13.5+) — 11.ª tentativa mesmo user / 15 min | HTTP 429, código `zelo_rate_limit` |
 | Login sem e-mail verificado | HTTP 403 |
 
 ---

@@ -68,8 +68,8 @@ Itens históricos; ver **Fase B** para status atualizado.
 | # | Entrega | Status | Issue |
 |---|---------|--------|-------|
 | B0 | Mapa indoor estádio + direções (POIs públicos, i18n) | **Planejamento** | [#28](https://github.com/esvianna/ZELO/issues/28) |
-| B1 | Hierarquia visual reforçada (emergência destacada) | PWA 127 — **In review** | [#17](https://github.com/esvianna/ZELO/issues/17) |
-| B2 | Branding evento na splash/home | Parcial (banner evento) | [#18](https://github.com/esvianna/ZELO/issues/18) |
+| B1 | Hierarquia visual reforçada (emergência destacada) | Concluído (2.13.4 / PWA 128) | [#17](https://github.com/esvianna/ZELO/issues/17) |
+| B2 | Branding evento na splash/home | **Descartado** (ADR-031; banner actual basta) | [#18](https://github.com/esvianna/ZELO/issues/18) |
 | B3 | Card visual do mapa | Implementado (`home-map-card`) | — |
 | B4 | Bottom navigation | Implementado | — |
 | B5 | Botão / área “Programação” | **Descartado** (ADR-029; JW Library + impresso) | [#14](https://github.com/esvianna/ZELO/issues/14) |
@@ -88,7 +88,7 @@ Itens históricos; ver **Fase B** para status atualizado.
 | C1 | `.gitignore` para PHP/IDE/OS | **Concluído** | [#19](https://github.com/esvianna/ZELO/issues/19) |
 | C2 | Testes automatizados (PHPUnit REST + smoke E2E) | Não iniciado | [#20](https://github.com/esvianna/ZELO/issues/20) |
 | C3 | Config de ambiente (URL API sem hardcode) | Pendente | [#21](https://github.com/esvianna/ZELO/issues/21) |
-| C4 | Rate limiting REST (login/register) | Parcial (register; export pós-sucesso 2.11.7) | [#22](https://github.com/esvianna/ZELO/issues/22) |
+| C4 | Rate limiting REST (login/register) | Login 2.13.5 + register/export | [#22](https://github.com/esvianna/ZELO/issues/22) |
 | C5 | Cross-domain PWA + JWT | Futuro (ver DECISIONS) | — |
 
 ---

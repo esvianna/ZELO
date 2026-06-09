@@ -413,8 +413,15 @@ function zelo_api_upload_profile_avatar( $request ) {
  * @param WP_REST_Request $request Request.
  */
 function zelo_api_login( $request ) {
+	$username = (string) $request->get_param( 'username' );
+
+	$rate = zelo_login_rate_limit_check( $username );
+	if ( is_wp_error( $rate ) ) {
+		return $rate;
+	}
+
 	$creds = array(
-		'user_login'    => $request->get_param( 'username' ),
+		'user_login'    => $username,
 		'user_password' => $request->get_param( 'password' ),
 		'remember'      => true,
 	);
