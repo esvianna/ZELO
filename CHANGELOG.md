@@ -8,6 +8,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Ajustado — histórico escala ops (PWA 131)
+
+| Versão | Entrega |
+|--------|---------|
+| PWA **131** | «Últimas alterações» colapsável (`<details>`); textos legíveis por tipo (`schedule_patch`, realocação, substituição) |
+
 ### Corrigido — avatar perfil (PWA 130 + plugin 2.13.6)
 
 | Versão | Entrega |

@@ -3641,6 +3641,54 @@ const app = {
         return label;
     },
 
+    formatOpsHistoryLine(h) {
+        if (!h || typeof h !== 'object') return '';
+        const at = String(h.at || '').trim();
+        const type = String(h.type || '').trim();
+        let detail = '';
+
+        if (type === 'schedule_patch') {
+            const day = h.day ? this.getOpsDayLabel(h.day) : '—';
+            const shift = h.shift || '—';
+            const count = h.row_count != null ? String(h.row_count) : '—';
+            detail = i18n.t('ops_history_schedule_patch')
+                .replace('{0}', day)
+                .replace('{1}', shift)
+                .replace('{2}', count);
+        } else if (type === 'reallocation') {
+            const id = h.assignment_id || '—';
+            let extra = '';
+            if (h.new_location) {
+                extra += i18n.t('ops_history_to_location').replace('{0}', String(h.new_location));
+            }
+            if (h.new_shift) {
+                extra += i18n.t('ops_history_to_shift').replace('{0}', String(h.new_shift));
+            }
+            detail = i18n.t('ops_history_reallocation').replace('{0}', id).replace('{1}', extra);
+        } else if (type === 'substitution') {
+            const id = h.assignment_id || '—';
+            const note = h.note ? i18n.t('ops_history_substitution_note').replace('{0}', String(h.note)) : '';
+            detail = i18n.t('ops_history_substitution').replace('{0}', id).replace('{1}', note);
+        } else {
+            detail = i18n.t('ops_history_generic').replace('{0}', type || '—');
+            if (h.assignment_id) {
+                detail += ` — ${i18n.t('ops_history_assignment')} ${h.assignment_id}`;
+            }
+        }
+
+        return at ? `${at} — ${detail}` : detail;
+    },
+
+    renderOpsHistoryBlock(history) {
+        if (!this.canManageOps() || !Array.isArray(history) || !history.length) {
+            return '';
+        }
+        const items = history.slice(0, 15);
+        const summary = i18n.t('ops_history_title_count').replace('{0}', String(items.length));
+        const list = items.map((h) => `<li>${this.escapeHtml(this.formatOpsHistoryLine(h))}</li>`).join('');
+        return `<details class="ops-history-details"><summary>${this.escapeHtml(summary)}</summary><ul class="ops-history-list">${list}</ul></details>`;
+    },
+
     getOpsDayName(day) {
         const map = { sexta: 'Sexta', sabado: 'Sábado', domingo: 'Domingo' };
         return map[day] || day;
@@ -4501,10 +4549,7 @@ const app = {
             swapPanel = `<div class="ops-swap-panel"><h3>${this.escapeHtml(i18n.t('ops_swap_requests_title'))}</h3>${pend.length ? pend.map((s) => `<div class="ops-schedule-card ops-swap-card"><code>${this.escapeHtml(s.id)}</code> — ${this.escapeHtml(i18n.t('ops_swap_assignment'))} <strong>${this.escapeHtml(String(s.assignment_id))}</strong> (${this.escapeHtml(i18n.t('ops_swap_requester'))} ${this.escapeHtml(String(s.requester_id))})<div class="ops-swap-actions"><button type="button" class="ops-btn ops-btn--active" onclick="app.resolveSwapPrompt('${s.id}')">${this.escapeHtml(i18n.t('ops_swap_approve'))}</button><button type="button" class="ops-btn" onclick="app.resolveSwap('${s.id}','rejected','',0)">${this.escapeHtml(i18n.t('ops_swap_reject'))}</button></div></div>`).join('') : `<p class="text-muted">${this.escapeHtml(i18n.t('ops_swap_none'))}</p>`}</div>`;
         }
 
-        let histBlock = '';
-        if (this.canManageOps() && Array.isArray(ops.history) && ops.history.length) {
-            histBlock = `<div class="ops-history-block"><h3>${this.escapeHtml(i18n.t('ops_history_title'))}</h3><ul>${ops.history.slice(0, 15).map((h) => `<li><code>${this.escapeHtml(h.type || '')}</code> ${this.escapeHtml(h.at || '')} — ${this.escapeHtml(i18n.t('ops_history_assignment'))} ${this.escapeHtml(h.assignment_id || '')}</li>`).join('')}</ul></div>`;
-        }
+        const histBlock = this.renderOpsHistoryBlock(ops.history);
 
         let items = ops.schedule.slice();
         if (selectedDay) items = items.filter((i) => i.day === selectedDay);

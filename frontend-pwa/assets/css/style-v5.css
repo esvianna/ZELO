@@ -3029,6 +3029,35 @@ body {
     margin-bottom: 0.5rem;
 }
 
+.ops-history-details {
+    margin-bottom: 1rem;
+}
+
+.ops-history-details summary {
+    cursor: pointer;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+    color: var(--text-muted, #64748b);
+    font-size: 0.92rem;
+    list-style: none;
+}
+
+.ops-history-details summary::-webkit-details-marker {
+    display: none;
+}
+
+.ops-history-details[open] summary {
+    margin-bottom: 0.5rem;
+    color: var(--primary-color);
+}
+
+.ops-history-list {
+    margin: 0;
+    padding-left: 1.2rem;
+    font-size: 0.85rem;
+    line-height: 1.45;
+}
+
 .ops-day-group {
     margin-bottom: 1.25rem;
 }

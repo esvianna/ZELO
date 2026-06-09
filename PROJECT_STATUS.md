@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-04** (fix avatar perfil — PWA 130 / plugin 2.13.6).
+> Última atualização: **2026-06-04** (PWA 131 — histórico escala colapsável).
 
 ---
 
@@ -13,7 +13,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | Referência no repo | Versão |
 |--------------------|--------|
 | Plugin WordPress (`zelo-assistente.php`) | **2.13.6** |
-| PWA (`zelo-build.js` / `sw.js`) | **build 130** |
+| PWA (`zelo-build.js` / `sw.js`) | **build 131** |
 
 **Backlog oficial:** [GitHub Project — Projeto ZELO](https://github.com/users/esvianna/projects/3) — issues em [`esvianna/ZELO`](https://github.com/esvianna/ZELO) (ADR-020, `docs/GITHUB-WORKFLOW.md`). Este arquivo **complementa** o quadro; status canônico das tarefas está no Project.
 
@@ -108,13 +108,15 @@ Backlog infra concluído (#20 descartado, #21/#22 Done). Próximas demandas via 
 
 ## Próximos passos lógicos
 
-1. Deploy plugin **2.13.6** + PWA **130** (fix avatar perfil).
-2. Manter smoke `TESTING.md` antes de eventos.
+1. Deploy PWA **131** (histórico escala colapsável).
+2. Deploy plugin **2.13.6** se ainda pendente (avatar).
+3. Manter smoke `TESTING.md` antes de eventos.
 
 ---
 
 ## Última sessão (2026-06-04)
 
+- **PWA 131:** «Últimas alterações» colapsável + textos legíveis na escala ops.
 - **Fix avatar perfil:** PWA **130** + plugin **2.13.6** — preview local, cache-bust, msg junto ao avatar; backend fallback URL attachment.
 - **#20 Testes automatizados descartado (ADR-033):** `TESTING.md` manual bastam; issue fechada; **Done** no Project.
 - **#18 Branding descartado (ADR-031):** banner + admin bastam; issue fechada; **Done** no Project.
