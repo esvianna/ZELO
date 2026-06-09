@@ -68,7 +68,7 @@ Itens históricos; ver **Fase B** para status atualizado.
 | # | Entrega | Status | Issue |
 |---|---------|--------|-------|
 | B0 | Mapa indoor estádio + direções (POIs públicos, i18n) | **Planejamento** | [#28](https://github.com/esvianna/ZELO/issues/28) |
-| B1 | Hierarquia visual reforçada (emergência destacada) | Parcial (CSS cards) | [#17](https://github.com/esvianna/ZELO/issues/17) |
+| B1 | Hierarquia visual reforçada (emergência destacada) | PWA 127 — **In review** | [#17](https://github.com/esvianna/ZELO/issues/17) |
 | B2 | Branding evento na splash/home | Parcial (banner evento) | [#18](https://github.com/esvianna/ZELO/issues/18) |
 | B3 | Card visual do mapa | Implementado (`home-map-card`) | — |
 | B4 | Bottom navigation | Implementado | — |

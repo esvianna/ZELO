@@ -88,6 +88,8 @@ Configurar `baseUrl` / `siteUrl` em `frontend-pwa/assets/js/api-v5.js` para o am
 | 2z | **Mapa evento** PWA mobile (110+) | iPhone / ≤768px | Abre em **Orientar**; aba Diagrama: **header + bottom nav visíveis** (124+); pinch; botões **Mapa completo** / **Ir ao destino** |
 | 2aa | **Novidades / blog** (#26, 2.13.0 / PWA 116+) | Logado | Admin: post com «Publicar na PWA» → `GET /news` OK; card/menu → lista + detalhe PT; **offline (123+):** detalhe em cache após visita online; **voluntário:** card «Novidades» na secção Operação (119+); anónimo sem novidades |
 | 2ac | **Carrossel novidades** (#15, 2.13.3 / PWA 126+) | Logado | Admin: post com «Publicar na PWA» + «Destaque no carrossel da home» + **imagem destacada** → home com swipe horizontal; toque abre detalhe; «Ver todas as novidades» → lista; **offline:** snapshot `zelo_news_carousel_v1_*`; sem posts carrossel → card fallback; anónimo sem carrossel |
+| 2ad | **Emergência — hierarquia visual** (#17, PWA 127+) | Visitante | Home: card Emergência full-width rosa vs Hospitais/Farmácias; view emergência com hero + tel. destaque admin; lista/pesquisa destaca categoria `emergencia`; S.O.S. bottom nav OK; regressão mapa/nav |
+| 2ae | **Emergência — contatos** (#17, 2.13.4 / PWA 128+) | Visitante | Admin: 3 slots 190/192/193 com guia PT/EN/ES; PWA: **Ligar agora** (`tel:`); home 3 colunas simétricas; tel. interno só se checkbox admin; idioma altera textos do backend |
 | 2g | Visitante em **Mapa** → F5 (107+) | — | Permanece em Mapa; hash `#mapa` |
 | 2h | Abrir URL com `#escala` sem login | — | Redireciona **Login** (sem loop infinito) |
 | 2i | `?zelo_verified=1` após cadastro | — | Tela e-mail verificado (prioridade sobre última view) |

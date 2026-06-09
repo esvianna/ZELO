@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define( 'ZELO_VERSION', '2.13.3' );
+define( 'ZELO_VERSION', '2.13.4' );
 define( 'ZELO_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 
 // Include required files
@@ -27,6 +27,7 @@ require_once ZELO_PLUGIN_DIR . 'inc/volunteer-ops-export.php';
 require_once ZELO_PLUGIN_DIR . 'inc/zelo-volunteer-registration.php';
 require_once ZELO_PLUGIN_DIR . 'inc/weather.php';
 require_once ZELO_PLUGIN_DIR . 'inc/zelo-news.php';
+require_once ZELO_PLUGIN_DIR . 'inc/emergency-services.php';
 require_once ZELO_PLUGIN_DIR . 'inc/api-routes.php';
 require_once ZELO_PLUGIN_DIR . 'inc/zelo-auth-api.php'; // Auth API
 require_once ZELO_PLUGIN_DIR . 'inc/zelo-volunteer-commitments.php';

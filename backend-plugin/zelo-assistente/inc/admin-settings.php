@@ -34,6 +34,7 @@ function zelo_render_settings_page() {
             'doctor_loc' => sanitize_text_field( $_POST['zelo_medical_loc'] ), // Keeping internal key consistent if used elsewhere or just mapping new one
             'medical_loc' => sanitize_text_field( $_POST['zelo_medical_loc'] ),
             'emergency_phone' => sanitize_text_field( $_POST['zelo_emergency_phone'] ),
+            'emergency_phone_active' => isset( $_POST['zelo_emergency_phone_active'] ) ? 1 : 0,
             'support_chat' => esc_url_raw( $_POST['zelo_support_chat'] ),
             // Transport Fields
             'trans_shuttle_active' => isset($_POST['zelo_trans_shuttle_active']) ? 1 : 0,
@@ -51,19 +52,11 @@ function zelo_render_settings_page() {
             'home_notice_text' => sanitize_textarea_field( $_POST['zelo_home_notice_text'] ),
             'home_notice_link' => esc_url_raw( $_POST['zelo_home_notice_link'] ),
             'weather_enabled' => isset( $_POST['zelo_weather_enabled'] ) ? 1 : 0,
+			'emergency_services' => zelo_sanitize_emergency_services_from_post(),
 			'phones'  => array(),
 		);
 
-		if ( isset( $_POST['zelo_phone_name'] ) && is_array( $_POST['zelo_phone_name'] ) ) {
-			foreach ( $_POST['zelo_phone_name'] as $index => $name ) {
-				if ( ! empty( $name ) ) {
-					$event_data['phones'][] = array(
-						'nome'   => sanitize_text_field( $name ),
-						'numero' => sanitize_text_field( $_POST['zelo_phone_number'][ $index ] ),
-					);
-				}
-			}
-		}
+		$event_data['phones'] = zelo_legacy_phones_from_emergency_services( $event_data );
 
 		update_option( 'zelo_event_data', $event_data );
 		if ( isset( $_POST['zelo_google_places_api_key'] ) ) {
@@ -81,6 +74,7 @@ function zelo_render_settings_page() {
 		'site'    => '',
 		'phones'  => array( array( 'nome' => 'Polícia', 'numero' => '190' ) ),
 	) );
+	$emergency_services = zelo_normalize_emergency_services( $data );
 	?>
 	<div class="wrap">
 		<h1><?php esc_html_e( 'Configurações do Evento Zelo', 'zelo-assistente' ); ?></h1>
@@ -167,8 +161,17 @@ function zelo_render_settings_page() {
                     <td><input type="text" name="zelo_medical_loc" id="zelo_medical_loc" value="<?php echo esc_attr( isset($data['medical_loc']) ? $data['medical_loc'] : '' ); ?>" class="regular-text" placeholder="Ex: Pavilhão A"></td>
                 </tr>
                 <tr>
-                    <th scope="row"><label for="zelo_emergency_phone">Telefone de Emergência (Destaque)</label></th>
-                    <td><input type="text" name="zelo_emergency_phone" id="zelo_emergency_phone" value="<?php echo esc_attr( isset($data['emergency_phone']) ? $data['emergency_phone'] : '' ); ?>" class="regular-text" placeholder="Ex: 0800 123 4567"></td>
+                    <th scope="row"><?php esc_html_e( 'Telefone interno do evento', 'zelo-assistente' ); ?></th>
+                    <td>
+                        <fieldset>
+                            <label>
+                                <input type="checkbox" name="zelo_emergency_phone_active" value="1" <?php checked( ! empty( $data['emergency_phone_active'] ) ); ?>>
+                                <?php esc_html_e( 'Mostrar telefone interno do evento na PWA', 'zelo-assistente' ); ?>
+                            </label>
+                            <p class="description"><?php esc_html_e( 'Opcional. Só aparece se marcado e com número preenchido.', 'zelo-assistente' ); ?></p>
+                            <input type="text" name="zelo_emergency_phone" id="zelo_emergency_phone" value="<?php echo esc_attr( isset( $data['emergency_phone'] ) ? $data['emergency_phone'] : '' ); ?>" class="regular-text" placeholder="Ex: 0800 123 4567">
+                        </fieldset>
+                    </td>
                 </tr>
                 <tr>
                     <th scope="row"><label for="zelo_support_chat">Link do Chat de Suporte</label></th>
@@ -257,20 +260,51 @@ function zelo_render_settings_page() {
             </table>
 
 			<hr>
-			<h2>Telefones de Emergência</h2>
-			<div id="phones-container">
-				<?php foreach ( $data['phones'] as $phone ) : ?>
-					<div class="phone-row" style="margin-bottom: 10px;">
-						<input type="text" name="zelo_phone_name[]" placeholder="Nome (Ex: SAMU)" value="<?php echo esc_attr( $phone['nome'] ); ?>">
-						<input type="text" name="zelo_phone_number[]" placeholder="Número (Ex: 192)" value="<?php echo esc_attr( $phone['numero'] ); ?>">
-					</div>
-				<?php endforeach; ?>
-				<div class="phone-row" style="margin-bottom: 10px;">
-					<input type="text" name="zelo_phone_name[]" placeholder="Nome (Ex: SAMU)">
-					<input type="text" name="zelo_phone_number[]" placeholder="Número (Ex: 192)">
+			<h2><?php esc_html_e( 'Emergência pública (PWA)', 'zelo-assistente' ); ?></h2>
+			<p class="description"><?php esc_html_e( 'Números exibidos na view Emergência com botão de discagem directa. Textos em PT, EN e ES.', 'zelo-assistente' ); ?></p>
+			<?php
+			$slot_titles = array(
+				'police' => __( 'Polícia', 'zelo-assistente' ),
+				'samu'   => __( 'SAMU', 'zelo-assistente' ),
+				'fire'   => __( 'Bombeiros', 'zelo-assistente' ),
+			);
+			foreach ( $emergency_services as $key => $svc ) :
+				$prefix = 'zelo_es_' . $key . '_';
+				?>
+				<div style="border:1px solid #ccd0d4;padding:16px;margin-bottom:16px;background:#fff;border-radius:4px;">
+					<h3 style="margin-top:0;"><?php echo esc_html( $slot_titles[ $key ] ?? $key ); ?></h3>
+					<p>
+						<label>
+							<input type="checkbox" name="<?php echo esc_attr( $prefix . 'active' ); ?>" value="1" <?php checked( ! empty( $svc['active'] ) ); ?>>
+							<?php esc_html_e( 'Exibir na PWA', 'zelo-assistente' ); ?>
+						</label>
+					</p>
+					<p>
+						<label><?php esc_html_e( 'Número', 'zelo-assistente' ); ?></label><br>
+						<input type="text" name="<?php echo esc_attr( $prefix . 'number' ); ?>" value="<?php echo esc_attr( $svc['number'] ); ?>" class="small-text">
+					</p>
+					<table class="widefat" style="margin-top:8px;">
+						<thead><tr><th><?php esc_html_e( 'Idioma', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'Nome', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'Quando ligar', 'zelo-assistente' ); ?></th></tr></thead>
+						<tbody>
+							<tr>
+								<td>PT</td>
+								<td><input type="text" name="<?php echo esc_attr( $prefix . 'label_pt' ); ?>" value="<?php echo esc_attr( $svc['label_pt'] ); ?>" class="regular-text"></td>
+								<td><textarea name="<?php echo esc_attr( $prefix . 'when_pt' ); ?>" rows="2" class="large-text"><?php echo esc_textarea( $svc['when_pt'] ); ?></textarea></td>
+							</tr>
+							<tr>
+								<td>EN</td>
+								<td><input type="text" name="<?php echo esc_attr( $prefix . 'label_en' ); ?>" value="<?php echo esc_attr( $svc['label_en'] ); ?>" class="regular-text"></td>
+								<td><textarea name="<?php echo esc_attr( $prefix . 'when_en' ); ?>" rows="2" class="large-text"><?php echo esc_textarea( $svc['when_en'] ); ?></textarea></td>
+							</tr>
+							<tr>
+								<td>ES</td>
+								<td><input type="text" name="<?php echo esc_attr( $prefix . 'label_es' ); ?>" value="<?php echo esc_attr( $svc['label_es'] ); ?>" class="regular-text"></td>
+								<td><textarea name="<?php echo esc_attr( $prefix . 'when_es' ); ?>" rows="2" class="large-text"><?php echo esc_textarea( $svc['when_es'] ); ?></textarea></td>
+							</tr>
+						</tbody>
+					</table>
 				</div>
-			</div>
-			<p class="description">Preencha os campos vazios para adicionar mais.</p>
+			<?php endforeach; ?>
 
 			<p class="submit">
 				<input type="submit" name="zelo_save_settings" id="submit" class="button button-primary" value="Salvar Alterações">

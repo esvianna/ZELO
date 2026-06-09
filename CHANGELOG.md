@@ -8,6 +8,18 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Ajustado — emergência (#17)
+
+| Versão | Entrega |
+|--------|---------|
+| Plugin **2.13.4** + PWA **128** | 3 serviços públicos no admin (PT/EN/ES); discagem directa `tel:`; telefone interno opcional (checkbox off); home simétrica 3 colunas |
+
+### Adicionado — hierarquia visual emergência (#17)
+
+| Versão | Entrega |
+|--------|---------|
+| PWA **127** | Card emergência full-width (PRD); view emergência com hero + telefone destaque; destaque lista/pesquisa categoria `emergencia`; a11y S.O.S. |
+
 ### Adicionado — carrossel novidades home (#15, ADR-030)
 
 | Versão | Entrega |

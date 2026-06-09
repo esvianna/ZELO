@@ -148,8 +148,31 @@ const app = {
             label: base.label,
             color: base.color,
             bg: this.hexToRgba(base.color, 0.15),
-            gradient: `linear-gradient(135deg, ${this.hexToRgba(base.color, 0.95)}, ${base.color})`
+            gradient: `linear-gradient(135deg, ${this.hexToRgba(base.color, 0.95)}, ${base.color})`,
+            isEmergency: slug === 'emergencia'
         };
+    },
+
+    isEmergencyCategory(slug) {
+        return slug === 'emergencia';
+    },
+
+    getEmergencyLangKey() {
+        const c = i18n.current || 'pt_br';
+        if (c === 'en') return 'en';
+        if (c === 'es') return 'es';
+        return 'pt';
+    },
+
+    pickLocalizedField(obj, langKey) {
+        if (!obj || typeof obj !== 'object') return '';
+        const val = obj[langKey] || obj.pt || obj.en || obj.es || '';
+        return String(val).trim();
+    },
+
+    formatTelHref(number) {
+        const digits = String(number || '').replace(/[^\d+]/g, '');
+        return digits || '';
     },
 
     getUserLocation() {
@@ -1799,8 +1822,9 @@ const app = {
         resultsEl.style.display = 'block';
         resultsEl.innerHTML = matches.map(item => {
             const cat = this.getCategoryMeta(item.category);
+            const emergencyCls = cat.isEmergency ? ' home-search-result-item--emergency' : '';
             return `
-                <div class="home-search-result-item" onclick="app.handleSearchResultClick(${item.id})">
+                <div class="home-search-result-item${emergencyCls}" onclick="app.handleSearchResultClick(${item.id})">
                     <div class="home-search-result-icon" style="background:${cat.bg}">${cat.icon}</div>
                     <div class="home-search-result-info">
                         <h4>${item.name}</h4>
@@ -2018,9 +2042,10 @@ const app = {
             const meta = this.getCategoryMeta(item.category);
             const is24h = item.is_24h == '1';
             const addressShort = item.address ? (item.address.length > 50 ? item.address.substring(0, 50) + '...' : item.address) : '';
+            const emergencyCls = meta.isEmergency ? ' rich-list-card--emergency' : '';
 
             return `
-            <div class="rich-list-card" onclick="app.router.navigate('detalhe', {id: ${item.id}})">
+            <div class="rich-list-card${emergencyCls}" onclick="app.router.navigate('detalhe', {id: ${item.id}})">
                 <div class="rich-list-card-icon" style="background:${meta.bg}">
                     ${item.image_url ? 
                         `<img src="${item.image_url}" style="width:100%; height:100%; object-fit:cover; border-radius:14px;">` : 
@@ -4539,14 +4564,72 @@ const app = {
 
     renderEmergency() {
         const container = document.getElementById('emergency-container');
-        const phones = this.data.evento.telefones_emergencia || [];
+        if (!container) return;
 
-        container.innerHTML = phones.map(p => `
-            <div class="contact-row">
-                <span>${p.nome}</span>
-                <a href="tel:${p.numero}" class="call-btn">${p.numero}</a>
-            </div>
-        `).join('');
+        const evento = this.data.evento || {};
+        const info = evento.info_uteis || {};
+        const lang = this.getEmergencyLangKey();
+        let services = Array.isArray(evento.emergency_services) ? evento.emergency_services : [];
+        if (!services.length && Array.isArray(evento.telefones_emergencia) && evento.telefones_emergencia.length) {
+            services = evento.telefones_emergencia.map((p) => ({
+                number: p.numero,
+                label: { pt: p.nome || '', en: p.nome || '', es: p.nome || '' },
+                when: { pt: '', en: '', es: '' }
+            }));
+        }
+        const showInternal = !!info.emergency_phone_active;
+        const internalPhone = (info.emergency_phone || '').trim();
+        const medicalLoc = (info.medical_loc || '').trim();
+
+        let html = `
+            <div class="emergency-hero">
+                <h3 class="emergency-hero-title">${this.escapeHtml(i18n.t('emergency_help_title'))}</h3>
+                <p class="emergency-hero-desc">${this.escapeHtml(i18n.t('emergency_help_desc'))}</p>
+            </div>`;
+
+        if (services.length) {
+            html += '<div class="emergency-services-list">';
+            html += services.map((svc) => {
+                const label = this.escapeHtml(this.pickLocalizedField(svc.label, lang) || svc.number || '');
+                const when = this.escapeHtml(this.pickLocalizedField(svc.when, lang));
+                const displayNumber = this.escapeHtml(svc.number || '');
+                const tel = this.formatTelHref(svc.number);
+                const callLabel = this.escapeHtml(i18n.t('emergency_call_now'));
+                if (!tel) return '';
+                return `
+                <div class="emergency-service-row">
+                    <div class="emergency-service-body">
+                        <span class="emergency-service-title">${label} — ${displayNumber}</span>
+                        ${when ? `<p class="emergency-service-when">${when}</p>` : ''}
+                    </div>
+                    <a href="tel:${tel}" class="emergency-service-call">${callLabel}</a>
+                </div>`;
+            }).join('');
+            html += '</div>';
+        }
+
+        if (showInternal && internalPhone) {
+            const tel = this.formatTelHref(internalPhone);
+            html += `
+            <div class="emergency-internal-block">
+                <span class="emergency-internal-label">${this.escapeHtml(i18n.t('emergency_internal_title'))}</span>
+                <a href="tel:${tel}" class="emergency-hero-call">${this.escapeHtml(internalPhone)}</a>
+            </div>`;
+        }
+
+        if (medicalLoc) {
+            html += `
+            <div class="emergency-medical-loc">
+                <strong>${this.escapeHtml(i18n.t('emergency_medical_loc_title'))}</strong>
+                <span>${this.escapeHtml(medicalLoc)}</span>
+            </div>`;
+        }
+
+        if (!services.length && !(showInternal && internalPhone)) {
+            html += `<div class="emergency-empty">${this.escapeHtml(i18n.t('emergency_empty_contacts'))}</div>`;
+        }
+
+        container.innerHTML = html;
     },
 
     shouldRefreshWeather() {

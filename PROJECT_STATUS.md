@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-04** (PWA 126 / plugin 2.13.3).
+> Última atualização: **2026-06-04** (PWA 128 / plugin 2.13.4).
 
 ---
 
@@ -12,8 +12,8 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Referência no repo | Versão |
 |--------------------|--------|
-| Plugin WordPress (`zelo-assistente.php`) | **2.13.3** |
-| PWA (`zelo-build.js` / `sw.js`) | **build 126** |
+| Plugin WordPress (`zelo-assistente.php`) | **2.13.4** |
+| PWA (`zelo-build.js` / `sw.js`) | **build 128** |
 
 **Backlog oficial:** [GitHub Project — Projeto ZELO](https://github.com/users/esvianna/projects/3) — issues em [`esvianna/ZELO`](https://github.com/esvianna/ZELO) (ADR-020, `docs/GITHUB-WORKFLOW.md`). Este arquivo **complementa** o quadro; status canônico das tarefas está no Project.
 
@@ -102,22 +102,23 @@ Priorização via [Project 3](https://github.com/users/esvianna/projects/3). Pri
 | Prioridade | Item | Issue |
 |------------|------|-------|
 | **Infra** | Rate limit REST, testes, env API | [#22](https://github.com/esvianna/ZELO/issues/22) … [#20](https://github.com/esvianna/ZELO/issues/20) |
-| **UX visitante** | Emergência, branding | [#17](https://github.com/esvianna/ZELO/issues/17), [#18](https://github.com/esvianna/ZELO/issues/18) |
+| **UX visitante** | Branding | [#18](https://github.com/esvianna/ZELO/issues/18) |
 
 ---
 
 ## Próximos passos lógicos
 
-1. Smoke humano **#15** carrossel + **#26** e **#28** — `TESTING.md` §4 (**2ac**, **2aa**, **2x–2z**) e §12 (O5, O6).
-2. Deploy alinhado plugin **2.13.3** + PWA **126** (`DEPLOYMENT_RULES.md`); utilizadores limpar cache PWA se necessário.
-3. Próxima feature sugerida: infra **#22** rate limit ou UX **#17** / **#18**.
+1. Smoke humano **#17** emergência — `TESTING.md` §4 (**2ad**); **#26** e **#28** (**2aa**, **2x–2z**).
+2. Deploy PWA **127** (`DEPLOYMENT_RULES.md`).
+3. Próxima feature: **#18** branding ou infra **#22** rate limit.
 
 ---
 
 ## Última sessão (2026-06-04)
 
-- **#15 Carrossel novidades (ADR-030):** plugin **2.13.3** + PWA **126** — meta `_zelo_carousel`; `GET /news?carousel_only=1`; carrossel scroll-snap na home (**logados**); snapshot offline; fallback card novidades; banner evento mantido. **In review** no Project.
-- **#15 análise:** plano `docs/ISSUE-15-CARROSSEL-HOME.md` — decisões D1=logados, D2=posts WP.
+- **#17 Emergência (ajustes):** plugin **2.13.4** + PWA **128** — admin 3 slots multilíngue; discagem directa; tel. interno opcional; home 3 colunas. **In review**.
+- **#17 Hierarquia emergência:** PWA **127** — primeira entrega visual.
+- **#15 Carrossel novidades (ADR-030):** plugin **2.13.3** + PWA **126** — smoke OK; **Done** no Project; issue fechada.
 - **#14 Programação descartada (ADR-029):** JW Library + impresso; **Done** no Project.
 - **#9 / #16 descartados (ADR-028):** hub sino + cron e-mail + localStorage; issues fechadas; **Done** no Project.
 - **#10 cobertura descartado (ADR-027):** filtros escala + export + admin presença bastam; issue fechada; **Done** no Project.

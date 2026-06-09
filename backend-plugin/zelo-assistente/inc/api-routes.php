@@ -305,6 +305,7 @@ function zelo_get_evento() {
             'cred_docs' => isset($data['cred_docs']) ? $data['cred_docs'] : '',
             'medical_loc' => isset($data['medical_loc']) ? $data['medical_loc'] : '',
             'emergency_phone' => isset($data['emergency_phone']) ? $data['emergency_phone'] : '',
+            'emergency_phone_active' => isset($data['emergency_phone_active']) ? (bool) $data['emergency_phone_active'] : false,
             'support_chat' => isset($data['support_chat']) ? $data['support_chat'] : '',
             // Transport
             'trans_shuttle' => array(
@@ -330,7 +331,8 @@ function zelo_get_evento() {
                 'link' => isset($data['home_notice_link']) ? $data['home_notice_link'] : '',
             ),
         ),
-		'telefones_emergencia' => $data['phones'],
+		'emergency_services'   => zelo_emergency_services_for_api( $data ),
+		'telefones_emergencia' => zelo_legacy_phones_from_emergency_services( $data ),
 	);
 
 	return rest_ensure_response( $response );

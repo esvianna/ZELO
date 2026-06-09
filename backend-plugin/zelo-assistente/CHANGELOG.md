@@ -2,6 +2,14 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.13.4] - 2026-06-04
+
+### Adicionado
+- **Emergência (#17):** `inc/emergency-services.php` — 3 slots (Polícia/SAMU/Bombeiros) com número, rótulo e «quando ligar» em PT/EN/ES; checkbox «Mostrar telefone interno do evento»; API `emergency_services[]`.
+
+### Alterado
+- Admin: secção «Emergência pública (PWA)» substitui lista livre de telefones; migração automática de `phones[]` legado.
+
 ## [2.13.3] - 2026-06-04
 
 ### Adicionado

@@ -1,7 +1,7 @@
 # Issue #15 — Carrossel de novidades na home (B9)
 
 > **Issue:** [esvianna/ZELO#15](https://github.com/esvianna/ZELO/issues/15)  
-> **Status:** **In review** — implementado (ADR-030)  
+> **Status:** **Done** — smoke OK (2026-06-04)  
 > **Relacionadas:** [#26](https://github.com/esvianna/ZELO/issues/26) novidades (logados), [#18](https://github.com/esvianna/ZELO/issues/18) branding, [#14](https://github.com/esvianna/ZELO/issues/14) programação (**descartada** ADR-029)  
 > **Versões:** plugin **2.13.3** + PWA **126**  
 > **Última atualização:** 2026-06-04

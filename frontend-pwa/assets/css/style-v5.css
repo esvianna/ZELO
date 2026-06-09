@@ -407,6 +407,41 @@ body {
     margin-top: 0.5rem;
 }
 
+.home-section-title--emergency {
+    color: #be123c;
+}
+
+.quick-actions-emergency {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.action-card.emergency-featured {
+    background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%);
+    border: 2px solid #fecdd3;
+    color: #9f1239;
+    box-shadow: 0 4px 16px rgba(225, 29, 72, 0.14);
+}
+
+.action-card.emergency-featured .emergency-icon-bg {
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(225, 29, 72, 0.15);
+}
+
+.action-card-emergency-hint {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 500;
+    opacity: 0.85;
+    line-height: 1.25;
+    margin-top: 0.15rem;
+    text-align: center;
+}
+
+.action-card.hospital-card,
+.action-card.pharmacy-card {
+    min-height: auto;
+}
+
 /* Home */
 .hero {
     text-align: center;
@@ -521,6 +556,194 @@ body {
 
 .action-card.emergency {
     color: var(--danger-color);
+}
+
+/* Emergency view (#17) */
+.emergency-view-header h2 {
+    color: #be123c;
+}
+
+.emergency-hero {
+    background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%);
+    border: 2px solid #fecdd3;
+    border-radius: var(--border-radius);
+    padding: 1.25rem 1.15rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.emergency-hero-icon {
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 0.75rem;
+    border-radius: 16px;
+    background: #fff;
+    color: #e11d48;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 10px rgba(225, 29, 72, 0.15);
+}
+
+.emergency-hero-title {
+    margin: 0 0 0.35rem;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #9f1239;
+}
+
+.emergency-hero-desc {
+    margin: 0 0 0.85rem;
+    font-size: 0.85rem;
+    color: #881337;
+    opacity: 0.9;
+    line-height: 1.4;
+}
+
+.emergency-services-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.emergency-service-row {
+    display: flex;
+    align-items: stretch;
+    gap: 0.75rem;
+    background: var(--surface-color);
+    border: 2px solid #fecdd3;
+    border-radius: var(--border-radius);
+    padding: 0.85rem 0.9rem;
+    background: #fffafb;
+}
+
+.emergency-service-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.emergency-service-title {
+    display: block;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #9f1239;
+    margin-bottom: 0.35rem;
+}
+
+.emergency-service-when {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+.emergency-service-call {
+    flex-shrink: 0;
+    align-self: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0.55rem 0.85rem;
+    border-radius: 999px;
+    background: var(--danger-color);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-decoration: none;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+}
+
+@media (max-width: 380px) {
+    .emergency-service-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .emergency-service-call {
+        width: 100%;
+    }
+}
+
+.emergency-internal-block {
+    background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%);
+    border: 2px solid #fecdd3;
+    border-radius: var(--border-radius);
+    padding: 1rem 1.1rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.emergency-internal-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #be123c;
+    margin-bottom: 0.5rem;
+}
+
+.emergency-medical-loc {
+    background: var(--surface-color);
+    border-radius: var(--border-radius);
+    padding: 0.85rem 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    border-left: 4px solid #3b82f6;
+}
+
+.emergency-medical-loc strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: var(--text-primary);
+}
+
+.emergency-hero-call {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0.65rem 1.25rem;
+    border-radius: 999px;
+    background: var(--danger-color);
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.05rem;
+    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+}
+
+.emergency-contacts-list-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #8494a7;
+    margin: 0.25rem 0 0.65rem;
+}
+
+.emergency-empty {
+    background: var(--surface-color);
+    border-radius: var(--border-radius);
+    padding: 1.25rem;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.45;
+}
+
+.rich-list-card--emergency {
+    border: 2px solid #fecdd3;
+    background: #fffafb;
+    box-shadow: 0 2px 10px rgba(225, 29, 72, 0.08);
+}
+
+.home-search-result-item--emergency {
+    border-left: 4px solid var(--danger-color);
+    background: #fffafb;
 }
 
 .action-card.hospital-card {
@@ -2226,6 +2449,12 @@ body {
 
 .nav-item.sos-item:active .sos-button {
     transform: scale(0.95);
+}
+
+.nav-item.sos-item:focus-visible .sos-button {
+    outline: 3px solid #fff;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 5px rgba(211, 47, 47, 0.45);
 }
 
 .event-sidebar {

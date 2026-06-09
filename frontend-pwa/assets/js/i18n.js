@@ -295,7 +295,13 @@ const i18n = {
             "parking": "Estacionamento",
             "parking_available": "Disponível (Consultar local)",
             "emergency_help_title": "Precisa de ajuda imediata?",
-            "emergency_help_desc": "Entre em contato com a linha de emergência.",
+            "emergency_help_desc": "Toque em Ligar agora para discar diretamente. Use o número adequado à situação.",
+            "emergency_card_hint": "Ligar ou ver contatos de emergência",
+            "emergency_call_now": "Ligar agora",
+            "emergency_internal_title": "Telefone do evento",
+            "emergency_medical_loc_title": "Posto médico no evento",
+            "emergency_contacts_title": "Outros contatos",
+            "emergency_empty_contacts": "Nenhum contato de emergência configurado. Procure ajuda no posto médico do evento ou ligue 192 (SAMU).",
             "emergency_title": "Aviso do Evento",
             
             // Home Redesign v49
@@ -601,7 +607,13 @@ const i18n = {
             "parking": "Parking",
             "parking_available": "Available (Check location)",
             "emergency_help_title": "Need immediate help?",
-            "emergency_help_desc": "Contact the emergency line.",
+            "emergency_help_desc": "Tap Call now to dial directly. Use the number that fits the situation.",
+            "emergency_card_hint": "Call or view emergency contacts",
+            "emergency_call_now": "Call now",
+            "emergency_internal_title": "Event hotline",
+            "emergency_medical_loc_title": "On-site medical desk",
+            "emergency_contacts_title": "Other contacts",
+            "emergency_empty_contacts": "No emergency contacts configured. Seek help at the event medical desk or call 192 (SAMU).",
             "emergency_title": "Event Notice",
             
             // Home Redesign v49
@@ -907,7 +919,13 @@ const i18n = {
             "parking": "Estacionamiento",
             "parking_available": "Disponible (Consultar lugar)",
             "emergency_help_title": "¿Necesitas ayuda inmediata?",
-            "emergency_help_desc": "Comunícate a la línea de emergencia.",
+            "emergency_help_desc": "Toque Llamar ahora para marcar directamente. Use el número adecuado a la situación.",
+            "emergency_card_hint": "Llamar o ver contactos de emergencia",
+            "emergency_call_now": "Llamar ahora",
+            "emergency_internal_title": "Teléfono del evento",
+            "emergency_medical_loc_title": "Puesto médico en el evento",
+            "emergency_contacts_title": "Otros contactos",
+            "emergency_empty_contacts": "No hay contactos de emergencia configurados. Busque ayuda en el puesto médico del evento o llame al 192 (SAMU).",
             "emergency_title": "Aviso del Evento",
             
             // Home Redesign v49
