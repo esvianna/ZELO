@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-12** (PWA 138 + plugin 2.13.8 — info evento, #34).
+> Última atualização: **2026-06-12** (PWA 140 — instruções imprensa, #35).
 
 ---
 
@@ -13,7 +13,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | Referência no repo | Versão |
 |--------------------|--------|
 | Plugin WordPress (`zelo-assistente.php`) | **2.13.8** |
-| PWA (`zelo-build.js` / `sw.js`) | **build 139** |
+| PWA (`zelo-build.js` / `sw.js`) | **build 140** |
 
 **Backlog oficial:** [GitHub Project — Projeto ZELO](https://github.com/users/esvianna/projects/3) — issues em [`esvianna/ZELO`](https://github.com/esvianna/ZELO) (ADR-020, `docs/GITHUB-WORKFLOW.md`). Este arquivo **complementa** o quadro; status canônico das tarefas está no Project.
 
@@ -102,6 +102,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## O que está pendente
 
+- [#35](https://github.com/esvianna/ZELO/issues/35) — link/botão instruções Imprensa (Novidades): **In review** (PWA 140).
 - [#34](https://github.com/esvianna/ZELO/issues/34) — info evento (secções opcionais + imprensa): **In review** (PWA 138 + plugin 2.13.8).
 - [#32](https://github.com/esvianna/ZELO/issues/32) — add/edit linha escala (modal): **In review** (PWA 136).
 
@@ -111,13 +112,15 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## Próximos passos lógicos
 
-1. Validar smoke `TESTING.md` §4 **6p–6p3** (#34) e **5n–5n5** (#32); deploy PWA **138** + plugin **2.13.8**.
-2. Configurar Curitiba/2026 no admin: desactivar transporte, Wi‑Fi, credenciamento; activar contacto imprensa.
+1. Validar smoke `TESTING.md` §4 **6p4–6p5** (#35), **6p–6p3** (#34) e **5n–5n5** (#32); deploy PWA **140** + plugin **2.13.8**.
+2. Criar post Novidades slug `imprensa-autoridades` (instruções completas) quando conteúdo estiver pronto.
+3. Configurar Curitiba/2026 no admin: desactivar transporte, Wi‑Fi, credenciamento; activar contacto imprensa.
 
 ---
 
 ## Última sessão (2026-06-12)
 
+- **#35 / PWA 140:** link «Ver instruções completas» no card Imprensa (Info Evento); botão Home «Imprensa / Autoridades» / *Como agir*; post Novidades por slug `imprensa-autoridades`; `TESTING.md` §4 **6p4–6p5**; card **In review**.
 - **#34 / PWA 138 + plugin 2.13.8:** toggles Como chegar / Wi‑Fi / Credenciamento; card Imprensa/autoridades (Ligar + WhatsApp) acima de Segurança; `TESTING.md` §4 **6p–6p3**; card **In review**.
 - **#33 / PWA 137:** layout superior escala — **Done** no Project.
 - **Governança:** `PROJECT_STATUS` alinhado ao Project (#29–#31 Done); regra obrigatória de mover cards via `gh project item-edit` em `AGENTS.md`, `docs/GITHUB-WORKFLOW.md` e `.cursor/rules/`.

@@ -20,6 +20,9 @@ const app = {
         installPrompt: null // Store PWA install prompt
     },
 
+    /** Slug WP do post Novidades com instruções completas (admin cria com este slug). */
+    PRESS_INSTRUCTIONS_NEWS_SLUG: 'imprensa-autoridades',
+
     _dataStale: {
         locais: false,
         ops: false,
@@ -396,6 +399,7 @@ const app = {
                     app.renderHomeNewsCard();
                     app.toggleHomeVisitorExtrasCollapse();
                     app.updateNotificationsBadge();
+                    app.updateHomePressInstructionsBtn();
                 }
 
                 if (options.persist !== false) {
@@ -958,6 +962,7 @@ const app = {
             this.renderHomeWeatherWidget();
             this.toggleHomeVisitorExtrasCollapse();
             this.updateNotificationsBadge();
+            this.updateHomePressInstructionsBtn();
 
         } catch (err) {
             console.error('Failed to load data', err);
@@ -1022,6 +1027,7 @@ const app = {
                 this.renderHomeNewsCard();
                 this.toggleHomeVisitorExtrasCollapse();
                 this.updateNotificationsBadge();
+                this.updateHomePressInstructionsBtn();
                 break;
             case 'lista':
                 if (this.data.currentCategory) {
@@ -1156,7 +1162,41 @@ const app = {
         }
         this.syncStaleFlags();
         this.updateNotificationsBadge();
+        this.updateHomePressInstructionsBtn();
         return this.data.news;
+    },
+
+    getPressInstructionsPostId() {
+        const slug = this.PRESS_INSTRUCTIONS_NEWS_SLUG;
+        const items = (this.data.news && Array.isArray(this.data.news.items)) ? this.data.news.items : [];
+        const fromNews = items.find((p) => p.slug === slug);
+        if (fromNews) return Number(fromNews.id);
+        const fromCarousel = this.getNewsCarouselItems().find((p) => p.slug === slug);
+        return fromCarousel ? Number(fromCarousel.id) : null;
+    },
+
+    async openPressInstructionsPost() {
+        if (!this.auth.user) {
+            this.router.navigate('login');
+            return;
+        }
+        let id = this.getPressInstructionsPostId();
+        if (!id) {
+            await this.loadNews(1, false);
+            id = this.getPressInstructionsPostId();
+        }
+        if (id) {
+            this.router.navigate('blog-post', { id });
+        } else {
+            this.router.navigate('blog');
+        }
+    },
+
+    updateHomePressInstructionsBtn() {
+        const btn = document.getElementById('home-press-instructions-btn');
+        if (!btn) return;
+        const show = !!this.auth.user && !!this.getPressInstructionsPostId();
+        btn.hidden = !show;
     },
 
     formatNewsDate(iso) {
@@ -5514,16 +5554,20 @@ const app = {
         const actions = (callBtn || waBtn)
             ? `<div class="event-contact-actions">${callBtn}${waBtn}</div>`
             : '';
+        const instructionsLink = (this.auth.user && this.getPressInstructionsPostId())
+            ? `<button type="button" class="event-press-instructions-link" onclick="app.openPressInstructionsPost(); return false;">${this.escapeHtml(i18n.t('event_press_instructions_link'))}</button>`
+            : '';
         return `
             <div class="info-card event-press-contact-card">
                 <div class="card-title">📰 ${label}</div>
                 ${name}
                 ${note}
                 ${actions}
+                ${instructionsLink}
             </div>`;
     },
 
-    renderEventInfo() {
+    async renderEventInfo() {
         const container = document.getElementById('event-container');
         const evt = this.data.evento;
 
@@ -5533,6 +5577,11 @@ const app = {
         const info = evt.info_uteis || {};
         const enderecoEsc = this.escapeHtml(evt.endereco || '');
         const enderecoJs = String(evt.endereco || '').replace(/'/g, "\\'");
+        const pc = info.press_contact;
+        if (this.auth.user && pc && pc.active && pc.phone && !this.getPressInstructionsPostId()) {
+            await this.loadNews(1, false);
+            this.updateHomePressInstructionsBtn();
+        }
         const transportHtml = this.renderEventTransportCard(info);
         const wifiHtml = this.renderEventWifiCard(info);
         const credHtml = this.renderEventCredCard(info);

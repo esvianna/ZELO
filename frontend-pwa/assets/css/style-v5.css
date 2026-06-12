@@ -779,6 +779,29 @@ body {
     color: #2563eb;
 }
 
+.action-card-subhint {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 500;
+    opacity: 0.85;
+    line-height: 1.25;
+    margin-top: 0.15rem;
+    text-align: center;
+}
+
+.press-instructions-icon-bg {
+    background: #fce7f3;
+    color: #be185d;
+}
+
+.press-instructions-icon-bg svg {
+    stroke: #be185d;
+}
+
+.action-card.press-instructions-card {
+    color: #9d174d;
+}
+
 /* Home Map Card */
 .home-map-card {
     background: var(--surface-color);
@@ -2573,6 +2596,25 @@ body {
     margin: 0 0 0.75rem;
     font-size: 0.88rem;
     line-height: 1.4;
+}
+
+.event-press-instructions-link {
+    display: inline-block;
+    margin-top: 0.75rem;
+    padding: 0;
+    border: none;
+    background: none;
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--primary-color);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+}
+
+.event-press-instructions-link:active {
+    opacity: 0.75;
 }
 
 .event-contact-actions {

@@ -8,6 +8,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Adicionado — atalhos para instruções Imprensa e Autoridades (PWA 140, #35)
+
+| Versão | Entrega |
+|--------|---------|
+| PWA **140** | Link «Ver instruções completas» no card Info Evento; botão rápido Home (Operação de Voluntários); resolve post Novidades por slug `imprensa-autoridades`; i18n pt/en/es |
+
 ### Corrigido — toggle vista escala no grid mobile (PWA 139, #33)
 
 | Versão | Entrega |
