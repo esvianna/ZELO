@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-04** (PWA 131 — histórico escala colapsável).
+> Última atualização: **2026-06-10** (PWA 132 — substituições legíveis, #29).
 
 ---
 
@@ -13,7 +13,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | Referência no repo | Versão |
 |--------------------|--------|
 | Plugin WordPress (`zelo-assistente.php`) | **2.13.6** |
-| PWA (`zelo-build.js` / `sw.js`) | **build 131** |
+| PWA (`zelo-build.js` / `sw.js`) | **build 132** |
 
 **Backlog oficial:** [GitHub Project — Projeto ZELO](https://github.com/users/esvianna/projects/3) — issues em [`esvianna/ZELO`](https://github.com/esvianna/ZELO) (ADR-020, `docs/GITHUB-WORKFLOW.md`). Este arquivo **complementa** o quadro; status canônico das tarefas está no Project.
 
@@ -102,21 +102,21 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## O que está pendente
 
-Backlog infra concluído (#20 descartado, #21/#22 Done). Próximas demandas via [Project 3](https://github.com/users/esvianna/projects/3) se surgirem.
+- [#29](https://github.com/esvianna/ZELO/issues/29) — visualização substituições: **In review** (PWA 132).
 
 ---
 
 ## Próximos passos lógicos
 
-1. Deploy PWA **131** (histórico escala colapsável).
+1. Deploy PWA **132** (#29 — substituições legíveis).
 2. Deploy plugin **2.13.6** se ainda pendente (avatar).
 3. Manter smoke `TESTING.md` antes de eventos.
 
 ---
 
-## Última sessão (2026-06-04)
+## Última sessão (2026-06-10)
 
-- **PWA 131:** «Últimas alterações» colapsável + textos legíveis na escala ops.
+- **#29 / PWA 132:** pedidos de substituição legíveis — painel escala, sino avisos e histórico ops (nome, dia/turno/local, motivo, data); i18n pt/en/es; `TESTING.md` §4 **6a–6c**.
 - **Fix avatar perfil:** PWA **130** + plugin **2.13.6** — preview local, cache-bust, msg junto ao avatar; backend fallback URL attachment.
 - **#20 Testes automatizados descartado (ADR-033):** `TESTING.md` manual bastam; issue fechada; **Done** no Project.
 - **#18 Branding descartado (ADR-031):** banner + admin bastam; issue fechada; **Done** no Project.

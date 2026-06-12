@@ -8,6 +8,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Ajustado — visualização pedidos de substituição (PWA 132, #29)
+
+| Versão | Entrega |
+|--------|---------|
+| PWA **132** | Painel swap, hub avisos e histórico ops com nome, dia/turno/local, motivo e data — sem IDs técnicos na UI |
+
 ### Ajustado — histórico escala ops (PWA 131)
 
 | Versão | Entrega |

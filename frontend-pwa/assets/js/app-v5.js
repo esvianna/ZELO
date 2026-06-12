@@ -1532,8 +1532,8 @@ const app = {
                         category: 'personal',
                         icon: '🔄',
                         title: i18n.t('avisos_swap_pending'),
-                        summary: i18n.t('avisos_swap_summary').replace('{0}', s.assignment_id || ''),
-                        time: '',
+                        summary: this.formatSwapAvisoSummary(s),
+                        time: this.formatOpsSwapCreatedAt(s.created_at),
                         action: 'escala'
                     });
                 });
@@ -3641,6 +3641,85 @@ const app = {
         return label;
     },
 
+    findOpsScheduleRow(assignmentId) {
+        if (!assignmentId) return null;
+        const schedule = this.data.volunteerOps?.schedule || [];
+        return schedule.find((r) => r.id === assignmentId) || null;
+    },
+
+    getSwapRequesterDisplayName(swap, row) {
+        if (row && row.volunteer_name) return String(row.volunteer_name).trim();
+        const rid = swap && swap.requester_id;
+        if (rid) {
+            const match = (this.data.volunteerOps?.schedule || []).find(
+                (r) => Number(r.wp_user_id) === Number(rid)
+            );
+            if (match && match.volunteer_name) return String(match.volunteer_name).trim();
+        }
+        return i18n.t('ops_swap_requester_unknown');
+    },
+
+    formatOpsAssignmentBrief(row) {
+        if (!row) return i18n.t('ops_swap_assignment_unknown');
+        const day = row.day ? this.getOpsDayLabel(row.day) : '—';
+        const shift = row.shift || '—';
+        const loc = row.location || '—';
+        let time = '';
+        if (row.start) {
+            time = row.end ? ` (${row.start} – ${row.end})` : ` (${row.start})`;
+        }
+        return i18n.t('ops_swap_context_line')
+            .replace('{0}', day)
+            .replace('{1}', shift)
+            .replace('{2}', loc)
+            .replace('{3}', time);
+    },
+
+    formatOpsSwapCreatedAt(createdAt) {
+        if (!createdAt) return '';
+        const s = String(createdAt).trim();
+        const m = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?/);
+        const formatted = m
+            ? `${m[3]}/${m[2]}/${m[1]}${m[4] != null ? ` ${m[4]}:${m[5] || '00'}` : ''}`
+            : s;
+        return i18n.t('ops_swap_requested_at').replace('{0}', formatted);
+    },
+
+    formatSwapAvisoSummary(swap) {
+        const row = this.findOpsScheduleRow(swap.assignment_id);
+        const name = this.getSwapRequesterDisplayName(swap, row);
+        if (!row) {
+            return i18n.t('avisos_swap_summary_unknown').replace('{0}', name);
+        }
+        return i18n.t('avisos_swap_summary')
+            .replace('{0}', name)
+            .replace('{1}', row.day ? this.getOpsDayLabel(row.day) : '—')
+            .replace('{2}', row.shift || '—')
+            .replace('{3}', row.location || '—');
+    },
+
+    renderOpsSwapRequestCard(swap) {
+        const row = this.findOpsScheduleRow(swap.assignment_id);
+        const name = this.getSwapRequesterDisplayName(swap, row);
+        const context = this.formatOpsAssignmentBrief(row);
+        const when = this.formatOpsSwapCreatedAt(swap.created_at);
+        const reason = (swap.reason || '').trim();
+        const idEsc = String(swap.id).replace(/'/g, "\\'");
+        const reasonHtml = reason
+            ? `<p class="ops-swap-card__reason">${this.escapeHtml(i18n.t('ops_swap_card_reason').replace('{0}', reason))}</p>`
+            : '';
+        return `<div class="ops-schedule-card ops-swap-card">
+            <p class="ops-swap-card__title"><strong>${this.escapeHtml(name)}</strong> — ${this.escapeHtml(i18n.t('ops_swap_card_requested'))}</p>
+            <p class="ops-swap-card__context">${this.escapeHtml(context)}</p>
+            ${when ? `<p class="ops-swap-card__meta text-muted">${this.escapeHtml(when)}</p>` : ''}
+            ${reasonHtml}
+            <div class="ops-swap-actions">
+                <button type="button" class="ops-btn ops-btn--active" onclick="app.resolveSwapPrompt('${idEsc}')">${this.escapeHtml(i18n.t('ops_swap_approve'))}</button>
+                <button type="button" class="ops-btn" onclick="app.resolveSwap('${idEsc}','rejected','',0)">${this.escapeHtml(i18n.t('ops_swap_reject'))}</button>
+            </div>
+        </div>`;
+    },
+
     formatOpsHistoryLine(h) {
         if (!h || typeof h !== 'object') return '';
         const at = String(h.at || '').trim();
@@ -3666,9 +3745,10 @@ const app = {
             }
             detail = i18n.t('ops_history_reallocation').replace('{0}', id).replace('{1}', extra);
         } else if (type === 'substitution') {
-            const id = h.assignment_id || '—';
+            const row = this.findOpsScheduleRow(h.assignment_id);
+            const context = this.formatOpsAssignmentBrief(row);
             const note = h.note ? i18n.t('ops_history_substitution_note').replace('{0}', String(h.note)) : '';
-            detail = i18n.t('ops_history_substitution').replace('{0}', id).replace('{1}', note);
+            detail = i18n.t('ops_history_substitution').replace('{0}', context).replace('{1}', note);
         } else {
             detail = i18n.t('ops_history_generic').replace('{0}', type || '—');
             if (h.assignment_id) {
@@ -4546,7 +4626,7 @@ const app = {
         const swaps = ops.swap_requests || [];
         if (this.canManageOps() || this.canReallocateOps()) {
             const pend = swaps.filter((s) => s.status === 'pending');
-            swapPanel = `<div class="ops-swap-panel"><h3>${this.escapeHtml(i18n.t('ops_swap_requests_title'))}</h3>${pend.length ? pend.map((s) => `<div class="ops-schedule-card ops-swap-card"><code>${this.escapeHtml(s.id)}</code> — ${this.escapeHtml(i18n.t('ops_swap_assignment'))} <strong>${this.escapeHtml(String(s.assignment_id))}</strong> (${this.escapeHtml(i18n.t('ops_swap_requester'))} ${this.escapeHtml(String(s.requester_id))})<div class="ops-swap-actions"><button type="button" class="ops-btn ops-btn--active" onclick="app.resolveSwapPrompt('${s.id}')">${this.escapeHtml(i18n.t('ops_swap_approve'))}</button><button type="button" class="ops-btn" onclick="app.resolveSwap('${s.id}','rejected','',0)">${this.escapeHtml(i18n.t('ops_swap_reject'))}</button></div></div>`).join('') : `<p class="text-muted">${this.escapeHtml(i18n.t('ops_swap_none'))}</p>`}</div>`;
+            swapPanel = `<div class="ops-swap-panel"><h3>${this.escapeHtml(i18n.t('ops_swap_requests_title'))}</h3>${pend.length ? pend.map((s) => this.renderOpsSwapRequestCard(s)).join('') : `<p class="text-muted">${this.escapeHtml(i18n.t('ops_swap_none'))}</p>`}</div>`;
         }
 
         const histBlock = this.renderOpsHistoryBlock(ops.history);

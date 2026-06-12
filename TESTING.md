@@ -108,6 +108,9 @@ Orientação de testes **manual** (prioritário hoje) e caminho para automação
 | 5j | **Montar este turno** no card | homem-chave | Abre editor com dia+turno corretos |
 | 5k | **Minhas designações** | voluntário | Cards por turno/faixa (não tabela); aceitar/recusar OK |
 | 6 | Pedido de substituição | conforme regra | Criado; gestor aprova/rejeita |
+| 6a | Painel «Pedidos de substituição» (PWA **132+**) | gestor / homem-chave | Nome do solicitante, dia·turno·local, motivo e data — **sem** IDs `sw_*` / `asg_*` |
+| 6b | Sino — aviso swap pendente | gestor | Resumo legível («Nome — Sábado · A1 — Balcão 3») |
+| 6c | Aprovar / recusar swap | gestor | Fluxo inalterado; após aprovação, histórico ops com contexto humano |
 | 7 | Cron lembretes | admin | `wp cron event list` contém `zelo_volunteer_notify_tick` (se aplicável) |
 
 ---
