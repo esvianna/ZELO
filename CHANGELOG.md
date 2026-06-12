@@ -8,6 +8,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Ajustado — designações: home só ações pendentes; escala com filtro e arquivo (PWA 133, #30)
+
+| Versão | Entrega |
+|--------|---------|
+| PWA **133** | Home «Minhas designações» lista só itens com ação (confirmar, check-in/out); empty state «Tudo em dia»; escala com filtro por estado e seção colapsável «Recusadas e encerradas»; badge presença oculto se recusado; «Aguardando dia do evento» para aceitas futuras |
+
 ### Ajustado — visualização pedidos de substituição (PWA 132, #29)
 
 | Versão | Entrega |

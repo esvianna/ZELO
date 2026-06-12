@@ -2656,8 +2656,14 @@ const app = {
         return i18n.t('ops_status_pending');
     },
 
-    getOpsStatusBadge(assignmentId) {
+    getOpsStatusBadge(assignmentId, item) {
+        const commitSt = this.getCommitmentStatus(assignmentId);
+        if (commitSt === 'declined') return '';
+
         const status = this.getCheckinStatus(assignmentId).status || 'pending';
+        if (commitSt === 'accepted' && status === 'pending' && item && !this.isAssignmentEventDay(item)) {
+            return `<span class="ops-status-badge ops-status-awaiting_day">${this.escapeHtml(i18n.t('ops_status_awaiting_day'))}</span>`;
+        }
         const cls = status === 'checked_in' ? 'ops-status-checked_in'
             : status === 'checked_out' ? 'ops-status-checked_out'
             : 'ops-status-pending';
@@ -2842,6 +2848,7 @@ const app = {
         const uid = this.auth.user.id;
         const schedule = (ops && Array.isArray(ops.schedule)) ? ops.schedule : [];
         const myRows = schedule.filter((i) => Number(i.wp_user_id) === uid);
+        const actionableRows = myRows.filter((i) => this.isMyAssignmentActionable(i));
 
         let linkBanner = '';
         if (ops && ops.link_pending) {
@@ -2851,8 +2858,10 @@ const app = {
         let assignmentsHtml = '';
         if (!myRows.length) {
             assignmentsHtml = `<p class="text-muted">${i18n.t('ops_no_assignments')}</p>`;
+        } else if (!actionableRows.length) {
+            assignmentsHtml = `<p class="home-assignments-all-clear">${this.escapeHtml(i18n.t('ops_assignments_all_clear'))}</p>`;
         } else {
-            assignmentsHtml = myRows.map((item) => {
+            assignmentsHtml = actionableRows.map((item) => {
                 const actions = this.renderAssignmentActions(item, false, true);
                 const dayName = this.escapeHtml(this.getOpsDayName(item.day));
                 const dayDate = this.getOpsDayDateShort(item.day);
@@ -2869,7 +2878,7 @@ const app = {
                         </div>
                         <p class="home-assignment-meta">${meta}</p>
                         <div class="home-assignment-badges">
-                            ${this.getCommitmentBadge(item.id)} ${this.getOpsStatusBadge(item.id)}
+                            ${this.getCommitmentBadge(item.id)} ${this.getOpsStatusBadge(item.id, item)}
                         </div>
                         ${actions}
                     </div>
@@ -3851,6 +3860,56 @@ const app = {
         return this.data.volunteerOps.schedule.filter((i) => Number(i.wp_user_id) === Number(uid));
     },
 
+    isAssignmentEnded(item) {
+        if (!item || !item.id) return false;
+        const presenceSt = this.getCheckinStatus(item.id).status || 'pending';
+        if (presenceSt === 'checked_out') return true;
+        const startMs = this.getAssignmentStartMs(item);
+        if (startMs == null) return false;
+        const endMs = this.getAssignmentEndMs(item, startMs);
+        return endMs != null && Date.now() > endMs;
+    },
+
+    isMyAssignmentArchived(item) {
+        if (!item || !item.id) return false;
+        if (this.getCommitmentStatus(item.id) === 'declined') return true;
+        return this.isAssignmentEnded(item);
+    },
+
+    isMyAssignmentActionable(item) {
+        if (!item || !item.id) return false;
+        const commitSt = this.getCommitmentStatus(item.id);
+        if (commitSt === 'pending' && this.canCommitAssignment(item)) return true;
+        if (commitSt === 'accepted') {
+            if (this.canCheckinAssignment(item)) return true;
+            if (this.canCheckoutAssignment(item)) return true;
+        }
+        return false;
+    },
+
+    getMyActionableAssignments() {
+        return this.getMyScheduleRows().filter((i) => this.isMyAssignmentActionable(i));
+    },
+
+    setOpsMineCommitmentFilter(value) {
+        this._opsMineCommitmentFilter = value || '';
+        this.renderVolunteerOps();
+    },
+
+    renderOpsMineCommitmentFilter() {
+        const cur = this._opsMineCommitmentFilter || '';
+        const opts = [
+            ['', 'ops_filter_commitment_all'],
+            ['pending', 'ops_filter_commitment_pending'],
+            ['accepted', 'ops_filter_commitment_accepted'],
+            ['declined', 'ops_filter_commitment_declined']
+        ];
+        const options = opts.map(([val, key]) =>
+            `<option value="${val}"${cur === val ? ' selected' : ''}>${this.escapeHtml(i18n.t(key))}</option>`
+        ).join('');
+        return `<select id="ops-mine-commitment-filter" class="ops-mine-commitment-filter" onchange="app.setOpsMineCommitmentFilter(this.value)" aria-label="${this.escapeHtml(i18n.t('ops_filter_commitment_label'))}">${options}</select>`;
+    },
+
     applyOpsFilterMyShift() {
         const myRows = this.getMyScheduleRows();
         if (!myRows.length) return;
@@ -4368,7 +4427,7 @@ const app = {
                     </div>
                     ${inlineActions ? `<div class="ops-volunteer-inline-actions" role="group" aria-label="${this.escapeHtml(i18n.t('ops_assignment_actions_group'))}">${inlineActions}</div>` : ''}
                 </div>
-                <div class="ops-volunteer-status">${this.getCommitmentBadge(item.id)} ${this.getOpsStatusBadge(item.id)}</div>
+                <div class="ops-volunteer-status">${this.getCommitmentBadge(item.id)} ${this.getOpsStatusBadge(item.id, item)}</div>
                 ${hintHtml}
             </li>`;
     },
@@ -4453,19 +4512,47 @@ const app = {
     },
 
     renderOpsMyAssignmentsBlock(uid) {
-        const myRows = this.getMyScheduleRows();
-        if (!myRows.length) {
-            return `<div class="ops-mine-block"><h3>${this.escapeHtml(i18n.t('ops_my_assignments'))}</h3><p class="text-muted">${this.escapeHtml(i18n.t('ops_no_wp_user'))}</p></div>`;
+        const allRows = this.getMyScheduleRows();
+        const filterHtml = this.renderOpsMineCommitmentFilter();
+        const headHtml = `<div class="ops-mine-block-head"><h3>${this.escapeHtml(i18n.t('ops_my_assignments'))}</h3>${filterHtml}</div>`;
+
+        if (!allRows.length) {
+            return `<section class="ops-mine-block ops-mine-block--shift">${headHtml}<p class="text-muted">${this.escapeHtml(i18n.t('ops_no_assignments'))}</p></section>`;
         }
-        const scheduleHtml = this.renderOpsShiftSchedule(myRows, uid, true, {
-            compact: true,
-            wrapClass: 'ops-schedule-shift-view ops-schedule-shift-view--mine'
-        });
-        return `
-            <section class="ops-mine-block ops-mine-block--shift">
-                <h3>${this.escapeHtml(i18n.t('ops_my_assignments'))}</h3>
-                ${scheduleHtml}
-            </section>`;
+
+        const filter = this._opsMineCommitmentFilter || '';
+        if (filter) {
+            const filtered = allRows.filter((i) => this.getCommitmentStatus(i.id) === filter);
+            if (!filtered.length) {
+                return `<section class="ops-mine-block ops-mine-block--shift">${headHtml}<p class="text-muted">${this.escapeHtml(i18n.t('ops_no_schedule_filtered'))}</p></section>`;
+            }
+            const scheduleHtml = this.renderOpsShiftSchedule(filtered, uid, true, {
+                compact: true,
+                wrapClass: 'ops-schedule-shift-view ops-schedule-shift-view--mine'
+            });
+            return `<section class="ops-mine-block ops-mine-block--shift">${headHtml}${scheduleHtml}</section>`;
+        }
+
+        const active = allRows.filter((i) => !this.isMyAssignmentArchived(i));
+        const archived = allRows.filter((i) => this.isMyAssignmentArchived(i));
+        const activeHtml = active.length
+            ? this.renderOpsShiftSchedule(active, uid, true, {
+                compact: true,
+                wrapClass: 'ops-schedule-shift-view ops-schedule-shift-view--mine'
+            })
+            : `<p class="text-muted">${this.escapeHtml(i18n.t('ops_mine_no_active'))}</p>`;
+
+        let archivedHtml = '';
+        if (archived.length) {
+            const archivedSchedule = this.renderOpsShiftSchedule(archived, uid, true, {
+                compact: true,
+                wrapClass: 'ops-schedule-shift-view ops-schedule-shift-view--mine ops-schedule-shift-view--archived'
+            });
+            const summary = i18n.t('ops_mine_archived_summary').replace('{0}', String(archived.length));
+            archivedHtml = `<details class="ops-mine-archived-details"><summary>${this.escapeHtml(summary)}</summary>${archivedSchedule}</details>`;
+        }
+
+        return `<section class="ops-mine-block ops-mine-block--shift">${headHtml}${activeHtml}${archivedHtml}</section>`;
     },
 
     renderOpsGovernanceCard(day, data) {
@@ -4503,7 +4590,7 @@ const app = {
                 <td data-label="${this.escapeHtml(i18n.t('ops_location_label'))}">${this.escapeHtml(item.location || '-')}</td>
                 <td data-label="${this.escapeHtml(i18n.t('ops_volunteer_label'))}">${mineRow ? `<span class="ops-you-badge">${this.escapeHtml(i18n.t('ops_you_badge'))}</span> ` : ''}${this.renderOpsWhatsAppNameLink(item.volunteer_name || i18n.t('ops_volunteer_default'), item.volunteer_phone)}</td>
                 <td data-label="${this.escapeHtml(i18n.t('ops_languages_label'))}">${this.escapeHtml((item.languages || []).join(', ') || '-')}</td>
-                <td data-label="${this.escapeHtml(i18n.t('ops_status_label'))}">${this.getCommitmentBadge(item.id)} ${this.getOpsStatusBadge(item.id)}</td>
+                <td data-label="${this.escapeHtml(i18n.t('ops_status_label'))}">${this.getCommitmentBadge(item.id)} ${this.getOpsStatusBadge(item.id, item)}</td>
                 ${actionCell ? `<td class="ops-table-actions-cell">${actionCell}</td>` : '<td></td>'}
             </tr>`;
     },

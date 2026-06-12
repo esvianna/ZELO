@@ -107,6 +107,11 @@ Orientação de testes **manual** (prioritário hoje) e caminho para automação
 | 5i | Toggle **Lista** | view_ops | Volta à tabela linha a linha; preferência persiste após refresh (`zelo_ops_schedule_view`) |
 | 5j | **Montar este turno** no card | homem-chave | Abre editor com dia+turno corretos |
 | 5k | **Minhas designações** | voluntário | Cards por turno/faixa (não tabela); aceitar/recusar OK |
+| 5l | **Home — designações** (PWA **133+**, #30) | voluntário com escala | Só aparecem itens com ação (pendente de confirmar ou check-in/out no dia); recusadas/aceitas futuras **não** no bloco home |
+| 5l2 | Após **recusar** designação | voluntário | Some da home; visível na escala em «Recusadas e encerradas» (colapsado) ou filtro «Recusadas» |
+| 5l3 | Após **aceitar** (dia futuro) | voluntário | Home mostra «Tudo em dia»; escala lista em ativas; presença «Aguardando dia do evento» (não «Pendente») |
+| 5l4 | Escala — filtro estado participação | voluntário | Select no bloco «Minhas designações»: Todos / Pendentes / Aceitas / Recusadas |
+| 5l5 | Vista equipa (supervisor) | homem-chave | Recusas de colegas **continuam** visíveis na escala da equipa |
 | 6 | Pedido de substituição | conforme regra | Criado; gestor aprova/rejeita |
 | 6a | Painel «Pedidos de substituição» (PWA **132+**) | gestor / homem-chave | Nome do solicitante, dia·turno·local, motivo e data — **sem** IDs `sw_*` / `asg_*` |
 | 6b | Sino — aviso swap pendente | gestor | Resumo legível («Nome — Sábado · A1 — Balcão 3») |

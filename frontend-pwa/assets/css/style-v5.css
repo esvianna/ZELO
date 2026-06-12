@@ -3030,6 +3030,56 @@ body {
     margin: 0 0 0.5rem;
 }
 
+.ops-mine-block-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.ops-mine-block-head h3 {
+    margin: 0;
+}
+
+.ops-mine-commitment-filter {
+    font-size: 0.85rem;
+    max-width: 100%;
+}
+
+.ops-mine-archived-details {
+    margin-top: 0.75rem;
+}
+
+.ops-mine-archived-details summary {
+    cursor: pointer;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+    color: var(--text-muted, #64748b);
+    font-size: 0.92rem;
+    list-style: none;
+}
+
+.ops-mine-archived-details summary::-webkit-details-marker {
+    display: none;
+}
+
+.home-assignments-all-clear {
+    margin: 0;
+    padding: 0.65rem 0.75rem;
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    border-radius: 8px;
+    color: #065f46;
+    font-size: 0.9rem;
+}
+
+.ops-status-awaiting_day {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
 .ops-mine-block ul {
     margin: 0;
     padding-left: 1.2rem;
