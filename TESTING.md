@@ -124,6 +124,9 @@ Orientação de testes **manual** (prioritário hoje) e caminho para automação
 | 5n3 | Horário inválido no modal | responsável | Erro exibido no modal (não só alert) |
 | 5n4 | «Montar este turno» | responsável | Editor completo inalterado |
 | 5n5 | Linha `declined` | responsável | Sem editar — remover (#31) + adicionar (#32) |
+| 5o | Layout toolbar escala (PWA **137+**, #33) | gestor / mobile 375px | Filtro status «Todos os status»; selects com estilo uniforme; filtros legíveis (grid 2 col.) |
+| 5o2 | Botões Montar escala + Export PDF | gestor | Mesma altura, mesma linha |
+| 5o3 | Regressão filtros escala | homem-chave | Dia/turno/local/responsável/nome/idioma e export PDF inalterados |
 | 6 | Pedido de substituição | conforme regra | Criado; gestor aprova/rejeita |
 | 6a | Painel «Pedidos de substituição» (PWA **132+**) | gestor / homem-chave | Nome do solicitante, dia·turno·local, motivo e data — **sem** IDs `sw_*` / `asg_*` |
 | 6b | Sino — aviso swap pendente | gestor | Resumo legível («Nome — Sábado · A1 — Balcão 3») |

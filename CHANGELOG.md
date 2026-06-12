@@ -8,6 +8,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Ajustado — layout superior da escala operacional (PWA 137, #33)
+
+| Versão | Entrega |
+|--------|---------|
+| PWA **137** | Filtro «Minhas designações»: «Todos os status»; selects/inputs unificados (`.ops-filter-control`); grid mobile da toolbar; botões «Montar escala» e «Exportar PDF» com mesma altura numa linha |
+
 ### Alterado — governança GitHub Project
 
 | Área | Entrega |

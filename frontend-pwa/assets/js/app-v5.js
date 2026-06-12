@@ -4280,7 +4280,7 @@ const app = {
         const options = opts.map(([val, key]) =>
             `<option value="${val}"${cur === val ? ' selected' : ''}>${this.escapeHtml(i18n.t(key))}</option>`
         ).join('');
-        return `<select id="ops-mine-commitment-filter" class="ops-mine-commitment-filter" onchange="app.setOpsMineCommitmentFilter(this.value)" aria-label="${this.escapeHtml(i18n.t('ops_filter_commitment_label'))}">${options}</select>`;
+        return `<select id="ops-mine-commitment-filter" class="ops-mine-commitment-filter ops-filter-control" onchange="app.setOpsMineCommitmentFilter(this.value)" aria-label="${this.escapeHtml(i18n.t('ops_filter_commitment_label'))}">${options}</select>`;
     },
 
     applyOpsFilterMyShift() {
@@ -5144,10 +5144,10 @@ const app = {
             : this.renderOpsShiftSchedule(items, uid, true);
 
         const editBtn = this.canEditSchedule()
-            ? `<button type="button" class="ops-btn ops-btn--accent" onclick="app.openScheduleEditor()">${this.escapeHtml(i18n.t('ops_schedule_edit_btn'))}</button>`
+            ? `<button type="button" class="ops-btn ops-btn--accent ops-toolbar-action-btn" onclick="app.openScheduleEditor()">${this.escapeHtml(i18n.t('ops_schedule_edit_btn'))}</button>`
             : '';
         const exportBtn = this.canManageOps()
-            ? `<button type="button" id="ops-export-pdf-btn" class="ops-btn ops-btn--accent ops-export-btn" onclick="app.downloadOpsExportPdf()">${this.escapeHtml(i18n.t('ops_export_pdf'))}</button>`
+            ? `<button type="button" id="ops-export-pdf-btn" class="ops-btn ops-btn--accent ops-toolbar-action-btn" onclick="app.downloadOpsExportPdf()">${this.escapeHtml(i18n.t('ops_export_pdf'))}</button>`
             : '';
 
         container.innerHTML = `
@@ -5157,34 +5157,34 @@ const app = {
             ${histBlock}
             <div class="ops-toolbar">
                 <div class="ops-filters">
-                    <span class="ops-view-toggle" role="group" aria-label="${this.escapeHtml(i18n.t('ops_view_mode_label'))}">
+                    <span class="ops-view-toggle ops-filters-span-full" role="group" aria-label="${this.escapeHtml(i18n.t('ops_view_mode_label'))}">
                         <button type="button" class="avisos-filter-chip${viewMode === 'shift' ? ' active' : ''}" onclick="app.setOpsScheduleViewMode('shift')">${this.escapeHtml(i18n.t('ops_view_by_shift'))}</button>
                         <button type="button" class="avisos-filter-chip${viewMode === 'list' ? ' active' : ''}" onclick="app.setOpsScheduleViewMode('list')">${this.escapeHtml(i18n.t('ops_view_list'))}</button>
                     </span>
-                    <button type="button" class="avisos-filter-chip" onclick="app.applyOpsFilterMyShift()">${this.escapeHtml(i18n.t('ops_filter_my_shift'))}</button>
-                    <select id="ops-day-filter" onchange="app.renderVolunteerOps()">
+                    <button type="button" class="avisos-filter-chip ops-filters-span-full" onclick="app.applyOpsFilterMyShift()">${this.escapeHtml(i18n.t('ops_filter_my_shift'))}</button>
+                    <select id="ops-day-filter" class="ops-filter-control" onchange="app.renderVolunteerOps()">
                         <option value="">${this.escapeHtml(i18n.t('ops_filter_all_days'))}</option>
                         <option value="sexta" ${selectedDay === 'sexta' ? 'selected' : ''}>${this.escapeHtml(this.getOpsDayLabel('sexta'))}</option>
                         <option value="sabado" ${selectedDay === 'sabado' ? 'selected' : ''}>${this.escapeHtml(this.getOpsDayLabel('sabado'))}</option>
                         <option value="domingo" ${selectedDay === 'domingo' ? 'selected' : ''}>${this.escapeHtml(this.getOpsDayLabel('domingo'))}</option>
                     </select>
-                    <select id="ops-shift-filter" onchange="app.renderVolunteerOps()">
+                    <select id="ops-shift-filter" class="ops-filter-control" onchange="app.renderVolunteerOps()">
                         <option value="">${this.escapeHtml(i18n.t('ops_filter_all_shifts'))}</option>
                         <option value="A1" ${selectedShift === 'A1' ? 'selected' : ''}>A1</option>
                         <option value="B1" ${selectedShift === 'B1' ? 'selected' : ''}>B1</option>
                         <option value="A2" ${selectedShift === 'A2' ? 'selected' : ''}>A2</option>
                         <option value="B2" ${selectedShift === 'B2' ? 'selected' : ''}>B2</option>
                     </select>
-                    <select id="ops-location-filter" onchange="app.renderVolunteerOps()">
+                    <select id="ops-location-filter" class="ops-filter-control" onchange="app.renderVolunteerOps()">
                         <option value="">${this.escapeHtml(i18n.t('ops_filter_all_locations'))}</option>
                         ${locOptions}
                     </select>
-                    ${responsibleNames.length ? `<select id="ops-responsible-filter" onchange="app.renderVolunteerOps()" aria-label="${this.escapeHtml(i18n.t('ops_filter_responsible_label'))}">
+                    ${responsibleNames.length ? `<select id="ops-responsible-filter" class="ops-filter-control" onchange="app.renderVolunteerOps()" aria-label="${this.escapeHtml(i18n.t('ops_filter_responsible_label'))}">
                         <option value="">${this.escapeHtml(i18n.t('ops_filter_all_responsibles'))}</option>
                         ${responsibleOptions}
                     </select>` : ''}
-                    <input id="ops-name-filter" value="${this.escapeHtml(nameQuery)}" oninput="app.renderVolunteerOps()" placeholder="${this.escapeHtml(i18n.t('ops_filter_name_placeholder'))}">
-                    <input id="ops-language-filter" value="${this.escapeHtml(selectedLanguage)}" oninput="app.renderVolunteerOps()" placeholder="${this.escapeHtml(i18n.t('ops_filter_language_placeholder'))}">
+                    <input id="ops-name-filter" class="ops-filter-control ops-filters-span-full" value="${this.escapeHtml(nameQuery)}" oninput="app.renderVolunteerOps()" placeholder="${this.escapeHtml(i18n.t('ops_filter_name_placeholder'))}">
+                    <input id="ops-language-filter" class="ops-filter-control ops-filters-span-full" value="${this.escapeHtml(selectedLanguage)}" oninput="app.renderVolunteerOps()" placeholder="${this.escapeHtml(i18n.t('ops_filter_language_placeholder'))}">
                 </div>
                 <div class="ops-toolbar-actions">${editBtn}${exportBtn}</div>
             </div>
