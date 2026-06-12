@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.13.8] - 2026-06-12
+
+### Adicionado
+- **Informações do evento (#34):** toggles `trans_section_active`, `wifi_section_active`, `cred_section_active`; contacto imprensa/autoridades (`press_contact_*`) exposto em `GET /evento` → `info_uteis.press_contact`.
+
 ## [2.13.7] - 2026-06-12
 
 ### Alterado

@@ -32,6 +32,9 @@ Orientação de testes **manual** (prioritário hoje) e caminho para automação
 | 4 | Mapa geral | Pins e legenda; zoom/pan OK |
 | 5 | Emergência | Telefones do evento visíveis |
 | 6 | Evento (info) | Dados de `/evento` |
+| 6p | Secções opcionais Info (PWA **138+**, plugin **2.13.8+**, #34) | manage_options | Desactivar Como chegar / Wi‑Fi / Credenciamento — cards **ausentes** na PWA |
+| 6p2 | Contacto imprensa | manage_options + telefone | Card acima de Segurança; **Ligar** e **WhatsApp** funcionam |
+| 6p3 | Compat. evento existente | — | Secções com dados antigos permanecem visíveis até desactivar no admin |
 | 7 | Widget tempo na home | Resumo + toque abre previsão completa |
 | 8 | Sino (avisos) | Lista evento + (voluntário) turno/check-in/swap |
 | 9 | Trocar idioma PT/EN/ES | Strings principais traduzidas |
@@ -179,7 +182,7 @@ Orientação de testes **manual** (prioritário hoje) e caminho para automação
 
 | # | Área | Esperado |
 |---|------|----------|
-| 1 | Salvar configurações evento | Dados refletidos na API `/evento` |
+| 1 | Salvar configurações evento | Dados refletidos na API `/evento` (incl. `trans_section_active`, `wifi_section_active`, `cred_section_active`, `press_contact`) |
 | 3 | Operação Voluntários → **Mapa evento** | Upload diagrama; posicionar pinos; direções Balcão 1/2; coluna Rotas OK |
 | 3 | Categorias CRUD | Reflete em `/categorias` e meta box |
 | 4 | Limpar todos os locais | Só na zona de perigo em configurações |

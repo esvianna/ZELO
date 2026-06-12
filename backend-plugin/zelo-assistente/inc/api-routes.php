@@ -276,6 +276,45 @@ function zelo_get_categorias() {
 	return rest_ensure_response( $data );
 }
 
+/**
+ * Secções opcionais da view Info — compatibilidade se flags ainda não gravadas.
+ */
+function zelo_event_info_trans_section_active( $data ) {
+	if ( array_key_exists( 'trans_section_active', $data ) ) {
+		return (bool) $data['trans_section_active'];
+	}
+	return ! empty( $data['trans_shuttle_active'] ) || ! empty( $data['trans_public_active'] ) || ! empty( $data['trans_taxi_active'] );
+}
+
+function zelo_event_info_wifi_section_active( $data ) {
+	if ( array_key_exists( 'wifi_section_active', $data ) ) {
+		return (bool) $data['wifi_section_active'];
+	}
+	$ssid = isset( $data['wifi_ssid'] ) ? trim( (string) $data['wifi_ssid'] ) : '';
+	$pass = isset( $data['wifi_pass'] ) ? trim( (string) $data['wifi_pass'] ) : '';
+	return $ssid !== '' || $pass !== '';
+}
+
+function zelo_event_info_cred_section_active( $data ) {
+	if ( array_key_exists( 'cred_section_active', $data ) ) {
+		return (bool) $data['cred_section_active'];
+	}
+	$hours = isset( $data['cred_hours'] ) ? trim( (string) $data['cred_hours'] ) : '';
+	$docs  = isset( $data['cred_docs'] ) ? trim( (string) $data['cred_docs'] ) : '';
+	return $hours !== '' || $docs !== '';
+}
+
+function zelo_event_info_press_contact_active( $data ) {
+	$phone = isset( $data['press_contact_phone'] ) ? trim( (string) $data['press_contact_phone'] ) : '';
+	if ( $phone === '' ) {
+		return false;
+	}
+	if ( array_key_exists( 'press_contact_active', $data ) ) {
+		return (bool) $data['press_contact_active'];
+	}
+	return false;
+}
+
 function zelo_get_evento() {
 	$data = get_option( 'zelo_event_data', array(
 		'name'    => 'Grande Evento',
@@ -299,6 +338,9 @@ function zelo_get_evento() {
 			'site'  => $data['site'],
 		),
         'info_uteis' => array(
+            'trans_section_active' => zelo_event_info_trans_section_active( $data ),
+            'wifi_section_active' => zelo_event_info_wifi_section_active( $data ),
+            'cred_section_active' => zelo_event_info_cred_section_active( $data ),
             'wifi_ssid' => isset($data['wifi_ssid']) ? $data['wifi_ssid'] : '',
             'wifi_pass' => isset($data['wifi_pass']) ? $data['wifi_pass'] : '',
             'cred_hours' => isset($data['cred_hours']) ? $data['cred_hours'] : '',
@@ -307,6 +349,13 @@ function zelo_get_evento() {
             'emergency_phone' => isset($data['emergency_phone']) ? $data['emergency_phone'] : '',
             'emergency_phone_active' => isset($data['emergency_phone_active']) ? (bool) $data['emergency_phone_active'] : false,
             'support_chat' => isset($data['support_chat']) ? $data['support_chat'] : '',
+            'press_contact' => array(
+                'active' => zelo_event_info_press_contact_active( $data ),
+                'label'  => isset( $data['press_contact_label'] ) ? $data['press_contact_label'] : '',
+                'name'   => isset( $data['press_contact_name'] ) ? $data['press_contact_name'] : '',
+                'phone'  => isset( $data['press_contact_phone'] ) ? $data['press_contact_phone'] : '',
+                'note'   => isset( $data['press_contact_note'] ) ? $data['press_contact_note'] : '',
+            ),
             // Transport
             'trans_shuttle' => array(
                 'active' => isset($data['trans_shuttle_active']) ? (bool)$data['trans_shuttle_active'] : false,

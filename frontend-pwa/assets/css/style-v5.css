@@ -1648,13 +1648,16 @@ body {
 
 .ops-filters-span-full {
     grid-column: 1 / -1;
+    width: 100%;
+    min-width: 0;
 }
 
 .ops-filters .ops-view-toggle {
-    display: inline-flex;
+    display: flex;
     flex-wrap: wrap;
     gap: 0.35rem;
     align-items: center;
+    width: 100%;
 }
 
 @media (max-width: 767px) {
@@ -2554,6 +2557,54 @@ body {
     border: 1px solid #fee;
 }
 
+.event-location-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin-top: 1rem;
+}
+
+.event-press-contact-name {
+    margin: 0 0 0.5rem;
+    font-weight: 600;
+}
+
+.event-press-contact-note {
+    margin: 0 0 0.75rem;
+    font-size: 0.88rem;
+    line-height: 1.4;
+}
+
+.event-contact-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+}
+
+.event-contact-actions .event-contact-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    text-align: center;
+    text-decoration: none;
+    margin: 0;
+}
+
+.event-contact-btn--whatsapp {
+    background: #25d366;
+    color: #fff;
+    border: none;
+}
+
+.event-contact-btn--whatsapp:active {
+    opacity: 0.9;
+}
+
+.event-support-email-btn {
+    background: #f0f0f0;
+    color: #333;
+    margin-top: 0.5rem;
+}
+
 .transport-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -3316,9 +3367,10 @@ body {
 }
 
 .ops-view-toggle {
-    display: inline-flex;
+    display: flex;
     flex-wrap: wrap;
     gap: 0.35rem;
+    width: 100%;
 }
 
 .ops-mine-block--table,

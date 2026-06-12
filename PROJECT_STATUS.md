@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-12** (PWA 137 — layout superior escala, #33).
+> Última atualização: **2026-06-12** (PWA 138 + plugin 2.13.8 — info evento, #34).
 
 ---
 
@@ -12,8 +12,8 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Referência no repo | Versão |
 |--------------------|--------|
-| Plugin WordPress (`zelo-assistente.php`) | **2.13.7** |
-| PWA (`zelo-build.js` / `sw.js`) | **build 137** |
+| Plugin WordPress (`zelo-assistente.php`) | **2.13.8** |
+| PWA (`zelo-build.js` / `sw.js`) | **build 139** |
 
 **Backlog oficial:** [GitHub Project — Projeto ZELO](https://github.com/users/esvianna/projects/3) — issues em [`esvianna/ZELO`](https://github.com/esvianna/ZELO) (ADR-020, `docs/GITHUB-WORKFLOW.md`). Este arquivo **complementa** o quadro; status canônico das tarefas está no Project.
 
@@ -102,23 +102,24 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## O que está pendente
 
-- [#33](https://github.com/esvianna/ZELO/issues/33) — layout superior escala (filtros/botões): **In review** (PWA 137).
+- [#34](https://github.com/esvianna/ZELO/issues/34) — info evento (secções opcionais + imprensa): **In review** (PWA 138 + plugin 2.13.8).
 - [#32](https://github.com/esvianna/ZELO/issues/32) — add/edit linha escala (modal): **In review** (PWA 136).
 
-**Validadas no Project (Done):** [#29](https://github.com/esvianna/ZELO/issues/29) (PWA 132), [#30](https://github.com/esvianna/ZELO/issues/30) (PWA 133–135), [#31](https://github.com/esvianna/ZELO/issues/31) (PWA 134 + plugin 2.13.7).
+**Validadas no Project (Done):** [#33](https://github.com/esvianna/ZELO/issues/33) (PWA 137), [#29](https://github.com/esvianna/ZELO/issues/29) (PWA 132), [#30](https://github.com/esvianna/ZELO/issues/30) (PWA 133–135), [#31](https://github.com/esvianna/ZELO/issues/31) (PWA 134 + plugin 2.13.7).
 
 ---
 
 ## Próximos passos lógicos
 
-1. Validar smoke `TESTING.md` §4 **5o–5o3** (#33) e **5n–5n5** (#32); deploy PWA **137** + plugin **2.13.7** (se ainda não publicados).
-2. Após OK do responsável: mover #32 para **Done** no Project.
+1. Validar smoke `TESTING.md` §4 **6p–6p3** (#34) e **5n–5n5** (#32); deploy PWA **138** + plugin **2.13.8**.
+2. Configurar Curitiba/2026 no admin: desactivar transporte, Wi‑Fi, credenciamento; activar contacto imprensa.
 
 ---
 
 ## Última sessão (2026-06-12)
 
-- **#33 / PWA 137:** layout superior escala — «Todos os status»; `.ops-filter-control` unificado; grid mobile 2/1 col; botões Montar escala + Export PDF uniformes; `TESTING.md` §4 **5o–5o3**; card **In review**.
+- **#34 / PWA 138 + plugin 2.13.8:** toggles Como chegar / Wi‑Fi / Credenciamento; card Imprensa/autoridades (Ligar + WhatsApp) acima de Segurança; `TESTING.md` §4 **6p–6p3**; card **In review**.
+- **#33 / PWA 137:** layout superior escala — **Done** no Project.
 - **Governança:** `PROJECT_STATUS` alinhado ao Project (#29–#31 Done); regra obrigatória de mover cards via `gh project item-edit` em `AGENTS.md`, `docs/GITHUB-WORKFLOW.md` e `.cursor/rules/`.
 - **#32 / PWA 136:** «+ Adicionar» no card do turno; editar linha (ícone + Lista); modal formulário; `POST /ops/schedule`; aviso reconfirmação; `TESTING.md` §4 **5n–5n5**; card em **In review** no Project.
 - **#31 / PWA 134 + plugin 2.13.7:** botão remover linha `declined` (vista turno + lista) para `canEditScheduleScope`; modal confirmação; `POST /ops/schedule` sem a linha; swap pendente cancelado no backend; histórico `(N removida(s))`; `TESTING.md` §4 **5m–5m6**.

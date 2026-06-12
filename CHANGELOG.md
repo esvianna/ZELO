@@ -8,11 +8,25 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Corrigido — toggle vista escala no grid mobile (PWA 139, #33)
+
+| Versão | Entrega |
+|--------|---------|
+| PWA **139** | `.ops-view-toggle` com `display: flex` + `width: 100%` para respeitar `grid-column: 1 / -1` na toolbar |
+
+### Adicionado — informações do evento configuráveis (PWA 138 + plugin 2.13.8, #34)
+
+| Versão | Entrega |
+|--------|---------|
+| PWA **138** | Secções Como chegar, Wi‑Fi e Credenciamento opcionais; card Imprensa/autoridades (Ligar + WhatsApp) acima de Segurança; i18n view Info |
+| Plugin **2.13.8** | Toggles admin + `press_contact` em `GET /evento`; compatibilidade com eventos já configurados |
+
 ### Ajustado — layout superior da escala operacional (PWA 137, #33)
 
 | Versão | Entrega |
 |--------|---------|
 | PWA **137** | Filtro «Minhas designações»: «Todos os status»; selects/inputs unificados (`.ops-filter-control`); grid mobile da toolbar; botões «Montar escala» e «Exportar PDF» com mesma altura numa linha |
+| Validação | **Done** no Project (#33) |
 
 ### Alterado — governança GitHub Project
 

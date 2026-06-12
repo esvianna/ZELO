@@ -5440,133 +5440,157 @@ const app = {
         }
     },
 
+    eventInfoFlagActive(info, key) {
+        if (!info || typeof info !== 'object') return false;
+        return info[key] === true;
+    },
+
+    renderEventTransportCard(info) {
+        if (!this.eventInfoFlagActive(info, 'trans_section_active')) return '';
+        const items = [];
+        if (info.trans_shuttle && info.trans_shuttle.active) {
+            items.push(`<div class="transport-item"><div class="icon">🚌</div><h4>${this.escapeHtml(info.trans_shuttle.title || '')}</h4><p>${this.escapeHtml(info.trans_shuttle.desc || '')}</p></div>`);
+        }
+        if (info.trans_public && info.trans_public.active) {
+            items.push(`<div class="transport-item"><div class="icon">🚇</div><h4>${this.escapeHtml(info.trans_public.title || '')}</h4><p>${this.escapeHtml(info.trans_public.desc || '')}</p></div>`);
+        }
+        if (info.trans_taxi && info.trans_taxi.active) {
+            items.push(`<div class="transport-item"><div class="icon">🚕</div><h4>${this.escapeHtml(info.trans_taxi.title || '')}</h4><p>${this.escapeHtml(info.trans_taxi.desc || '')}</p></div>`);
+        }
+        if (!items.length) return '';
+        return `<div class="info-card"><div class="card-title">🚍 ${this.escapeHtml(i18n.t('event_transport_title'))}</div><div class="transport-grid">${items.join('')}</div></div>`;
+    },
+
+    renderEventWifiCard(info) {
+        if (!this.eventInfoFlagActive(info, 'wifi_section_active')) return '';
+        const ssid = this.escapeHtml(info.wifi_ssid || i18n.t('event_wifi_not_disclosed'));
+        const pass = this.escapeHtml(info.wifi_pass || '—');
+        return `
+            <div class="info-card highlight-blue">
+                <h3 style="color:white; margin-bottom:1rem;">📶 ${this.escapeHtml(i18n.t('event_useful_info_title'))}</h3>
+                <div style="margin-bottom: 1rem;">
+                    <div style="font-size:0.8rem; opacity:0.8;">${this.escapeHtml(i18n.t('event_wifi_ssid_label'))}</div>
+                    <div style="font-weight:bold; font-size:1.1rem;">${ssid}</div>
+                </div>
+                <div>
+                    <div style="font-size:0.8rem; opacity:0.8;">${this.escapeHtml(i18n.t('event_wifi_pass_label'))}</div>
+                    <div style="font-weight:bold; font-size:1.1rem;">${pass}</div>
+                </div>
+            </div>`;
+    },
+
+    renderEventCredCard(info) {
+        if (!this.eventInfoFlagActive(info, 'cred_section_active')) return '';
+        const hours = this.escapeHtml(info.cred_hours || i18n.t('event_cred_hours_fallback'));
+        const docs = this.escapeHtml(info.cred_docs || i18n.t('event_cred_docs_fallback'));
+        return `
+            <div class="info-card">
+                <div class="card-title">🆔 ${this.escapeHtml(i18n.t('event_cred_title'))}</div>
+                <div class="timeline-item">
+                    <div class="time">${this.escapeHtml(i18n.t('event_cred_hours_label'))}</div>
+                    <div class="desc">${hours}</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="time">${this.escapeHtml(i18n.t('event_cred_docs_label'))}</div>
+                    <div class="desc">${docs}</div>
+                </div>
+            </div>`;
+    },
+
+    renderEventPressContactCard(info) {
+        const pc = info && info.press_contact;
+        if (!pc || !pc.active || !pc.phone) return '';
+        const label = this.escapeHtml(pc.label || i18n.t('event_press_contact_default_label'));
+        const name = pc.name ? `<p class="event-press-contact-name">${this.escapeHtml(pc.name)}</p>` : '';
+        const note = pc.note ? `<p class="event-press-contact-note text-muted">${this.escapeHtml(pc.note)}</p>` : '';
+        const tel = this.formatTelHref(pc.phone);
+        const wa = this.buildWhatsAppUrl(pc.phone);
+        const callBtn = tel
+            ? `<a href="tel:${this.escapeHtml(tel)}" class="btn-block outline event-contact-btn">${this.escapeHtml(i18n.t('event_call_btn'))}</a>`
+            : '';
+        const waBtn = wa
+            ? `<a href="${this.escapeHtml(wa)}" class="btn-block event-contact-btn event-contact-btn--whatsapp" target="_blank" rel="noopener noreferrer">${this.escapeHtml(i18n.t('event_whatsapp_btn'))}</a>`
+            : '';
+        const actions = (callBtn || waBtn)
+            ? `<div class="event-contact-actions">${callBtn}${waBtn}</div>`
+            : '';
+        return `
+            <div class="info-card event-press-contact-card">
+                <div class="card-title">📰 ${label}</div>
+                ${name}
+                ${note}
+                ${actions}
+            </div>`;
+    },
+
     renderEventInfo() {
         const container = document.getElementById('event-container');
         const evt = this.data.evento;
 
         if (!evt) return;
 
-        // Fallback for image
-        const heroImage = evt.foto || 'images/convention-center.jpg'; // Placeholder
-
-        // Helper to safely get nested properties
+        const heroImage = evt.foto || 'images/convention-center.jpg';
         const info = evt.info_uteis || {};
+        const enderecoEsc = this.escapeHtml(evt.endereco || '');
+        const enderecoJs = String(evt.endereco || '').replace(/'/g, "\\'");
+        const transportHtml = this.renderEventTransportCard(info);
+        const wifiHtml = this.renderEventWifiCard(info);
+        const credHtml = this.renderEventCredCard(info);
+        const pressHtml = this.renderEventPressContactCard(info);
+        const supportEmail = (evt.contatos && evt.contatos.email) ? evt.contatos.email : '';
+        const supportChat = info.support_chat || '#';
 
         container.innerHTML = `
             <div class="event-hero" style="background-image: url('${heroImage}');">
                 <div class="hero-overlay">
-                    <h1>${evt.name_evento}</h1>
+                    <h1>${this.escapeHtml(evt.name_evento || '')}</h1>
                 </div>
             </div>
 
             <div class="event-grid">
-                <!-- Left Column -->
                 <div class="event-main">
-                    
-                    <!-- Location -->
                     <div class="info-card">
-                        <div class="card-title text-primary">LOCALIZAÇÃO</div>
-                        <h3>${evt.local || 'Centro de Convenções'}</h3>
-                        <p>${evt.endereco}</p>
-                        
-                        <div style="display: flex; gap: 10px; margin-top: 1rem;">
-                            <button class="action-btn outline small" onclick="navigator.clipboard.writeText('${evt.endereco}')">
-                                📋 Copiar Endereço
+                        <div class="card-title text-primary">${this.escapeHtml(i18n.t('event_location_title'))}</div>
+                        <h3>${this.escapeHtml(evt.local || i18n.t('event_location_default'))}</h3>
+                        <p>${enderecoEsc}</p>
+                        <div class="event-location-actions">
+                            <button type="button" class="action-btn outline small" onclick="navigator.clipboard.writeText('${enderecoJs}')">
+                                📋 ${this.escapeHtml(i18n.t('event_copy_address'))}
                             </button>
-                            <button class="action-btn primary small" onclick="window.open('https://maps.google.com/?q=${evt.endereco}', '_blank')">
-                                🗺️ Abrir no Mapa
+                            <button type="button" class="action-btn primary small" onclick="window.open('https://maps.google.com/?q=${encodeURIComponent(evt.endereco || '')}', '_blank')">
+                                🗺️ ${this.escapeHtml(i18n.t('event_open_map'))}
                             </button>
                         </div>
                     </div>
-
-                    <!-- How to get there -->
-                    <div class="info-card">
-                        <div class="card-title">🚍 Como chegar</div>
-                        <div class="transport-grid">
-                            ${info.trans_shuttle && info.trans_shuttle.active ? `
-                            <div class="transport-item">
-                                <div class="icon">🚌</div>
-                                <h4>${info.trans_shuttle.title}</h4>
-                                <p>${info.trans_shuttle.desc}</p>
-                            </div>` : ''}
-
-                            ${info.trans_public && info.trans_public.active ? `
-                            <div class="transport-item">
-                                <div class="icon">🚇</div>
-                                <h4>${info.trans_public.title}</h4>
-                                <p>${info.trans_public.desc}</p>
-                            </div>` : ''}
-
-                            ${info.trans_taxi && info.trans_taxi.active ? `
-                            <div class="transport-item">
-                                <div class="icon">🚕</div>
-                                <h4>${info.trans_taxi.title}</h4>
-                                <p>${info.trans_taxi.desc}</p>
-                            </div>` : ''}
-                        </div>
-                    </div>
-
-                    <!-- Map Place -->
-                    <div class="map-preview" id="event-map-preview">
-                        <!-- Mini map will be rendered here -->
-                    </div>
-
+                    ${transportHtml}
+                    <div class="map-preview" id="event-map-preview"></div>
                 </div>
 
-                <!-- Right Column (Sidebar) -->
                 <div class="event-sidebar">
-                    
-                    <!-- Useful Info -->
-                    <div class="info-card highlight-blue">
-                        <h3 style="color:white; margin-bottom:1rem;">📶 Informações úteis</h3>
-                        <div style="margin-bottom: 1rem;">
-                            <div style="font-size:0.8rem; opacity:0.8;">WI-FI DO EVENTO (SSID)</div>
-                            <div style="font-weight:bold; font-size:1.1rem;">${info.wifi_ssid || 'Não divulgado'}</div>
-                        </div>
-                        <div>
-                            <div style="font-size:0.8rem; opacity:0.8;">SENHA</div>
-                            <div style="font-weight:bold; font-size:1.1rem;">${info.wifi_pass || '-'}</div>
-                        </div>
-                    </div>
-
-                    <!-- Credenciamento -->
-                    <div class="info-card">
-                        <div class="card-title">🆔 Credenciamento</div>
-                        <div class="timeline-item">
-                            <div class="time">Horário</div>
-                            <div class="desc">${info.cred_hours || 'Consulte a programação'}</div>
-                        </div>
-                        <div class="timeline-item">
-                            <div class="time">Documentos</div>
-                            <div class="desc">${info.cred_docs || 'Documento com foto'}</div>
-                        </div>
-                    </div>
-
-                    <!-- Safety -->
+                    ${wifiHtml}
+                    ${credHtml}
+                    ${pressHtml}
                     <div class="info-card highlight-red">
-                        <div class="card-title" style="color: #d63384;">⛑️ Segurança</div>
+                        <div class="card-title" style="color: #d63384;">⛑️ ${this.escapeHtml(i18n.t('event_safety_title'))}</div>
                         <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
-                            <span>Posto Médico</span>
-                            <strong>${info.medical_loc || 'A definir'}</strong>
+                            <span>${this.escapeHtml(i18n.t('event_medical_post'))}</span>
+                            <strong>${this.escapeHtml(info.medical_loc || i18n.t('event_medical_fallback'))}</strong>
                         </div>
                         <div style="display:flex; justify-content:space-between;">
-                            <span>Emergência</span>
-                            <strong style="color:var(--danger-color);">${info.emergency_phone || '192'}</strong>
+                            <span>${this.escapeHtml(i18n.t('event_emergency_label'))}</span>
+                            <strong style="color:var(--danger-color);">${this.escapeHtml(info.emergency_phone || '192')}</strong>
                         </div>
                     </div>
-
-                    <!-- Support -->
                     <div class="info-card">
-                        <div class="card-title">Suporte ao Visitante</div>
-                        <p style="font-size:0.9rem; color:#666; margin-bottom:1rem;">Precisa de ajuda? Fale conosco.</p>
-                        <button class="btn-block outline" onclick="window.open('${info.support_chat || '#'}', '_blank')">
-                            Chat de Suporte
+                        <div class="card-title">${this.escapeHtml(i18n.t('event_support_title'))}</div>
+                        <p class="text-muted" style="font-size:0.9rem; margin-bottom:1rem;">${this.escapeHtml(i18n.t('event_support_desc'))}</p>
+                        <button type="button" class="btn-block outline" onclick="window.open('${this.escapeHtml(supportChat)}', '_blank')">
+                            ${this.escapeHtml(i18n.t('event_support_chat'))}
                         </button>
-                        <button class="btn-block" style="background:#f0f0f0; color:#333;" onclick="window.location.href='mailto:${evt.contatos.email}'">
-                             📧 Enviar E-mail
+                        <button type="button" class="btn-block event-support-email-btn" onclick="window.location.href='mailto:${this.escapeHtml(supportEmail)}'">
+                            📧 ${this.escapeHtml(i18n.t('event_support_email'))}
                         </button>
                     </div>
-
                 </div>
             </div>
         `;

@@ -27,16 +27,24 @@ function zelo_render_settings_page() {
 			'site'    => esc_url_raw( $_POST['zelo_event_site'] ),
             'logo'    => esc_url_raw( $_POST['zelo_event_logo'] ),
             'foto'    => esc_url_raw( $_POST['zelo_event_foto'] ),
+            'wifi_section_active' => isset( $_POST['zelo_wifi_section_active'] ) ? 1 : 0,
             'wifi_ssid' => sanitize_text_field( $_POST['zelo_wifi_ssid'] ),
             'wifi_pass' => sanitize_text_field( $_POST['zelo_wifi_pass'] ),
+            'cred_section_active' => isset( $_POST['zelo_cred_section_active'] ) ? 1 : 0,
             'cred_hours' => sanitize_text_field( $_POST['zelo_cred_hours'] ),
             'cred_docs' => sanitize_text_field( $_POST['zelo_cred_docs'] ),
+            'press_contact_active' => isset( $_POST['zelo_press_contact_active'] ) ? 1 : 0,
+            'press_contact_label' => sanitize_text_field( $_POST['zelo_press_contact_label'] ),
+            'press_contact_name' => sanitize_text_field( $_POST['zelo_press_contact_name'] ),
+            'press_contact_phone' => sanitize_text_field( $_POST['zelo_press_contact_phone'] ),
+            'press_contact_note' => sanitize_textarea_field( $_POST['zelo_press_contact_note'] ),
             'doctor_loc' => sanitize_text_field( $_POST['zelo_medical_loc'] ), // Keeping internal key consistent if used elsewhere or just mapping new one
             'medical_loc' => sanitize_text_field( $_POST['zelo_medical_loc'] ),
             'emergency_phone' => sanitize_text_field( $_POST['zelo_emergency_phone'] ),
             'emergency_phone_active' => isset( $_POST['zelo_emergency_phone_active'] ) ? 1 : 0,
             'support_chat' => esc_url_raw( $_POST['zelo_support_chat'] ),
             // Transport Fields
+            'trans_section_active' => isset( $_POST['zelo_trans_section_active'] ) ? 1 : 0,
             'trans_shuttle_active' => isset($_POST['zelo_trans_shuttle_active']) ? 1 : 0,
             'trans_shuttle_title' => sanitize_text_field( $_POST['zelo_trans_shuttle_title'] ),
             'trans_shuttle_desc' => sanitize_text_field( $_POST['zelo_trans_shuttle_desc'] ),
@@ -75,6 +83,18 @@ function zelo_render_settings_page() {
 		'phones'  => array( array( 'nome' => 'Polícia', 'numero' => '190' ) ),
 	) );
 	$emergency_services = zelo_normalize_emergency_services( $data );
+	$trans_section_active = array_key_exists( 'trans_section_active', $data )
+		? ! empty( $data['trans_section_active'] )
+		: zelo_event_info_trans_section_active( $data );
+	$wifi_section_active = array_key_exists( 'wifi_section_active', $data )
+		? ! empty( $data['wifi_section_active'] )
+		: zelo_event_info_wifi_section_active( $data );
+	$cred_section_active = array_key_exists( 'cred_section_active', $data )
+		? ! empty( $data['cred_section_active'] )
+		: zelo_event_info_cred_section_active( $data );
+	$press_contact_active = array_key_exists( 'press_contact_active', $data )
+		? ! empty( $data['press_contact_active'] )
+		: zelo_event_info_press_contact_active( $data );
 	?>
 	<div class="wrap">
 		<h1><?php esc_html_e( 'Configurações do Evento Zelo', 'zelo-assistente' ); ?></h1>
@@ -141,20 +161,72 @@ function zelo_render_settings_page() {
             <h2>Informações Úteis (App)</h2>
             <table class="form-table">
                 <tr>
-                    <th scope="row"><label for="zelo_wifi_ssid">Wi-Fi (SSID)</label></th>
-                    <td><input type="text" name="zelo_wifi_ssid" id="zelo_wifi_ssid" value="<?php echo esc_attr( isset($data['wifi_ssid']) ? $data['wifi_ssid'] : '' ); ?>" class="regular-text"></td>
+                    <th scope="row"><?php esc_html_e( 'Wi-Fi do evento', 'zelo-assistente' ); ?></th>
+                    <td>
+                        <fieldset>
+                            <label>
+                                <input type="checkbox" name="zelo_wifi_section_active" value="1" <?php checked( $wifi_section_active ); ?>>
+                                <?php esc_html_e( 'Mostrar secção Wi-Fi na PWA', 'zelo-assistente' ); ?>
+                            </label>
+                            <p class="description"><?php esc_html_e( 'Desmarque se o Wi-Fi não for divulgado.', 'zelo-assistente' ); ?></p>
+                            <p>
+                                <label for="zelo_wifi_ssid">Wi-Fi (SSID)</label><br>
+                                <input type="text" name="zelo_wifi_ssid" id="zelo_wifi_ssid" value="<?php echo esc_attr( isset($data['wifi_ssid']) ? $data['wifi_ssid'] : '' ); ?>" class="regular-text">
+                            </p>
+                            <p>
+                                <label for="zelo_wifi_pass"><?php esc_html_e( 'Senha do Wi-Fi', 'zelo-assistente' ); ?></label><br>
+                                <input type="text" name="zelo_wifi_pass" id="zelo_wifi_pass" value="<?php echo esc_attr( isset($data['wifi_pass']) ? $data['wifi_pass'] : '' ); ?>" class="regular-text">
+                            </p>
+                        </fieldset>
+                    </td>
                 </tr>
                 <tr>
-                    <th scope="row"><label for="zelo_wifi_pass">Senha do Wi-Fi</label></th>
-                    <td><input type="text" name="zelo_wifi_pass" id="zelo_wifi_pass" value="<?php echo esc_attr( isset($data['wifi_pass']) ? $data['wifi_pass'] : '' ); ?>" class="regular-text"></td>
+                    <th scope="row"><?php esc_html_e( 'Credenciamento', 'zelo-assistente' ); ?></th>
+                    <td>
+                        <fieldset>
+                            <label>
+                                <input type="checkbox" name="zelo_cred_section_active" value="1" <?php checked( $cred_section_active ); ?>>
+                                <?php esc_html_e( 'Mostrar secção Credenciamento na PWA', 'zelo-assistente' ); ?>
+                            </label>
+                            <p class="description"><?php esc_html_e( 'Desmarque se o evento não tiver credenciamento.', 'zelo-assistente' ); ?></p>
+                            <p>
+                                <label for="zelo_cred_hours"><?php esc_html_e( 'Horário', 'zelo-assistente' ); ?></label><br>
+                                <input type="text" name="zelo_cred_hours" id="zelo_cred_hours" value="<?php echo esc_attr( isset($data['cred_hours']) ? $data['cred_hours'] : '' ); ?>" class="regular-text" placeholder="Ex: Seg-Ter: 08:00 - 18:00">
+                            </p>
+                            <p>
+                                <label for="zelo_cred_docs"><?php esc_html_e( 'Documentos necessários', 'zelo-assistente' ); ?></label><br>
+                                <input type="text" name="zelo_cred_docs" id="zelo_cred_docs" value="<?php echo esc_attr( isset($data['cred_docs']) ? $data['cred_docs'] : '' ); ?>" class="regular-text" placeholder="Ex: Documento com foto (RG, CNH)">
+                            </p>
+                        </fieldset>
+                    </td>
                 </tr>
                 <tr>
-                    <th scope="row"><label for="zelo_cred_hours">Horário Credenciamento</label></th>
-                    <td><input type="text" name="zelo_cred_hours" id="zelo_cred_hours" value="<?php echo esc_attr( isset($data['cred_hours']) ? $data['cred_hours'] : '' ); ?>" class="regular-text" placeholder="Ex: Seg-Ter: 08:00 - 18:00"></td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="zelo_cred_docs">Documentos Necessários</label></th>
-                    <td><input type="text" name="zelo_cred_docs" id="zelo_cred_docs" value="<?php echo esc_attr( isset($data['cred_docs']) ? $data['cred_docs'] : '' ); ?>" class="regular-text" placeholder="Ex: Documento com foto (RG, CNH)"></td>
+                    <th scope="row"><?php esc_html_e( 'Imprensa e autoridades', 'zelo-assistente' ); ?></th>
+                    <td>
+                        <fieldset>
+                            <label>
+                                <input type="checkbox" name="zelo_press_contact_active" value="1" <?php checked( $press_contact_active ); ?>>
+                                <?php esc_html_e( 'Mostrar contacto na PWA (acima de Segurança)', 'zelo-assistente' ); ?>
+                            </label>
+                            <p class="description"><?php esc_html_e( 'Voluntários no balcão podem ligar ou enviar WhatsApp.', 'zelo-assistente' ); ?></p>
+                            <p>
+                                <label for="zelo_press_contact_label"><?php esc_html_e( 'Título do card', 'zelo-assistente' ); ?></label><br>
+                                <input type="text" name="zelo_press_contact_label" id="zelo_press_contact_label" value="<?php echo esc_attr( isset( $data['press_contact_label'] ) ? $data['press_contact_label'] : '' ); ?>" class="regular-text" placeholder="<?php esc_attr_e( 'Imprensa e autoridades', 'zelo-assistente' ); ?>">
+                            </p>
+                            <p>
+                                <label for="zelo_press_contact_name"><?php esc_html_e( 'Responsável / departamento', 'zelo-assistente' ); ?></label><br>
+                                <input type="text" name="zelo_press_contact_name" id="zelo_press_contact_name" value="<?php echo esc_attr( isset( $data['press_contact_name'] ) ? $data['press_contact_name'] : '' ); ?>" class="regular-text">
+                            </p>
+                            <p>
+                                <label for="zelo_press_contact_phone"><?php esc_html_e( 'Telefone (ligar + WhatsApp)', 'zelo-assistente' ); ?></label><br>
+                                <input type="text" name="zelo_press_contact_phone" id="zelo_press_contact_phone" value="<?php echo esc_attr( isset( $data['press_contact_phone'] ) ? $data['press_contact_phone'] : '' ); ?>" class="regular-text" placeholder="Ex: (41) 99999-9999">
+                            </p>
+                            <p>
+                                <label for="zelo_press_contact_note"><?php esc_html_e( 'Nota para voluntários (opcional)', 'zelo-assistente' ); ?></label><br>
+                                <textarea name="zelo_press_contact_note" id="zelo_press_contact_note" rows="2" class="large-text" placeholder="<?php esc_attr_e( 'Ex.: Acionar se o visitante se identificar como imprensa ou autoridade.', 'zelo-assistente' ); ?>"><?php echo esc_textarea( isset( $data['press_contact_note'] ) ? $data['press_contact_note'] : '' ); ?></textarea>
+                            </p>
+                        </fieldset>
+                    </td>
                 </tr>
                 <tr>
                     <th scope="row"><label for="zelo_medical_loc">Local Posto Médico</label></th>
@@ -182,6 +254,16 @@ function zelo_render_settings_page() {
             <hr>
             <h2>Como Chegar (Transporte)</h2>
             <table class="form-table">
+                <tr>
+                    <th scope="row"><?php esc_html_e( 'Secção na PWA', 'zelo-assistente' ); ?></th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="zelo_trans_section_active" value="1" <?php checked( $trans_section_active ); ?>>
+                            <?php esc_html_e( 'Mostrar secção «Como chegar» na PWA', 'zelo-assistente' ); ?>
+                        </label>
+                        <p class="description"><?php esc_html_e( 'Desmarque se não houver instruções de transporte.', 'zelo-assistente' ); ?></p>
+                    </td>
+                </tr>
                 <!-- Shuttle -->
                 <tr>
                     <th scope="row">Shuttle / Transfer</th>
