@@ -249,6 +249,27 @@ function zelo_ops_cleanup_orphan_assignment_data( $assignment_ids ) {
 	if ( $chk_changed ) {
 		update_option( 'zelo_volunteer_checkins', $checkins );
 	}
+	if ( function_exists( 'zelo_get_swap_requests' ) && function_exists( 'zelo_save_swap_requests' ) ) {
+		$list       = zelo_get_swap_requests();
+		$sw_changed = false;
+		$now        = current_time( 'mysql' );
+		foreach ( $list as &$swap ) {
+			if ( ! isset( $swap['assignment_id'], $swap['status'] ) || $swap['status'] !== 'pending' ) {
+				continue;
+			}
+			if ( ! isset( $ids[ (string) $swap['assignment_id'] ] ) ) {
+				continue;
+			}
+			$swap['status']      = 'rejected';
+			$swap['resolved_at'] = $now;
+			$swap['resolver_id'] = 0;
+			$sw_changed          = true;
+		}
+		unset( $swap );
+		if ( $sw_changed ) {
+			zelo_save_swap_requests( $list );
+		}
+	}
 }
 
 /**

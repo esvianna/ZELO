@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.13.7] - 2026-06-12
+
+### Alterado
+- **Remoção de linha da escala (#31):** `zelo_ops_cleanup_orphan_assignment_data` rejeita pedidos de substituição `pending` quando a designação é removida.
+
 ## [2.13.6] - 2026-06-04
 
 ### Corrigido

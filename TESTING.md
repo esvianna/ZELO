@@ -110,8 +110,15 @@ Orientação de testes **manual** (prioritário hoje) e caminho para automação
 | 5l | **Home — designações** (PWA **133+**, #30) | voluntário com escala | Só aparecem itens com ação (pendente de confirmar ou check-in/out no dia); recusadas/aceitas futuras **não** no bloco home |
 | 5l2 | Após **recusar** designação | voluntário | Some da home; visível na escala em «Recusadas e encerradas» (colapsado) ou filtro «Recusadas» |
 | 5l3 | Após **aceitar** (dia futuro) | voluntário | Home mostra «Tudo em dia»; escala lista em ativas; presença «Aguardando dia do evento» (não «Pendente») |
+| 5l3b | Aceita + dia **já passou** sem check-in (PWA **135+**) | voluntário | Badge presença «Pendente» — **não** «Aguardando dia do evento» |
 | 5l4 | Escala — filtro estado participação | voluntário | Select no bloco «Minhas designações»: Todos / Pendentes / Aceitas / Recusadas |
 | 5l5 | Vista equipa (supervisor) | homem-chave | Recusas de colegas **continuam** visíveis na escala da equipa |
+| 5m | **Remover linha recusada** (PWA **134+** / plugin **2.13.7+**, #31) | homem-chave / gestor | Ícone lixeira em linha `declined` no turno do escopo; modal com resumo → Confirmar remove linha |
+| 5m2 | Cancelar no modal | responsável | Linha permanece; sem alteração na API |
+| 5m3 | Swap pendente na linha | responsável | Modal avisa; após remover, pedido fica `rejected` |
+| 5m4 | Voluntário comum | view_ops | **Sem** botão remover em linhas de colegas |
+| 5m5 | Homem-chave outro turno | view_ops | Sem botão; `POST /ops/schedule` omitindo linha → **403** |
+| 5m6 | Vista **Lista** | gestor | Botão «Remover» na coluna de acções |
 | 6 | Pedido de substituição | conforme regra | Criado; gestor aprova/rejeita |
 | 6a | Painel «Pedidos de substituição» (PWA **132+**) | gestor / homem-chave | Nome do solicitante, dia·turno·local, motivo e data — **sem** IDs `sw_*` / `asg_*` |
 | 6b | Sino — aviso swap pendente | gestor | Resumo legível («Nome — Sábado · A1 — Balcão 3») |

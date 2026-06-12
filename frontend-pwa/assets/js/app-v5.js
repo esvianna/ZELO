@@ -2508,6 +2508,15 @@ const app = {
         return ymd === todayYmd;
     },
 
+    isAssignmentFutureEventDay(item) {
+        const dates = this.data.volunteerOps?.settings?.event_dates || {};
+        const ymd = dates[item.day];
+        if (!ymd) return false;
+        const today = new Date();
+        const todayYmd = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        return ymd > todayYmd;
+    },
+
     canCheckinAssignment(item) {
         if (this.getCommitmentStatus(item.id) !== 'accepted') return false;
         if (!this.isAssignmentEventDay(item)) return false;
@@ -2661,7 +2670,7 @@ const app = {
         if (commitSt === 'declined') return '';
 
         const status = this.getCheckinStatus(assignmentId).status || 'pending';
-        if (commitSt === 'accepted' && status === 'pending' && item && !this.isAssignmentEventDay(item)) {
+        if (commitSt === 'accepted' && status === 'pending' && item && this.isAssignmentFutureEventDay(item)) {
             return `<span class="ops-status-badge ops-status-awaiting_day">${this.escapeHtml(i18n.t('ops_status_awaiting_day'))}</span>`;
         }
         const cls = status === 'checked_in' ? 'ops-status-checked_in'
@@ -2684,7 +2693,8 @@ const app = {
             checkin: `<svg class="ops-icon-btn__svg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" ${stroke} aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>`,
             checkout: `<svg class="ops-icon-btn__svg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" ${stroke} aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>`,
             reallocate: `<svg class="ops-icon-btn__svg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" ${stroke} aria-hidden="true"><path d="M16 3h5v5"></path><path d="M8 21H3v-5"></path><path d="M21 8l-9 9"></path><path d="M3 16l9-9"></path></svg>`,
-            swap: `<svg class="ops-icon-btn__svg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" ${stroke} aria-hidden="true"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 5h18"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 19H3"></path></svg>`
+            swap: `<svg class="ops-icon-btn__svg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" ${stroke} aria-hidden="true"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 5h18"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 19H3"></path></svg>`,
+            remove: `<svg class="ops-icon-btn__svg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" ${stroke} aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`
         };
         return icons[kind] || icons.accept;
     },
@@ -3656,6 +3666,140 @@ const app = {
         return schedule.find((r) => r.id === assignmentId) || null;
     },
 
+    getPendingSwapForAssignment(assignmentId) {
+        return (this.data.volunteerOps?.swap_requests || []).find(
+            (s) => s.assignment_id === assignmentId && s.status === 'pending'
+        ) || null;
+    },
+
+    canRemoveDeclinedAssignment(item) {
+        if (!item || !item.id) return false;
+        if (this.getCommitmentStatus(item.id) !== 'declined') return false;
+        return this.canEditScheduleScope(item.day, item.shift);
+    },
+
+    buildScheduleScopeRowsExcluding(assignmentId) {
+        const row = this.findOpsScheduleRow(assignmentId);
+        if (!row || !row.day || !row.shift) return null;
+        const rows = (this.data.volunteerOps?.schedule || [])
+            .filter((r) => r.day === row.day && r.shift === row.shift && r.id !== assignmentId)
+            .map((r) => ({
+                id: r.id,
+                start: r.start || '',
+                end: r.end || '',
+                volunteer_ref: this.volunteerRefFromRow(r)
+            }))
+            .filter((r) => r.volunteer_ref);
+        return { day: row.day, shift: row.shift, rows };
+    },
+
+    _bindRemoveDeclinedEscape() {
+        if (this._removeDeclinedEscapeBound) return;
+        this._removeDeclinedEscapeHandler = (e) => {
+            if (e.key === 'Escape' && this._removeDeclinedModal && !this._removeDeclinedSaving) {
+                this.closeRemoveDeclinedModal();
+            }
+        };
+        document.addEventListener('keydown', this._removeDeclinedEscapeHandler);
+        this._removeDeclinedEscapeBound = true;
+    },
+
+    _unbindRemoveDeclinedEscape() {
+        if (this._removeDeclinedEscapeHandler) {
+            document.removeEventListener('keydown', this._removeDeclinedEscapeHandler);
+            this._removeDeclinedEscapeHandler = null;
+        }
+        this._removeDeclinedEscapeBound = false;
+    },
+
+    openRemoveDeclinedModal(assignmentId) {
+        const item = this.findOpsScheduleRow(assignmentId);
+        if (!item || !this.canRemoveDeclinedAssignment(item)) return;
+        this._removeDeclinedModal = { assignmentId, item };
+        this._removeDeclinedSaving = false;
+        this.renderRemoveDeclinedModal();
+    },
+
+    closeRemoveDeclinedModal() {
+        this._removeDeclinedModal = null;
+        this._removeDeclinedSaving = false;
+        const overlay = document.getElementById('ops-remove-declined-overlay');
+        if (overlay) overlay.remove();
+        document.body.classList.remove('ops-modal-open');
+        this._unbindRemoveDeclinedEscape();
+    },
+
+    renderRemoveDeclinedModal() {
+        const mod = this._removeDeclinedModal;
+        if (!mod) return;
+        const item = mod.item;
+        const name = this.escapeHtml(item.volunteer_name || i18n.t('ops_volunteer_default'));
+        const day = this.escapeHtml(this.getOpsDayLabel(item.day));
+        const shift = this.escapeHtml(item.shift || '—');
+        const loc = this.escapeHtml(item.location || '—');
+        const timeRange = this.escapeHtml(this.formatAssignmentTimeRange(item) || '—');
+        const pendingSwap = this.getPendingSwapForAssignment(mod.assignmentId);
+        const swapNote = pendingSwap
+            ? `<p class="ops-confirm-warning">${this.escapeHtml(i18n.t('ops_remove_declined_swap_note'))}</p>`
+            : '';
+        const saving = !!this._removeDeclinedSaving;
+        let overlay = document.getElementById('ops-remove-declined-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'ops-remove-declined-overlay';
+            overlay.className = 'ops-confirm-overlay';
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay && !this._removeDeclinedSaving) this.closeRemoveDeclinedModal();
+            });
+            document.body.appendChild(overlay);
+        }
+        overlay.innerHTML = `
+            <div class="ops-confirm-panel" role="dialog" aria-modal="true" aria-labelledby="ops-remove-declined-title">
+                <header class="ops-confirm-header">
+                    <h2 id="ops-remove-declined-title">${this.escapeHtml(i18n.t('ops_remove_declined_title'))}</h2>
+                    <button type="button" class="ops-editor-close-btn" onclick="app.closeRemoveDeclinedModal()" aria-label="${this.escapeHtml(i18n.t('ops_editor_close_aria'))}" ${saving ? 'disabled' : ''}>×</button>
+                </header>
+                <div class="ops-confirm-body">
+                    <p class="ops-confirm-volunteer"><strong>${name}</strong></p>
+                    <p class="ops-confirm-meta text-muted">${day} · ${shift} · ${loc}</p>
+                    <p class="ops-confirm-meta text-muted">${timeRange}</p>
+                    <p class="ops-confirm-note">${this.escapeHtml(i18n.t('ops_remove_declined_body'))}</p>
+                    ${swapNote}
+                </div>
+                <footer class="ops-confirm-footer">
+                    <button type="button" class="btn-block outline" onclick="app.closeRemoveDeclinedModal()" ${saving ? 'disabled' : ''}>${this.escapeHtml(i18n.t('ops_remove_declined_cancel'))}</button>
+                    <button type="button" class="btn-block ops-confirm-danger-btn" onclick="app.confirmRemoveDeclinedAssignment()" ${saving ? 'disabled' : ''}>${this.escapeHtml(saving ? i18n.t('ops_remove_declined_removing') : i18n.t('ops_remove_declined_confirm'))}</button>
+                </footer>
+            </div>
+        `;
+        document.body.classList.add('ops-modal-open');
+        this._bindRemoveDeclinedEscape();
+    },
+
+    async confirmRemoveDeclinedAssignment() {
+        const mod = this._removeDeclinedModal;
+        if (!mod || this._removeDeclinedSaving) return;
+        const scope = this.buildScheduleScopeRowsExcluding(mod.assignmentId);
+        if (!scope) {
+            alert(i18n.t('ops_remove_declined_fail'));
+            return;
+        }
+        this._removeDeclinedSaving = true;
+        this.renderRemoveDeclinedModal();
+        try {
+            const result = await API.saveScheduleScope(scope.day, scope.shift, scope.rows);
+            if (result.data) this.data.volunteerOps = result.data;
+            this.closeRemoveDeclinedModal();
+            this.renderVolunteerOps();
+            if (this.router.currentView === 'home') this.renderHomeVolunteerDashboard();
+            this.updateNotificationsBadge();
+        } catch (err) {
+            this._removeDeclinedSaving = false;
+            this.renderRemoveDeclinedModal();
+            alert(err.message || i18n.t('ops_remove_declined_fail'));
+        }
+    },
+
     getSwapRequesterDisplayName(swap, row) {
         if (row && row.volunteer_name) return String(row.volunteer_name).trim();
         const rid = swap && swap.requester_id;
@@ -3743,6 +3887,12 @@ const app = {
                 .replace('{0}', day)
                 .replace('{1}', shift)
                 .replace('{2}', count);
+            const removed = h.reconcile && Number(h.reconcile.removed_count) > 0
+                ? Number(h.reconcile.removed_count)
+                : 0;
+            if (removed > 0) {
+                detail += ' ' + i18n.t('ops_history_removed_count').replace('{0}', String(removed));
+            }
         } else if (type === 'reallocation') {
             const id = h.assignment_id || '—';
             let extra = '';
@@ -4413,6 +4563,9 @@ const app = {
             if (mineRow && this.getCommitmentStatus(item.id) === 'declined') {
                 inlineActions += this.renderOpsIconButton('ops_request_swap', `app.requestSwap('${idEsc}')`, 'swap', 'accent');
             }
+            if (this.canRemoveDeclinedAssignment(item)) {
+                inlineActions += this.renderOpsIconButton('ops_remove_declined_btn', `app.openRemoveDeclinedModal('${idEsc}')`, 'remove', 'danger');
+            }
         }
         const langs = (item.languages || []).join(', ');
         const volName = item.volunteer_name || i18n.t('ops_volunteer_default');
@@ -4579,8 +4732,11 @@ const app = {
         const reallocBtn = canRealloc
             ? `<button type="button" class="ops-btn" onclick="app.doReallocate('${String(item.id).replace(/'/g, "\\'")}')">${this.escapeHtml(i18n.t('ops_reallocate'))}</button>`
             : '';
-        const actionCell = (actions || swapBtn || reallocBtn)
-            ? `<div class="ops-table-actions">${actions}${reallocBtn}${swapBtn}</div>`
+        const removeBtn = this.canRemoveDeclinedAssignment(item)
+            ? `<button type="button" class="ops-btn ops-btn--danger" onclick="app.openRemoveDeclinedModal('${String(item.id).replace(/'/g, "\\'")}')">${this.escapeHtml(i18n.t('ops_remove_declined_btn'))}</button>`
+            : '';
+        const actionCell = (actions || swapBtn || reallocBtn || removeBtn)
+            ? `<div class="ops-table-actions">${actions}${reallocBtn}${swapBtn}${removeBtn}</div>`
             : '';
         const timeRange = `${item.start || '-'} ${i18n.t('ops_time_to')} ${item.end || '-'}`;
         return `

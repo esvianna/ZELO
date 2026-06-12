@@ -8,6 +8,19 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Corrigido — badge presença em dia passado (PWA 135)
+
+| Versão | Entrega |
+|--------|---------|
+| PWA **135** | «Aguardando dia do evento» só em designações **futuras**; dia passado com check-in pendente volta a mostrar «Pendente» |
+
+### Adicionado — excluir linha recusada da escala (PWA 134 + plugin 2.13.7, #31)
+
+| Versão | Entrega |
+|--------|---------|
+| PWA **134** | Botão remover (ícone/btn) em linhas `declined` para gestor/responsável do turno; modal de confirmação; reutiliza `POST /ops/schedule`; aviso se swap pendente; histórico com contagem removida |
+| Plugin **2.13.7** | Cancela swaps `pending` ao remover designação da escala |
+
 ### Ajustado — designações: home só ações pendentes; escala com filtro e arquivo (PWA 133, #30)
 
 | Versão | Entrega |
