@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-12** (PWA 134 + plugin 2.13.7 — remover linha recusada, #31).
+> Última atualização: **2026-06-12** (PWA 136 — add/edit linha escala, #32).
 
 ---
 
@@ -13,7 +13,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | Referência no repo | Versão |
 |--------------------|--------|
 | Plugin WordPress (`zelo-assistente.php`) | **2.13.7** |
-| PWA (`zelo-build.js` / `sw.js`) | **build 135** |
+| PWA (`zelo-build.js` / `sw.js`) | **build 136** |
 
 **Backlog oficial:** [GitHub Project — Projeto ZELO](https://github.com/users/esvianna/projects/3) — issues em [`esvianna/ZELO`](https://github.com/esvianna/ZELO) (ADR-020, `docs/GITHUB-WORKFLOW.md`). Este arquivo **complementa** o quadro; status canônico das tarefas está no Project.
 
@@ -102,6 +102,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## O que está pendente
 
+- [#32](https://github.com/esvianna/ZELO/issues/32) — add/edit linha escala (modal): **In review** (PWA 136).
 - [#31](https://github.com/esvianna/ZELO/issues/31) — remover linha recusada: **In review** (PWA 134 + plugin 2.13.7).
 - [#30](https://github.com/esvianna/ZELO/issues/30) — designações home/escala: **In review** (PWA 133).
 - [#29](https://github.com/esvianna/ZELO/issues/29) — visualização substituições: **In review** (PWA 132).
@@ -110,13 +111,14 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## Próximos passos lógicos
 
-1. Validar smoke `TESTING.md` §4 **5m–5m6** (#31); deploy plugin **2.13.7** + PWA **134**.
+1. Validar smoke `TESTING.md` §4 **5n–5n5** (#32) e **5m–5m6** (#31); deploy PWA **136** + plugin **2.13.7**.
 2. Validar #30 (PWA 133) e #29 (PWA 132) se ainda pendentes.
 
 ---
 
 ## Última sessão (2026-06-12)
 
+- **#32 / PWA 136:** «+ Adicionar» no card do turno; editar linha (ícone + Lista); modal formulário; `POST /ops/schedule`; aviso reconfirmação; `TESTING.md` §4 **5n–5n5**.
 - **#31 / PWA 134 + plugin 2.13.7:** botão remover linha `declined` (vista turno + lista) para `canEditScheduleScope`; modal confirmação; `POST /ops/schedule` sem a linha; swap pendente cancelado no backend; histórico `(N removida(s))`; `TESTING.md` §4 **5m–5m6**.
 - **#30 / PWA 133:** home «Minhas designações» só com ações pendentes; empty state «Tudo em dia»; escala com filtro por estado e seção colapsável «Recusadas e encerradas»; badges presença corrigidos; i18n pt/en/es; `TESTING.md` §4 **5l–5l5**.
 

@@ -8,6 +8,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Adicionado — adicionar/editar linha na escala sem editor completo (PWA 136, #32)
+
+| Versão | Entrega |
+|--------|---------|
+| PWA **136** | «+ Adicionar» no card do turno; ícone/botão Editar por linha; modal formulário (voluntário + horário); `POST /ops/schedule`; aviso reconfirmação; paridade vista Lista |
+
 ### Corrigido — badge presença em dia passado (PWA 135)
 
 | Versão | Entrega |

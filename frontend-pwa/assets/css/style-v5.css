@@ -3319,11 +3319,44 @@ body {
     opacity: 0.85;
 }
 
-.ops-shift-edit-btn {
+.ops-shift-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    flex: 0 0 auto;
+}
+
+.ops-shift-edit-btn,
+.ops-shift-add-btn {
     flex: 0 0 auto;
     min-width: auto;
     padding: 0.4rem 0.65rem;
     font-size: 0.75rem;
+}
+
+.ops-confirm-panel--form {
+    max-width: 420px;
+}
+
+.ops-row-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+    margin-top: 0.5rem;
+}
+
+.ops-row-form-grid .ops-editor-field--full {
+    grid-column: 1 / -1;
+}
+
+.ops-confirm-error {
+    margin: 0.65rem 0 0;
+    padding: 0.5rem 0.65rem;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: #b91c1c;
 }
 
 .ops-shift-card-body {

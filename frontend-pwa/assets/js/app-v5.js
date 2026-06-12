@@ -2694,7 +2694,8 @@ const app = {
             checkout: `<svg class="ops-icon-btn__svg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" ${stroke} aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>`,
             reallocate: `<svg class="ops-icon-btn__svg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" ${stroke} aria-hidden="true"><path d="M16 3h5v5"></path><path d="M8 21H3v-5"></path><path d="M21 8l-9 9"></path><path d="M3 16l9-9"></path></svg>`,
             swap: `<svg class="ops-icon-btn__svg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" ${stroke} aria-hidden="true"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 5h18"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 19H3"></path></svg>`,
-            remove: `<svg class="ops-icon-btn__svg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" ${stroke} aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`
+            remove: `<svg class="ops-icon-btn__svg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" ${stroke} aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`,
+            edit: `<svg class="ops-icon-btn__svg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" ${stroke} aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`
         };
         return icons[kind] || icons.accept;
     },
@@ -3681,8 +3682,14 @@ const app = {
     buildScheduleScopeRowsExcluding(assignmentId) {
         const row = this.findOpsScheduleRow(assignmentId);
         if (!row || !row.day || !row.shift) return null;
-        const rows = (this.data.volunteerOps?.schedule || [])
-            .filter((r) => r.day === row.day && r.shift === row.shift && r.id !== assignmentId)
+        const rows = this.mapScheduleScopeRows(row.day, row.shift)
+            .filter((r) => r.id !== assignmentId);
+        return { day: row.day, shift: row.shift, rows };
+    },
+
+    mapScheduleScopeRows(day, shift) {
+        return (this.data.volunteerOps?.schedule || [])
+            .filter((r) => r.day === day && r.shift === shift)
             .map((r) => ({
                 id: r.id,
                 start: r.start || '',
@@ -3690,7 +3697,223 @@ const app = {
                 volunteer_ref: this.volunteerRefFromRow(r)
             }))
             .filter((r) => r.volunteer_ref);
-        return { day: row.day, shift: row.shift, rows };
+    },
+
+    scheduleAssignmentFingerprint(volunteerRef, start, end) {
+        return `${volunteerRef || ''}|${start || ''}|${end || ''}`;
+    },
+
+    canEditScheduleRow(item) {
+        if (!item || !item.id) return false;
+        if (this.getCommitmentStatus(item.id) === 'declined') return false;
+        return this.canEditScheduleScope(item.day, item.shift);
+    },
+
+    getDefaultRowTimesForShift(shift, slotStart, slotEnd) {
+        const sh = this.getShiftCatalogEntry(shift);
+        return {
+            start: slotStart || sh?.start || '',
+            end: slotEnd || sh?.end || ''
+        };
+    },
+
+    buildScheduleScopeRowsForAdd(day, shift, newRow) {
+        const rows = this.mapScheduleScopeRows(day, shift);
+        rows.push({
+            start: newRow.start || '',
+            end: newRow.end || '',
+            volunteer_ref: newRow.volunteer_ref || ''
+        });
+        return { day, shift, rows: rows.filter((r) => r.volunteer_ref) };
+    },
+
+    buildScheduleScopeRowsForEdit(assignmentId, patch) {
+        const row = this.findOpsScheduleRow(assignmentId);
+        if (!row || !row.day || !row.shift) return null;
+        const rows = this.mapScheduleScopeRows(row.day, row.shift).map((r) => {
+            if (r.id !== assignmentId) return r;
+            return {
+                id: r.id,
+                start: patch.start || '',
+                end: patch.end || '',
+                volunteer_ref: patch.volunteer_ref || ''
+            };
+        });
+        return {
+            day: row.day,
+            shift: row.shift,
+            rows: rows.filter((r) => r.volunteer_ref)
+        };
+    },
+
+    _bindOpsRowFormEscape() {
+        if (this._opsRowFormEscapeBound) return;
+        this._opsRowFormEscapeHandler = (e) => {
+            if (e.key === 'Escape' && this._opsRowFormModal && !this._opsRowFormSaving) {
+                this.closeOpsRowFormModal();
+            }
+        };
+        document.addEventListener('keydown', this._opsRowFormEscapeHandler);
+        this._opsRowFormEscapeBound = true;
+    },
+
+    _unbindOpsRowFormEscape() {
+        if (this._opsRowFormEscapeHandler) {
+            document.removeEventListener('keydown', this._opsRowFormEscapeHandler);
+            this._opsRowFormEscapeHandler = null;
+        }
+        this._opsRowFormEscapeBound = false;
+    },
+
+    openAddScheduleRowModal(day, shift) {
+        if (!this.canEditScheduleScope(day, shift)) return;
+        const times = this.getDefaultRowTimesForShift(shift);
+        this._opsRowFormModal = {
+            mode: 'add',
+            day,
+            shift,
+            assignmentId: '',
+            start: times.start,
+            end: times.end,
+            volunteer_ref: '',
+            error: ''
+        };
+        this._opsRowFormSaving = false;
+        this.renderOpsRowFormModal();
+    },
+
+    openEditScheduleRowModal(assignmentId) {
+        const item = this.findOpsScheduleRow(assignmentId);
+        if (!item || !this.canEditScheduleRow(item)) return;
+        const volunteerRef = this.volunteerRefFromRow(item);
+        this._opsRowFormModal = {
+            mode: 'edit',
+            day: item.day,
+            shift: item.shift,
+            assignmentId: item.id,
+            start: item.start || '',
+            end: item.end || '',
+            volunteer_ref: volunteerRef,
+            originalFingerprint: this.scheduleAssignmentFingerprint(volunteerRef, item.start, item.end),
+            originalCommitment: this.getCommitmentStatus(item.id),
+            error: ''
+        };
+        this._opsRowFormSaving = false;
+        this.renderOpsRowFormModal();
+    },
+
+    closeOpsRowFormModal() {
+        this._opsRowFormModal = null;
+        this._opsRowFormSaving = false;
+        const overlay = document.getElementById('ops-row-form-overlay');
+        if (overlay) overlay.remove();
+        document.body.classList.remove('ops-modal-open');
+        this._unbindOpsRowFormEscape();
+    },
+
+    renderOpsRowFormModal() {
+        const mod = this._opsRowFormModal;
+        if (!mod) return;
+        const isAdd = mod.mode === 'add';
+        const titleKey = isAdd ? 'ops_row_form_add_title' : 'ops_row_form_edit_title';
+        const day = this.escapeHtml(this.getOpsDayLabel(mod.day));
+        const shift = this.escapeHtml(mod.shift || '—');
+        const loc = this.escapeHtml(this.resolveLocationNameForShift(mod.shift));
+        const bounds = this.escapeHtml(this.getShiftBoundsLabel(mod.shift));
+        const contextParts = [day, shift, loc !== '-' ? loc : '', bounds].filter(Boolean).join(' · ');
+        const saving = !!this._opsRowFormSaving;
+        const volOptions = this.buildVolunteerRefOptions(mod.volunteer_ref || '');
+        const reconfirmNote = (!isAdd && mod.originalCommitment === 'accepted')
+            ? `<p class="ops-confirm-warning">${this.escapeHtml(i18n.t('ops_row_form_reconfirm_note'))}</p>`
+            : '';
+        const errorHtml = mod.error
+            ? `<p class="ops-confirm-error" role="alert">${this.escapeHtml(mod.error)}</p>`
+            : '';
+        let overlay = document.getElementById('ops-row-form-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'ops-row-form-overlay';
+            overlay.className = 'ops-confirm-overlay';
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay && !this._opsRowFormSaving) this.closeOpsRowFormModal();
+            });
+            document.body.appendChild(overlay);
+        }
+        overlay.innerHTML = `
+            <div class="ops-confirm-panel ops-confirm-panel--form" role="dialog" aria-modal="true" aria-labelledby="ops-row-form-title">
+                <header class="ops-confirm-header">
+                    <h2 id="ops-row-form-title">${this.escapeHtml(i18n.t(titleKey))}</h2>
+                    <button type="button" class="ops-editor-close-btn" onclick="app.closeOpsRowFormModal()" aria-label="${this.escapeHtml(i18n.t('ops_editor_close_aria'))}" ${saving ? 'disabled' : ''}>×</button>
+                </header>
+                <div class="ops-confirm-body">
+                    <p class="ops-confirm-meta text-muted">${contextParts}</p>
+                    <div class="ops-row-form-grid">
+                        <label class="ops-editor-field">
+                            <span class="ops-editor-field-label">${this.escapeHtml(i18n.t('ops_time_start'))}</span>
+                            <input type="time" id="ops-row-form-start" value="${this.escapeHtml(mod.start || '')}" ${saving ? 'disabled' : ''}>
+                        </label>
+                        <label class="ops-editor-field">
+                            <span class="ops-editor-field-label">${this.escapeHtml(i18n.t('ops_time_end'))}</span>
+                            <input type="time" id="ops-row-form-end" value="${this.escapeHtml(mod.end || '')}" ${saving ? 'disabled' : ''}>
+                        </label>
+                        <label class="ops-editor-field ops-editor-field--full">
+                            <span class="ops-editor-field-label">${this.escapeHtml(i18n.t('ops_volunteer_label'))}</span>
+                            <select id="ops-row-form-volunteer" ${saving ? 'disabled' : ''}>${volOptions}</select>
+                        </label>
+                    </div>
+                    ${reconfirmNote}
+                    ${errorHtml}
+                </div>
+                <footer class="ops-confirm-footer">
+                    <button type="button" class="btn-block outline" onclick="app.closeOpsRowFormModal()" ${saving ? 'disabled' : ''}>${this.escapeHtml(i18n.t('ops_remove_declined_cancel'))}</button>
+                    <button type="button" class="btn-block" onclick="app.saveOpsRowFormModal()" ${saving ? 'disabled' : ''}>${this.escapeHtml(saving ? i18n.t('ops_row_form_saving') : i18n.t(isAdd ? 'ops_row_form_save_add' : 'ops_row_form_save_edit'))}</button>
+                </footer>
+            </div>
+        `;
+        document.body.classList.add('ops-modal-open');
+        this._bindOpsRowFormEscape();
+    },
+
+    async saveOpsRowFormModal() {
+        const mod = this._opsRowFormModal;
+        if (!mod || this._opsRowFormSaving) return;
+        const startEl = document.getElementById('ops-row-form-start');
+        const endEl = document.getElementById('ops-row-form-end');
+        const volEl = document.getElementById('ops-row-form-volunteer');
+        const start = startEl ? startEl.value : mod.start;
+        const end = endEl ? endEl.value : mod.end;
+        const volunteer_ref = volEl ? volEl.value : mod.volunteer_ref;
+        if (!volunteer_ref || !start || !end) {
+            mod.error = i18n.t('ops_row_form_required');
+            this.renderOpsRowFormModal();
+            return;
+        }
+        let scope;
+        if (mod.mode === 'add') {
+            scope = this.buildScheduleScopeRowsForAdd(mod.day, mod.shift, { start, end, volunteer_ref });
+        } else {
+            scope = this.buildScheduleScopeRowsForEdit(mod.assignmentId, { start, end, volunteer_ref });
+        }
+        if (!scope) {
+            mod.error = i18n.t('ops_row_form_fail');
+            this.renderOpsRowFormModal();
+            return;
+        }
+        this._opsRowFormSaving = true;
+        mod.error = '';
+        this.renderOpsRowFormModal();
+        try {
+            const result = await API.saveScheduleScope(scope.day, scope.shift, scope.rows);
+            if (result.data) this.data.volunteerOps = result.data;
+            this.closeOpsRowFormModal();
+            this.renderVolunteerOps();
+            if (this.router.currentView === 'home') this.renderHomeVolunteerDashboard();
+            this.updateNotificationsBadge();
+        } catch (err) {
+            this._opsRowFormSaving = false;
+            mod.error = err.message || i18n.t('ops_row_form_fail');
+            this.renderOpsRowFormModal();
+        }
     },
 
     _bindRemoveDeclinedEscape() {
@@ -4566,6 +4789,9 @@ const app = {
             if (this.canRemoveDeclinedAssignment(item)) {
                 inlineActions += this.renderOpsIconButton('ops_remove_declined_btn', `app.openRemoveDeclinedModal('${idEsc}')`, 'remove', 'danger');
             }
+            if (this.canEditScheduleRow(item)) {
+                inlineActions += this.renderOpsIconButton('ops_edit_schedule_row_btn', `app.openEditScheduleRowModal('${idEsc}')`, 'edit', 'outline');
+            }
         }
         const langs = (item.languages || []).join(', ');
         const volName = item.volunteer_name || i18n.t('ops_volunteer_default');
@@ -4613,8 +4839,15 @@ const app = {
         }).join('');
         const dayEsc = String(day).replace(/'/g, "\\'");
         const shiftEsc = String(shift).replace(/'/g, "\\'");
-        const editBtn = showActions && this.canEditScheduleScope(day, shift)
+        const canEditScope = showActions && this.canEditScheduleScope(day, shift);
+        const addBtn = canEditScope
+            ? `<button type="button" class="ops-btn ops-btn--accent ops-shift-add-btn" onclick="app.openAddScheduleRowModal('${dayEsc}','${shiftEsc}')">${this.escapeHtml(i18n.t('ops_add_schedule_row_btn'))}</button>`
+            : '';
+        const editBtn = canEditScope
             ? `<button type="button" class="ops-btn ops-shift-edit-btn" onclick="app.openScheduleEditor('${dayEsc}','${shiftEsc}')">${this.escapeHtml(i18n.t('ops_edit_this_shift'))}</button>`
+            : '';
+        const shiftActions = (addBtn || editBtn)
+            ? `<div class="ops-shift-card-actions">${addBtn}${editBtn}</div>`
             : '';
         const responsibleLine = this.renderOpsShiftResponsibleLine(day, shift);
         return `
@@ -4625,7 +4858,7 @@ const app = {
                         <span class="ops-shift-meta text-muted">${this.escapeHtml([display.location, display.bounds].filter(Boolean).join(' · '))}</span>
                         ${responsibleLine}
                     </div>
-                    ${editBtn}
+                    ${shiftActions}
                 </header>
                 <div class="ops-shift-card-body">${slotsHtml}</div>
             </article>`;
@@ -4735,8 +4968,11 @@ const app = {
         const removeBtn = this.canRemoveDeclinedAssignment(item)
             ? `<button type="button" class="ops-btn ops-btn--danger" onclick="app.openRemoveDeclinedModal('${String(item.id).replace(/'/g, "\\'")}')">${this.escapeHtml(i18n.t('ops_remove_declined_btn'))}</button>`
             : '';
-        const actionCell = (actions || swapBtn || reallocBtn || removeBtn)
-            ? `<div class="ops-table-actions">${actions}${reallocBtn}${swapBtn}${removeBtn}</div>`
+        const editRowBtn = this.canEditScheduleRow(item)
+            ? `<button type="button" class="ops-btn" onclick="app.openEditScheduleRowModal('${String(item.id).replace(/'/g, "\\'")}')">${this.escapeHtml(i18n.t('ops_edit_schedule_row_btn'))}</button>`
+            : '';
+        const actionCell = (actions || swapBtn || reallocBtn || removeBtn || editRowBtn)
+            ? `<div class="ops-table-actions">${actions}${reallocBtn}${swapBtn}${editRowBtn}${removeBtn}</div>`
             : '';
         const timeRange = `${item.start || '-'} ${i18n.t('ops_time_to')} ${item.end || '-'}`;
         return `

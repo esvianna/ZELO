@@ -119,6 +119,11 @@ Orientação de testes **manual** (prioritário hoje) e caminho para automação
 | 5m4 | Voluntário comum | view_ops | **Sem** botão remover em linhas de colegas |
 | 5m5 | Homem-chave outro turno | view_ops | Sem botão; `POST /ops/schedule` omitindo linha → **403** |
 | 5m6 | Vista **Lista** | gestor | Botão «Remover» na coluna de acções |
+| 5n | **+ Adicionar** no card do turno (PWA **136+**, #32) | homem-chave / gestor | Modal com voluntário + horário; nova linha na escala; compromisso `pending` |
+| 5n2 | **Editar** linha (ícone / botão Lista) | responsável | Alterar horário ou voluntário; aviso se `accepted`; API valida bounds |
+| 5n3 | Horário inválido no modal | responsável | Erro exibido no modal (não só alert) |
+| 5n4 | «Montar este turno» | responsável | Editor completo inalterado |
+| 5n5 | Linha `declined` | responsável | Sem editar — remover (#31) + adicionar (#32) |
 | 6 | Pedido de substituição | conforme regra | Criado; gestor aprova/rejeita |
 | 6a | Painel «Pedidos de substituição» (PWA **132+**) | gestor / homem-chave | Nome do solicitante, dia·turno·local, motivo e data — **sem** IDs `sw_*` / `asg_*` |
 | 6b | Sino — aviso swap pendente | gestor | Resumo legível («Nome — Sábado · A1 — Balcão 3») |
