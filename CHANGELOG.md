@@ -8,11 +8,31 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Alterado — governança GitHub Project
+
+| Área | Entrega |
+|------|---------|
+| Docs / regras | Mover cards via CLI (`gh project item-edit`) obrigatório para agentes; sync **Done** → `PROJECT_STATUS` + `CHANGELOG`; IDs do Project 3 em `AGENTS.md`, `docs/GITHUB-WORKFLOW.md`, `.cursor/rules/` |
+
 ### Adicionado — adicionar/editar linha na escala sem editor completo (PWA 136, #32)
 
 | Versão | Entrega |
 |--------|---------|
 | PWA **136** | «+ Adicionar» no card do turno; ícone/botão Editar por linha; modal formulário (voluntário + horário); `POST /ops/schedule`; aviso reconfirmação; paridade vista Lista |
+
+### Ajustado — visualização pedidos de substituição (PWA 132, #29)
+
+| Versão | Entrega |
+|--------|---------|
+| PWA **132** | Painel swap, hub avisos e histórico ops com nome, dia/turno/local, motivo e data — sem IDs técnicos na UI |
+| Validação | **Done** no Project (#29) |
+
+### Ajustado — designações: home só ações pendentes; escala com filtro e arquivo (PWA 133, #30)
+
+| Versão | Entrega |
+|--------|---------|
+| PWA **133** | Home «Minhas designações» lista só itens com ação (confirmar, check-in/out); empty state «Tudo em dia»; escala com filtro por estado e seção colapsável «Recusadas e encerradas»; badge presença oculto se recusado; «Aguardando dia do evento» para aceitas futuras |
+| Validação | **Done** no Project (#30) |
 
 ### Corrigido — badge presença em dia passado (PWA 135)
 
@@ -26,18 +46,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 |--------|---------|
 | PWA **134** | Botão remover (ícone/btn) em linhas `declined` para gestor/responsável do turno; modal de confirmação; reutiliza `POST /ops/schedule`; aviso se swap pendente; histórico com contagem removida |
 | Plugin **2.13.7** | Cancela swaps `pending` ao remover designação da escala |
-
-### Ajustado — designações: home só ações pendentes; escala com filtro e arquivo (PWA 133, #30)
-
-| Versão | Entrega |
-|--------|---------|
-| PWA **133** | Home «Minhas designações» lista só itens com ação (confirmar, check-in/out); empty state «Tudo em dia»; escala com filtro por estado e seção colapsável «Recusadas e encerradas»; badge presença oculto se recusado; «Aguardando dia do evento» para aceitas futuras |
-
-### Ajustado — visualização pedidos de substituição (PWA 132, #29)
-
-| Versão | Entrega |
-|--------|---------|
-| PWA **132** | Painel swap, hub avisos e histórico ops com nome, dia/turno/local, motivo e data — sem IDs técnicos na UI |
+| Validação | **Done** no Project (#31) |
 
 ### Ajustado — histórico escala ops (PWA 131)
 

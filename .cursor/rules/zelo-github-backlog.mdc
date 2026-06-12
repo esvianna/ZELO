@@ -28,8 +28,9 @@ Se o usuário pedir código imediato sem issue: criar a issue em Backlog, aprese
 
 ## Durante e após o trabalho
 
-- Mover status no Project conforme avanço: **In progress** ao codificar.
-- **Ao concluir implementação:** mover para **In review** (não Done); comentar na issue com resumo, versões plugin/PWA e passos de teste (`TESTING.md`). **Não fechar** a issue.
+- **Mover o card no Project via CLI** — obrigatório; não basta comentar na issue nem pedir ao usuário.
+- **In progress** ao iniciar codificação.
+- **In review** ao concluir implementação (nunca **Done**); comentar na issue com resumo, versões plugin/PWA e passos de teste (`TESTING.md`). **Não fechar** a issue.
 - **Done** + fechar issue: **somente** se o usuário pedir explicitamente ou confirmar que testou («OK», «pode fechar», «validado em produção»).
 - PR/commit: referenciar `Closes #N` só quando o merge/fechamento for intencional após validação.
 - Atualizar `PROJECT_STATUS.md` / `CHANGELOG.md` conforme `zelo-pos-alteracao.mdc` (entrega técnica; status canônico de validação = Project).
@@ -41,3 +42,57 @@ Se o usuário pedir código imediato sem issue: criar a issue em Backlog, aprese
 gh issue create -R esvianna/ZELO --title "..." --body "..."
 gh project item-add 3 --owner esvianna --url https://github.com/esvianna/ZELO/issues/N
 ```
+
+### Mover status no Project 3 (obrigatório para agentes)
+
+Constantes do [Project ZELO](https://github.com/users/esvianna/projects/3) — usar **node ID**, não o número `3`:
+
+| Recurso | ID |
+|---------|-----|
+| `project-id` | `PVT_kwHOBfIcG84BZhqu` |
+| Campo Status (`field-id`) | `PVTSSF_lAHOBfIcG84BZhquzhUftHw` |
+| Opção Backlog | `f75ad846` |
+| Opção Ready | `61e4505c` |
+| Opção In progress | `47fc9ee4` |
+| Opção In review | `df73e18b` |
+| Opção Done | `98236657` |
+
+**1. Obter `item-id` da issue N** (substitua `N`):
+
+```powershell
+gh project item-list 3 --owner esvianna --format json --limit 100 --jq ".items[] | select(.content.number == N) | .id"
+```
+
+**2. Mover para o status desejado** (ex.: **In review** após implementar):
+
+```powershell
+gh project item-edit --project-id PVT_kwHOBfIcG84BZhqu --id <item-id> --field-id PVTSSF_lAHOBfIcG84BZhquzhUftHw --single-select-option-id df73e18b
+```
+
+Trocar `--single-select-option-id` conforme a tabela (ex.: `47fc9ee4` = In progress, `98236657` = Done só com OK do responsável).
+
+Detalhes: `docs/GITHUB-WORKFLOW.md`.
+
+### Sincronizar Done → docs (início de sessão / nova issue)
+
+**Quando:** ao iniciar trabalho numa issue ou sessão — antes de codificar ou atualizar entregáveis.
+
+**Consultar status** (issues recentes com número `#N`):
+
+```powershell
+gh api graphql -f query='query { user(login: \"esvianna\") { projectV2(number: 3) { items(first: 50) { nodes { content { ... on Issue { number title } } fieldValues(first: 10) { nodes { ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2SingleSelectField { name } } } } } } } } } }' --jq '.data.user.projectV2.items.nodes[] | select(.content.number != null) | {number: .content.number, status: ([.fieldValues.nodes[] | select(.field.name == \"Status\") | .name][0])}'
+```
+
+**Se status = Done** (movido pelo responsável, não pelo agente):
+
+1. **`PROJECT_STATUS.md`** — retirar de «O que está pendente»; incluir em «Validadas no Project (Done)» se ainda não constar.
+2. **`CHANGELOG.md`** — na entrada `[Unreleased]` da issue (#N), acrescentar linha na tabela:
+
+   `| Validação | **Done** no Project (#N) |`
+
+   Só se essa linha ainda não existir.
+
+**Não fazer só por Done:**
+
+- Mover bloco de `[Unreleased]` para versão datada — isso é **release/deploy** (plugin/PWA publicados), não validação.
+- Marcar issue como **Done** no Project — competência do responsável após smoke (`TESTING.md`).

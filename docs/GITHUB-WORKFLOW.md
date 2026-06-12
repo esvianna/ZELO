@@ -35,7 +35,7 @@ Backlog → Ready → In progress → In review → Done
 ### Regras para agentes de IA
 
 - **Nunca** mover para **Done** nem **fechar** a issue após implementar — salvo pedido explícito do usuário («pode fechar», «testado OK», etc.).
-- **Sempre** mover para **In review** ao terminar o código/docs.
+- **Sempre** mover o card para **In review** via CLI ao terminar o código/docs — comentar na issue **sem** mover o card não cumpre o fluxo.
 - Comentar na issue: resumo da entrega, versões deploy, passos de `TESTING.md`.
 - **Done** + fechar issue: apenas quando o usuário confirmar testes ou pedir explicitamente.
 
@@ -71,3 +71,53 @@ gh issue develop NUMERO -R esvianna/ZELO   # branch vinculada
 ```
 
 PR com `Closes #NUMERO` fecha a issue ao merge.
+
+### Mover status de um card (agentes — obrigatório)
+
+O Project usa **node IDs** (não o número `3` em `--project-id`).
+
+| Recurso | ID |
+|---------|-----|
+| `project-id` | `PVT_kwHOBfIcG84BZhqu` |
+| Campo Status | `PVTSSF_lAHOBfIcG84BZhquzhUftHw` |
+| Backlog | `f75ad846` |
+| Ready | `61e4505c` |
+| In progress | `47fc9ee4` |
+| In review | `df73e18b` |
+| Done | `98236657` |
+
+**Obter `item-id` da issue N:**
+
+```powershell
+gh project item-list 3 --owner esvianna --format json --limit 100 --jq ".items[] | select(.content.number == N) | .id"
+```
+
+**Exemplos:**
+
+```powershell
+# In progress — ao iniciar codificação
+gh project item-edit --project-id PVT_kwHOBfIcG84BZhqu --id <item-id> --field-id PVTSSF_lAHOBfIcG84BZhquzhUftHw --single-select-option-id 47fc9ee4
+
+# In review — ao concluir implementação (padrão do agente)
+gh project item-edit --project-id PVT_kwHOBfIcG84BZhqu --id <item-id> --field-id PVTSSF_lAHOBfIcG84BZhquzhUftHw --single-select-option-id df73e18b
+```
+
+**Done** (`98236657`): somente após validação do responsável.
+
+### Sincronizar Done → documentação
+
+Ao **iniciar sessão** ou pegar **nova issue**, o agente consulta o Project e alinha o repo:
+
+| Onde | Ação quando issue = **Done** |
+|------|------------------------------|
+| `PROJECT_STATUS.md` | Sair de pendências; entrar em «Validadas no Project (Done)» |
+| `CHANGELOG.md` | Na entrada `[Unreleased]` da issue, linha `\| Validação \| **Done** no Project (#N) \|` |
+| Release datada | **Não** — só quando plugin/PWA forem publicados em produção |
+
+Consulta rápida (todas as issues do Project):
+
+```powershell
+gh api graphql -f query='query { user(login: \"esvianna\") { projectV2(number: 3) { items(first: 50) { nodes { content { ... on Issue { number title } } fieldValues(first: 10) { nodes { ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2SingleSelectField { name } } } } } } } } } }' --jq '.data.user.projectV2.items.nodes[] | select(.content.number != null) | {number: .content.number, status: ([.fieldValues.nodes[] | select(.field.name == \"Status\") | .name][0])}'
+```
+
+Detalhes: `.cursor/rules/zelo-github-backlog.mdc` § «Sincronizar Done».
