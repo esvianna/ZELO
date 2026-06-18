@@ -1636,6 +1636,70 @@ function zelo_ops_parse_catalog_roster_from_post() {
 }
 
 /**
+ * IDs de roster presentes no catálogo.
+ *
+ * @param array $roster Roster rows.
+ * @return string[]
+ */
+function zelo_ops_roster_ids_from_catalog( $roster ) {
+	$ids = array();
+	if ( ! is_array( $roster ) ) {
+		return $ids;
+	}
+	foreach ( $roster as $rv ) {
+		if ( ! empty( $rv['id'] ) ) {
+			$ids[] = sanitize_text_field( $rv['id'] );
+		}
+	}
+	return $ids;
+}
+
+/**
+ * IDs removidos do roster (antes vs depois do POST).
+ *
+ * @param array $before Roster anterior.
+ * @param array $after  Roster do POST.
+ * @return string[]
+ */
+function zelo_ops_removed_roster_ids( $before, $after ) {
+	$old = array_flip( zelo_ops_roster_ids_from_catalog( $before ) );
+	$new = zelo_ops_roster_ids_from_catalog( $after );
+	$out = array();
+	foreach ( array_keys( $old ) as $id ) {
+		if ( ! in_array( $id, $new, true ) ) {
+			$out[] = $id;
+		}
+	}
+	return $out;
+}
+
+/**
+ * Desvincula voluntários removidos do roster das linhas da escala (evita recriação na migração).
+ *
+ * @param array    $schedule       Linhas da escala (por referência).
+ * @param string[] $removed_rv_ids IDs removidos.
+ */
+function zelo_ops_detach_roster_ids_from_schedule( &$schedule, $removed_rv_ids ) {
+	if ( empty( $removed_rv_ids ) || ! is_array( $schedule ) ) {
+		return;
+	}
+	$gone = array_flip( array_map( 'strval', $removed_rv_ids ) );
+	foreach ( $schedule as &$row ) {
+		if ( ! is_array( $row ) ) {
+			continue;
+		}
+		$rv = isset( $row['roster_volunteer_id'] ) ? sanitize_text_field( $row['roster_volunteer_id'] ) : '';
+		if ( $rv === '' || ! isset( $gone[ $rv ] ) ) {
+			continue;
+		}
+		$row['roster_volunteer_id'] = '';
+		$row['volunteer_name']      = '';
+		$row['wp_user_id']          = 0;
+	}
+	unset( $row );
+}
+
+/**
  * Mapa id → nome para roster (JS).
  *
  * @param array $catalogs Catalogs.

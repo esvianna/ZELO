@@ -118,7 +118,7 @@ function zelo_indoor_map_admin_place_row_html( $place, $idx, $booths, $locations
 	$row  = '<tr class="zelo-map-place-row" data-place-id="' . esc_attr( $id ) . '"' . ( $is_booth ? ' data-booth-slot="' . esc_attr( (string) $booth_slot ) . '"' : '' ) . '>';
 	$row .= '<td><input type="hidden" name="map_place_id[]" value="' . esc_attr( $id ) . '" />';
 	$row .= '<select name="map_place_kind[]" class="map-place-kind" onchange="zeloMapKindChanged(this)">' . $kind_opts . '</select></td>';
-	$row .= '<td><input name="map_place_name_pt[]" value="' . $name_pt . '" class="regular-text" required placeholder="PT" /></td>';
+	$row .= '<td><input name="map_place_name_pt[]" value="' . $name_pt . '" class="regular-text" placeholder="PT" /></td>';
 	$row .= '<td><input name="map_place_floor[]" value="' . $floor . '" style="width:70px;" placeholder="P1" /></td>';
 	$row .= '<td class="map-coord-cell"><code class="map-coord-display">' . esc_html( $x . ', ' . $y ) . '</code>';
 	$row .= '<input type="hidden" name="map_place_x[]" class="map-place-x" value="' . $x . '" />';

@@ -639,7 +639,7 @@ function zelo_push_render_admin_fields( $cfg = null ) {
 		<th><?php esc_html_e( 'Chaves', 'zelo-assistente' ); ?></th>
 		<td>
 			<?php wp_nonce_field( 'zelo_push_gen_vapid', 'zelo_push_gen_nonce' ); ?>
-			<button type="submit" name="zelo_push_generate" value="1" class="button"><?php esc_html_e( 'Gerar novo par VAPID', 'zelo-assistente' ); ?></button>
+			<button type="button" class="button" onclick="zeloOpsSubmitPushGenerate()"><?php esc_html_e( 'Gerar novo par VAPID', 'zelo-assistente' ); ?></button>
 			<p class="description"><?php esc_html_e( 'Gere as chaves uma vez por ambiente. Subscriptions antigas deixam de funcionar se regenerar.', 'zelo-assistente' ); ?></p>
 		</td>
 	</tr>
@@ -647,8 +647,7 @@ function zelo_push_render_admin_fields( $cfg = null ) {
 }
 
 /**
- * Acções admin (gerar VAPID) antes de gravar ops.
- *
+ * @deprecated Usar zelo_ops_handle_push_generate_post() no admin ops.
  * @return string Mensagem de admin ou vazio.
  */
 function zelo_push_admin_pre_save() {

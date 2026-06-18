@@ -178,20 +178,61 @@ function zelo_ops_nav_tab_link( $id, $label, $active_tab ) {
 	);
 }
 
-function zelo_ops_save_from_post_tabs() {
-	if ( function_exists( 'zelo_push_admin_pre_save' ) ) {
-		$push_gen = zelo_push_admin_pre_save();
-		if ( $push_gen !== '' ) {
-			return $push_gen;
-		}
+function zelo_ops_handle_push_generate_post() {
+	if ( empty( $_POST['zelo_push_generate'] ) || ! empty( $_POST['zelo_ops_tabs_save'] ) ) {
+		return '';
 	}
+	if ( ! current_user_can( 'manage_options' ) ) {
+		return '';
+	}
+	if ( ! function_exists( 'zelo_push_generate_vapid_keys' ) ) {
+		return __( 'Rotina indisponível.', 'zelo-assistente' );
+	}
+	if ( ! isset( $_POST['zelo_push_gen_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['zelo_push_gen_nonce'] ) ), 'zelo_push_gen_vapid' ) ) {
+		return __( 'Nonce inválido.', 'zelo-assistente' );
+	}
+	$res = zelo_push_generate_vapid_keys();
+	if ( is_wp_error( $res ) ) {
+		return $res->get_error_message();
+	}
+	$tab = isset( $_POST['zelo_ops_active_tab'] ) ? sanitize_key( wp_unslash( $_POST['zelo_ops_active_tab'] ) ) : 'tab-config';
+	$user_id = get_current_user_id();
+	if ( $user_id && in_array( $tab, zelo_ops_allowed_admin_tabs(), true ) ) {
+		update_user_meta( $user_id, 'zelo_ops_active_tab', $tab );
+	}
+	return __( 'Par VAPID gerado.', 'zelo-assistente' );
+}
+
+/**
+ * Classe CSS do aviso admin ops.
+ *
+ * @param string $msg Mensagem.
+ * @return string
+ */
+function zelo_ops_admin_notice_class( $msg ) {
+	if ( $msg === '' ) {
+		return 'notice-success';
+	}
+	if ( strpos( $msg, 'Linha' ) !== false || strpos( $msg, 'utilizador' ) !== false || strpos( $msg, 'voluntário' ) !== false ) {
+		if ( strpos( $msg, 'escala anterior foi mantida' ) !== false || strpos( $msg, 'Catálogos e configurações salvos' ) !== false ) {
+			return 'notice-warning';
+		}
+		return 'notice-error';
+	}
+	return 'notice-success';
+}
+
+function zelo_ops_save_from_post_tabs() {
 	if ( ! isset( $_POST['zelo_ops_tabs_save'] ) || ! check_admin_referer( 'zelo_ops_tabs_nonce' ) ) {
 		return '';
 	}
 	if ( ! current_user_can( 'manage_options' ) ) {
 		return '';
 	}
-	$data = zelo_get_volunteer_ops_data();
+	$data              = zelo_get_volunteer_ops_data();
+	$old_roster        = isset( $data['catalogs']['roster_volunteers'] ) && is_array( $data['catalogs']['roster_volunteers'] )
+		? $data['catalogs']['roster_volunteers'] : array();
+	$previous_schedule = isset( $data['schedule'] ) && is_array( $data['schedule'] ) ? $data['schedule'] : array();
 
 	$catalogs = array(
 		'shifts'            => zelo_ops_parse_catalog_shifts_from_post(),
@@ -229,11 +270,20 @@ function zelo_ops_save_from_post_tabs() {
 	}
 
 	$valid = zelo_validate_schedule_rows( $schedule, $catalogs );
+	$schedule_err = '';
 	if ( is_wp_error( $valid ) ) {
-		return $valid->get_error_message();
+		$schedule_err = $valid->get_error_message();
+		$data['schedule'] = $previous_schedule;
+	} else {
+		$data['schedule'] = $schedule;
 	}
 
-	$data['schedule'] = $schedule;
+	$removed_roster = function_exists( 'zelo_ops_removed_roster_ids' )
+		? zelo_ops_removed_roster_ids( $old_roster, $catalogs['roster_volunteers'] )
+		: array();
+	if ( ! empty( $removed_roster ) && function_exists( 'zelo_ops_detach_roster_ids_from_schedule' ) ) {
+		zelo_ops_detach_roster_ids_from_schedule( $data['schedule'], $removed_roster );
+	}
 
 	// Governance per day keys posted as gov_{day}_field.
 	$gov = array();
@@ -344,6 +394,12 @@ function zelo_ops_save_from_post_tabs() {
 		update_user_meta( $user_id, 'zelo_ops_active_tab', $tab );
 	}
 
+	if ( $schedule_err !== '' ) {
+		return __( 'Catálogos e configurações salvos.', 'zelo-assistente' ) . ' '
+			. $schedule_err . ' '
+			. __( 'A escala anterior foi mantida.', 'zelo-assistente' );
+	}
+
 	return __( 'Dados operacionais salvos.', 'zelo-assistente' );
 }
 
@@ -421,6 +477,10 @@ function zelo_render_volunteer_ops_admin_tabs() {
 	if ( $msg_dedupe ) {
 		$msg = $msg ? $msg . ' ' . $msg_dedupe : $msg_dedupe;
 	}
+	$msg_push = zelo_ops_handle_push_generate_post();
+	if ( $msg_push ) {
+		$msg = $msg ? $msg . ' ' . $msg_push : $msg_push;
+	}
 	$msg2 = zelo_ops_save_json_advanced();
 	if ( $msg2 ) {
 		$msg = $msg ? $msg . ' ' . $msg2 : $msg2;
@@ -437,10 +497,7 @@ function zelo_render_volunteer_ops_admin_tabs() {
 		'users'       => $wp_users,
 		'event_dates' => $dates,
 	);
-	$notice_class = 'notice-success';
-	if ( $msg && ( strpos( $msg, 'Linha' ) !== false || strpos( $msg, 'utilizador' ) !== false || strpos( $msg, 'voluntário' ) !== false ) ) {
-		$notice_class = 'notice-error';
-	}
+	$notice_class = zelo_ops_admin_notice_class( $msg );
 	$active_tab = zelo_ops_resolve_active_tab();
 	$dup_count  = function_exists( 'zelo_ops_count_schedule_duplicates' ) ? zelo_ops_count_schedule_duplicates( $sched, $catalogs ) : 0;
 	?>
@@ -465,7 +522,7 @@ function zelo_render_volunteer_ops_admin_tabs() {
 			?>
 		</h2>
 
-		<form method="post" id="zelo-ops-tabs-form">
+		<form method="post" id="zelo-ops-tabs-form" novalidate>
 			<?php wp_nonce_field( 'zelo_ops_tabs_nonce' ); ?>
 			<input type="hidden" name="zelo_ops_tabs_save" value="1" />
 			<input type="hidden" name="zelo_ops_active_tab" id="zelo_ops_active_tab" value="<?php echo esc_attr( $active_tab ); ?>" />
@@ -540,6 +597,7 @@ function zelo_render_volunteer_ops_admin_tabs() {
 
 			<div id="tab-voluntarios" class="zelo-ops-tab" style="display:<?php echo $active_tab === 'tab-voluntarios' ? 'block' : 'none'; ?>;">
 				<p class="description"><?php esc_html_e( 'Voluntários sem conta WordPress (nome e telefone para contacto). Idiomas podem ser pré-preenchidos aqui ou pelo voluntário no app.', 'zelo-assistente' ); ?></p>
+				<p class="description"><?php esc_html_e( 'Ao excluir um voluntário e clicar «Salvar abas», as designações na escala que o referenciam são desvinculadas automaticamente.', 'zelo-assistente' ); ?></p>
 				<?php echo zelo_ops_catalog_roster_table_html( $catalogs['roster_volunteers'], $catalogs ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 				<p><button type="button" class="button" onclick="zeloAddCatalogRow('zelo-cat-vols-body','vol')"><?php esc_html_e( 'Adicionar voluntário', 'zelo-assistente' ); ?></button></p>
 			</div>
@@ -733,7 +791,7 @@ function zelo_render_volunteer_ops_admin_tabs() {
 			?>
 
 			<p class="submit" id="zelo-ops-submit-tabs" style="display:<?php echo $active_tab === 'tab-json' ? 'none' : 'block'; ?>;">
-				<button type="submit" class="button button-primary"><?php esc_html_e( 'Salvar abas', 'zelo-assistente' ); ?></button>
+				<button type="submit" class="button button-primary" id="zelo-ops-save-tabs-btn"><?php esc_html_e( 'Salvar abas', 'zelo-assistente' ); ?></button>
 			</p>
 		</form>
 
@@ -752,6 +810,12 @@ function zelo_render_volunteer_ops_admin_tabs() {
 	$cat_loc_tpl         = zelo_ops_catalog_location_row_html( array(), '__IDX__' );
 	$cat_lang_tpl        = zelo_ops_catalog_language_row_html( array(), '__IDX__' );
 	$cat_vol_tpl         = zelo_ops_catalog_roster_row_html( array(), '__IDX__', $catalogs );
+	$sched_rv_refs       = array();
+	foreach ( $sched as $srow ) {
+		if ( ! empty( $srow['roster_volunteer_id'] ) ) {
+			$sched_rv_refs[ sanitize_text_field( $srow['roster_volunteer_id'] ) ] = true;
+		}
+	}
 	?>
 	<script>
 	var ZELO_SCHED_ROW_TPL=<?php echo wp_json_encode( $sched_row_tpl ); ?>;
@@ -759,13 +823,20 @@ function zelo_render_volunteer_ops_admin_tabs() {
 	var ZELO_CAT_LOC_TPL=<?php echo wp_json_encode( $cat_loc_tpl ); ?>;
 	var ZELO_CAT_LANG_TPL=<?php echo wp_json_encode( $cat_lang_tpl ); ?>;
 	var ZELO_CAT_VOL_TPL=<?php echo wp_json_encode( $cat_vol_tpl ); ?>;
+	var ZELO_SCHED_RV_REFS=<?php echo wp_json_encode( $sched_rv_refs ); ?>;
+	var ZELO_ROSTER_DEL_CONFIRM=<?php echo wp_json_encode( __( 'Este voluntário ainda tem designações na escala. Ao remover e salvar, essas linhas serão desvinculadas. Continuar?', 'zelo-assistente' ) ); ?>;
 	function zeloOpsTab(e,id){e.preventDefault();document.querySelectorAll('.zelo-ops-tab').forEach(function(el){el.style.display='none';});document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('nav-tab-active');});if(e&&e.target)e.target.classList.add('nav-tab-active');document.getElementById(id).style.display='block';var hf=document.getElementById('zelo_ops_active_tab');if(hf)hf.value=id;var sb=document.getElementById('zelo-ops-submit-tabs');if(sb)sb.style.display=(id==='tab-json')?'none':'block';}
+	function zeloReindexCatalogRows(bodyId,opts){var tb=document.getElementById(bodyId);if(!tb)return;opts=opts||{};var rows=tb.querySelectorAll('tr');rows.forEach(function(tr,idx){if(opts.activePrefix){var cb=tr.querySelector('input[type=checkbox][name^="'+opts.activePrefix+'"]');if(cb){cb.name=opts.activePrefix+'['+idx+']';}}if(opts.roster){var lang=tr.querySelector('select[name^="cat_vol_lang_ids"]');if(lang){lang.name='cat_vol_lang_ids['+idx+'][]';}}});}
+	function zeloRemoveCatalogRow(btn,bodyId,opts){var tr=btn.closest('tr');if(!tr)return;if(opts&&opts.roster){var idInp=tr.querySelector('input[name="cat_vol_id[]"]');var volId=idInp?idInp.value:'';if(volId&&window.ZELO_SCHED_RV_REFS&&window.ZELO_SCHED_RV_REFS[volId]){if(!window.confirm(window.ZELO_ROSTER_DEL_CONFIRM||'')){return;}}}tr.remove();zeloReindexCatalogRows(bodyId,opts);}
 	function zeloAddSchedRow(){var tb=document.getElementById('zelo-sched-body');var tr=document.createElement('tr');var idx=String(tb.querySelectorAll('tr').length);tr.innerHTML=ZELO_SCHED_ROW_TPL.split('__ROW_INDEX__').join(idx);tb.appendChild(tr);zeloBindSchedRow(tr);}
-	function zeloAddCatalogRow(bodyId,type){var tb=document.getElementById(bodyId);var tr=document.createElement('tr');var tpl='';var idx=String(tb.querySelectorAll('tr').length);if(type==='shift')tpl=ZELO_CAT_SHIFT_TPL;else if(type==='loc')tpl=ZELO_CAT_LOC_TPL;else if(type==='lang')tpl=ZELO_CAT_LANG_TPL;else if(type==='vol')tpl=ZELO_CAT_VOL_TPL;tr.innerHTML=tpl.split('__IDX__').join(idx);tb.appendChild(tr);}
+	function zeloAddCatalogRow(bodyId,type){var tb=document.getElementById(bodyId);var tr=document.createElement('tr');var tpl='';var idx=String(tb.querySelectorAll('tr').length);var opts={activePrefix:''};if(type==='shift'){tpl=ZELO_CAT_SHIFT_TPL;opts.activePrefix='cat_shift_active';}else if(type==='loc'){tpl=ZELO_CAT_LOC_TPL;opts.activePrefix='cat_loc_active';}else if(type==='lang'){tpl=ZELO_CAT_LANG_TPL;opts.activePrefix='cat_lang_active';}else if(type==='vol'){tpl=ZELO_CAT_VOL_TPL;opts.activePrefix='cat_vol_active';opts.roster=true;}tr.innerHTML=tpl.split('__IDX__').join(idx);tb.appendChild(tr);zeloReindexCatalogRows(bodyId,opts);}
 	function zeloOnShiftChange(sel){var tr=sel.closest('tr');if(!tr)return;var opt=sel.options[sel.selectedIndex];var st=opt?opt.getAttribute('data-start'):'';var en=opt?opt.getAttribute('data-end'):'';var loc=opt?opt.getAttribute('data-location'):'';var si=tr.querySelector('.sched-time-start');var ei=tr.querySelector('.sched-time-end');var ld=tr.querySelector('.sched-loc-display');if(si){si.value=st||'';}if(ei){ei.value=en||'';}if(ld){ld.textContent=loc||'—';}}
 	function zeloBindSchedRow(tr){var sh=tr.querySelector('.sched-shift');if(sh){sh.addEventListener('change',function(){zeloOnShiftChange(sh);});zeloOnShiftChange(sh);}}
-	document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('#zelo-sched-body tr').forEach(zeloBindSchedRow);});
+	function zeloOpsStripEmptyCatalogRows(bodyId,nameSelector,opts){var tb=document.getElementById(bodyId);if(!tb)return;tb.querySelectorAll('tr').forEach(function(tr){var n=tr.querySelector(nameSelector);if(n&&!String(n.value||'').trim()){tr.remove();}});if(opts){zeloReindexCatalogRows(bodyId,opts);}}
+	function zeloOpsPrepareSaveForm(){zeloOpsStripEmptyCatalogRows('zelo-cat-vols-body','input[name="cat_vol_name[]"]',{activePrefix:'cat_vol_active',roster:true});zeloOpsStripEmptyCatalogRows('zelo-cat-locs-body','input[name="cat_loc_name[]"]',{activePrefix:'cat_loc_active'});zeloOpsStripEmptyCatalogRows('zelo-cat-langs-body','input[name="cat_lang_name[]"]',{activePrefix:'cat_lang_active'});zeloOpsStripEmptyCatalogRows('zelo-cat-shifts-body','input[name="cat_shift_code[]"]',{activePrefix:'cat_shift_active'});var btn=document.getElementById('zelo-ops-save-tabs-btn');if(btn&&!btn.disabled){btn.disabled=true;btn.textContent=<?php echo wp_json_encode( __( 'A guardar…', 'zelo-assistente' ) ); ?>;}}
+	document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('#zelo-sched-body tr').forEach(zeloBindSchedRow);var f=document.getElementById('zelo-ops-tabs-form');if(f){f.addEventListener('submit',function(){zeloOpsPrepareSaveForm();});}});
 	function zeloRemoveSchedRow(btn){var tr=btn.closest('tr');if(tr)tr.remove();}
+	function zeloOpsSubmitPushGenerate(){var nonce=document.querySelector('input[name="zelo_push_gen_nonce"]');var tab=document.getElementById('zelo_ops_active_tab');var f=document.createElement('form');f.method='POST';f.action=window.location.href.split('#')[0];function add(n,v){var i=document.createElement('input');i.type='hidden';i.name=n;i.value=v;f.appendChild(i);}add('zelo_push_generate','1');if(nonce){add('zelo_push_gen_nonce',nonce.value);}if(tab){add('zelo_ops_active_tab',tab.value);}document.body.appendChild(f);f.submit();}
 	</script>
 	<?php
 }
@@ -1047,13 +1118,13 @@ function zelo_ops_catalog_shift_row_html( $r, $idx = 0, $locations = array() ) {
 	$loc_html = '<select name="cat_shift_location_id[]" style="min-width:140px;">' . zelo_ops_location_options_html( $locations, '', $loc_id ) . '</select>';
 	return '<tr>'
 		. '<input type="hidden" name="cat_shift_id[]" value="' . $id . '" />'
-		. '<td><input name="cat_shift_code[]" value="' . $code . '" style="width:70px;" required /></td>'
+		. '<td><input name="cat_shift_code[]" value="' . $code . '" style="width:70px;" /></td>'
 		. '<td><input name="cat_shift_label[]" value="' . $label . '" class="regular-text" /></td>'
 		. '<td>' . $loc_html . '</td>'
 		. '<td><input type="time" name="cat_shift_start[]" value="' . $start . '" /></td>'
 		. '<td><input type="time" name="cat_shift_end[]" value="' . $end . '" /></td>'
 		. '<td><input type="checkbox" name="cat_shift_active[' . $ix . ']" value="1"' . ( $active ? ' checked' : '' ) . ' /></td>'
-		. '<td><button type="button" class="button-link-delete" onclick="this.closest(\'tr\').remove()">&times;</button></td>'
+		. '<td><button type="button" class="button-link-delete" onclick="zeloRemoveCatalogRow(this,\'zelo-cat-shifts-body\',{activePrefix:\'cat_shift_active\'})">&times;</button></td>'
 		. '</tr>';
 }
 
@@ -1075,9 +1146,9 @@ function zelo_ops_catalog_location_row_html( $r, $idx = 0 ) {
 	$ix     = esc_attr( (string) $idx );
 	return '<tr>'
 		. '<input type="hidden" name="cat_loc_id[]" value="' . $id . '" />'
-		. '<td><input name="cat_loc_name[]" value="' . $name . '" class="regular-text" required /></td>'
+		. '<td><input name="cat_loc_name[]" value="' . $name . '" class="regular-text" /></td>'
 		. '<td><input type="checkbox" name="cat_loc_active[' . $ix . ']" value="1"' . ( $active ? ' checked' : '' ) . ' /></td>'
-		. '<td><button type="button" class="button-link-delete" onclick="this.closest(\'tr\').remove()">&times;</button></td>'
+		. '<td><button type="button" class="button-link-delete" onclick="zeloRemoveCatalogRow(this,\'zelo-cat-locs-body\',{activePrefix:\'cat_loc_active\'})">&times;</button></td>'
 		. '</tr>';
 }
 
@@ -1099,9 +1170,9 @@ function zelo_ops_catalog_language_row_html( $r, $idx = 0 ) {
 	$ix     = esc_attr( (string) $idx );
 	return '<tr>'
 		. '<input type="hidden" name="cat_lang_id[]" value="' . $id . '" />'
-		. '<td><input name="cat_lang_name[]" value="' . $name . '" class="regular-text" required /></td>'
+		. '<td><input name="cat_lang_name[]" value="' . $name . '" class="regular-text" /></td>'
 		. '<td><input type="checkbox" name="cat_lang_active[' . $ix . ']" value="1"' . ( $active ? ' checked' : '' ) . ' /></td>'
-		. '<td><button type="button" class="button-link-delete" onclick="this.closest(\'tr\').remove()">&times;</button></td>'
+		. '<td><button type="button" class="button-link-delete" onclick="zeloRemoveCatalogRow(this,\'zelo-cat-langs-body\',{activePrefix:\'cat_lang_active\'})">&times;</button></td>'
 		. '</tr>';
 }
 
@@ -1153,13 +1224,13 @@ function zelo_ops_catalog_roster_row_html( $r, $idx = 0, $catalogs = null ) {
 	return '<tr>'
 		. '<input type="hidden" name="cat_vol_id[]" value="' . $id . '" />'
 		. '<input type="hidden" name="cat_vol_linked_uid[]" value="' . esc_attr( (string) $linked ) . '" />'
-		. '<td><input name="cat_vol_name[]" value="' . $name . '" class="regular-text" required /></td>'
+		. '<td><input name="cat_vol_name[]" value="' . $name . '" class="regular-text" /></td>'
 		. '<td><input name="cat_vol_phone[]" value="' . $phone . '" class="regular-text" type="tel" /></td>'
-		. '<td><input name="cat_vol_email[]" value="' . $email . '" class="regular-text" type="email" /></td>'
+		. '<td><input name="cat_vol_email[]" value="' . $email . '" class="regular-text" type="text" inputmode="email" autocomplete="email" /></td>'
 		. '<td>' . $lang_html . '</td>'
 		. '<td>' . $sel . '</td>'
 		. '<td><input type="checkbox" name="cat_vol_active[' . $ix . ']" value="1"' . ( $active ? ' checked' : '' ) . ' /></td>'
-		. '<td><button type="button" class="button-link-delete" onclick="this.closest(\'tr\').remove()">&times;</button></td>'
+		. '<td><button type="button" class="button-link-delete" onclick="zeloRemoveCatalogRow(this,\'zelo-cat-vols-body\',{activePrefix:\'cat_vol_active\',roster:true})">&times;</button></td>'
 		. '</tr>';
 }
 

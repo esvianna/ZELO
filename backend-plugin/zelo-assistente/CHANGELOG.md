@@ -2,6 +2,16 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.14.5] - 2026-06-18
+
+### Corrigido
+- **Admin ops (#38):** «Salvar abas» bloqueado por validação HTML5 em abas ocultas (`novalidate`, sem `required` client-side); feedback «A guardar…» no clique; linhas vazias de catálogo removidas antes do POST.
+
+## [2.14.4] - 2026-06-18
+
+### Corrigido
+- **Admin ops (#38):** «Salvar abas» grava catálogos/config mesmo com escala inválida; botão VAPID não aborta save; exclusão de voluntário persiste; designações desvinculadas; reindex de checkboxes ao remover linhas.
+
 ## [2.14.3] - 2026-06-18
 
 ### Corrigido

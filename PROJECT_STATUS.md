@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-18** (#37 dedupe escala + #36 Web Push In review).
+> Última atualização: **2026-06-18** (#38 admin save 2.14.5 + #37 dedupe escala).
 
 ---
 
@@ -12,7 +12,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Referência no repo | Versão |
 |--------------------|--------|
-| Plugin WordPress (`zelo-assistente.php`) | **2.14.3** |
+| Plugin WordPress (`zelo-assistente.php`) | **2.14.5** |
 | PWA (`zelo-build.js` / `sw.js`) | **build 142** |
 
 **Backlog oficial:** [GitHub Project — Projeto ZELO](https://github.com/users/esvianna/projects/3) — issues em [`esvianna/ZELO`](https://github.com/esvianna/ZELO) (ADR-020, `docs/GITHUB-WORKFLOW.md`). Este arquivo **complementa** o quadro; status canônico das tarefas está no Project.
@@ -102,7 +102,8 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## O que está pendente
 
-- [#37](https://github.com/esvianna/ZELO/issues/37) — limpar duplicatas na escala (admin): **In review** (plugin 2.14.1).
+- [#38](https://github.com/esvianna/ZELO/issues/38) — admin save Operação Voluntários (parcial, VAPID, roster, submit HTML5): **In review** (plugin 2.14.5).
+- [#37](https://github.com/esvianna/ZELO/issues/37) — limpar duplicatas na escala (admin): **In review** (plugin 2.14.1+).
 - [#36](https://github.com/esvianna/ZELO/issues/36) — Web Push VAPID (#8 retomada): **In review** (PWA 141 + plugin 2.14.0). Smoke `TESTING.md` §15.
 - [#35](https://github.com/esvianna/ZELO/issues/35) — link/botão instruções Imprensa (Novidades): **In review** (PWA 140).
 - [#34](https://github.com/esvianna/ZELO/issues/34) — info evento (secções opcionais + imprensa): **In review** (PWA 138 + plugin 2.13.8).
@@ -123,8 +124,9 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## Última sessão (2026-06-18)
 
-- **#37 / plugin 2.14.1:** rotina «Limpar duplicatas» na aba Escala (admin); aviso quando detectadas; sem SQL; `TESTING.md` §4 **5n6**; card **In review**.
-- **#36 / plugin 2.14.0 + PWA 141:** Web Push VAPID — tabela subscriptions, admin Config, REST subscribe/status, push Novidades + escala + check-in/out; Perfil activar/desactivar; prompt `zelo_push_consent_v2`; ADR-035; `TESTING.md` §15; card **In review**.
+- **#38 / plugin 2.14.4–2.14.5:** save parcial admin ops; VAPID separado; exclusão voluntário + desvincular escala; fix submit bloqueado por `required` em abas ocultas; `TESTING.md` §4 **5n7–5n8**; card **In review**.
+- **#37 / plugin 2.14.1–2.14.3:** «Limpar duplicatas» + notice sucesso; `TESTING.md` §4 **5n6**; card **In review**.
+- **#36 / plugin 2.14.0–2.14.2 + PWA 142:** Web Push VAPID; fixes unsubscribe + `_pushStatusCache`; card **In review**.
 
 ## Sessão anterior (2026-06-12)
 

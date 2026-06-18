@@ -8,6 +8,13 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Corrigido — admin Operação Voluntários save (#38)
+
+| Versão | Entrega |
+|--------|---------|
+| Plugin **2.14.5** | Submit desbloqueado (`novalidate` + sem `required` em abas ocultas); botão «A guardar…» |
+| Plugin **2.14.4** | Save parcial (catálogos/config se escala inválida); VAPID separado; reindex checkboxes; desvincular roster removido na escala |
+
 ### Corrigido — dedupe escala (#37)
 
 | Versão | Entrega |

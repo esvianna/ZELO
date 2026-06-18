@@ -130,6 +130,8 @@ Orientação de testes **manual** (prioritário hoje) e caminho para automação
 | 5n4 | «Montar este turno» | responsável | Editor completo inalterado |
 | 5n5 | Linha `declined` | responsável | Sem editar — remover (#31) + adicionar (#32) |
 | 5n6 | Admin → Escala → **Limpar duplicatas** (#37, plugin 2.14.1+) | `manage_options` | Aviso amarelo se há duplicatas; confirmação; remove excedentes; sem duplicatas → notice verde |
+| 5n7 | Admin → Voluntários: excluir linha → **Salvar abas** (#38, plugin 2.14.4+) | `manage_options` | Página recarrega; botão mostra «A guardar…»; voluntário some; se escala inválida, notice amarelo mas roster salvo; designações desvinculadas |
+| 5n8 | Config → **Gerar VAPID** não grava outras abas (#38) | `manage_options` | Só gera chaves; **Salvar abas** grava config sem conflito |
 | 5o | Layout toolbar escala (PWA **137+**, #33) | gestor / mobile 375px | Filtro status «Todos os status»; selects com estilo uniforme; filtros legíveis (grid 2 col.) |
 | 5o2 | Botões Montar escala + Export PDF | gestor | Mesma altura, mesma linha |
 | 5o3 | Regressão filtros escala | homem-chave | Dia/turno/local/responsável/nome/idioma e export PDF inalterados |
