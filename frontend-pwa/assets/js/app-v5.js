@@ -257,10 +257,13 @@ const app = {
             if (viewId === 'escala') {
                 return app.canViewOps() && !app._opsAuthFailed;
             }
-            if (viewId === 'profile') {
-                return !!app.auth.user;
+            if (viewId === 'mapa-evento' || viewId === 'blog' || viewId === 'blog-post') {
+                return app.canViewOps();
             }
-            if (viewId === 'blog' || viewId === 'blog-post') {
+            if (viewId === 'cadastros-pendentes') {
+                return !!(app.auth.user && app.auth.user.site_admin);
+            }
+            if (viewId === 'profile') {
                 return !!app.auth.user;
             }
             return this.isPersistableView(viewId);
@@ -518,12 +521,15 @@ const app = {
                             throw new Error(msg);
                         }
                         this.clearOpsAuthFailure();
+                        await app.loadNews();
+                        await app.loadNewsCarousel();
                     } else {
                         app.data.volunteerOps = null;
+                        API.clearOpsRelatedSnapshots(this.user.id);
+                        app.data.news = null;
+                        app.data.newsCarousel = null;
+                        app.data.indoorMap = null;
                     }
-
-                    await app.loadNews();
-                    await app.loadNewsCarousel();
 
                     app.router.navigate('home');
                     app.maybePromptPushConsent();
@@ -585,16 +591,11 @@ const app = {
             const uid = this.user && this.user.id;
             this.user = null;
             localStorage.removeItem('zelo_user');
-            localStorage.removeItem('zelo_volunteer_ops');
-            localStorage.removeItem('zelo_volunteer_ops_mine');
-            if (uid != null) {
-                localStorage.removeItem(API.newsSnapshotKey(uid));
-                localStorage.removeItem(API.newsCarouselSnapshotKey(uid));
-                API.clearNewsItemSnapshots(uid);
-            }
+            API.clearOpsRelatedSnapshots(uid);
             app.data.volunteerOps = null;
             app.data.news = null;
             app.data.newsCarousel = null;
+            app.data.indoorMap = null;
             this.clearOpsAuthFailure();
             this.refreshAuthChrome();
             app.router.navigate('home');
@@ -630,9 +631,11 @@ const app = {
 
             app.updateBottomNavForVolunteer();
             app.updateNewsMenuItem();
+            app.updateHomeOpsVisibility();
             app.renderHomeNewsCard();
             app.updateNotificationsBadge();
             app.renderProfileLanguages();
+            app.renderProfileAdminSection();
         },
 
         updateUI() {
@@ -779,6 +782,7 @@ const app = {
         this.bindProfileAvatarInput();
         this.renderProfileLanguages();
         this.renderProfilePush();
+        this.renderProfileAdminSection();
     },
 
     bindProfileAvatarInput() {
@@ -918,12 +922,16 @@ const app = {
             }
 
             // Load initial data
+            const indoorPromise = (this.auth.user && this.auth.user.caps && this.auth.user.caps.view_ops)
+                ? API.getIndoorMap(true).catch(() => ({}))
+                : Promise.resolve({});
+
             const [locais, evento, categorias, clima, indoorMap] = await Promise.all([
                 API.getLocais(), // Fetch all initially
                 API.getEvento(),
                 API.getCategorias(),
                 API.getClima().catch(() => null),
-                API.getIndoorMap().catch(() => ({}))
+                indoorPromise
             ]);
 
             this.data.locais = locais || [];
@@ -949,8 +957,13 @@ const app = {
                 }
             }
 
-            if (this.auth.user) {
+            if (this.auth.user && this.canViewOps()) {
                 await Promise.all([this.loadNews(), this.loadNewsCarousel()]);
+            } else if (this.auth.user) {
+                API.clearOpsRelatedSnapshots(this.auth.user.id);
+                this.data.news = null;
+                this.data.newsCarousel = null;
+                this.data.indoorMap = null;
             }
 
             console.log('Data loaded', this.data);
@@ -963,6 +976,7 @@ const app = {
             this.renderHomeNewsCard();
             this.renderHomeWeatherWidget();
             this.toggleHomeVisitorExtrasCollapse();
+            this.updateHomeOpsVisibility();
             this.updateNotificationsBadge();
             this.updateHomePressInstructionsBtn();
 
@@ -1005,7 +1019,7 @@ const app = {
             this.router.navigate(viewId, params);
             return;
         }
-        if (viewId === 'escala' || viewId === 'profile' || viewId === 'blog' || viewId === 'blog-post') {
+        if (viewId === 'escala' || viewId === 'profile' || viewId === 'blog' || viewId === 'blog-post' || viewId === 'mapa-evento' || viewId === 'cadastros-pendentes') {
             if (!this.auth.user) {
                 this.router.navigate('login', {}, { persist: false });
             } else {
@@ -1070,6 +1084,9 @@ const app = {
                 break;
             case 'mapa-evento':
                 this.renderIndoorEventMap();
+                break;
+            case 'cadastros-pendentes':
+                this.renderVolunteerApprovals();
                 break;
             case 'profile':
                 this.populateProfileForm();
@@ -1146,7 +1163,7 @@ const app = {
     },
 
     async loadNews(page = 1, append = false) {
-        if (!this.auth.user) {
+        if (!this.auth.user || !this.canViewOps()) {
             this.data.news = null;
             return null;
         }
@@ -1186,6 +1203,9 @@ const app = {
             this.router.navigate('login');
             return;
         }
+        if (!this.canViewOps()) {
+            return;
+        }
         let id = this.getPressInstructionsPostId();
         if (!id) {
             await this.loadNews(1, false);
@@ -1201,7 +1221,7 @@ const app = {
     updateHomePressInstructionsBtn() {
         const btn = document.getElementById('home-press-instructions-btn');
         if (!btn) return;
-        const show = !!this.auth.user && !!this.getPressInstructionsPostId();
+        const show = this.canViewOps() && !!this.getPressInstructionsPostId();
         btn.hidden = !show;
     },
 
@@ -1224,11 +1244,11 @@ const app = {
     updateNewsMenuItem() {
         const item = document.getElementById('header-menu-news');
         if (!item) return;
-        item.hidden = !this.auth.user;
+        item.hidden = !this.canViewOps();
     },
 
     async loadNewsCarousel() {
-        if (!this.auth.user) {
+        if (!this.auth.user || !this.canViewOps()) {
             this.data.newsCarousel = null;
             return null;
         }
@@ -1260,14 +1280,14 @@ const app = {
     renderHomeNewsCard() {
         const el = document.getElementById('home-news-card');
         const opsBtn = document.getElementById('home-ops-news-btn');
-        const loggedIn = !!this.auth.user;
+        const canOps = this.canViewOps();
 
         if (opsBtn) {
-            opsBtn.hidden = !loggedIn;
+            opsBtn.hidden = !canOps;
         }
 
         if (!el) return;
-        if (!loggedIn) {
+        if (!canOps) {
             el.hidden = true;
             el.innerHTML = '';
             return;
@@ -1638,7 +1658,7 @@ const app = {
             items = items.filter((i) => i.category === 'news');
         }
 
-        const showNewsFilter = !!this.auth.user;
+        const showNewsFilter = this.canViewOps();
 
         const chips = `
             <div class="avisos-toolbar">
@@ -2465,6 +2485,119 @@ const app = {
         return !!(this.auth.user && this.auth.user.caps && this.auth.user.caps.view_ops);
     },
 
+    canSiteAdmin() {
+        return !!(this.auth.user && this.auth.user.site_admin);
+    },
+
+    isVolunteerApprovalPending() {
+        return !!(this.auth.user && this.auth.user.volunteer_approval_status === 'pending');
+    },
+
+    isVolunteerApprovalRejected() {
+        return !!(this.auth.user && this.auth.user.volunteer_approval_status === 'rejected');
+    },
+
+    updateHomeOpsVisibility() {
+        const block = document.getElementById('home-ops-extras-block');
+        if (block) {
+            block.hidden = !this.canViewOps();
+        }
+    },
+
+    renderProfileAdminSection() {
+        const section = document.getElementById('profile-admin-section');
+        if (!section) return;
+        section.style.display = this.canSiteAdmin() ? 'block' : 'none';
+        if (this.canSiteAdmin()) {
+            this.refreshVolunteerApprovalsCount();
+        }
+    },
+
+    updateVolunteerApprovalsBadge() {
+        const badge = document.getElementById('profile-approvals-badge');
+        if (!badge) return;
+        const count = this._volunteerApprovalsCount || 0;
+        if (count > 0) {
+            badge.hidden = false;
+            badge.textContent = ` (${count})`;
+        } else {
+            badge.hidden = true;
+            badge.textContent = '';
+        }
+    },
+
+    async refreshVolunteerApprovalsCount() {
+        if (!this.canSiteAdmin()) return;
+        try {
+            const data = await API.getVolunteerApprovals();
+            this._volunteerApprovalsCount = typeof data.count === 'number'
+                ? data.count
+                : (Array.isArray(data.items) ? data.items.length : 0);
+        } catch (e) {
+            this._volunteerApprovalsCount = 0;
+        }
+        this.updateVolunteerApprovalsBadge();
+    },
+
+    async renderVolunteerApprovals() {
+        const container = document.getElementById('volunteer-approvals-container');
+        if (!container) return;
+        if (!this.canSiteAdmin()) {
+            container.innerHTML = `<p class="text-muted">${this.escapeHtml(i18n.t('ops_no_access'))}</p>`;
+            return;
+        }
+        container.innerHTML = `<div class="loading">${this.escapeHtml(i18n.t('loading'))}</div>`;
+        try {
+            const data = await API.getVolunteerApprovals();
+            const items = Array.isArray(data.items) ? data.items : [];
+            this._volunteerApprovalsCount = items.length;
+            this.updateVolunteerApprovalsBadge();
+            if (!items.length) {
+                container.innerHTML = `<p class="description">${this.escapeHtml(i18n.t('admin_volunteer_approvals_empty'))}</p>`;
+                return;
+            }
+            container.innerHTML = items.map((item) => {
+                const langs = (item.languages || []).join(', ') || '—';
+                const reg = item.registered_at ? this.escapeHtml(String(item.registered_at).slice(0, 10)) : '—';
+                const uid = Number(item.user_id);
+                return `
+                    <div class="volunteer-approval-card profile-card" style="margin-bottom:1rem;">
+                        <h3 style="margin:0 0 0.5rem;">${this.escapeHtml(item.name || '')}</h3>
+                        <p style="margin:0.25rem 0;">${this.escapeHtml(item.email || '')}</p>
+                        <p class="text-muted" style="margin:0.25rem 0;">${this.escapeHtml(item.phone || '')}</p>
+                        <p class="text-muted" style="margin:0.5rem 0 1rem;font-size:0.9rem;">${this.escapeHtml(langs)} · ${reg}</p>
+                        <div class="volunteer-approval-actions">
+                            <button type="button" class="btn-block" onclick="app.approveVolunteerRegistration(${uid})">${this.escapeHtml(i18n.t('admin_volunteer_approvals_approve'))}</button>
+                            <button type="button" class="btn-block outline warning" style="margin-top:0.5rem;" onclick="app.rejectVolunteerRegistration(${uid})">${this.escapeHtml(i18n.t('admin_volunteer_approvals_reject'))}</button>
+                        </div>
+                    </div>`;
+            }).join('');
+        } catch (e) {
+            container.innerHTML = `<p class="text-danger">${this.escapeHtml(e.message || i18n.t('error_generic'))}</p>`;
+        }
+    },
+
+    async approveVolunteerRegistration(userId) {
+        try {
+            await API.approveVolunteerRegistration(userId);
+            alert(i18n.t('admin_volunteer_approvals_success_approve'));
+            await this.renderVolunteerApprovals();
+        } catch (e) {
+            alert(e.message || i18n.t('error_generic'));
+        }
+    },
+
+    async rejectVolunteerRegistration(userId) {
+        if (!confirm(i18n.t('admin_volunteer_approvals_confirm_reject'))) return;
+        try {
+            await API.rejectVolunteerRegistration(userId);
+            alert(i18n.t('admin_volunteer_approvals_success_reject'));
+            await this.renderVolunteerApprovals();
+        } catch (e) {
+            alert(e.message || i18n.t('error_generic'));
+        }
+    },
+
     canReallocateOps() {
         return !!(this.auth.user && this.auth.user.caps && this.auth.user.caps.reallocate_ops);
     },
@@ -2691,7 +2824,7 @@ const app = {
     },
 
     async maybePromptPushConsent() {
-        if (!this.auth.user) return;
+        if (!this.auth.user || !this.canViewOps()) return;
         if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
         if (localStorage.getItem(this._pushConsentKey) === '1') return;
         const status = await this.getPushStatusCached();
@@ -2718,7 +2851,7 @@ const app = {
         const statusEl = document.getElementById('profile-push-status');
         const enableBtn = document.getElementById('profile-push-enable-btn');
         const disableBtn = document.getElementById('profile-push-disable-btn');
-        if (!section || !this.auth.user) {
+        if (!section || !this.auth.user || !this.canViewOps()) {
             if (section) section.style.display = 'none';
             return;
         }
@@ -3017,11 +3150,40 @@ const app = {
         const container = document.getElementById('home-volunteer-dashboard');
         if (!container) return;
 
-        if (!this.auth.user || !this.canViewOps()) {
+        if (!this.auth.user) {
             container.hidden = true;
             container.innerHTML = '';
             return;
         }
+
+        if (!this.canViewOps()) {
+            if (this.isVolunteerApprovalPending() && !this._approvalRefreshAttempted) {
+                this._approvalRefreshAttempted = true;
+                const synced = await API.refreshSession();
+                if (synced) {
+                    this.auth.user = synced;
+                    app.cacheUserAvatar(synced.avatar);
+                    if (this.canViewOps()) {
+                        return this.renderHomeVolunteerDashboard();
+                    }
+                }
+            }
+            if (this.isVolunteerApprovalPending()) {
+                container.hidden = false;
+                container.innerHTML = `<p class="home-ops-link-pending" style="background:#fef3c7;padding:0.75rem;border-radius:8px;font-size:0.9rem;">${this.escapeHtml(i18n.t('volunteer_approval_pending_banner'))}</p>`;
+                return;
+            }
+            if (this.isVolunteerApprovalRejected()) {
+                container.hidden = false;
+                container.innerHTML = `<p class="home-subscriber-rejected-banner" style="background:#fee2e2;padding:0.75rem;border-radius:8px;font-size:0.9rem;">${this.escapeHtml(i18n.t('volunteer_approval_rejected_banner'))}</p>`;
+                return;
+            }
+            container.hidden = true;
+            container.innerHTML = '';
+            return;
+        }
+
+        this._approvalRefreshAttempted = false;
 
         container.hidden = false;
         const name = this.escapeHtml(this.auth.user.name || '');
@@ -3102,8 +3264,12 @@ const app = {
     async renderIndoorEventMap() {
         const el = document.getElementById('indoor-map-container');
         if (!el) return;
+        if (!this.canViewOps()) {
+            el.innerHTML = `<p class="text-muted">${this.escapeHtml(i18n.t('ops_no_access'))}</p>`;
+            return;
+        }
         el.innerHTML = `<div class="loading">${i18n.t('loading')}</div>`;
-        const cfg = await API.getIndoorMap();
+        const cfg = await API.getIndoorMap(true);
         this.data.indoorMap = cfg;
         this.syncStaleFlags();
         if (!cfg || !cfg.image_url) {
@@ -3826,7 +3992,11 @@ const app = {
             return;
         }
         if (!this.canViewOps()) {
-            alert(i18n.t('ops_no_access'));
+            if (this.isVolunteerApprovalPending()) {
+                alert(i18n.t('volunteer_approval_pending_banner'));
+            } else {
+                alert(i18n.t('ops_no_access'));
+            }
             return;
         }
         if (this._opsAuthFailed) {

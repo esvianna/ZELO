@@ -331,12 +331,21 @@ const API = {
         }
     },
 
-    async getIndoorMap() {
+    async getIndoorMap(authenticated = false) {
         const url = `${this.baseUrl}/indoor-map?_t=${Date.now()}`;
         const snapKey = this.indoorMapSnapshotKey;
+        const fetchOpts = authenticated
+            ? { credentials: 'include', headers: this.getAuthHeaders() }
+            : { credentials: 'include' };
 
         try {
-            const r = await fetch(url);
+            const r = await fetch(url, fetchOpts);
+            if (r.status === 401 || r.status === 403) {
+                this.cache.indoorMap = null;
+                localStorage.removeItem(snapKey);
+                this.lastFetchFromCache.indoorMap = false;
+                return {};
+            }
             if (!r.ok) throw new Error('Network response was not ok');
             const data = await r.json();
             if (data && data.image_url) {
@@ -699,5 +708,63 @@ const API = {
             err.code = 'news_offline_unavailable';
             throw err;
         }
+    },
+
+    clearOpsRelatedSnapshots(userId = null) {
+        localStorage.removeItem('zelo_volunteer_ops');
+        localStorage.removeItem('zelo_volunteer_ops_mine');
+        localStorage.removeItem(this.indoorMapSnapshotKey);
+        if (userId != null) {
+            localStorage.removeItem(this.newsSnapshotKey(userId));
+            localStorage.removeItem(this.newsCarouselSnapshotKey(userId));
+            this.clearNewsItemSnapshots(userId);
+        }
+        this.cache.volunteerOps = null;
+        this.cache.indoorMap = null;
+        this.cache.news = null;
+        this.lastFetchFromCache.indoorMap = false;
+        this.lastFetchFromCache.news = false;
+        this.lastFetchFromCache.newsCarousel = false;
+    },
+
+    async getVolunteerApprovals() {
+        const url = `${this.baseUrl}/ops/volunteer-approvals?_t=${Date.now()}`;
+        const response = await fetch(url, {
+            headers: { ...this.getAuthHeaders() },
+            credentials: 'include'
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(data.message || data.code || 'Falha ao carregar cadastros pendentes');
+        }
+        return data;
+    },
+
+    async approveVolunteerRegistration(userId) {
+        const url = `${this.baseUrl}/ops/volunteer-approvals/${encodeURIComponent(userId)}/approve`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { ...this.getAuthHeaders() },
+            credentials: 'include'
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(data.message || data.code || 'Falha ao aprovar cadastro');
+        }
+        return data;
+    },
+
+    async rejectVolunteerRegistration(userId) {
+        const url = `${this.baseUrl}/ops/volunteer-approvals/${encodeURIComponent(userId)}/reject`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { ...this.getAuthHeaders() },
+            credentials: 'include'
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(data.message || data.code || 'Falha ao reprovar cadastro');
+        }
+        return data;
     }
 };

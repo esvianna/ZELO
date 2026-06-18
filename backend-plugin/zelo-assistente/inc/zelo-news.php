@@ -247,7 +247,7 @@ function zelo_register_news_routes() {
 		array(
 			'methods'             => 'GET',
 			'callback'            => 'zelo_get_news_list',
-			'permission_callback' => 'zelo_rest_is_logged_in',
+			'permission_callback' => 'zelo_rest_can_view_ops',
 			'args'                => array(
 				'page'               => array(
 					'type'              => 'integer',
@@ -277,7 +277,7 @@ function zelo_register_news_routes() {
 		array(
 			'methods'             => 'GET',
 			'callback'            => 'zelo_get_news_item',
-			'permission_callback' => 'zelo_rest_is_logged_in',
+			'permission_callback' => 'zelo_rest_can_view_ops',
 			'args'                => array(
 				'id' => array(
 					'type'              => 'integer',

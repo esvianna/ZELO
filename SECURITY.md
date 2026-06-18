@@ -42,7 +42,10 @@ Matriz completa (roles, endpoints, IDOR): **[docs/OPS-PERMISSIONS.md](docs/OPS-P
 | Endpoint | Regra esperada |
 |----------|----------------|
 | `/auth/login` | Público; falha genérica; rate limit 30/15 min/IP + 10/15 min/username (429) |
-| `/auth/register` | Público com rate limit 8/h/IP; filtro `zelo_registration_enabled` |
+| `/auth/register` | Público com rate limit 8/h/IP; filtro `zelo_registration_enabled`; cria **`subscriber`** (não `zelo_voluntario`) |
+| `/ops/volunteer-approvals` | **`manage_options`** — fila aprovação pós-e-mail (#41) |
+| `/news`, `/news/{id}` | **`zelo_view_ops`** (#41) |
+| `/indoor-map` | **`zelo_view_ops`** (#41; antes público) |
 | `/ops/voluntarios` | **Autenticado + `zelo_view_ops`** — **não** activar `zelo_ops_voluntarios_public_read` |
 | `/ops/checkin`, `/checkout` | `zelo_checkin_ops` + titular ou supervisão na linha (governança) |
 | `/ops/reallocate` | `zelo_reallocate_volunteer` + supervisão na linha (2.11.8+) |

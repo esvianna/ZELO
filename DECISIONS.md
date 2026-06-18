@@ -336,11 +336,25 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 ---
 
+---
+
+## ADR-036 — Aprovação de voluntário pós-e-mail (#41, 2026-06-18)
+
+**Contexto:** Registo PWA atribuía `zelo_voluntario` imediatamente; verificação de e-mail não garantia autorização como voluntário do evento (lacuna ADR-013).
+
+**Decisão:** Fluxo em três passos — registo → `subscriber` → verificar e-mail → fila `pending` → admin (`manage_options`) aprova (`zelo_voluntario`) ou reprova (`subscriber`). Fila e acções **só na PWA admin**. `/news` e `/indoor-map` exigem `zelo_view_ops`. Legados migrados para `approved` sem alterar roles.
+
+**Consequências:** Visitantes e subscribers não acedem a ops, novidades internas nem mapa indoor; administradores notificados por e-mail + push.
+
+**Alternativas consideradas:** Fila no admin WP Onboarding (rejeitada — D15); escala pública via filtro (rejeitada — R1).
+
+---
+
 ## ADR-003 — APIs públicas de conteúdo (visitante)
 
 **Contexto:** PWA offline e acesso sem login para visitantes.
 
-**Decisão:** `permission_callback => __return_true` em GET `/locais`, `/evento`, `/categorias`, `/indoor-map`.
+**Decisão:** `permission_callback => __return_true` em GET `/locais`, `/evento`, `/categorias`. **`GET /indoor-map` passou a exigir `zelo_view_ops`** (ADR-036, #41).
 
 **Consequências:** Dados são públicos por design; não colocar segredos nesses payloads.
 

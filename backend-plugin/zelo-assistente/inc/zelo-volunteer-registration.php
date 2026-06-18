@@ -93,7 +93,7 @@ function zelo_rest_auth_register( $request ) {
 	);
 
 	$user = new WP_User( $user_id );
-	$user->set_role( 'zelo_voluntario' );
+	$user->set_role( 'subscriber' );
 
 	update_user_meta( $user_id, 'zelo_email_verified', '0' );
 	$token = wp_generate_password( 48, false, false );
@@ -175,6 +175,10 @@ function zelo_mark_user_email_verified( $user_id, $admin_user_id = 0 ) {
 		delete_user_meta( $user_id, 'zelo_email_verified_by' );
 		delete_user_meta( $user_id, 'zelo_email_verified_at' );
 		update_user_meta( $user_id, 'zelo_email_verified_method', 'link' );
+	}
+
+	if ( function_exists( 'zelo_volunteer_approval_after_email_verified' ) ) {
+		zelo_volunteer_approval_after_email_verified( $user_id );
 	}
 
 	return true;

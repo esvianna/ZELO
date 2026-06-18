@@ -50,8 +50,9 @@ Orientação de testes **manual** (prioritário hoje) e caminho para automação
 |---|-------|----------|
 | 1 | Login credenciais inválidas | Mensagem de erro, sem vazar se usuário existe |
 | 2 | Login válido (e-mail verificado) | Redireciona home; nonce salvo |
-| 3 | Cadastro novo voluntário | E-mail de verificação; login bloqueado até verificar |
-| 4 | Link verificação | View `email-verified`; depois login OK |
+| 3 | Cadastro novo voluntário | E-mail de verificação; role `subscriber`; login bloqueado até verificar |
+| 4 | Link verificação | View `email-verified`; login OK como visitante; banner «aguardando aprovação» |
+| 4b | Admin aprova na PWA (#41) | Perfil → Gerir cadastros → Aprovar → logout/login → acesso ops |
 | 5 | Logout / limpar sessão | Perfil pede login novamente |
 
 ---
@@ -87,10 +88,10 @@ Orientação de testes **manual** (prioritário hoje) e caminho para automação
 | 2f | Escala aberta → **F5** (build 107+) | view_ops | Permanece em **Escala**; hash `#escala`; nav Operação ativo |
 | 2w | Nome voluntário/responsável com telefone cadastrado (105+) | view_ops | Nome é link `wa.me`; sem telefone → texto sem link; offline: cache ops; abrir WhatsApp exige rede |
 | 2x | **Mapa evento** — admin: upload JPG + 2 balcões + 1 destino com direções (2.12+) | manage_options | Detalhes → direções Balcão 1/2; **Salvar abas** permanece na aba Mapa evento; `GET /indoor-map` tem `routes` com texto |
-| 2y | **Mapa evento** PWA: balcão + destino | view_ops ou visitante | Diagrama: Balcão 1 azul / Balcão 2 teal + legenda (115+); combobox destinos; copiar instruções |
+| 2y | **Mapa evento** PWA: balcão + destino | **view_ops** (#41) | Diagrama: Balcão 1 azul / Balcão 2 teal + legenda (115+); combobox destinos; copiar instruções; **403** sem `view_ops` |
 | 2z | **Mapa evento** PWA mobile (110+) | iPhone / ≤768px | Abre em **Orientar**; aba Diagrama: **header + bottom nav visíveis** (124+); pinch; botões **Mapa completo** / **Ir ao destino** |
-| 2aa | **Novidades / blog** (#26, 2.13.0 / PWA 116+) | Logado | Admin: post com «Publicar na PWA» → `GET /news` OK; card/menu → lista + detalhe PT; **offline (123+):** detalhe em cache após visita online; **voluntário:** card «Novidades» na secção Operação (119+); anónimo sem novidades |
-| 2ac | **Carrossel novidades** (#15, 2.13.3 / PWA 126+) | Logado | Admin: post com «Publicar na PWA» + «Destaque no carrossel da home» + **imagem destacada** → home com swipe horizontal; toque abre detalhe; «Ver todas as novidades» → lista; **offline:** snapshot `zelo_news_carousel_v1_*`; sem posts carrossel → card fallback; anónimo sem carrossel |
+| 2aa | **Novidades / blog** (#26, 2.13.0 / PWA 116+) | **view_ops** (#41) | Admin: post com «Publicar na PWA» → `GET /news` OK; card/menu → lista + detalhe PT; subscriber **403** |
+| 2ac | **Carrossel novidades** (#15, 2.13.3 / PWA 126+) | **view_ops** (#41) | Admin: post carrossel → home com swipe; subscriber/anónimo sem carrossel |
 | 2ad | **Emergência — hierarquia visual** (#17, PWA 127+) | Visitante | Home: card Emergência full-width rosa vs Hospitais/Farmácias; view emergência com hero + tel. destaque admin; lista/pesquisa destaca categoria `emergencia`; S.O.S. bottom nav OK; regressão mapa/nav |
 | 2ae | **Emergência — contatos** (#17, 2.13.4 / PWA 128+) | Visitante | Admin: 3 slots 190/192/193 com guia PT/EN/ES; PWA: **Ligar agora** (`tel:`); home 3 colunas simétricas; tel. interno só se checkbox admin; idioma altera textos do backend |
 | 2g | Visitante em **Mapa** → F5 (107+) | — | Permanece em Mapa; hash `#mapa` |
@@ -280,7 +281,8 @@ Até lá, **checklist manual acima é a fonte de verdade**.
 | 4 | Aviso warning/critical na home | Faixa compacta + link para avisos |
 | 5 | Aviso info | Só no hub (não card grande na home) |
 | 6 | Voluntário logado | Secção «Para você» com check-in pendente em qualquer dia da escala |
-| 7n1 | **Ícones PWA** (#40, build **145+**) | Chrome desktop | **Aba:** favicon coração; **Instalar/atalho desktop:** wordmark «zelo» (`logo-zelo.png`); DevTools → Manifest sem warnings; desinstalar `chrome://apps` + limpar dados do site → reinstalar |
+| 7n1 | **Ícones PWA** (#40, build **145+**) | Chrome desktop | **Aba:** favicon coração; **Apps instalados / instalar:** wordmark «zelo»; DevTools → Manifest sem warnings; reinstalar após deploy se necessário |
+| 7n2 | **Atalho desktop Windows** (#40) | Chrome desktop | Se `.lnk` mostrar «Z» cinza: Propriedades → Alterar ícone → `%LOCALAPPDATA%\Google\Chrome\User Data\Default\Web Applications\Manifest Resources\` (`.ico`/`.png` da app) |
 
 ---
 
@@ -340,6 +342,23 @@ Pré-requisitos: HTTPS; Chrome/Android ou Safari 16.4+ (iOS com limitações). A
 | 15.7 | Perfil → desactivar notificações | `DELETE /ops/push/subscribe` **200**; sem push novo |
 | 15.7b | Regressão unsubscribe | Endpoint gravado é removido (hash coerente; plugin 2.14.2+) |
 | 15.8 | Regressão hub sino + e-mail cron | Inalterados |
+
+---
+
+## 16. Aprovação de voluntários (#41, plugin 2.16.0+, PWA 146+)
+
+| # | Passo | Esperado |
+|---|-------|----------|
+| 16.1 | Registo PWA → confirmar e-mail | Role `subscriber`; login OK; **403** `/ops/voluntarios`, `/news`, `/indoor-map` |
+| 16.2 | Home subscriber pendente | Banner «aguardando aprovação»; secção Operação oculta |
+| 16.3 | Admin (`manage_options`) → Perfil → Gerir cadastros | Lista pendentes; badge com contagem |
+| 16.4 | Aprovar candidato | Role `zelo_voluntario`; após re-login ops OK |
+| 16.5 | Reprovar candidato pendente | Mantém `subscriber`; ops 403; banner reprovado |
+| 16.6 | Após aprovado | **Sem** botão reprovar na fila |
+| 16.7 | Admin WP cria user `zelo_voluntario` | Bypass fila; ops imediato |
+| 16.8 | Legado existente pós-deploy | Ops intactos (migração `approved`) |
+| 16.9 | Entrada na fila | E-mail admin + push (se subscrito) |
+| 16.10 | F5 pós-reprovar | Cache ops/news/indoor limpo |
 
 ---
 

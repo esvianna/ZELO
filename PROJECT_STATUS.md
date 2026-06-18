@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-18** (#40 ícones PWA — build **144**, favicon coração + cache-bust).
+> Última atualização: **2026-06-18** (#41 **In review** — aprovação voluntários plugin **2.16.0** / PWA **146**).
 
 ---
 
@@ -12,17 +12,16 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Referência no repo | Versão |
 |--------------------|--------|
-| Plugin WordPress (`zelo-assistente.php`) | **2.15.2** |
-| PWA (`zelo-build.js` / `sw.js`) | **build 145** |
+| Plugin WordPress (`zelo-assistente.php`) | **2.16.0** |
+| PWA (`zelo-build.js` / `sw.js`) | **build 146** |
 
-**Produção:** deploy **2.15.2** (abas JS + save por aba persiste dados).
-
-**Backlog oficial:** [GitHub Project — Projeto ZELO](https://github.com/users/esvianna/projects/3) — issues em [`esvianna/ZELO`](https://github.com/esvianna/ZELO) (ADR-020, `docs/GITHUB-WORKFLOW.md`). Este arquivo **complementa** o quadro; status canônico das tarefas está no Project.
+**Produção:** plugin **2.15.2**; PWA **build 145** — deploy **2.16.0 / 146** pendente (#41).
 
 ### Entregas recentes (Done no Project / issues fechadas)
 
 | Issue | Entrega |
 |-------|---------|
+| [#40](https://github.com/esvianna/ZELO/issues/40) | Ícones PWA — favicon coração + manifest wordmark; atalho desktop (PWA 145) — **Done** Project 18/06 |
 | [#39](https://github.com/esvianna/ZELO/issues/39) | Admin save por aba + fix abas (plugin 2.15.0–2.15.2) — **Done** Project 18/06 |
 | [#38](https://github.com/esvianna/ZELO/issues/38) | Admin save ops — fixes 2.14.4–2.14.8 — **Done** Project 18/06 |
 | [#37](https://github.com/esvianna/ZELO/issues/37) | Limpar duplicatas escala admin (plugin 2.14.1–2.14.3) — **Done** Project 18/06 |
@@ -37,6 +36,8 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | [#26](https://github.com/esvianna/ZELO/issues/26) | Novidades/blog WP — card Operação, offline detalhe (2.13.x, PWA 116–125) |
 | [#27](https://github.com/esvianna/ZELO/issues/27) | Persistir última view após F5 (PWA 107) |
 | [#1](https://github.com/esvianna/ZELO/issues/1)–[#22](https://github.com/esvianna/ZELO/issues/22) | Pacote escala, export, filtros, e-mails, rate limit, etc. (ver histórico) |
+
+**Backlog oficial:** [GitHub Project — Projeto ZELO](https://github.com/users/esvianna/projects/3) — issues em [`esvianna/ZELO`](https://github.com/esvianna/ZELO) (ADR-020, `docs/GITHUB-WORKFLOW.md`). Este arquivo **complementa** o quadro; status canônico das tarefas está no Project.
 
 ### Descartado (decisão de produto)
 
@@ -68,7 +69,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 - [x] Export PDF/CSV, escala merge, reconciliação compromissos, permissões ops (2.11.x+)
 - [x] Novidades WP, mapa indoor, info evento toggles, rate limit login (2.12.x–2.13.x)
 
-### Frontend (PWA build 144)
+### Frontend (PWA build 145)
 
 - [x] Ícones PWA: manifest/atalho = wordmark `logo-zelo.png`; favicon aba = coração (#40, 145)
 - [x] Web Push subscribe + Perfil + consentimento (#36)
@@ -83,7 +84,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Issue | Entrega | Project | Smoke |
 |-------|---------|---------|-------|
-| [#40](https://github.com/esvianna/ZELO/issues/40) | Ícones PWA — favicon coração + atalho logo Zelo (PWA 145) | **In review** | §7 **7n1** |
+| [#41](https://github.com/esvianna/ZELO/issues/41) | Aprovação cadastro voluntários (2.16.0 / PWA 146) | **In review** | §16 |
 | [#36](https://github.com/esvianna/ZELO/issues/36) | Web Push VAPID (PWA 142 + plugin 2.14.x) | **In review** | §15 |
 
 **Ops / conteúdo (sem issue aberta):** post Novidades slug `imprensa-autoridades`; config Curitiba/2026 (desactivar transporte/Wi‑Fi/credenciamento; activar imprensa).
@@ -92,17 +93,18 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## Próximos passos lógicos
 
-1. **Deploy PWA build 144** — ícones favicon + cache-bust (#40, §7 **7n1**).
+1. Smoke `TESTING.md` §16 (#41 aprovação voluntários) + deploy plugin 2.16.0 / PWA 146.
 2. Smoke `TESTING.md` §15 (#36 Web Push).
-3. Criar post `imprensa-autoridades` quando conteúdo estiver pronto.
-4. Config Curitiba/2026: desactivar transporte/Wi‑Fi/credenciamento; activar imprensa.
+2. Criar post `imprensa-autoridades` quando conteúdo estiver pronto.
+3. Config Curitiba/2026: desactivar transporte/Wi‑Fi/credenciamento; activar imprensa.
 
 ---
 
 ## Última sessão (2026-06-18)
 
-- **#40 / PWA 143:** ícones manifest 192/512 reais + maskable; favicon/apple-touch no head; precache SW.
-- **Validação:** smoke OK — **Done** no Project [#37](https://github.com/esvianna/ZELO/issues/37), [#38](https://github.com/esvianna/ZELO/issues/38), [#39](https://github.com/esvianna/ZELO/issues/39).
+- **#41 / plugin 2.16.0 / PWA 146:** gate aprovação voluntário — registo `subscriber`, fila PWA admin, `/news` + `/indoor-map` com `zelo_view_ops`, notificação e-mail + push, migração legados. Card **In review** — smoke §16.
+- **#40 / PWA 145:** **Done** — smoke §7 **7n1** OK; favicon coração na aba; manifest wordmark; atalho desktop Windows via «Alterar ícone» quando `.lnk` mostra «Z» (limitação Chrome/shell).
+- **Validação anterior:** **Done** [#37](https://github.com/esvianna/ZELO/issues/37), [#38](https://github.com/esvianna/ZELO/issues/38), [#39](https://github.com/esvianna/ZELO/issues/39).
 
 ## Sessão anterior (2026-06-18)
 

@@ -8,6 +8,13 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Segurança — aprovação de voluntários (#41)
+
+| Versão | Entrega |
+|--------|---------|
+| Plugin **2.16.0** | Registo PWA → `subscriber`; fila aprovação pós-e-mail; REST approve/reject (`manage_options`); notificação e-mail + push; migração legados |
+| PWA **146** | Fila «Cadastros pendentes» (admin); gates `/news` e `/indoor-map`; banner pendente; cache ops limpo para subscriber |
+
 ### Corrigido — ícones PWA instalação desktop (#40)
 
 | Versão | Entrega |
@@ -15,6 +22,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | PWA **143** | Ícones manifest 192×192 e 512×512 reais (a partir de `logo-zelo.png`); maskable 512; `purpose` no manifest; favicon + `apple-touch-icon` no `<head>`; ícones no precache SW |
 | PWA **144** | Ícones regenerados de `favicon-96x96.png` (coração); 256×256 Windows; paths absolutos + `?v=` no manifest; `id`/`scope`/`start_url` `/zelo/`; precache com cache-bust |
 | PWA **145** | Ícones manifest/atalho desktop de **`logo-zelo.png`** (wordmark); favicon aba = coração (`favicon-*` no head); manifest sem `?v=` nos ícones (compat. Windows); bump cache v145 |
+| Validação | **Done** no Project (#40) — smoke §7 **7n1**; atalho desktop Windows: fallback manual «Alterar ícone» se `.lnk` mostrar «Z» |
 
 ### Corrigido — admin Operação Voluntários save (#38)
 

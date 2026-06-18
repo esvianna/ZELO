@@ -31,6 +31,10 @@ function zelo_rest_auth_user_payload( $user ) {
 		'roles'         => $user->roles,
 		'language_ids'  => $lang_ids,
 		'languages'     => $lang_names,
+		'volunteer_approval_status' => function_exists( 'zelo_get_volunteer_approval_status' )
+			? zelo_get_volunteer_approval_status( $user->ID )
+			: ( user_can( $user, 'zelo_view_ops' ) ? 'approved' : '' ),
+		'site_admin'    => user_can( $user, 'manage_options' ),
 		'caps'          => array(
 			'view_ops'       => user_can( $user, 'zelo_view_ops' ),
 			'checkin_ops'    => user_can( $user, 'zelo_checkin_ops' ),

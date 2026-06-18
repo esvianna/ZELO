@@ -2,6 +2,14 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.16.0] - 2026-06-18
+
+### Adicionado
+- **Aprovação de voluntários (#41):** registo PWA cria `subscriber`; após verificar e-mail entra na fila `pending`; REST `GET/POST /ops/volunteer-approvals` (só `manage_options`); notificação e-mail + push aos administradores; meta auditoria; migração legados → `approved`.
+
+### Alterado
+- **`GET /news`** e **`GET /indoor-map`:** exigem `zelo_view_ops` (antes login/público).
+
 ## [2.15.2] - 2026-06-18
 
 ### Corrigido

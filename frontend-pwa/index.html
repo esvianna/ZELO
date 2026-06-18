@@ -21,7 +21,7 @@
     <!-- CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <link rel="stylesheet" href="assets/css/style-v5.css?v=145">
+    <link rel="stylesheet" href="assets/css/style-v5.css?v=146">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -150,7 +150,8 @@
                 </button>
             </div>
 
-            <div class="home-section-title">OPERAÇÃO DE VOLUNTÁRIOS</div>
+            <div id="home-ops-extras-block" hidden>
+            <div class="home-section-title" data-i18n="nav_volunteer_schedule">OPERAÇÃO DE VOLUNTÁRIOS</div>
             <div class="quick-actions">
                 <button class="action-card" onclick="app.openVolunteerOps()">
                     <span class="action-icon" style="background:#e0f2fe; color:#0369a1;">
@@ -183,9 +184,8 @@
                     <span class="action-card-subhint" data-i18n="ops_press_instructions_hint">Como agir</span>
                 </button>
             </div>
+            </div>
             </details>
-
-            <!-- Map Preview Card -->
             <div class="home-section-title" data-i18n="location_title">LOCALIZAÇÃO</div>
             <div class="home-map-card" onclick="app.router.navigate('mapa')">
                 <div class="home-map-preview" id="home-map-preview">
@@ -427,6 +427,18 @@
             </div>
         </section>
 
+        </section>
+
+        <section id="view-cadastros-pendentes" class="view">
+            <div class="view-header">
+                <button class="back-btn" onclick="app.router.back()" data-i18n="back">Voltar</button>
+                <h2 data-i18n="admin_volunteer_approvals_title">Cadastros pendentes</h2>
+            </div>
+            <div id="volunteer-approvals-container" class="volunteer-approvals-container">
+                <div class="loading" data-i18n="loading">Carregando...</div>
+            </div>
+        </section>
+
         <!-- Profile View (Simple for now) -->
         <section id="view-profile" class="view">
             <div class="view-header">
@@ -500,6 +512,15 @@
                     <div id="profile-form-msg" class="profile-form-msg" style="display:none;" role="status"></div>
                     <button type="submit" class="btn-block" id="profile-save-btn" data-i18n="profile_save_btn">Salvar perfil</button>
                 </form>
+
+                <div id="profile-admin-section" class="profile-admin" style="display:none;">
+                    <h3 class="profile-section-title" data-i18n="admin_volunteer_approvals_title">Cadastros pendentes</h3>
+                    <p class="description profile-section-hint" data-i18n="admin_volunteer_approvals_hint">Aprovar ou reprovar novos voluntários após confirmação de e-mail.</p>
+                    <button type="button" class="btn-block outline" onclick="app.router.navigate('cadastros-pendentes')">
+                        <span data-i18n="admin_volunteer_approvals_manage">Gerir cadastros</span>
+                        <span id="profile-approvals-badge" class="profile-approvals-badge" hidden></span>
+                    </button>
+                </div>
 
                 <div class="profile-actions">
                     <button class="btn-block outline warning" onclick="app.auth.forceUpdate()"
@@ -579,11 +600,11 @@
 
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script src="assets/js/zelo-build.js?v=145"></script>
-    <script src="assets/js/i18n.js?v=145"></script>
-    <script src="assets/js/api-v5.js?v=145"></script>
-    <script src="assets/js/map-manager.js?v=145"></script>
-    <script src="assets/js/app-v5.js?v=145"></script>
+    <script src="assets/js/zelo-build.js?v=146"></script>
+    <script src="assets/js/i18n.js?v=146"></script>
+    <script src="assets/js/api-v5.js?v=146"></script>
+    <script src="assets/js/map-manager.js?v=146"></script>
+    <script src="assets/js/app-v5.js?v=146"></script>
 
     <script>
         // Register Service Worker

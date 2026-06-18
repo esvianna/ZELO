@@ -35,7 +35,7 @@ function zelo_register_api_routes() {
 		array(
 			'methods'             => 'GET',
 			'callback'            => 'zelo_get_indoor_map_public',
-			'permission_callback' => '__return_true',
+			'permission_callback' => 'zelo_rest_can_view_ops',
 		)
 	);
 
@@ -157,6 +157,9 @@ function zelo_get_ops_voluntarios( $request ) {
 }
 
 function zelo_rest_can_view_ops() {
+	if ( function_exists( 'zelo_rest_resolve_user_from_cookie' ) ) {
+		zelo_rest_resolve_user_from_cookie();
+	}
 	return is_user_logged_in() && zelo_can_view_ops();
 }
 
