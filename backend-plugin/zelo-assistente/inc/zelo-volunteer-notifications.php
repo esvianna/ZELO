@@ -271,6 +271,9 @@ function zelo_volunteer_notify_run() {
 				$body    = __( 'Sua janela de check-in está aberta. Confirme sua chegada no aplicativo.', 'zelo-assistente' );
 				if ( wp_mail( $user->user_email, $subject, $body ) ) {
 					zelo_volunteer_notify_mark_sent( $uid, $row['id'], 'checkin_open' );
+					if ( function_exists( 'zelo_push_mirror_email' ) ) {
+						zelo_push_mirror_email( $uid, __( 'Check-in disponível', 'zelo-assistente' ), __( 'Sua janela de check-in está aberta. Confirme sua chegada no aplicativo.', 'zelo-assistente' ), './#escala' );
+					}
 				}
 			}
 		}
@@ -284,6 +287,9 @@ function zelo_volunteer_notify_run() {
 				$body    = __( 'Sua janela de check-out está aberta. Confirme sua saída no aplicativo.', 'zelo-assistente' );
 				if ( wp_mail( $user->user_email, $subject, $body ) ) {
 					zelo_volunteer_notify_mark_sent( $uid, $row['id'], 'checkout_open' );
+					if ( function_exists( 'zelo_push_mirror_email' ) ) {
+						zelo_push_mirror_email( $uid, __( 'Check-out disponível', 'zelo-assistente' ), __( 'Sua janela de check-out está aberta. Confirme sua saída no aplicativo.', 'zelo-assistente' ), './#escala' );
+					}
 				}
 			}
 		}

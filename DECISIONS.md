@@ -88,11 +88,23 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 ## ADR-026 — Web Push (#8) descartado; notificações in-app na PWA (2026-06-04)
 
+**Status:** **Supersedido** por ADR-035 (2026-06-18).
+
 **Contexto:** Issue [#8](https://github.com/esvianna/ZELO/issues/8) previa VAPID + `POST /ops/push/subscribe` real (hoje stub **501**). O pacote de confirmação voluntários (C4 no ROADMAP) incluía push nativo do browser.
 
-**Decisão:** **Não implementar** Web Push como prioridade de produto. Voluntários terão acesso à PWA e verão avisos **in-app** (hub/sino + Novidades #26, badge stale, offline parcial ADR-025). Manter stub 501 e handlers `push`/`notificationclick` no SW sem evolução até nova decisão explícita.
+**Decisão (histórica):** **Não implementar** Web Push como prioridade de produto. Voluntários terão acesso à PWA e verão avisos **in-app** (hub/sino + Novidades #26, badge stale, offline parcial ADR-025). Manter stub 501 e handlers `push`/`notificationclick` no SW sem evolução até nova decisão explícita.
 
 **Consequências:** Issue #8 fechada como *won't fix* / descartada. Motor unificado (#9) e inbox servidor (#16) permanecem no backlog sem dependência de push. E-mail cron (`schedule_changed`) continua como canal assíncrono fora da PWA.
+
+---
+
+## ADR-035 — Web Push VAPID retomado (#36, supersede ADR-026) (2026-06-18)
+
+**Contexto:** Retomada da [#36](https://github.com/esvianna/ZELO/issues/36) após decisão de produto. ADR-026 deixou stub 501; voluntários passam a poder receber push nativo além do hub in-app (#26) e e-mail cron.
+
+**Decisão:** Implementar Web Push com **VAPID** (`minishlink/web-push`), subscriptions em tabela `wp_zelo_push_subscriptions`, admin em Operação Voluntários → Config. Eventos MVP: Novidades (`_zelo_as_notification`), escala alterada (imediato), check-in/check-out (cron). Unsubscribe **só no Perfil**; re-pedir consentimento no login via `zelo_push_consent_v2`. iOS/Safari: limitações aceites; fallback in-app mantido.
+
+**Consequências:** Plugin **2.14.0** + PWA **141**. Deploy exige `vendor/` do Composer no servidor. Chave privada VAPID em `wp_options` — não commitar; gerar por ambiente.
 
 ---
 

@@ -154,6 +154,12 @@ function zelo_ops_nav_tab_link( $id, $label, $active_tab ) {
 }
 
 function zelo_ops_save_from_post_tabs() {
+	if ( function_exists( 'zelo_push_admin_pre_save' ) ) {
+		$push_gen = zelo_push_admin_pre_save();
+		if ( $push_gen !== '' ) {
+			return $push_gen;
+		}
+	}
 	if ( ! isset( $_POST['zelo_ops_tabs_save'] ) || ! check_admin_referer( 'zelo_ops_tabs_nonce' ) ) {
 		return '';
 	}
@@ -299,6 +305,10 @@ function zelo_ops_save_from_post_tabs() {
 	}
 	if ( function_exists( 'zelo_indoor_map_parse_from_post' ) && ( isset( $_POST['map_place_id'] ) || isset( $_POST['map_image_url'] ) ) ) {
 		$data['indoor_map'] = zelo_indoor_map_parse_from_post();
+	}
+
+	if ( function_exists( 'zelo_push_save_admin_settings' ) ) {
+		zelo_push_save_admin_settings( $_POST );
 	}
 
 	update_option( 'zelo_volunteer_ops_data', $data );
@@ -535,6 +545,11 @@ function zelo_render_volunteer_ops_admin_tabs() {
 						<p>Sábado: <input name="set_date_sabado" value="<?php echo esc_attr( isset( $dates['sabado'] ) ? $dates['sabado'] : '' ); ?>" /></p>
 						<p>Domingo: <input name="set_date_domingo" value="<?php echo esc_attr( isset( $dates['domingo'] ) ? $dates['domingo'] : '' ); ?>" /></p>
 					</td></tr>
+					<?php
+					if ( function_exists( 'zelo_push_render_admin_fields' ) ) {
+						zelo_push_render_admin_fields();
+					}
+					?>
 				</table>
 			</div>
 

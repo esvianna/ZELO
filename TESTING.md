@@ -316,6 +316,23 @@ Referência: [docs/OPS-PERMISSIONS.md](docs/OPS-PERMISSIONS.md).
 
 ---
 
+## 15. Web Push VAPID (plugin 2.14.0+, PWA 141+, #36)
+
+Pré-requisitos: HTTPS; Chrome/Android ou Safari 16.4+ (iOS com limitações). Admin: Operação Voluntários → Config → gerar VAPID + activar push.
+
+| # | Passo | Esperado |
+|---|-------|----------|
+| 15.1 | Admin: gerar par VAPID, activar push, salvar | Chave pública visível; sem erro |
+| 15.2 | Login voluntário → prompt consentimento (1×) → aceitar | `POST /ops/push/subscribe` **200** |
+| 15.3 | Perfil → estado «Activas»; botão desactivar | `GET /ops/push/status` `subscribed: true` |
+| 15.4 | Publicar post Novidades com «notificação» | Push recebido (app fechada) |
+| 15.5 | Alterar horário na escala (voluntário `accepted`) | Push «escala mudou» + hub in-app |
+| 15.6 | Janela check-in aberta (cron ou simular) | Push check-in (se subscription activa) |
+| 15.7 | Perfil → desactivar notificações | `DELETE /ops/push/subscribe` **200**; sem push novo |
+| 15.8 | Regressão hub sino + e-mail cron | Inalterados |
+
+---
+
 ## Registro de execução
 
 Copie e preencha após cada rodada:

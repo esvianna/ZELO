@@ -8,6 +8,13 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Adicionado — Web Push VAPID (#36, retomada #8)
+
+| Versão | Entrega |
+|--------|---------|
+| Plugin **2.14.0** | Tabela `wp_zelo_push_subscriptions`; VAPID no admin (Operação → Config); `minishlink/web-push`; REST subscribe/unsubscribe/status/test; push em Novidades, escala alterada, check-in/out (cron) |
+| PWA **141** | `pushManager.subscribe`; prompt `zelo_push_consent_v2` no login; secção Perfil activar/desactivar; i18n pt/en/es |
+
 ### Adicionado — atalhos para instruções Imprensa e Autoridades (PWA 140, #35)
 
 | Versão | Entrega |

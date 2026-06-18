@@ -495,17 +495,57 @@ const API = {
         return data;
     },
 
-    async subscribePushStub() {
+    async subscribePush(subscription) {
         const url = `${this.baseUrl}/ops/push/subscribe`;
         const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ...this.getAuthHeaders() },
             credentials: 'include',
-            body: JSON.stringify({})
+            body: JSON.stringify(subscription || {})
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'Falha ao activar push');
+        return data;
+    },
+
+    async unsubscribePush(endpoint) {
+        const url = `${this.baseUrl}/ops/push/subscribe`;
+        const response = await fetch(url, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json', ...this.getAuthHeaders() },
+            credentials: 'include',
+            body: JSON.stringify(endpoint ? { endpoint } : {})
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'Falha ao desactivar push');
+        return data;
+    },
+
+    async getPushVapidPublic() {
+        const url = `${this.baseUrl}/push/vapid-public`;
+        const response = await fetch(url, {
+            headers: { ...this.getAuthHeaders() },
+            credentials: 'include'
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.message || 'Push indisponível');
         return data;
+    },
+
+    async getPushStatus() {
+        const url = `${this.baseUrl}/ops/push/status`;
+        const response = await fetch(url, {
+            headers: { ...this.getAuthHeaders() },
+            credentials: 'include'
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'Push indisponível');
+        return data;
+    },
+
+    /** @deprecated use subscribePush */
+    async subscribePushStub() {
+        return this.subscribePush({});
     },
 
     async saveScheduleScope(day, shift, rows) {

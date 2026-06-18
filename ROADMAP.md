@@ -30,7 +30,7 @@ Roadmap orientado ao contexto real do projeto (visitante + voluntários + WordPr
 | C1 | Compromisso antecipado + prazo admin | Implementado (2.7.0) | — |
 | C2 | Janelas check-in/out + validação API | Implementado | — |
 | C3 | Onboarding roster + fila vínculos | Implementado | — |
-| C4 | Web Push completo (VAPID + subscribe) | **Descartado** (ADR-026; avisos in-app #26) | [#8](https://github.com/esvianna/ZELO/issues/8) |
+| C4 | Web Push completo (VAPID + subscribe) | **In review** (#36, ADR-035) | [#36](https://github.com/esvianna/ZELO/issues/36) · [#8](https://github.com/esvianna/ZELO/issues/8) |
 | C5 | Motor notificações unificado + inbox servidor | **Descartado** (ADR-028; hub + e-mail + localStorage) | [#9](https://github.com/esvianna/ZELO/issues/9) |
 
 ---

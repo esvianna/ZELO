@@ -1,7 +1,7 @@
 # Matriz de permissões — REST `/ops/*` e swaps (ZELO)
 
 Documento de referência para auditoria de segurança (ROADMAP A2, [ZELO#13](https://github.com/esvianna/ZELO/issues/13)).  
-**Plugin:** 2.11.8+ · Namespace: `zelo/v1`
+**Plugin:** 2.14.0+ · Namespace: `zelo/v1`
 
 ## Roles e capabilities
 
@@ -38,7 +38,11 @@ Legenda: **P** = público · **L** = login · **V** = `zelo_view_ops` · **C** =
 | POST | `/ops/swap-requests` | L + C | Só titular da linha | Própria | Própria | Própria | Própria |
 | PATCH | `/ops/swap-requests/{id}` | L + (M ou R) | **E** no pedido | **403** | OK | **403** | OK |
 | GET | `/ops/onboarding` | L + A | Admin WP | **403** | **403** | **403** | **403** |
-| POST | `/ops/push/subscribe` | L | Stub 501 | OK (stub) | OK | OK | OK |
+| POST | `/ops/push/subscribe` | L | Persiste subscription | OK | OK | OK | OK |
+| DELETE | `/ops/push/subscribe` | L | Remove subscription | OK | OK | OK | OK |
+| GET | `/ops/push/status` | L | Estado push do utilizador | OK | OK | OK | OK |
+| GET | `/push/vapid-public` | L | Chave pública VAPID | OK | OK | OK | OK |
+| POST | `/ops/push/test` | L + A | Envio de teste | **403** | **403** | **403** | **403** |
 
 Rotas públicas relacionadas (não `/ops/*` mas dados ops): `GET /indoor-map` (mapa indoor a partir de options).
 

@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.14.0] - 2026-06-18
+
+### Adicionado
+- **Web Push (#36):** `inc/zelo-web-push.php` — VAPID configurável; tabela `wp_zelo_push_subscriptions`; `GET /push/vapid-public`, `POST|DELETE /ops/push/subscribe`, `GET /ops/push/status`, `POST /ops/push/test`; push em posts Novidades (`_zelo_as_notification`), escala alterada (`zelo_assignment_schedule_changed`), lembretes check-in/check-out no cron; dependência `minishlink/web-push` (Composer).
+
 ## [2.13.8] - 2026-06-12
 
 ### Adicionado

@@ -17,7 +17,7 @@
     <!-- CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <link rel="stylesheet" href="assets/css/style-v5.css?v=140">
+    <link rel="stylesheet" href="assets/css/style-v5.css?v=141">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -485,6 +485,14 @@
                         <div id="profile-languages" class="language-checkbox-list" role="group" aria-labelledby="profile-languages-title"></div>
                     </div>
 
+                    <div id="profile-push-section" class="profile-push" style="display:none;">
+                        <h3 class="profile-section-title" data-i18n="profile_push_title">Notificações no dispositivo</h3>
+                        <p class="description profile-section-hint" data-i18n="profile_push_hint">Receba lembretes de turno, escala e novidades mesmo com o app fechado. No iPhone, o Safari pode limitar notificações.</p>
+                        <p id="profile-push-status" class="profile-push-status" role="status"></p>
+                        <button type="button" id="profile-push-enable-btn" class="btn-block outline" style="display:none;" data-i18n="profile_push_enable">Activar notificações</button>
+                        <button type="button" id="profile-push-disable-btn" class="btn-block outline warning" style="display:none;" data-i18n="profile_push_disable">Desactivar notificações</button>
+                    </div>
+
                     <div id="profile-form-msg" class="profile-form-msg" style="display:none;" role="status"></div>
                     <button type="submit" class="btn-block" id="profile-save-btn" data-i18n="profile_save_btn">Salvar perfil</button>
                 </form>
@@ -567,11 +575,11 @@
 
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script src="assets/js/zelo-build.js?v=140"></script>
-    <script src="assets/js/i18n.js?v=140"></script>
-    <script src="assets/js/api-v5.js?v=140"></script>
-    <script src="assets/js/map-manager.js?v=140"></script>
-    <script src="assets/js/app-v5.js?v=140"></script>
+    <script src="assets/js/zelo-build.js?v=141"></script>
+    <script src="assets/js/i18n.js?v=141"></script>
+    <script src="assets/js/api-v5.js?v=141"></script>
+    <script src="assets/js/map-manager.js?v=141"></script>
+    <script src="assets/js/app-v5.js?v=141"></script>
 
     <script>
         // Register Service Worker

@@ -526,6 +526,7 @@ const app = {
                     await app.loadNewsCarousel();
 
                     app.router.navigate('home');
+                    app.maybePromptPushConsent();
 
                     // Clear form
                     document.getElementById('login-username').value = '';
@@ -777,6 +778,7 @@ const app = {
         if (newPass) newPass.value = '';
         this.bindProfileAvatarInput();
         this.renderProfileLanguages();
+        this.renderProfilePush();
     },
 
     bindProfileAvatarInput() {
@@ -978,6 +980,10 @@ const app = {
             this.router.navigate('email-verified', {}, { persist: false });
         } else {
             this.resolveInitialNavigation();
+        }
+
+        if (this.auth.user) {
+            setTimeout(() => this.maybePromptPushConsent(), 800);
         }
 
         // Request location
@@ -2608,20 +2614,161 @@ const app = {
     },
 
     async promptPushNotifications() {
-        if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
-        if (localStorage.getItem('zelo_push_prompted') === '1') return;
-        if (Notification.permission === 'granted') {
-            localStorage.setItem('zelo_push_prompted', '1');
+        return this.maybePromptPushConsent();
+    },
+
+    _pushConsentKey: 'zelo_push_consent_v2',
+
+    _urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    },
+
+    async registerPushSubscription() {
+        if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+            throw new Error(i18n.t('ops_push_unsupported'));
+        }
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+            throw new Error(i18n.t('ops_push_denied'));
+        }
+        const { publicKey } = await API.getPushVapidPublic();
+        if (!publicKey) {
+            throw new Error(i18n.t('ops_push_unavailable'));
+        }
+        const reg = await navigator.serviceWorker.ready;
+        let sub = await reg.pushManager.getSubscription();
+        if (!sub) {
+            sub = await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: this._urlBase64ToUint8Array(publicKey)
+            });
+        }
+        await API.subscribePush(sub.toJSON());
+        this._pushStatusCache = null;
+        return true;
+    },
+
+    async unregisterPushSubscription() {
+        if (!('serviceWorker' in navigator)) {
             return;
         }
-        if (Notification.permission === 'denied') return;
+        const reg = await navigator.serviceWorker.ready;
+        const sub = await reg.pushManager.getSubscription();
+        if (sub) {
+            try {
+                await API.unsubscribePush(sub.endpoint);
+            } catch (e) {
+                console.warn('Push unsubscribe API', e);
+            }
+            try {
+                await sub.unsubscribe();
+            } catch (e) {
+                console.warn('Push unsubscribe browser', e);
+            }
+        } else {
+            await API.unsubscribePush('');
+        }
+        this._pushStatusCache = null;
+    },
+
+    async getPushStatusCached(force = false) {
+        if (!this.auth.user) return null;
+        if (this._pushStatusCache && !force) return this._pushStatusCache;
+        try {
+            this._pushStatusCache = await API.getPushStatus();
+        } catch (e) {
+            this._pushStatusCache = { enabled: false, subscribed: false, devices: 0 };
+        }
+        return this._pushStatusCache;
+    },
+
+    async maybePromptPushConsent() {
+        if (!this.auth.user) return;
+        if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+        if (localStorage.getItem(this._pushConsentKey) === '1') return;
+        const status = await this.getPushStatusCached();
+        if (!status || !status.enabled) {
+            localStorage.setItem(this._pushConsentKey, '1');
+            return;
+        }
+        if (status.subscribed && Notification.permission === 'granted') {
+            localStorage.setItem(this._pushConsentKey, '1');
+            return;
+        }
         const ok = confirm(`${i18n.t('ops_push_prompt')}\n\n${i18n.t('ops_push_prompt_body')}`);
-        localStorage.setItem('zelo_push_prompted', '1');
+        localStorage.setItem(this._pushConsentKey, '1');
         if (!ok) return;
         try {
-            await Notification.requestPermission();
+            await this.registerPushSubscription();
         } catch (e) {
-            console.warn('Push permission', e);
+            console.warn('Push subscribe', e);
+        }
+    },
+
+    async renderProfilePush() {
+        const section = document.getElementById('profile-push-section');
+        const statusEl = document.getElementById('profile-push-status');
+        const enableBtn = document.getElementById('profile-push-enable-btn');
+        const disableBtn = document.getElementById('profile-push-disable-btn');
+        if (!section || !this.auth.user) {
+            if (section) section.style.display = 'none';
+            return;
+        }
+        const status = await this.getPushStatusCached(true);
+        if (!status || !status.enabled) {
+            section.style.display = 'none';
+            return;
+        }
+        section.style.display = 'block';
+        const perm = ('Notification' in window) ? Notification.permission : 'denied';
+        let statusText = i18n.t('profile_push_off');
+        if (status.subscribed && perm === 'granted') {
+            statusText = i18n.t('profile_push_on');
+        } else if (perm === 'denied') {
+            statusText = i18n.t('profile_push_blocked');
+        }
+        if (statusEl) statusEl.textContent = statusText;
+        if (enableBtn) {
+            enableBtn.style.display = (!status.subscribed || perm !== 'granted') ? 'block' : 'none';
+            if (!enableBtn._zeloBound) {
+                enableBtn._zeloBound = true;
+                enableBtn.addEventListener('click', () => this.onProfilePushEnable());
+            }
+        }
+        if (disableBtn) {
+            disableBtn.style.display = status.subscribed ? 'block' : 'none';
+            if (!disableBtn._zeloBound) {
+                disableBtn._zeloBound = true;
+                disableBtn.addEventListener('click', () => this.onProfilePushDisable());
+            }
+        }
+    },
+
+    async onProfilePushEnable() {
+        try {
+            await this.registerPushSubscription();
+            this.showProfileFormMessage(i18n.t('profile_push_enabled'), 'success');
+            await this.renderProfilePush();
+        } catch (e) {
+            this.showProfileFormMessage(e.message || i18n.t('ops_push_unavailable'), 'error');
+        }
+    },
+
+    async onProfilePushDisable() {
+        if (!confirm(i18n.t('profile_push_disable_confirm'))) return;
+        try {
+            await this.unregisterPushSubscription();
+            this.showProfileFormMessage(i18n.t('profile_push_disabled'), 'success');
+            await this.renderProfilePush();
+        } catch (e) {
+            this.showProfileFormMessage(e.message || i18n.t('ops_push_unavailable'), 'error');
         }
     },
 

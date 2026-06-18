@@ -158,6 +158,7 @@ function zelo_commitment_mark_schedule_changed( $assignment_id ) {
 
 	$all[ $assignment_id ] = $entry;
 	zelo_save_volunteer_commitments( $all );
+	do_action( 'zelo_assignment_schedule_changed', $assignment_id );
 }
 
 /**
@@ -611,17 +612,6 @@ function zelo_register_commitment_rest_routes() {
 		)
 	);
 
-	register_rest_route(
-		'zelo/v1',
-		'/ops/push/subscribe',
-		array(
-			'methods'             => 'POST',
-			'callback'            => 'zelo_rest_push_subscribe_stub',
-			'permission_callback' => function () {
-				return is_user_logged_in();
-			},
-		)
-	);
 }
 add_action( 'rest_api_init', 'zelo_register_commitment_rest_routes', 11 );
 
@@ -657,19 +647,6 @@ function zelo_rest_ops_onboarding( $request ) {
 		return rest_ensure_response( zelo_build_onboarding_report() );
 	}
 	return rest_ensure_response( array( 'items' => array() ) );
-}
-
-/**
- * Stub Fase 3 push.
- *
- * @param WP_REST_Request $request Request.
- */
-function zelo_rest_push_subscribe_stub( $request ) {
-	return new WP_Error(
-		'zelo_push_not_implemented',
-		__( 'Notificações push serão ativadas numa atualização futura.', 'zelo-assistente' ),
-		array( 'status' => 501 )
-	);
 }
 
 /**

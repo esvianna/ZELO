@@ -10,7 +10,7 @@ Princípios e checklist de segurança adaptados a **WordPress REST + PWA estáti
 2. **Dados públicos vs sensíveis** — locais/evento são públicos; escala, check-ins e swaps são sensíveis.
 3. **Defesa em profundidade** — sanitizar na entrada, escapar na saída (admin e REST quando renderizado em HTML).
 4. **HTTPS em produção** — obrigatório para login e cookies.
-5. **Sem segredos no repositório** — API keys Google, senhas SMTP, etc. ficam em `wp-config` ou options do WP, nunca commitadas.
+5. **Sem segredos no repositório** — API keys Google, senhas SMTP, **chave privada VAPID** (`zelo_push_config` em `wp_options`), etc. ficam em `wp-config` ou options do WP, nunca commitadas.
 
 ---
 
