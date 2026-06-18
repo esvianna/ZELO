@@ -12,6 +12,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 | Versão | Entrega |
 |--------|---------|
+| Plugin **2.15.2** | Fix save por aba: `call_user_func` não passa `&$data` em PHP 8 |
+| Plugin **2.15.1** | Fix JS abas admin (`tab-*` quoted); hash sync no load |
 | Plugin **2.15.0** | Admin ops: salvar por aba (#39); Config/push isolado; sem redirect PRG |
 | Plugin **2.14.8** | Fix nonce duplicado `_wpnonce` no form admin ops («Este link expirou») |
 | Plugin **2.14.7** | Hotfix save: hidden `zelo_ops_tabs_save`; disable botão após submit; flash em `user_meta` |

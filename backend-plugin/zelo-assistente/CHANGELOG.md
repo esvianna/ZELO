@@ -2,6 +2,16 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.15.2] - 2026-06-18
+
+### Corrigido
+- **Admin ops (#39):** `call_user_func()` em PHP 8 não passa `&$data` por referência — save por aba não persistia alterações; invocação directa `$handler( $data )`.
+
+## [2.15.1] - 2026-06-18
+
+### Corrigido
+- **Admin ops (#39):** `SyntaxError` em `zeloOpsPrepareSaveForm` (chaves `tab-*` sem aspas) impedia `zeloOpsTab` — abas só mudavam o hash na URL; sync hash no load + null-check no painel.
+
 ## [2.15.0] - 2026-06-18
 
 ### Alterado

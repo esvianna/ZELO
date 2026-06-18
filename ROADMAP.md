@@ -2,7 +2,7 @@
 
 Roadmap orientado ao contexto real do projeto (visitante + voluntários + WordPress). **Backlog operacional e priorização:** [GitHub Project 3](https://github.com/users/esvianna/projects/3) (ADR-020). Atualize este arquivo quando fases mudarem; issues linkadas são a fonte de tarefas.
 
-**Versão de referência no repo:** plugin **2.15.0**, PWA **build 142**.
+**Versão de referência no repo:** plugin **2.15.2**, PWA **build 142**.
 
 ---
 
@@ -14,7 +14,7 @@ Roadmap orientado ao contexto real do projeto (visitante + voluntários + WordPr
 |---|---------|--------|-------|
 | 1 | Web Push VAPID + subscribe PWA | **In review** | [#36](https://github.com/esvianna/ZELO/issues/36) |
 | 2 | Admin dedupe escala | **In review** | [#37](https://github.com/esvianna/ZELO/issues/37) |
-| 3 | Admin save por aba | **In review** (2.15.0) | [#39](https://github.com/esvianna/ZELO/issues/39) · [#38](https://github.com/esvianna/ZELO/issues/38) |
+| 3 | Admin save por aba | **In review** (2.15.2) | [#39](https://github.com/esvianna/ZELO/issues/39) · [#38](https://github.com/esvianna/ZELO/issues/38) |
 | 4 | Info evento + imprensa PWA | **Concluído** | [#34](https://github.com/esvianna/ZELO/issues/34) · [#35](https://github.com/esvianna/ZELO/issues/35) |
 | 5 | Modal add/edit linha escala | **Concluído** | [#32](https://github.com/esvianna/ZELO/issues/32) |
 

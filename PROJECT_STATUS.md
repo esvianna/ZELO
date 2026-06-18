@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-18** (save por aba **2.15.0** / #39).
+> Última atualização: **2026-06-18** (fix save por aba **2.15.2** / #39).
 
 ---
 
@@ -12,10 +12,10 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Referência no repo | Versão |
 |--------------------|--------|
-| Plugin WordPress (`zelo-assistente.php`) | **2.15.0** |
+| Plugin WordPress (`zelo-assistente.php`) | **2.15.2** |
 | PWA (`zelo-build.js` / `sw.js`) | **build 142** |
 
-**Produção (18/06):** plugin **2.14.8** validado parcialmente (notice amarelo escala); **2.15.0** no repo — save por aba + sem redirect (deploy pendente).
+**Produção:** deploy **2.15.2** (abas JS + save por aba persiste dados).
 
 **Backlog oficial:** [GitHub Project — Projeto ZELO](https://github.com/users/esvianna/projects/3) — issues em [`esvianna/ZELO`](https://github.com/esvianna/ZELO) (ADR-020, `docs/GITHUB-WORKFLOW.md`). Este arquivo **complementa** o quadro; status canônico das tarefas está no Project.
 
@@ -50,8 +50,10 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## O que já foi implementado (resumo por versão actual)
 
-### Backend (`zelo-assistente` v2.15.0)
+### Backend (`zelo-assistente` v2.15.2)
 
+- [x] Fix save por aba: `call_user_func` → invocação directa (#39, 2.15.2)
+- [x] Fix JS troca de abas admin (#39, 2.15.1)
 - [x] Admin save **por aba** (#39, 2.15.0) — Config/push isolado; notice inline
 
 - [x] Web Push VAPID — tabela subscriptions, admin Config, REST subscribe/status/test (#36, ADR-035)
@@ -79,7 +81,7 @@ Todas as issues **abertas** no GitHub (18/06):
 
 | Issue | Entrega | Project | Smoke |
 |-------|---------|---------|-------|
-| [#39](https://github.com/esvianna/ZELO/issues/39) | Admin save por aba | **In review** | `TESTING.md` §4 **5n12** |
+| [#39](https://github.com/esvianna/ZELO/issues/39) | Admin save por aba + fix abas | **In review** | §4 **5n12–5n13** |
 | [#38](https://github.com/esvianna/ZELO/issues/38) | Admin save ops (fixes 2.14.x) | **In review** | §4 **5n7–5n11** |
 | [#37](https://github.com/esvianna/ZELO/issues/37) | Limpar duplicatas escala (admin) | **In review** | §4 **5n6** |
 | [#36](https://github.com/esvianna/ZELO/issues/36) | Web Push VAPID (PWA 142 + plugin 2.14.x) | **In review** | §15 |
@@ -90,16 +92,24 @@ Todas as issues **abertas** no GitHub (18/06):
 
 ## Próximos passos lógicos
 
-1. **Deploy plugin 2.15.0** — save por aba; smoke Config/push (#39, §4 **5n12**).
+1. **Deploy plugin 2.15.2** — fix abas + save persiste (#39, §4 **5n12–5n13**).
 2. Smoke `TESTING.md` §15 (#36 Web Push) e §4 **5n6** (#37).
 3. Validar escala admin ↔ PWA após save OK (`GET /ops/voluntarios` vs admin F5).
 4. Criar post `imprensa-autoridades` quando conteúdo estiver pronto.
 
 ---
 
-## Última sessão (2026-06-18 — noite)
+## Última sessão (2026-06-18)
 
-- **#39 / plugin 2.15.0:** save por aba (botão **Salvar** em cada aba); Config grava push isolado; removido redirect PRG (fix tela branca); §4 **5n12**.
+- **#39 / plugin 2.15.2:** `call_user_func()` em PHP 8 não passa `&$data` — save por aba não persistia; invocação directa `$handler( $data )`.
+
+## Sessão anterior (2026-06-18)
+
+- **#39 / plugin 2.15.1:** fix `SyntaxError` JS (`tab-*` sem aspas) — abas só mudavam hash; `zeloOpsActivateTabFromHash`; §4 **5n13**.
+
+## Sessão anterior (2026-06-18 — noite)
+
+- **#39 / plugin 2.15.0:** save por aba; §4 **5n12**.
 
 ## Sessão anterior (2026-06-18 — noite, cont.)
 
