@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-18** (#38 admin save 2.14.5 + #37 dedupe escala).
+> Última atualização: **2026-06-18** (save por aba **2.15.0** / #39).
 
 ---
 
@@ -12,173 +12,116 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Referência no repo | Versão |
 |--------------------|--------|
-| Plugin WordPress (`zelo-assistente.php`) | **2.14.5** |
+| Plugin WordPress (`zelo-assistente.php`) | **2.15.0** |
 | PWA (`zelo-build.js` / `sw.js`) | **build 142** |
+
+**Produção (18/06):** plugin **2.14.8** validado parcialmente (notice amarelo escala); **2.15.0** no repo — save por aba + sem redirect (deploy pendente).
 
 **Backlog oficial:** [GitHub Project — Projeto ZELO](https://github.com/users/esvianna/projects/3) — issues em [`esvianna/ZELO`](https://github.com/esvianna/ZELO) (ADR-020, `docs/GITHUB-WORKFLOW.md`). Este arquivo **complementa** o quadro; status canônico das tarefas está no Project.
 
-### Entregas recentes (Done no Project)
+### Entregas recentes (Done no Project / issues fechadas)
 
 | Issue | Entrega |
 |-------|---------|
-| [#1](https://github.com/esvianna/ZELO/issues/1) | Escala por turno — ícones de ação, UX responsáveis (PWA 103–104) |
-| [#2](https://github.com/esvianna/ZELO/issues/2) | E-mails / recuperação de senha |
-| [#5](https://github.com/esvianna/ZELO/issues/5) | Deploy plugin 2.11.2 + PWA 102 |
-| [#6](https://github.com/esvianna/ZELO/issues/6) | Smoke `TESTING.md` §4 em produção |
-| [#7](https://github.com/esvianna/ZELO/issues/7) | Export PDF agrupado dia → turno → faixa (2.11.5–2.11.7) |
-| [#11](https://github.com/esvianna/ZELO/issues/11) | Filtros escala: idioma + responsável do turno (PWA 106) |
-| [#19](https://github.com/esvianna/ZELO/issues/19) | `.gitignore` monorepo (C1) |
-| [#23](https://github.com/esvianna/ZELO/issues/23) | Docs PROJECT_STATUS + ROADMAP alinhados |
-| [#27](https://github.com/esvianna/ZELO/issues/27) | Persistir última view após F5 (PWA 107) |
-| [#13](https://github.com/esvianna/ZELO/issues/13) | Auditoria permissões ops/swaps (2.11.8) |
-| [#12](https://github.com/esvianna/ZELO/issues/12) | WhatsApp na escala — links wa.me (2.11.4 / PWA 105) |
-| [#26](https://github.com/esvianna/ZELO/issues/26) | Novidades/blog WP — card Operação, offline detalhe (2.13.x, PWA 116–125) |
+| [#35](https://github.com/esvianna/ZELO/issues/35) | Link/botão instruções Imprensa (PWA 140) — **Done** GitHub 18/06 |
+| [#34](https://github.com/esvianna/ZELO/issues/34) | Info evento secções opcionais + imprensa (PWA 138 + plugin 2.13.8) — **Done** GitHub 18/06 |
+| [#33](https://github.com/esvianna/ZELO/issues/33) | Layout superior escala (PWA 137) |
+| [#32](https://github.com/esvianna/ZELO/issues/32) | Add/edit linha escala modal (PWA 136) — **Done** GitHub 12/06 |
+| [#31](https://github.com/esvianna/ZELO/issues/31) | Excluir linha recusada (PWA 134 + plugin 2.13.7) |
+| [#30](https://github.com/esvianna/ZELO/issues/30) | Designações home/escala — filtro e arquivo (PWA 133–135) |
+| [#29](https://github.com/esvianna/ZELO/issues/29) | Substituições legíveis (PWA 132) |
 | [#28](https://github.com/esvianna/ZELO/issues/28) | Mapa do evento — admin + PWA diagrama, offline (2.12.x, PWA 110–125) |
-| [#15](https://github.com/esvianna/ZELO/issues/15) | Carrossel novidades home — posts WP + scroll-snap (2.13.3, PWA 126) |
-| [#17](https://github.com/esvianna/ZELO/issues/17) | Emergência — hierarquia + contatos 190/192/193 (2.13.4, PWA 128) |
-| [#22](https://github.com/esvianna/ZELO/issues/22) | Rate limit login REST — 30/15 min IP + 10/15 min user (2.13.5) |
-| [#21](https://github.com/esvianna/ZELO/issues/21) | Config API — login centralizado; docs same-origin (PWA 129) |
+| [#26](https://github.com/esvianna/ZELO/issues/26) | Novidades/blog WP — card Operação, offline detalhe (2.13.x, PWA 116–125) |
+| [#27](https://github.com/esvianna/ZELO/issues/27) | Persistir última view após F5 (PWA 107) |
+| [#1](https://github.com/esvianna/ZELO/issues/1)–[#22](https://github.com/esvianna/ZELO/issues/22) | Pacote escala, export, filtros, e-mails, rate limit, etc. (ver histórico) |
 
 ### Descartado (decisão de produto)
 
 | Issue | Motivo |
 |-------|--------|
 | [#8](https://github.com/esvianna/ZELO/issues/8) Web Push VAPID | Supersedido por [#36](https://github.com/esvianna/ZELO/issues/36) (ADR-035). |
-| [#10](https://github.com/esvianna/ZELO/issues/10) Cobertura posto/idioma | Escala + filtros (#11), export PDF e admin presença bastam — ADR-027. |
-| [#9](https://github.com/esvianna/ZELO/issues/9) Motor notificações | Hub sino + e-mail cron + localStorage bastam — ADR-028. |
-| [#16](https://github.com/esvianna/ZELO/issues/16) Inbox servidor | Descartado com #9 — ADR-028. |
-| [#14](https://github.com/esvianna/ZELO/issues/14) Programação visitante | JW Library + impresso no evento — ADR-029. |
-| [#18](https://github.com/esvianna/ZELO/issues/18) Branding splash/home | Banner evento + admin logo/foto bastam — ADR-031. |
-| [#20](https://github.com/esvianna/ZELO/issues/20) Testes automatizados | `TESTING.md` manual + smoke pré-evento bastam — ADR-033. |
-
-### Destaques técnicos por versão
-
-**Plugin 2.11.8:** supervisão por governança (fix homem-chave global); swaps filtrados; `docs/OPS-PERMISSIONS.md`.
-
-**PWA 107:** `sessionStorage` + hash — restaura escala/mapa/perfil após F5.
-
-**Plugin 2.11.7:** fix export PDF (`FPDF` margens PHP 8.2); rate limit só após export OK.
-
-**Plugin 2.11.5–2.11.6:** PDF por faixa horária; governança compacta; página por dia.
-
-**Plugin 2.11.4 + PWA 105:** links WhatsApp (voluntário + responsável, se telefone cadastrado).
-
-**Plugin 2.11.3:** status de compromisso dos colegas visível na escala da equipa.
-
-**Plugin 2.11.2:** `prior_commitment` em `schedule_changed` (auditoria).
-
-**Plugin 2.11.1 / PWA 101:** reconciliação de compromissos + aviso «escala mudou» (ADR-019).
-
-**Plugin 2.11.0 / PWA 99–100:** edição escala, modal Montar escala (ADR-018).
-
-**PWA 102–106:** vista por turno, filtros combináveis, ícones compactos na linha.
+| [#10](https://github.com/esvianna/ZELO/issues/10) Cobertura posto/idioma | ADR-027 |
+| [#9](https://github.com/esvianna/ZELO/issues/9) / [#16](https://github.com/esvianna/ZELO/issues/16) | ADR-028 |
+| [#14](https://github.com/esvianna/ZELO/issues/14) Programação visitante | ADR-029 |
+| [#18](https://github.com/esvianna/ZELO/issues/18) Branding splash/home | ADR-031 |
+| [#20](https://github.com/esvianna/ZELO/issues/20) Testes automatizados | ADR-033 |
 
 ---
 
-## O que já foi implementado
+## O que já foi implementado (resumo por versão actual)
 
-### Backend (`zelo-assistente` v2.11.7)
+### Backend (`zelo-assistente` v2.15.0)
 
-- [x] Export PDF/CSV `GET /zelo/v1/ops/export` — agrupamento por faixa; responsável no turno; 3 dias com quebra de página
-- [x] Payload `/ops/voluntarios`: `shift_contacts`, `volunteer_phone`, compromissos de colegas na escala
-- [x] `POST /zelo/v1/ops/schedule` — merge por dia+turno; reconciliação de compromissos (ADR-019)
-- [x] `zelo_edit_schedule` + escopos via governança; `reallocate` com supervisão na linha
-- [x] E-mail cron `schedule_changed`; histórico ops (slice 15 na UI)
-- [x] Tudo de 2.10.x (local no turno, horários por linha, catálogos, etc.)
+- [x] Admin save **por aba** (#39, 2.15.0) — Config/push isolado; notice inline
 
-### Frontend (PWA build 106)
+- [x] Web Push VAPID — tabela subscriptions, admin Config, REST subscribe/status/test (#36, ADR-035)
+- [x] Admin «Limpar duplicatas» na escala (#37)
+- [x] Admin save parcial + VAPID separado + desvincular roster (#38)
+- [x] Admin fix form aninhado + flash notice PRG (#38, 2.14.6)
+- [x] Hotfix save: hidden `zelo_ops_tabs_save` + disable botão após submit + flash `user_meta` (#38, 2.14.7)
+- [x] Fix nonce duplicado no form ops — «Este link expirou» (#38, 2.14.8)
+- [x] Export PDF/CSV, escala merge, reconciliação compromissos, permissões ops (2.11.x+)
+- [x] Novidades WP, mapa indoor, info evento toggles, rate limit login (2.12.x–2.13.x)
 
-- [x] Escala: vista **Por turno** e **Lista**; «Montar este turno» / editor Montar escala
-- [x] Filtros: dia, turno, local, nome, idioma, responsável do turno; «Comigo neste turno»
-- [x] Ações em ícones na linha (confirmar, check-in/out, realocar, swap); links WhatsApp
-- [x] Minhas designações; aviso «escala alterada»; export PDF (gestor)
-- [x] Home operacional, nav Operação, hub avisos, widget tempo, mapa indoor
+### Frontend (PWA build 142)
 
-### Governança docs
-
-- [x] ADR-018, ADR-019, ADR-020; `TESTING.md` §4; `docs/GITHUB-WORKFLOW.md`
+- [x] Web Push subscribe + Perfil + consentimento (#36)
+- [x] Imprensa/autoridades atalhos (#35); info evento condicional (#34)
+- [x] Modal add/edit linha escala (#32); layout toolbar escala (#33)
+- [x] Home designações só acções pendentes; escala filtro/arquivo (#30)
+- [x] Substituições legíveis (#29); escala por turno, filtros, WhatsApp, offline
 
 ---
 
 ## O que está pendente
 
-- [#38](https://github.com/esvianna/ZELO/issues/38) — admin save Operação Voluntários (parcial, VAPID, roster, submit HTML5): **In review** (plugin 2.14.5).
-- [#37](https://github.com/esvianna/ZELO/issues/37) — limpar duplicatas na escala (admin): **In review** (plugin 2.14.1+).
-- [#36](https://github.com/esvianna/ZELO/issues/36) — Web Push VAPID (#8 retomada): **In review** (PWA 141 + plugin 2.14.0). Smoke `TESTING.md` §15.
-- [#35](https://github.com/esvianna/ZELO/issues/35) — link/botão instruções Imprensa (Novidades): **In review** (PWA 140).
-- [#34](https://github.com/esvianna/ZELO/issues/34) — info evento (secções opcionais + imprensa): **In review** (PWA 138 + plugin 2.13.8).
-- [#32](https://github.com/esvianna/ZELO/issues/32) — add/edit linha escala (modal): **In review** (PWA 136).
+Todas as issues **abertas** no GitHub (18/06):
 
-**Validadas no Project (Done):** [#33](https://github.com/esvianna/ZELO/issues/33) (PWA 137), [#29](https://github.com/esvianna/ZELO/issues/29) (PWA 132), [#30](https://github.com/esvianna/ZELO/issues/30) (PWA 133–135), [#31](https://github.com/esvianna/ZELO/issues/31) (PWA 134 + plugin 2.13.7).
+| Issue | Entrega | Project | Smoke |
+|-------|---------|---------|-------|
+| [#39](https://github.com/esvianna/ZELO/issues/39) | Admin save por aba | **In review** | `TESTING.md` §4 **5n12** |
+| [#38](https://github.com/esvianna/ZELO/issues/38) | Admin save ops (fixes 2.14.x) | **In review** | §4 **5n7–5n11** |
+| [#37](https://github.com/esvianna/ZELO/issues/37) | Limpar duplicatas escala (admin) | **In review** | §4 **5n6** |
+| [#36](https://github.com/esvianna/ZELO/issues/36) | Web Push VAPID (PWA 142 + plugin 2.14.x) | **In review** | §15 |
+
+**Ops / conteúdo (sem issue aberta):** post Novidades slug `imprensa-autoridades`; config Curitiba/2026 (desactivar transporte/Wi‑Fi/credenciamento; activar imprensa).
 
 ---
 
 ## Próximos passos lógicos
 
-1. Validar smoke `TESTING.md` §15 (#36 Web Push); deploy plugin **2.14.0** + PWA **141** (incluir `vendor/` do Composer).
-2. Validar smoke `TESTING.md` §4 **6p4–6p5** (#35), **6p–6p3** (#34) e **5n–5n5** (#32).
-3. Criar post Novidades slug `imprensa-autoridades` quando conteúdo estiver pronto.
-4. Configurar Curitiba/2026 no admin: desactivar transporte, Wi‑Fi, credenciamento; activar contacto imprensa.
+1. **Deploy plugin 2.15.0** — save por aba; smoke Config/push (#39, §4 **5n12**).
+2. Smoke `TESTING.md` §15 (#36 Web Push) e §4 **5n6** (#37).
+3. Validar escala admin ↔ PWA após save OK (`GET /ops/voluntarios` vs admin F5).
+4. Criar post `imprensa-autoridades` quando conteúdo estiver pronto.
 
 ---
 
-## Última sessão (2026-06-18)
+## Última sessão (2026-06-18 — noite)
 
-- **#38 / plugin 2.14.4–2.14.5:** save parcial admin ops; VAPID separado; exclusão voluntário + desvincular escala; fix submit bloqueado por `required` em abas ocultas; `TESTING.md` §4 **5n7–5n8**; card **In review**.
-- **#37 / plugin 2.14.1–2.14.3:** «Limpar duplicatas» + notice sucesso; `TESTING.md` §4 **5n6**; card **In review**.
-- **#36 / plugin 2.14.0–2.14.2 + PWA 142:** Web Push VAPID; fixes unsubscribe + `_pushStatusCache`; card **In review**.
+- **#39 / plugin 2.15.0:** save por aba (botão **Salvar** em cada aba); Config grava push isolado; removido redirect PRG (fix tela branca); §4 **5n12**.
+
+## Sessão anterior (2026-06-18 — noite, cont.)
+
+- **#38 / plugin 2.14.8:** «Este link expirou» — colisão de `_wpnonce` (tabs + dedupe no mesmo form desde 2.14.6); nomes únicos; §4 **5n11**.
+
+## Sessão anterior (2026-06-18 — noite)
+
+- **#38 / plugin 2.14.7:** hotfix hidden `zelo_ops_tabs_save`; §4 **5n10**.
+
+## Sessão anterior (2026-06-18 — tarde)
+
+- **Sync docs ↔ GitHub:** #32/#34/#35 **Done**; pendentes = #36–#38.
+- **#38 / plugin 2.14.6:** form aninhado corrigido; PRG + transient flash; §4 **5n9**.
+
+## Sessão anterior (2026-06-18 — manhã)
+
+- **#38 / plugin 2.14.4–2.14.5:** save parcial; VAPID separado; `novalidate`; `TESTING.md` §4 **5n7–5n8**.
+- **#37 / plugin 2.14.1–2.14.3:** dedupe escala; §4 **5n6**.
+- **#36 / plugin 2.14.0–2.14.2 + PWA 142:** Web Push VAPID; ADR-035.
 
 ## Sessão anterior (2026-06-12)
 
-- **#35 / PWA 140:** link «Ver instruções completas» no card Imprensa (Info Evento); botão Home «Imprensa / Autoridades» / *Como agir*; post Novidades por slug `imprensa-autoridades`; `TESTING.md` §4 **6p4–6p5**; card **In review**.
-- **#34 / PWA 138 + plugin 2.13.8:** toggles Como chegar / Wi‑Fi / Credenciamento; card Imprensa/autoridades (Ligar + WhatsApp) acima de Segurança; `TESTING.md` §4 **6p–6p3**; card **In review**.
-- **#33 / PWA 137:** layout superior escala — **Done** no Project.
-- **Governança:** `PROJECT_STATUS` alinhado ao Project (#29–#31 Done); regra obrigatória de mover cards via `gh project item-edit` em `AGENTS.md`, `docs/GITHUB-WORKFLOW.md` e `.cursor/rules/`.
-- **#32 / PWA 136:** «+ Adicionar» no card do turno; editar linha (ícone + Lista); modal formulário; `POST /ops/schedule`; aviso reconfirmação; `TESTING.md` §4 **5n–5n5**; card em **In review** no Project.
-- **#31 / PWA 134 + plugin 2.13.7:** botão remover linha `declined` (vista turno + lista) para `canEditScheduleScope`; modal confirmação; `POST /ops/schedule` sem a linha; swap pendente cancelado no backend; histórico `(N removida(s))`; `TESTING.md` §4 **5m–5m6**.
-- **#30 / PWA 133:** home «Minhas designações» só com ações pendentes; empty state «Tudo em dia»; escala com filtro por estado e seção colapsável «Recusadas e encerradas»; badges presença corrigidos; i18n pt/en/es; `TESTING.md` §4 **5l–5l5**.
+- **#35 / PWA 140**, **#34 / PWA 138 + plugin 2.13.8**, **#33 / PWA 137 Done**, **#32 / PWA 136**, **#31 / PWA 134**, **#30 / PWA 133**.
 
-## Sessão anterior (2026-06-10)
-
-- **#29 / PWA 132:** pedidos de substituição legíveis — painel escala, sino avisos e histórico ops (nome, dia/turno/local, motivo, data); i18n pt/en/es; `TESTING.md` §4 **6a–6c**.
-- **Fix avatar perfil:** PWA **130** + plugin **2.13.6** — preview local, cache-bust, msg junto ao avatar; backend fallback URL attachment.
-- **#20 Testes automatizados descartado (ADR-033):** `TESTING.md` manual bastam; issue fechada; **Done** no Project.
-- **#18 Branding descartado (ADR-031):** banner + admin bastam; issue fechada; **Done** no Project.
-- **#22 Rate limit:** plugin **2.13.5** deploy OK; issue fechada; **Done** no Project.
-- **#17 Emergência:** plugin **2.13.4** + PWA **128** — smoke OK; **Done** no Project; issue fechada.
-- **#15 Carrossel novidades (ADR-030):** plugin **2.13.3** + PWA **126** — smoke OK; **Done** no Project; issue fechada.
-- **#14 Programação descartada (ADR-029):** JW Library + impresso; **Done** no Project.
-- **#9 / #16 descartados (ADR-028):** hub sino + cron e-mail + localStorage; issues fechadas; **Done** no Project.
-- **#10 cobertura descartado (ADR-027):** filtros escala + export + admin presença bastam; issue fechada; **Done** no Project.
-- **#8 Web Push descartado (ADR-026):** notificações via PWA in-app (#26); issue fechada; **Done** no Project; stub `/ops/push/subscribe` mantido.
-- **Mapa evento UX:** PWA **125** — viewport do diagrama edge-to-edge; **124** — header/bottom nav no Diagrama.
-- **ADR-025 / novidades detalhe offline:** PWA **123** — snapshot `zelo_news_item_v1_*`, prefetch ao listar, badge stale, mensagem amigável; teste O6.
-- **ADR-024 / mapa evento offline:** PWA **122** — snapshot `zelo_indoor_map`, prefetch imagem same-origin no SW, badge stale, carregamento no `init()`; teste `TESTING.md` O5.
-- **UX home designações:** PWA **121** — aviso «escala alterada» acima dos botões; mobile: Aceitar/Não posso empilhados largura total.
-- **#26 UX home:** PWA **120** — rótulo do card na secção Operação: «Novidades».
-- **#26 fix título:** plugin **2.13.2** + PWA **118** — `zelo_news_plain_text()` decodifica entidades e normaliza travessões → `-`; frontend `formatPlainText`/`decodeHtmlEntities`; cache API `v2` + snapshot cliente `zelo_news_v2_*`.
-- **#26 fix anterior:** plugin **2.13.1** + PWA **117** — vídeos responsivos; cache `/news` ao gravar post.
-- **#26:** plugin **2.13.0** + PWA **116** — blog/notificações implementado (**In review**).
-- **#28** permanece **In review** (PWA 115 / plugin 2.12.3).
-
-**Como testar:** `TESTING.md` §7 (rate limit login #22); §4 (**2ac** carrossel; **2aa** novidades; **2x–2z** mapa indoor); §12 **O5** offline mapa evento.
-
-## Sessão anterior (2026-06-04)
-- PWA **115** + plugin **2.12.3**: Balcão 1 (azul) / Balcão 2 (teal), número no pino, legenda.
-- PWA **110–112**: mobile (tela cheia, pinch, mapa completo); fix diagrama em branco iPhone.
-- PWA **113–114**: combobox «Para onde?»; rótulo Pavim.
-- Plugin **2.12.1–2.12.2**: fix direções admin + aba Mapa evento / tela branca Salvar abas.
-- **#24 / #25:** Done no Project (PWA 108 + plugin 2.11.9).
-
-**Como testar:** `TESTING.md` §4 (**2x**, **2y**, **2z**); validação humana → **Done** no Project.
-
-## Sessão anterior (2026-06-04)
-
-- Backlog oficial no GitHub Project 3; fluxo Backlog → plano → **Ready** → código (`docs/GITHUB-WORKFLOW.md`, ADR-020).
-- Issues migradas de `SITE-NOVO-VTIS` para `esvianna/ZELO` (#1 escala, #2 e-mails).
-
-## Sessão anterior (2026-06-02)
-
-- Plugin 2.11.0: API escala escopada; PWA build 99: UX leitura + editor Montar escala.
-
-**Como testar:** `TESTING.md` §4 (2, 2b–2c, 5, 5b–5c).
+**Como testar:** `TESTING.md` §4 (escala/admin), §15 (push), §12 (offline).

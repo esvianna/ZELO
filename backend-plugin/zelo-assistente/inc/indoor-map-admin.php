@@ -239,6 +239,11 @@ function zelo_render_indoor_map_admin_tab( $indoor_map, $locations = array(), $a
 			</tbody>
 		</table>
 		<p><button type="button" class="button" onclick="zeloMapAddPlace()"><?php esc_html_e( 'Adicionar local', 'zelo-assistente' ); ?></button></p>
+		<?php
+		if ( function_exists( 'zelo_ops_render_tab_save_button' ) ) {
+			zelo_ops_render_tab_save_button( 'tab-mapa-evento' );
+		}
+		?>
 	</div>
 	<?php
 	$tpl_place = zelo_indoor_map_admin_place_row_html(

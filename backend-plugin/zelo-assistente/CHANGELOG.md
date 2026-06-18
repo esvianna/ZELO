@@ -2,6 +2,26 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.15.0] - 2026-06-18
+
+### Alterado
+- **Admin ops (#39):** «Salvar abas» substituído por **Salvar** em cada aba (escala, turnos, locais, idiomas, voluntários, governança, config, mapa); POST isolado por aba; notice na mesma página (sem redirect PRG).
+
+## [2.14.8] - 2026-06-18
+
+### Corrigido
+- **Admin ops (#38):** «Este link expirou» ao «Salvar abas» — dois `wp_nonce_field` no mesmo form usavam `_wpnonce`; o POST enviava só o nonce da dedupe; nomes únicos por acção + `check_admin_referer( …, false )`.
+
+## [2.14.7] - 2026-06-18
+
+### Corrigido
+- **Admin ops (#38):** hotfix «Salvar abas» — `input hidden` `zelo_ops_tabs_save` restaurado; botão «A guardar…» só desactiva após `setTimeout(0)`; dedupe desactiva o hidden para não gravar abas; flash do notice em `user_meta` (mais fiável que transient).
+
+## [2.14.6] - 2026-06-18
+
+### Corrigido
+- **Admin ops (#38):** formulário «Limpar duplicatas» aninhado dentro de «Salvar abas» invalidava o HTML — o browser fechava o `<form>` principal e o botão Salvar deixava de enviar dados; dedupe passou a ser botão `submit` no mesmo form; aviso admin via flash + redirect (PRG).
+
 ## [2.14.5] - 2026-06-18
 
 ### Corrigido

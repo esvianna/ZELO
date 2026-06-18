@@ -2,11 +2,25 @@
 
 Roadmap orientado ao contexto real do projeto (visitante + voluntários + WordPress). **Backlog operacional e priorização:** [GitHub Project 3](https://github.com/users/esvianna/projects/3) (ADR-020). Atualize este arquivo quando fases mudarem; issues linkadas são a fonte de tarefas.
 
-**Versão de referência no repo:** plugin **2.13.2**, PWA **build 125**.
+**Versão de referência no repo:** plugin **2.15.0**, PWA **build 142**.
 
 ---
 
-## Fase atual: Operação voluntários — estabilização pós-pacote escala
+## Fase actual: Validação pós-pacote 2.14.x
+
+**Objetivo:** Fechar smoke de #36–#38 em produção; admin ops estável (save + dedupe + push).
+
+| # | Entrega | Status | Issue |
+|---|---------|--------|-------|
+| 1 | Web Push VAPID + subscribe PWA | **In review** | [#36](https://github.com/esvianna/ZELO/issues/36) |
+| 2 | Admin dedupe escala | **In review** | [#37](https://github.com/esvianna/ZELO/issues/37) |
+| 3 | Admin save por aba | **In review** (2.15.0) | [#39](https://github.com/esvianna/ZELO/issues/39) · [#38](https://github.com/esvianna/ZELO/issues/38) |
+| 4 | Info evento + imprensa PWA | **Concluído** | [#34](https://github.com/esvianna/ZELO/issues/34) · [#35](https://github.com/esvianna/ZELO/issues/35) |
+| 5 | Modal add/edit linha escala | **Concluído** | [#32](https://github.com/esvianna/ZELO/issues/32) |
+
+---
+
+## Fase anterior: Operação voluntários — estabilização pós-pacote escala
 
 **Objetivo:** Dept. de informações com escala, check-in, export e filtros em produção; visitantes ocasionais sem login preservados.
 
@@ -67,7 +81,7 @@ Itens históricos; ver **Fase B** para status atualizado.
 
 | # | Entrega | Status | Issue |
 |---|---------|--------|-------|
-| B0 | Mapa indoor estádio + direções (POIs públicos, i18n) | **Planejamento** | [#28](https://github.com/esvianna/ZELO/issues/28) |
+| B0 | Mapa indoor estádio + direções (POIs públicos, i18n) | **In review** | [#28](https://github.com/esvianna/ZELO/issues/28) |
 | B1 | Hierarquia visual reforçada (emergência destacada) | Concluído (2.13.4 / PWA 128) | [#17](https://github.com/esvianna/ZELO/issues/17) |
 | B2 | Branding evento na splash/home | **Descartado** (ADR-031; banner actual basta) | [#18](https://github.com/esvianna/ZELO/issues/18) |
 | B3 | Card visual do mapa | Implementado (`home-map-card`) | — |
@@ -76,7 +90,7 @@ Itens históricos; ver **Fase B** para status atualizado.
 | B6 | Protótipos `docs/stitch_zelo/` → telas reais | Referência de design | — |
 | B7 | Hub avisos unificado (sino) | Implementado MVP (build 78) | — |
 | B8 | Widget tempo na home | Implementado (build 78) | — |
-| B9 | Carrossel destaques na home | Pendente | [#15](https://github.com/esvianna/ZELO/issues/15) |
+| B9 | Carrossel destaques na home | **Concluído** (2.13.3 / PWA 126) | [#15](https://github.com/esvianna/ZELO/issues/15) |
 | B10 | Inbox avisos com persistência servidor | **Descartado** (ADR-028; com #9) | [#16](https://github.com/esvianna/ZELO/issues/16) |
 
 ---

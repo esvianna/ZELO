@@ -12,6 +12,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 | Versão | Entrega |
 |--------|---------|
+| Plugin **2.15.0** | Admin ops: salvar por aba (#39); Config/push isolado; sem redirect PRG |
+| Plugin **2.14.8** | Fix nonce duplicado `_wpnonce` no form admin ops («Este link expirou») |
+| Plugin **2.14.7** | Hotfix save: hidden `zelo_ops_tabs_save`; disable botão após submit; flash em `user_meta` |
+| Plugin **2.14.6** | Form aninhado «Limpar duplicatas» quebrava submit «Salvar abas»; flash notice + redirect (PRG) |
 | Plugin **2.14.5** | Submit desbloqueado (`novalidate` + sem `required` em abas ocultas); botão «A guardar…» |
 | Plugin **2.14.4** | Save parcial (catálogos/config se escala inválida); VAPID separado; reindex checkboxes; desvincular roster removido na escala |
 
