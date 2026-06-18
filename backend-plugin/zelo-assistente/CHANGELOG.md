@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.14.3] - 2026-06-18
+
+### Corrigido
+- **Escala (#37):** «Limpar duplicatas» sem duplicatas → aviso de sucesso, não erro.
+
 ## [2.14.2] - 2026-06-18
 
 ### Corrigido

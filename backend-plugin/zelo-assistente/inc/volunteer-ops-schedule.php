@@ -503,9 +503,9 @@ function zelo_ops_dedupe_volunteer_ops_schedule( $user_id = 0 ) {
 	$result  = zelo_dedupe_schedule_rows( isset( $data['schedule'] ) ? $data['schedule'] : array(), $catalogs );
 
 	if ( $result['removed'] < 1 ) {
-		return new WP_Error(
-			'zelo_schedule_dedupe_none',
-			__( 'Nenhuma duplicata encontrada na escala.', 'zelo-assistente' )
+		return array(
+			'removed'     => 0,
+			'removed_ids' => array(),
 		);
 	}
 

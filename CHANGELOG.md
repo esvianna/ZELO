@@ -8,6 +8,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Corrigido — dedupe escala (#37)
+
+| Versão | Entrega |
+|--------|---------|
+| Plugin **2.14.3** | «Nenhuma duplicata» exibido como sucesso (não `notice-error`) |
+
 ### Corrigido — Web Push (#36)
 
 | Versão | Entrega |

@@ -47,6 +47,9 @@ function zelo_ops_handle_dedupe_schedule_post() {
 	if ( $user_id ) {
 		update_user_meta( $user_id, 'zelo_ops_active_tab', 'tab-escala' );
 	}
+	if ( (int) $result['removed'] < 1 ) {
+		return __( 'Nenhuma duplicata encontrada na escala.', 'zelo-assistente' );
+	}
 	/* translators: %d: number of removed rows */
 	return sprintf( __( 'Duplicatas removidas: %d linha(s). Compromissos e check-ins das linhas apagadas foram limpos.', 'zelo-assistente' ), (int) $result['removed'] );
 }
@@ -435,7 +438,7 @@ function zelo_render_volunteer_ops_admin_tabs() {
 		'event_dates' => $dates,
 	);
 	$notice_class = 'notice-success';
-	if ( $msg && ( strpos( $msg, 'Linha' ) !== false || strpos( $msg, 'utilizador' ) !== false || strpos( $msg, 'voluntário' ) !== false || strpos( $msg, 'Nenhuma duplicata' ) !== false ) ) {
+	if ( $msg && ( strpos( $msg, 'Linha' ) !== false || strpos( $msg, 'utilizador' ) !== false || strpos( $msg, 'voluntário' ) !== false ) ) {
 		$notice_class = 'notice-error';
 	}
 	$active_tab = zelo_ops_resolve_active_tab();
