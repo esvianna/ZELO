@@ -8,6 +8,13 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Adicionado — reset push / VAPID (#42)
+
+| Versão | Entrega |
+|--------|---------|
+| Plugin **2.17.0** | Truncate subscriptions ao regenerar VAPID; botão «Limpar subscriptions»; fingerprint VAPID no REST; auditoria `history`; contagem admin |
+| PWA **147** | Consent `v3`; fingerprint localStorage; logout desactiva push; re-subscribe se chave browser ≠ VAPID; UI «Reactivação necessária» |
+
 ### Segurança — aprovação de voluntários (#41)
 
 | Versão | Entrega |

@@ -342,6 +342,10 @@ Pré-requisitos: HTTPS; Chrome/Android ou Safari 16.4+ (iOS com limitações). A
 | 15.7 | Perfil → desactivar notificações | `DELETE /ops/push/subscribe` **200**; sem push novo |
 | 15.7b | Regressão unsubscribe | Endpoint gravado é removido (hash coerente; plugin 2.14.2+) |
 | 15.8 | Regressão hub sino + e-mail cron | Inalterados |
+| 15.9 | Admin: «Limpar subscriptions push» + confirm (#42, plugin 2.17.0+) | Tabela vazia; `subscribed: false`; notice admin; push só após re-activar Perfil |
+| 15.10 | Admin: «Gerar novo par VAPID» + confirm (#42) | Novo par + subscriptions removidas; voluntário re-activa; `vapidPublicKeyFingerprint` muda |
+| 15.11 | Logout → login outra conta mesmo telefone (#42, PWA 147+) | Push do user A não chega após B activar; cada conta re-activa no Perfil |
+| 15.12 | Fingerprint: `subscribed:true` sem `zelo_push_vapid_fp` local (#42) | Perfil «Reactivação necessária»; Activar → push Novidades OK |
 
 ---
 

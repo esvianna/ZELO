@@ -589,6 +589,9 @@ const app = {
 
         logout() {
             const uid = this.user && this.user.id;
+            if (typeof app.unregisterPushSubscription === 'function') {
+                app.unregisterPushSubscription().catch(() => {});
+            }
             this.user = null;
             localStorage.removeItem('zelo_user');
             API.clearOpsRelatedSnapshots(uid);
@@ -2750,8 +2753,46 @@ const app = {
         return this.maybePromptPushConsent();
     },
 
-    _pushConsentKey: 'zelo_push_consent_v2',
+    _pushConsentKey: 'zelo_push_consent_v3',
+    _pushVapidFpKey: 'zelo_push_vapid_fp',
     _pushStatusCache: null,
+
+    _pushVapidFingerprintOk(status) {
+        const fp = status && status.vapidPublicKeyFingerprint;
+        if (!fp) return true;
+        const stored = localStorage.getItem(this._pushVapidFpKey);
+        if (!stored) return false;
+        return stored === fp;
+    },
+
+    _pushSubscriptionKeyMatchesVapid(sub, publicKey) {
+        if (!sub || !publicKey) return false;
+        const appKey = sub.options && sub.options.applicationServerKey;
+        if (!appKey) return false;
+        const expected = this._urlBase64ToUint8Array(publicKey);
+        if (appKey.byteLength !== expected.byteLength) return false;
+        for (let i = 0; i < appKey.byteLength; i++) {
+            if (appKey[i] !== expected[i]) return false;
+        }
+        return true;
+    },
+
+    _pushStoreVapidFingerprint(status) {
+        const fp = status && status.vapidPublicKeyFingerprint;
+        if (fp) {
+            localStorage.setItem(this._pushVapidFpKey, fp);
+        }
+    },
+
+    _pushClearVapidFingerprint() {
+        localStorage.removeItem(this._pushVapidFpKey);
+    },
+
+    isPushEffectivelyActive(status, permission) {
+        if (!status || !status.enabled) return false;
+        const perm = permission || (('Notification' in window) ? Notification.permission : 'denied');
+        return !!(status.subscribed && perm === 'granted' && this._pushVapidFingerprintOk(status));
+    },
 
     _urlBase64ToUint8Array(base64String) {
         const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -2772,12 +2813,21 @@ const app = {
         if (permission !== 'granted') {
             throw new Error(i18n.t('ops_push_denied'));
         }
-        const { publicKey } = await API.getPushVapidPublic();
+        const vapid = await API.getPushVapidPublic();
+        const publicKey = vapid && vapid.publicKey;
         if (!publicKey) {
             throw new Error(i18n.t('ops_push_unavailable'));
         }
         const reg = await navigator.serviceWorker.ready;
         let sub = await reg.pushManager.getSubscription();
+        if (sub && !this._pushSubscriptionKeyMatchesVapid(sub, publicKey)) {
+            try {
+                await sub.unsubscribe();
+            } catch (e) {
+                console.warn('Push unsubscribe stale', e);
+            }
+            sub = null;
+        }
         if (!sub) {
             sub = await reg.pushManager.subscribe({
                 userVisibleOnly: true,
@@ -2785,6 +2835,8 @@ const app = {
             });
         }
         await API.subscribePush(sub.toJSON());
+        const status = await this.getPushStatusCached(true);
+        this._pushStoreVapidFingerprint(status || vapid);
         this._pushStatusCache = null;
         return true;
     },
@@ -2809,6 +2861,7 @@ const app = {
         } else {
             await API.unsubscribePush('');
         }
+        this._pushClearVapidFingerprint();
         this._pushStatusCache = null;
     },
 
@@ -2832,7 +2885,8 @@ const app = {
             localStorage.setItem(this._pushConsentKey, '1');
             return;
         }
-        if (status.subscribed && Notification.permission === 'granted') {
+        const perm = Notification.permission;
+        if (this.isPushEffectivelyActive(status, perm)) {
             localStorage.setItem(this._pushConsentKey, '1');
             return;
         }
@@ -2862,22 +2916,26 @@ const app = {
         }
         section.style.display = 'block';
         const perm = ('Notification' in window) ? Notification.permission : 'denied';
+        const fpOk = this._pushVapidFingerprintOk(status);
+        const effectivelyActive = this.isPushEffectivelyActive(status, perm);
         let statusText = i18n.t('profile_push_off');
-        if (status.subscribed && perm === 'granted') {
+        if (effectivelyActive) {
             statusText = i18n.t('profile_push_on');
+        } else if (status.subscribed && perm === 'granted' && !fpOk) {
+            statusText = i18n.t('profile_push_reactivate');
         } else if (perm === 'denied') {
             statusText = i18n.t('profile_push_blocked');
         }
         if (statusEl) statusEl.textContent = statusText;
         if (enableBtn) {
-            enableBtn.style.display = (!status.subscribed || perm !== 'granted') ? 'block' : 'none';
+            enableBtn.style.display = !effectivelyActive ? 'block' : 'none';
             if (!enableBtn._zeloBound) {
                 enableBtn._zeloBound = true;
                 enableBtn.addEventListener('click', () => this.onProfilePushEnable());
             }
         }
         if (disableBtn) {
-            disableBtn.style.display = status.subscribed ? 'block' : 'none';
+            disableBtn.style.display = (status.subscribed || effectivelyActive) ? 'block' : 'none';
             if (!disableBtn._zeloBound) {
                 disableBtn._zeloBound = true;
                 disableBtn.addEventListener('click', () => this.onProfilePushDisable());

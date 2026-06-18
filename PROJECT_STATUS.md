@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-18** (#41 **In review** — aprovação voluntários plugin **2.16.0** / PWA **146**).
+> Última atualização: **2026-06-18** (#42 **In review** — reset push plugin **2.17.0** / PWA **147**).
 
 ---
 
@@ -12,8 +12,8 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Referência no repo | Versão |
 |--------------------|--------|
-| Plugin WordPress (`zelo-assistente.php`) | **2.16.0** |
-| PWA (`zelo-build.js` / `sw.js`) | **build 146** |
+| Plugin WordPress (`zelo-assistente.php`) | **2.17.0** |
+| PWA (`zelo-build.js` / `sw.js`) | **build 147** |
 
 **Produção:** plugin **2.15.2**; PWA **build 145** — deploy **2.16.0 / 146** pendente (#41).
 
@@ -54,6 +54,14 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## O que já foi implementado (resumo por versão actual)
 
+### Backend (`zelo-assistente` v2.17.0)
+
+- [x] Reset push (#42): truncate ao regenerar VAPID; botão limpar subscriptions; fingerprint REST; histórico ops
+
+### Frontend (PWA build 147)
+
+- [x] Push consent v3 + fingerprint + logout unsub + re-subscribe VAPID (#42)
+
 ### Backend (`zelo-assistente` v2.15.2)
 
 - [x] Fix save por aba: `call_user_func` → invocação directa (#39, 2.15.2)
@@ -86,6 +94,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 |-------|---------|---------|-------|
 | [#41](https://github.com/esvianna/ZELO/issues/41) | Aprovação cadastro voluntários (2.16.0 / PWA 146) | **In review** | §16 |
 | [#36](https://github.com/esvianna/ZELO/issues/36) | Web Push VAPID (PWA 142 + plugin 2.14.x) | **In review** | §15 |
+| [#42](https://github.com/esvianna/ZELO/issues/42) | Reset subscriptions push + consent v3 (pós-smoke #36) | **In review** | §15.9–15.12 |
 
 **Ops / conteúdo (sem issue aberta):** post Novidades slug `imprensa-autoridades`; config Curitiba/2026 (desactivar transporte/Wi‑Fi/credenciamento; activar imprensa).
 

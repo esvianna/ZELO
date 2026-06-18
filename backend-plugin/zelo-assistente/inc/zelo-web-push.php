@@ -100,7 +100,73 @@ function zelo_push_vapid_subject() {
 }
 
 /**
- * Gera par VAPID e grava em options.
+ * Fingerprint curto da chave pública VAPID (R8 — #42).
+ *
+ * @param string $public_key Chave pública (opcional — usa config actual).
+ * @return string
+ */
+function zelo_push_vapid_public_key_fingerprint( $public_key = '' ) {
+	if ( $public_key === '' ) {
+		$cfg        = zelo_push_get_config();
+		$public_key = isset( $cfg['public_key'] ) ? (string) $cfg['public_key'] : '';
+	}
+	if ( $public_key === '' ) {
+		return '';
+	}
+	return substr( hash( 'sha256', $public_key ), 0, 12 );
+}
+
+/**
+ * @return int
+ */
+function zelo_push_count_subscriptions() {
+	global $wpdb;
+	$table = zelo_push_table_name();
+	$count = $wpdb->get_var( "SELECT COUNT(*) FROM {$table}" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+	return max( 0, (int) $count );
+}
+
+/**
+ * Remove todas as subscriptions push (reset global).
+ *
+ * @return int Linhas removidas.
+ */
+function zelo_push_delete_all_subscriptions() {
+	global $wpdb;
+	$table   = zelo_push_table_name();
+	$removed = zelo_push_count_subscriptions();
+	$wpdb->query( "TRUNCATE TABLE {$table}" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+	return $removed;
+}
+
+/**
+ * Registo em zelo_volunteer_ops_data['history'].
+ *
+ * @param string               $type    Tipo do evento.
+ * @param array<string, mixed> $context Contexto extra.
+ */
+function zelo_push_append_ops_history( $type, $context = array() ) {
+	if ( ! function_exists( 'zelo_get_volunteer_ops_data' ) ) {
+		return;
+	}
+	$data = zelo_get_volunteer_ops_data();
+	if ( ! isset( $data['history'] ) || ! is_array( $data['history'] ) ) {
+		$data['history'] = array();
+	}
+	$entry = array_merge(
+		array(
+			'type'    => sanitize_key( $type ),
+			'user_id' => get_current_user_id(),
+			'at'      => current_time( 'mysql' ),
+		),
+		is_array( $context ) ? $context : array()
+	);
+	$data['history'][] = $entry;
+	update_option( 'zelo_volunteer_ops_data', $data );
+}
+
+/**
+ * Gera par VAPID, grava em options e remove subscriptions (R1/R10 — #42).
  *
  * @return true|WP_Error
  */
@@ -113,14 +179,37 @@ function zelo_push_generate_vapid_keys() {
 	} catch ( Exception $e ) {
 		return new WP_Error( 'zelo_push_vapid', __( 'Falha ao gerar chaves VAPID.', 'zelo-assistente' ), array( 'status' => 500 ) );
 	}
-	$cfg                  = zelo_push_get_config();
-	$cfg['public_key']    = isset( $keys['publicKey'] ) ? (string) $keys['publicKey'] : '';
-	$cfg['private_key']   = isset( $keys['privateKey'] ) ? (string) $keys['privateKey'] : '';
+	$cfg                = zelo_push_get_config();
+	$cfg['public_key']  = isset( $keys['publicKey'] ) ? (string) $keys['publicKey'] : '';
+	$cfg['private_key'] = isset( $keys['privateKey'] ) ? (string) $keys['privateKey'] : '';
 	if ( $cfg['public_key'] === '' || $cfg['private_key'] === '' ) {
 		return new WP_Error( 'zelo_push_vapid', __( 'Chaves VAPID inválidas.', 'zelo-assistente' ), array( 'status' => 500 ) );
 	}
 	update_option( ZELO_PUSH_CONFIG_OPTION, $cfg );
+	$removed = zelo_push_delete_all_subscriptions();
+	zelo_push_append_ops_history(
+		'push_vapid_rotated',
+		array(
+			'subscriptions_removed' => $removed,
+		)
+	);
 	return true;
+}
+
+/**
+ * Limpa subscriptions sem regenerar VAPID (R2 — #42).
+ *
+ * @return int Linhas removidas.
+ */
+function zelo_push_clear_all_subscriptions() {
+	$removed = zelo_push_delete_all_subscriptions();
+	zelo_push_append_ops_history(
+		'push_subscriptions_cleared',
+		array(
+			'subscriptions_removed' => $removed,
+		)
+	);
+	return $removed;
 }
 
 /**
@@ -531,8 +620,9 @@ function zelo_rest_push_vapid_public() {
 	$cfg = zelo_push_get_config();
 	return rest_ensure_response(
 		array(
-			'publicKey' => $cfg['public_key'],
-			'subject'   => zelo_push_vapid_subject(),
+			'publicKey'                  => $cfg['public_key'],
+			'subject'                    => zelo_push_vapid_subject(),
+			'vapidPublicKeyFingerprint'  => zelo_push_vapid_public_key_fingerprint( $cfg['public_key'] ),
 		)
 	);
 }
@@ -543,12 +633,14 @@ function zelo_rest_push_vapid_public() {
 function zelo_rest_push_status() {
 	$uid   = get_current_user_id();
 	$count = count( zelo_push_get_user_subscriptions( $uid ) );
+	$cfg = zelo_push_get_config();
 	return rest_ensure_response(
 		array(
-			'enabled'       => zelo_push_is_enabled(),
-			'subscribed'    => $count > 0,
-			'devices'       => $count,
-			'configVersion' => 'v2',
+			'enabled'                   => zelo_push_is_enabled(),
+			'subscribed'                => $count > 0,
+			'devices'                   => $count,
+			'configVersion'             => 'v3',
+			'vapidPublicKeyFingerprint' => zelo_push_vapid_public_key_fingerprint( isset( $cfg['public_key'] ) ? $cfg['public_key'] : '' ),
 		)
 	);
 }
@@ -636,11 +728,23 @@ function zelo_push_render_admin_fields( $cfg = null ) {
 		<td><code style="word-break:break-all;"><?php echo esc_html( isset( $cfg['public_key'] ) ? $cfg['public_key'] : '' ); ?></code></td>
 	</tr>
 	<tr>
+		<th><?php esc_html_e( 'Dispositivos subscritos', 'zelo-assistente' ); ?></th>
+		<td><strong><?php echo esc_html( (string) zelo_push_count_subscriptions() ); ?></strong></td>
+	</tr>
+	<tr>
+		<th><?php esc_html_e( 'Reset push', 'zelo-assistente' ); ?></th>
+		<td>
+			<?php wp_nonce_field( 'zelo_push_clear_subs', 'zelo_push_clear_nonce' ); ?>
+			<button type="button" class="button" onclick="zeloOpsSubmitPushClear()"><?php esc_html_e( 'Limpar subscriptions push', 'zelo-assistente' ); ?></button>
+			<p class="description"><?php esc_html_e( 'Remove todos os dispositivos subscritos sem alterar as chaves VAPID. Os voluntários devem re-activar no Perfil da PWA.', 'zelo-assistente' ); ?></p>
+		</td>
+	</tr>
+	<tr>
 		<th><?php esc_html_e( 'Chaves', 'zelo-assistente' ); ?></th>
 		<td>
 			<?php wp_nonce_field( 'zelo_push_gen_vapid', 'zelo_push_gen_nonce' ); ?>
 			<button type="button" class="button" onclick="zeloOpsSubmitPushGenerate()"><?php esc_html_e( 'Gerar novo par VAPID', 'zelo-assistente' ); ?></button>
-			<p class="description"><?php esc_html_e( 'Gere as chaves uma vez por ambiente. Subscriptions antigas deixam de funcionar se regenerar.', 'zelo-assistente' ); ?></p>
+			<p class="description"><?php esc_html_e( 'Gera um novo par e remove todas as subscriptions. Use uma vez por ambiente ou após comprometimento das chaves.', 'zelo-assistente' ); ?></p>
 		</td>
 	</tr>
 	<?php
