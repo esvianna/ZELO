@@ -8,6 +8,14 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Corrigido — ícones PWA instalação desktop (#40)
+
+| Versão | Entrega |
+|--------|---------|
+| PWA **143** | Ícones manifest 192×192 e 512×512 reais (a partir de `logo-zelo.png`); maskable 512; `purpose` no manifest; favicon + `apple-touch-icon` no `<head>`; ícones no precache SW |
+| PWA **144** | Ícones regenerados de `favicon-96x96.png` (coração); 256×256 Windows; paths absolutos + `?v=` no manifest; `id`/`scope`/`start_url` `/zelo/`; precache com cache-bust |
+| PWA **145** | Ícones manifest/atalho desktop de **`logo-zelo.png`** (wordmark); favicon aba = coração (`favicon-*` no head); manifest sem `?v=` nos ícones (compat. Windows); bump cache v145 |
+
 ### Corrigido — admin Operação Voluntários save (#38)
 
 | Versão | Entrega |
@@ -20,6 +28,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | Plugin **2.14.6** | Form aninhado «Limpar duplicatas» quebrava submit «Salvar abas»; flash notice + redirect (PRG) |
 | Plugin **2.14.5** | Submit desbloqueado (`novalidate` + sem `required` em abas ocultas); botão «A guardar…» |
 | Plugin **2.14.4** | Save parcial (catálogos/config se escala inválida); VAPID separado; reindex checkboxes; desvincular roster removido na escala |
+| Validação | **Done** no Project (#38) |
+| Validação | **Done** no Project (#39) |
 
 ### Corrigido — dedupe escala (#37)
 
@@ -39,6 +49,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | Versão | Entrega |
 |--------|---------|
 | Plugin **2.14.1** | Admin Operação Voluntários → Escala: aviso + botão «Limpar duplicatas»; `zelo_dedupe_schedule_rows`; limpa compromissos/check-ins órfãos |
+| Validação | **Done** no Project (#37) |
 
 ### Adicionado — Web Push VAPID (#36, retomada #8)
 

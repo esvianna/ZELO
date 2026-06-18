@@ -280,6 +280,7 @@ Até lá, **checklist manual acima é a fonte de verdade**.
 | 4 | Aviso warning/critical na home | Faixa compacta + link para avisos |
 | 5 | Aviso info | Só no hub (não card grande na home) |
 | 6 | Voluntário logado | Secção «Para você» com check-in pendente em qualquer dia da escala |
+| 7n1 | **Ícones PWA** (#40, build **145+**) | Chrome desktop | **Aba:** favicon coração; **Instalar/atalho desktop:** wordmark «zelo» (`logo-zelo.png`); DevTools → Manifest sem warnings; desinstalar `chrome://apps` + limpar dados do site → reinstalar |
 
 ---
 

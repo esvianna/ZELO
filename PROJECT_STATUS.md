@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-18** (fix save por aba **2.15.2** / #39).
+> Última atualização: **2026-06-18** (#40 ícones PWA — build **144**, favicon coração + cache-bust).
 
 ---
 
@@ -13,7 +13,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | Referência no repo | Versão |
 |--------------------|--------|
 | Plugin WordPress (`zelo-assistente.php`) | **2.15.2** |
-| PWA (`zelo-build.js` / `sw.js`) | **build 142** |
+| PWA (`zelo-build.js` / `sw.js`) | **build 145** |
 
 **Produção:** deploy **2.15.2** (abas JS + save por aba persiste dados).
 
@@ -23,6 +23,9 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Issue | Entrega |
 |-------|---------|
+| [#39](https://github.com/esvianna/ZELO/issues/39) | Admin save por aba + fix abas (plugin 2.15.0–2.15.2) — **Done** Project 18/06 |
+| [#38](https://github.com/esvianna/ZELO/issues/38) | Admin save ops — fixes 2.14.4–2.14.8 — **Done** Project 18/06 |
+| [#37](https://github.com/esvianna/ZELO/issues/37) | Limpar duplicatas escala admin (plugin 2.14.1–2.14.3) — **Done** Project 18/06 |
 | [#35](https://github.com/esvianna/ZELO/issues/35) | Link/botão instruções Imprensa (PWA 140) — **Done** GitHub 18/06 |
 | [#34](https://github.com/esvianna/ZELO/issues/34) | Info evento secções opcionais + imprensa (PWA 138 + plugin 2.13.8) — **Done** GitHub 18/06 |
 | [#33](https://github.com/esvianna/ZELO/issues/33) | Layout superior escala (PWA 137) |
@@ -65,8 +68,9 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 - [x] Export PDF/CSV, escala merge, reconciliação compromissos, permissões ops (2.11.x+)
 - [x] Novidades WP, mapa indoor, info evento toggles, rate limit login (2.12.x–2.13.x)
 
-### Frontend (PWA build 142)
+### Frontend (PWA build 144)
 
+- [x] Ícones PWA: manifest/atalho = wordmark `logo-zelo.png`; favicon aba = coração (#40, 145)
 - [x] Web Push subscribe + Perfil + consentimento (#36)
 - [x] Imprensa/autoridades atalhos (#35); info evento condicional (#34)
 - [x] Modal add/edit linha escala (#32); layout toolbar escala (#33)
@@ -77,13 +81,9 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## O que está pendente
 
-Todas as issues **abertas** no GitHub (18/06):
-
 | Issue | Entrega | Project | Smoke |
 |-------|---------|---------|-------|
-| [#39](https://github.com/esvianna/ZELO/issues/39) | Admin save por aba + fix abas | **In review** | §4 **5n12–5n13** |
-| [#38](https://github.com/esvianna/ZELO/issues/38) | Admin save ops (fixes 2.14.x) | **In review** | §4 **5n7–5n11** |
-| [#37](https://github.com/esvianna/ZELO/issues/37) | Limpar duplicatas escala (admin) | **In review** | §4 **5n6** |
+| [#40](https://github.com/esvianna/ZELO/issues/40) | Ícones PWA — favicon coração + atalho logo Zelo (PWA 145) | **In review** | §7 **7n1** |
 | [#36](https://github.com/esvianna/ZELO/issues/36) | Web Push VAPID (PWA 142 + plugin 2.14.x) | **In review** | §15 |
 
 **Ops / conteúdo (sem issue aberta):** post Novidades slug `imprensa-autoridades`; config Curitiba/2026 (desactivar transporte/Wi‑Fi/credenciamento; activar imprensa).
@@ -92,16 +92,17 @@ Todas as issues **abertas** no GitHub (18/06):
 
 ## Próximos passos lógicos
 
-1. **Deploy plugin 2.15.2** — fix abas + save persiste (#39, §4 **5n12–5n13**).
-2. Smoke `TESTING.md` §15 (#36 Web Push) e §4 **5n6** (#37).
-3. Validar escala admin ↔ PWA após save OK (`GET /ops/voluntarios` vs admin F5).
-4. Criar post `imprensa-autoridades` quando conteúdo estiver pronto.
+1. **Deploy PWA build 144** — ícones favicon + cache-bust (#40, §7 **7n1**).
+2. Smoke `TESTING.md` §15 (#36 Web Push).
+3. Criar post `imprensa-autoridades` quando conteúdo estiver pronto.
+4. Config Curitiba/2026: desactivar transporte/Wi‑Fi/credenciamento; activar imprensa.
 
 ---
 
 ## Última sessão (2026-06-18)
 
-- **Governança:** nova rule `.cursor/rules/zelo-entrega-segura.mdc` — red flags (#38/#39), gate F5, PHP 8 `call_user_func` + `&$data`; referências em `zelo-contexto`, `zelo-php-backend`, `AGENTS.md`.
+- **#40 / PWA 143:** ícones manifest 192/512 reais + maskable; favicon/apple-touch no head; precache SW.
+- **Validação:** smoke OK — **Done** no Project [#37](https://github.com/esvianna/ZELO/issues/37), [#38](https://github.com/esvianna/ZELO/issues/38), [#39](https://github.com/esvianna/ZELO/issues/39).
 
 ## Sessão anterior (2026-06-18)
 
