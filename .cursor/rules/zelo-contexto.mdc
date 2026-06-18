@@ -14,7 +14,8 @@ alwaysApply: true
 5. **Preserve** comportamento existente; não refatore arquivos grandes (`app-v5.js`) sem pedido explícito.
 6. **Não** altere `api-v5.js` URLs de produção sem confirmação do usuário.
 7. Responda e documente em **português (PT-BR)**.
+8. Admin ops / forms POST / JS inline no plugin → aplicar gate em `zelo-entrega-segura.mdc` antes de marcar entrega.
 
 Arquivos críticos:
-- Backend: `backend-plugin/zelo-assistente/zelo-assistente.php`, `inc/api-routes.php`, `inc/volunteer-ops.php`
+- Backend: `backend-plugin/zelo-assistente/zelo-assistente.php`, `inc/api-routes.php`, `inc/volunteer-ops.php`, `inc/volunteer-ops-admin-ui.php` (gate: `zelo-entrega-segura.mdc`)
 - Frontend: `frontend-pwa/assets/js/app-v5.js`, `api-v5.js`, `index.html`, `sw.js`, `zelo-build.js`

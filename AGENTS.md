@@ -53,6 +53,7 @@ Solução **Backend (plugin WordPress) + Frontend (PWA estática)** para assisti
 | `DECISIONS.md` | ADRs — decisões técnicas |
 | `SECURITY.md` | Princípios e checklist de segurança |
 | `TESTING.md` | Como validar mudanças |
+| `.cursor/rules/zelo-entrega-segura.mdc` | Red flags e gate antes de «implementado» (admin ops, PHP 8) |
 | `docs/GITHUB-WORKFLOW.md` | Issues, Project, status e gate Ready |
 | `.cursor/rules/*.mdc` | Regras automáticas no Cursor |
 

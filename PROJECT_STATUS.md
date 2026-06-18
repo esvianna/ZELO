@@ -101,6 +101,10 @@ Todas as issues **abertas** no GitHub (18/06):
 
 ## Última sessão (2026-06-18)
 
+- **Governança:** nova rule `.cursor/rules/zelo-entrega-segura.mdc` — red flags (#38/#39), gate F5, PHP 8 `call_user_func` + `&$data`; referências em `zelo-contexto`, `zelo-php-backend`, `AGENTS.md`.
+
+## Sessão anterior (2026-06-18)
+
 - **#39 / plugin 2.15.2:** `call_user_func()` em PHP 8 não passa `&$data` — save por aba não persistia; invocação directa `$handler( $data )`.
 
 ## Sessão anterior (2026-06-18)

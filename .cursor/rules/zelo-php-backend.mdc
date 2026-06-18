@@ -12,6 +12,7 @@ alwaysApply: false
 - Capabilities: `zelo_view_ops`, `zelo_checkin_ops`, `zelo_reallocate_volunteer`, `zelo_manage_ops`.
 - Não reintroduzir leitura pública de `/ops/voluntarios` sem ADR em `DECISIONS.md`.
 - Dados ops em `wp_options` — mudanças de schema JSON exigem migração/backward compatibility.
+- **PHP 8:** nunca `call_user_func( $fn, $data )` se `$fn` declara `&$data`. **`$handler( $data )` com nome em variável preserva referência** — ver `zelo-entrega-segura.mdc`.
 - Ao subir versão do plugin: atualizar `ZELO_VERSION` em `zelo-assistente.php` + changelog do plugin.
 
 Qualidade: funções pequenas, nomes claros, early return, `WP_Error` com status HTTP adequado.

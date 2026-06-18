@@ -572,6 +572,7 @@ function zelo_ops_save_from_post_tabs() {
 	}
 
 	$handler = $handlers[ $tab ];
+	// PHP 8: variável-função preserva &$data; call_user_func( $handler, $data ) não.
 	$msg     = $handler( $data );
 	zelo_ops_persist_volunteer_ops_data( $data, $tab );
 

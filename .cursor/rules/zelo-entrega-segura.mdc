@@ -1,0 +1,48 @@
+---
+description: Gate de entrega — red flags, runtime PHP 8 e smoke admin ops (#38/#39)
+alwaysApply: true
+---
+
+# Entrega segura (ZELO)
+
+Papel do agente: **analista** que reduz risco — não declarar «implementado» só porque compila ou o diff parece limpo.
+
+## Antes de concluir (grep mental ou real)
+
+| Padrão no diff | Sintoma em produção | Mitigação |
+|----------------|---------------------|-----------|
+| `call_user_func( $fn, $data )` com `&$data` no handler | Save «OK» mas dados não gravam (PHP 8) | `$handler( $data )` — **não** é o mesmo que `call_user_func` |
+| `call_user_func_array( $fn, array( $data ) )` sem `&` no array | Idem | `array( &$data )` ou variável-função |
+| Dois `wp_nonce_field` com mesmo `name` | «Este link expirou» | Nomes únicos; `check_admin_referer( ..., false )` |
+| `<form>` dentro de `<form>` | Submit imprevisível | Um form; botões com `name`/`value` distintos |
+| Chaves JS `tab-*` sem aspas em literal | `SyntaxError`; abas só mudam `#hash` | `'tab-config':` sempre entre aspas |
+| `required` em campos de abas ocultas | Botão Salvar não envia | `novalidate` ou validar só a aba activa |
+| Notice verde sem teste de persistência | Falso positivo | **F5** ou `GET` API após save |
+
+## Admin Operação Voluntários (`volunteer-ops-admin-ui.php`)
+
+Ao alterar save POST, abas ou JS inline:
+
+1. **`TESTING.md` §4** — citar casos aplicáveis na resposta (mín. **5n12** se save; **5n13** se abas/JS).
+2. **Persistência:** notice ≠ gravação; descrever aba testada e confirmação pós-F5.
+3. **Save por aba:** handlers usam `&$data`. Em PHP 8: **`$handler( $data )` (mapa de funções) é válido**; proibido só `call_user_func( $handler, $data )`. Reproduzir em CLI antes de «corrigir» para `switch`.
+4. **Config/push:** não revalidar escala inteira ao salvar só Config (#39).
+
+## Se review/Bugbot reportar bug
+
+1. **Reproduzir** (script PHP CLI, passos `TESTING.md`) — não refutar por intuição **nem aplicar fix sem prova**.
+2. Se o relatório contradizer o teste CLI, **manter código** e documentar o falso positivo na rule.
+3. Corrigir só com diff mínimo comprovado; bump patch se runtime afectado.
+4. Comentar na issue **como validar**; card **In review** (não Done).
+
+## Prova rápida PHP 8 (referência)
+
+```php
+function f( &$x ) { $x['ok'] = 1; }
+$d = array();
+call_user_func( 'f', $d );           // $d vazio + warning
+$h = 'f'; $h( $d );                 // $d['ok'] === 1  ← padrão do dispatcher
+call_user_func_array( 'f', array( &$d ) ); // também OK
+```
+
+Detalhes PHP: `zelo-php-backend.mdc`. Fluxo issue/Project: `zelo-github-backlog.mdc`.

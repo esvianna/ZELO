@@ -9,6 +9,6 @@ alwaysApply: true
 
 **Segurança:** validar/sanitizar entradas; escapar saídas HTML; SQL via APIs WP; REST com permissões; proteger tokens/senhas; logs sem PII desnecessária.
 
-**Testes:** após mudanças, indicar passos de `TESTING.md` (smoke + regressão + casos de erro).
+**Testes:** após mudanças, indicar passos de `TESTING.md` (smoke + regressão + casos de erro). Admin ops: gate em `zelo-entrega-segura.mdc`.
 
 Consulte `SECURITY.md` para checklist de deploy.
