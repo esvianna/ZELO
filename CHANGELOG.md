@@ -8,6 +8,19 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Corrigido — Web Push (#36)
+
+| Versão | Entrega |
+|--------|---------|
+| Plugin **2.14.2** | `zelo_push_normalize_endpoint` — mesmo `esc_url_raw` no subscribe e unsubscribe (hash coerente) |
+| PWA **142** | `_pushStatusCache: null` inicializado no objeto `app` |
+
+### Adicionado — limpar duplicatas na escala (#37)
+
+| Versão | Entrega |
+|--------|---------|
+| Plugin **2.14.1** | Admin Operação Voluntários → Escala: aviso + botão «Limpar duplicatas»; `zelo_dedupe_schedule_rows`; limpa compromissos/check-ins órfãos |
+
 ### Adicionado — Web Push VAPID (#36, retomada #8)
 
 | Versão | Entrega |

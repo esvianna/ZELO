@@ -489,3 +489,45 @@ function zelo_ops_save_schedule_rest( $request ) {
 		)
 	);
 }
+
+/**
+ * Remove duplicatas da escala gravada e limpa dados órfãos.
+ *
+ * @param int $user_id Editor (0 = utilizador actual).
+ * @return array{removed: int, removed_ids: string[]}|WP_Error
+ */
+function zelo_ops_dedupe_volunteer_ops_schedule( $user_id = 0 ) {
+	$user_id = $user_id > 0 ? (int) $user_id : get_current_user_id();
+	$data    = zelo_get_volunteer_ops_data();
+	$catalogs = isset( $data['catalogs'] ) && is_array( $data['catalogs'] ) ? $data['catalogs'] : array();
+	$result  = zelo_dedupe_schedule_rows( isset( $data['schedule'] ) ? $data['schedule'] : array(), $catalogs );
+
+	if ( $result['removed'] < 1 ) {
+		return new WP_Error(
+			'zelo_schedule_dedupe_none',
+			__( 'Nenhuma duplicata encontrada na escala.', 'zelo-assistente' )
+		);
+	}
+
+	if ( ! empty( $result['removed_ids'] ) ) {
+		zelo_ops_cleanup_orphan_assignment_data( $result['removed_ids'] );
+	}
+
+	$data['schedule'] = $result['schedule'];
+	if ( ! isset( $data['history'] ) || ! is_array( $data['history'] ) ) {
+		$data['history'] = array();
+	}
+	$data['history'][] = array(
+		'type'        => 'schedule_dedupe',
+		'at'          => current_time( 'mysql' ),
+		'user_id'     => $user_id,
+		'removed'     => $result['removed'],
+		'removed_ids' => $result['removed_ids'],
+	);
+	update_option( 'zelo_volunteer_ops_data', $data );
+
+	return array(
+		'removed'     => $result['removed'],
+		'removed_ids' => $result['removed_ids'],
+	);
+}

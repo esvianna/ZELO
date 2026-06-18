@@ -2,6 +2,16 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.14.2] - 2026-06-18
+
+### Corrigido
+- **Web Push (#36):** `zelo_push_normalize_endpoint()` — unsubscribe usava `sanitize_text_field` em vez de `esc_url_raw`, gerando hash diferente do subscribe.
+
+## [2.14.1] - 2026-06-18
+
+### Adicionado
+- **Escala (#37):** botão «Limpar duplicatas» no admin; `zelo_ops_schedule_dedup_key`, `zelo_dedupe_schedule_rows`, `zelo_ops_dedupe_volunteer_ops_schedule`; aviso quando há duplicatas; mantém linha com compromisso/check-in.
+
 ## [2.14.0] - 2026-06-18
 
 ### Adicionado

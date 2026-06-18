@@ -129,6 +129,7 @@ Orientação de testes **manual** (prioritário hoje) e caminho para automação
 | 5n3 | Horário inválido no modal | responsável | Erro exibido no modal (não só alert) |
 | 5n4 | «Montar este turno» | responsável | Editor completo inalterado |
 | 5n5 | Linha `declined` | responsável | Sem editar — remover (#31) + adicionar (#32) |
+| 5n6 | Admin → Escala → **Limpar duplicatas** (#37, plugin 2.14.1+) | `manage_options` | Aviso amarelo se há duplicatas; confirmação; remove excedentes; salvar escala volta a funcionar |
 | 5o | Layout toolbar escala (PWA **137+**, #33) | gestor / mobile 375px | Filtro status «Todos os status»; selects com estilo uniforme; filtros legíveis (grid 2 col.) |
 | 5o2 | Botões Montar escala + Export PDF | gestor | Mesma altura, mesma linha |
 | 5o3 | Regressão filtros escala | homem-chave | Dia/turno/local/responsável/nome/idioma e export PDF inalterados |
@@ -329,6 +330,7 @@ Pré-requisitos: HTTPS; Chrome/Android ou Safari 16.4+ (iOS com limitações). A
 | 15.5 | Alterar horário na escala (voluntário `accepted`) | Push «escala mudou» + hub in-app |
 | 15.6 | Janela check-in aberta (cron ou simular) | Push check-in (se subscription activa) |
 | 15.7 | Perfil → desactivar notificações | `DELETE /ops/push/subscribe` **200**; sem push novo |
+| 15.7b | Regressão unsubscribe | Endpoint gravado é removido (hash coerente; plugin 2.14.2+) |
 | 15.8 | Regressão hub sino + e-mail cron | Inalterados |
 
 ---

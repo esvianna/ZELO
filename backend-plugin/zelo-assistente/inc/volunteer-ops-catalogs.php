@@ -1285,6 +1285,213 @@ function zelo_validate_schedule_rows( $schedule, $catalogs = null ) {
 }
 
 /**
+ * Chave canónica para detectar duplicatas na escala (dia + turno + voluntário + horário).
+ *
+ * @param array      $row      Linha normalizada.
+ * @param array|null $catalogs Catálogos (opcional).
+ * @return string Vazio se a linha não entra na deduplicação.
+ */
+function zelo_ops_schedule_dedup_key( $row, $catalogs = null ) {
+	if ( ! is_array( $catalogs ) ) {
+		$data     = zelo_get_volunteer_ops_data();
+		$catalogs = isset( $data['catalogs'] ) && is_array( $data['catalogs'] ) ? $data['catalogs'] : array();
+	}
+
+	$day = isset( $row['day'] ) ? sanitize_key( $row['day'] ) : '';
+	$sh  = isset( $row['shift'] ) ? sanitize_text_field( $row['shift'] ) : '';
+	$st  = isset( $row['start'] ) ? zelo_ops_normalize_time( $row['start'] ) : '';
+	$en  = isset( $row['end'] ) ? zelo_ops_normalize_time( $row['end'] ) : '';
+
+	if ( $day === '' || $sh === '' || $st === '' || $en === '' ) {
+		return '';
+	}
+
+	$wp = isset( $row['wp_user_id'] ) ? (int) $row['wp_user_id'] : 0;
+	$rv = isset( $row['roster_volunteer_id'] ) ? sanitize_text_field( $row['roster_volunteer_id'] ) : '';
+
+	$vol_key = '';
+	if ( $wp > 0 ) {
+		$vol_key = 'wp:' . $wp;
+	} elseif ( $rv !== '' ) {
+		$roster = isset( $catalogs['roster_volunteers'] ) && is_array( $catalogs['roster_volunteers'] ) ? $catalogs['roster_volunteers'] : array();
+		foreach ( $roster as $rv_row ) {
+			if ( ! empty( $rv_row['id'] ) && $rv_row['id'] === $rv && ! empty( $rv_row['linked_wp_user_id'] ) ) {
+				$vol_key = 'wp:' . (int) $rv_row['linked_wp_user_id'];
+				break;
+			}
+		}
+		if ( $vol_key === '' ) {
+			$vol_key = 'rv:' . $rv;
+		}
+	}
+
+	if ( $vol_key === '' ) {
+		return '';
+	}
+
+	return $day . '|' . $sh . '|' . $vol_key . '|' . $st . '|' . $en;
+}
+
+/**
+ * Pontuação para escolher qual linha duplicada manter (compromisso/check-in).
+ *
+ * @param string $assignment_id ID da designação.
+ * @return int
+ */
+function zelo_ops_schedule_row_keep_score( $assignment_id ) {
+	$assignment_id = sanitize_text_field( $assignment_id );
+	if ( $assignment_id === '' ) {
+		return 0;
+	}
+	$score = 0;
+	if ( function_exists( 'zelo_get_commitment_status' ) ) {
+		$status = zelo_get_commitment_status( $assignment_id );
+		if ( $status === 'accepted' ) {
+			$score += 100;
+		} elseif ( $status === 'pending' ) {
+			$score += 50;
+		} elseif ( $status === 'declined' ) {
+			$score += 10;
+		}
+	}
+	if ( function_exists( 'zelo_get_volunteer_checkins' ) ) {
+		$checkins = zelo_get_volunteer_checkins();
+		if ( ! empty( $checkins[ $assignment_id ] ) ) {
+			$score += 200;
+		}
+	}
+	return $score;
+}
+
+/**
+ * Conta linhas duplicadas na escala (excedentes além da primeira de cada grupo).
+ *
+ * @param array      $schedule Linhas.
+ * @param array|null $catalogs Catálogos.
+ * @return int
+ */
+function zelo_ops_count_schedule_duplicates( $schedule, $catalogs = null ) {
+	if ( ! is_array( $schedule ) ) {
+		return 0;
+	}
+	$groups = array();
+	foreach ( $schedule as $row ) {
+		if ( ! is_array( $row ) ) {
+			continue;
+		}
+		$key = zelo_ops_schedule_dedup_key( $row, $catalogs );
+		if ( $key === '' ) {
+			continue;
+		}
+		if ( ! isset( $groups[ $key ] ) ) {
+			$groups[ $key ] = 0;
+		}
+		++$groups[ $key ];
+	}
+	$extra = 0;
+	foreach ( $groups as $count ) {
+		if ( $count > 1 ) {
+			$extra += $count - 1;
+		}
+	}
+	return $extra;
+}
+
+/**
+ * Remove duplicatas exactas da escala; mantém a linha «mais importante» de cada grupo.
+ *
+ * @param array      $schedule Linhas (idealmente normalizadas).
+ * @param array|null $catalogs Catálogos.
+ * @return array{schedule: array, removed: int, removed_ids: string[]}
+ */
+function zelo_dedupe_schedule_rows( $schedule, $catalogs = null ) {
+	$out = array(
+		'schedule'    => array(),
+		'removed'     => 0,
+		'removed_ids' => array(),
+	);
+
+	if ( ! is_array( $schedule ) ) {
+		return $out;
+	}
+
+	if ( ! is_array( $catalogs ) ) {
+		$data     = zelo_get_volunteer_ops_data();
+		$catalogs = isset( $data['catalogs'] ) && is_array( $data['catalogs'] ) ? $data['catalogs'] : array();
+	}
+
+	$normalized = array();
+	foreach ( $schedule as $row ) {
+		if ( ! is_array( $row ) ) {
+			continue;
+		}
+		$normalized[] = zelo_normalize_schedule_row_with_catalogs( $row, $catalogs );
+	}
+
+	$groups   = array();
+	$no_key   = array();
+	$idx      = 0;
+	foreach ( $normalized as $row ) {
+		$key = zelo_ops_schedule_dedup_key( $row, $catalogs );
+		if ( $key === '' ) {
+			$no_key[] = $row;
+			continue;
+		}
+		if ( ! isset( $groups[ $key ] ) ) {
+			$groups[ $key ] = array();
+		}
+		$groups[ $key ][] = array(
+			'row' => $row,
+			'idx' => $idx,
+		);
+		++$idx;
+	}
+
+	$kept = array();
+	foreach ( $groups as $items ) {
+		if ( count( $items ) === 1 ) {
+			$kept[] = $items[0];
+			continue;
+		}
+		usort(
+			$items,
+			function ( $a, $b ) {
+				$sa = zelo_ops_schedule_row_keep_score( isset( $a['row']['id'] ) ? $a['row']['id'] : '' );
+				$sb = zelo_ops_schedule_row_keep_score( isset( $b['row']['id'] ) ? $b['row']['id'] : '' );
+				if ( $sa !== $sb ) {
+					return $sb <=> $sa;
+				}
+				return $a['idx'] <=> $b['idx'];
+			}
+		);
+		$kept[] = $items[0];
+		for ( $i = 1; $i < count( $items ); $i++ ) {
+			$rid = isset( $items[ $i ]['row']['id'] ) ? sanitize_text_field( $items[ $i ]['row']['id'] ) : '';
+			if ( $rid !== '' ) {
+				$out['removed_ids'][] = $rid;
+			}
+			++$out['removed'];
+		}
+	}
+
+	usort(
+		$kept,
+		function ( $a, $b ) {
+			return $a['idx'] <=> $b['idx'];
+		}
+	);
+	$out['schedule'] = array();
+	foreach ( $kept as $item ) {
+		$out['schedule'][] = $item['row'];
+	}
+	foreach ( $no_key as $row ) {
+		$out['schedule'][] = $row;
+	}
+
+	return $out;
+}
+
+/**
  * Linha de catálogo marcada como ativa no POST (checkbox indexado).
  *
  * @param string $field Field base name.

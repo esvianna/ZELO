@@ -29,6 +29,28 @@ function zelo_ops_user_select_html( $users, $selected, $name ) {
 	return $html;
 }
 
+function zelo_ops_handle_dedupe_schedule_post() {
+	if ( ! isset( $_POST['zelo_ops_dedupe_schedule'] ) || ! check_admin_referer( 'zelo_ops_dedupe_schedule_nonce' ) ) {
+		return '';
+	}
+	if ( ! current_user_can( 'manage_options' ) ) {
+		return '';
+	}
+	if ( ! function_exists( 'zelo_ops_dedupe_volunteer_ops_schedule' ) ) {
+		return __( 'Rotina indisponível.', 'zelo-assistente' );
+	}
+	$result = zelo_ops_dedupe_volunteer_ops_schedule( get_current_user_id() );
+	if ( is_wp_error( $result ) ) {
+		return $result->get_error_message();
+	}
+	$user_id = get_current_user_id();
+	if ( $user_id ) {
+		update_user_meta( $user_id, 'zelo_ops_active_tab', 'tab-escala' );
+	}
+	/* translators: %d: number of removed rows */
+	return sprintf( __( 'Duplicatas removidas: %d linha(s). Compromissos e check-ins das linhas apagadas foram limpos.', 'zelo-assistente' ), (int) $result['removed'] );
+}
+
 function zelo_ops_handle_link_request_admin_post() {
 	if ( ! isset( $_POST['zelo_link_admin'] ) || ! check_admin_referer( 'zelo_link_admin_nonce' ) || ! current_user_can( 'manage_options' ) ) {
 		return '';
@@ -392,6 +414,10 @@ function zelo_render_volunteer_ops_admin_tabs() {
 	if ( $msg_tabs ) {
 		$msg = $msg ? $msg . ' ' . $msg_tabs : $msg_tabs;
 	}
+	$msg_dedupe = zelo_ops_handle_dedupe_schedule_post();
+	if ( $msg_dedupe ) {
+		$msg = $msg ? $msg . ' ' . $msg_dedupe : $msg_dedupe;
+	}
 	$msg2 = zelo_ops_save_json_advanced();
 	if ( $msg2 ) {
 		$msg = $msg ? $msg . ' ' . $msg2 : $msg2;
@@ -409,10 +435,11 @@ function zelo_render_volunteer_ops_admin_tabs() {
 		'event_dates' => $dates,
 	);
 	$notice_class = 'notice-success';
-	if ( $msg && ( strpos( $msg, 'Linha' ) !== false || strpos( $msg, 'utilizador' ) !== false || strpos( $msg, 'voluntário' ) !== false ) ) {
+	if ( $msg && ( strpos( $msg, 'Linha' ) !== false || strpos( $msg, 'utilizador' ) !== false || strpos( $msg, 'voluntário' ) !== false || strpos( $msg, 'Nenhuma duplicata' ) !== false ) ) {
 		$notice_class = 'notice-error';
 	}
 	$active_tab = zelo_ops_resolve_active_tab();
+	$dup_count  = function_exists( 'zelo_ops_count_schedule_duplicates' ) ? zelo_ops_count_schedule_duplicates( $sched, $catalogs ) : 0;
 	?>
 	<div class="wrap">
 		<h1><?php esc_html_e( 'Operação de Voluntários', 'zelo-assistente' ); ?></h1>
@@ -445,6 +472,26 @@ function zelo_render_volunteer_ops_admin_tabs() {
 				<p class="description"><?php esc_html_e( 'Início e fim são preenchidos ao selecionar o turno (limites da aba Turnos). Pode ajustar a faixa dentro desse intervalo. Várias linhas no mesmo turno com horários diferentes são permitidas.', 'zelo-assistente' ); ?></p>
 				<p class="description"><?php esc_html_e( 'Idiomas vêm do perfil do voluntário (aba Voluntários ou cadastro no app), não desta tabela.', 'zelo-assistente' ); ?></p>
 				<p class="description"><?php esc_html_e( 'Não repita a mesma pessoa no mesmo dia, turno e horário (início + fim iguais).', 'zelo-assistente' ); ?></p>
+				<?php if ( $dup_count > 0 ) : ?>
+					<div class="notice notice-warning inline" style="margin:12px 0;padding:8px 12px;">
+						<p>
+							<?php
+							printf(
+								/* translators: %d: duplicate row count */
+								esc_html__( 'Foram detectadas %d linha(s) duplicada(s). O salvamento manual pode falhar até limpar. Use o botão abaixo (não precisa de acesso ao banco de dados).', 'zelo-assistente' ),
+								(int) $dup_count
+							);
+							?>
+						</p>
+					</div>
+				<?php endif; ?>
+				<p>
+					<form method="post" style="display:inline;" onsubmit="return confirm('<?php echo esc_js( __( 'Remover linhas duplicadas da escala? Mantém a linha com compromisso ou check-in, quando existir.', 'zelo-assistente' ) ); ?>');">
+						<?php wp_nonce_field( 'zelo_ops_dedupe_schedule_nonce' ); ?>
+						<input type="hidden" name="zelo_ops_dedupe_schedule" value="1" />
+						<button type="submit" class="button"><?php esc_html_e( 'Limpar duplicatas', 'zelo-assistente' ); ?></button>
+					</form>
+				</p>
 				<table class="widefat striped zelo-sched-table">
 					<thead>
 						<tr>

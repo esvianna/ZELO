@@ -141,8 +141,16 @@ function zelo_push_save_admin_settings( $post ) {
  * @param string $endpoint Endpoint.
  * @return string
  */
+function zelo_push_normalize_endpoint( $endpoint ) {
+	return esc_url_raw( (string) $endpoint );
+}
+
+/**
+ * @param string $endpoint Endpoint.
+ * @return string
+ */
 function zelo_push_endpoint_hash( $endpoint ) {
-	return hash( 'sha256', (string) $endpoint );
+	return hash( 'sha256', zelo_push_normalize_endpoint( $endpoint ) );
 }
 
 /**
@@ -156,7 +164,7 @@ function zelo_push_save_subscription( $user_id, $sub ) {
 	if ( $user_id < 1 ) {
 		return new WP_Error( 'zelo_push_user', __( 'Utilizador inválido.', 'zelo-assistente' ), array( 'status' => 400 ) );
 	}
-	$endpoint = isset( $sub['endpoint'] ) ? esc_url_raw( (string) $sub['endpoint'] ) : '';
+	$endpoint = isset( $sub['endpoint'] ) ? zelo_push_normalize_endpoint( $sub['endpoint'] ) : '';
 	$keys     = isset( $sub['keys'] ) && is_array( $sub['keys'] ) ? $sub['keys'] : array();
 	$p256dh   = isset( $keys['p256dh'] ) ? sanitize_text_field( (string) $keys['p256dh'] ) : '';
 	$auth     = isset( $keys['auth'] ) ? sanitize_text_field( (string) $keys['auth'] ) : '';
@@ -204,7 +212,8 @@ function zelo_push_delete_subscription( $user_id, $endpoint = '' ) {
 	}
 	$table = zelo_push_table_name();
 	if ( $endpoint !== '' ) {
-		$hash = zelo_push_endpoint_hash( $endpoint );
+		$endpoint = zelo_push_normalize_endpoint( $endpoint );
+		$hash     = zelo_push_endpoint_hash( $endpoint );
 		$wpdb->delete( $table, array( 'user_id' => $user_id, 'endpoint_hash' => $hash ), array( '%d', '%s' ) );
 		return true;
 	}
@@ -571,10 +580,10 @@ function zelo_rest_push_unsubscribe( $request ) {
 	$endpoint = '';
 	$body     = $request->get_json_params();
 	if ( is_array( $body ) && isset( $body['endpoint'] ) ) {
-		$endpoint = sanitize_text_field( (string) $body['endpoint'] );
+		$endpoint = zelo_push_normalize_endpoint( $body['endpoint'] );
 	}
 	if ( $endpoint === '' ) {
-		$endpoint = sanitize_text_field( (string) $request->get_param( 'endpoint' ) );
+		$endpoint = zelo_push_normalize_endpoint( (string) $request->get_param( 'endpoint' ) );
 	}
 	$res      = zelo_push_delete_subscription( get_current_user_id(), $endpoint );
 	if ( is_wp_error( $res ) ) {
