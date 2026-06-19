@@ -2,21 +2,23 @@
 
 Roadmap orientado ao contexto real do projeto (visitante + voluntários + WordPress). **Backlog operacional e priorização:** [GitHub Project 3](https://github.com/users/esvianna/projects/3) (ADR-020). Atualize este arquivo quando fases mudarem; issues linkadas são a fonte de tarefas.
 
-**Versão de referência no repo:** plugin **2.15.2**, PWA **build 142**.
+**Versão de referência no repo:** plugin **2.17.0**, PWA **build 149**.
 
 ---
 
-## Fase actual: Validação pós-pacote 2.14.x
+## Fase actual: Operação em evento (Curitiba/2026)
 
-**Objetivo:** Fechar smoke de #36–#38 em produção; admin ops estável (save + dedupe + push).
+**Objetivo:** Conteúdo e config do evento; backlog novo via Project 3.
 
 | # | Entrega | Status | Issue |
 |---|---------|--------|-------|
-| 1 | Web Push VAPID + subscribe PWA | **In review** | [#36](https://github.com/esvianna/ZELO/issues/36) |
-| 2 | Admin dedupe escala | **In review** | [#37](https://github.com/esvianna/ZELO/issues/37) |
-| 3 | Admin save por aba | **In review** (2.15.2) | [#39](https://github.com/esvianna/ZELO/issues/39) · [#38](https://github.com/esvianna/ZELO/issues/38) |
-| 4 | Info evento + imprensa PWA | **Concluído** | [#34](https://github.com/esvianna/ZELO/issues/34) · [#35](https://github.com/esvianna/ZELO/issues/35) |
-| 5 | Modal add/edit linha escala | **Concluído** | [#32](https://github.com/esvianna/ZELO/issues/32) |
+| 1 | Web Push VAPID + subscribe PWA | **Concluído** | [#36](https://github.com/esvianna/ZELO/issues/36) |
+| 2 | Reset push pós-VAPID (#42) | **Concluído** | [#42](https://github.com/esvianna/ZELO/issues/42) |
+| 3 | Aprovação cadastro voluntários | **Concluído** | [#41](https://github.com/esvianna/ZELO/issues/41) |
+| 4 | Excluir linha escala (pending/accepted) | **Concluído** | [#43](https://github.com/esvianna/ZELO/issues/43) |
+| 5 | Admin dedupe escala | **Concluído** | [#37](https://github.com/esvianna/ZELO/issues/37) |
+| 6 | Admin save por aba | **Concluído** (2.15.2) | [#39](https://github.com/esvianna/ZELO/issues/39) · [#38](https://github.com/esvianna/ZELO/issues/38) |
+| 7 | Conteúdo imprensa + config evento | **Pendente** (sem issue) | — |
 
 ---
 
@@ -44,7 +46,7 @@ Roadmap orientado ao contexto real do projeto (visitante + voluntários + WordPr
 | C1 | Compromisso antecipado + prazo admin | Implementado (2.7.0) | — |
 | C2 | Janelas check-in/out + validação API | Implementado | — |
 | C3 | Onboarding roster + fila vínculos | Implementado | — |
-| C4 | Web Push completo (VAPID + subscribe) | **In review** (#36, ADR-035) | [#36](https://github.com/esvianna/ZELO/issues/36) · [#8](https://github.com/esvianna/ZELO/issues/8) |
+| C4 | Web Push completo (VAPID + subscribe) | **Concluído** (#36, ADR-035) | [#36](https://github.com/esvianna/ZELO/issues/36) · [#8](https://github.com/esvianna/ZELO/issues/8) |
 | C5 | Motor notificações unificado + inbox servidor | **Descartado** (ADR-028; hub + e-mail + localStorage) | [#9](https://github.com/esvianna/ZELO/issues/9) |
 
 ---

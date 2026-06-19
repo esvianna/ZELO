@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-18** (#41 hotfix PWA **149** — Gerir cadastros; #43 **In review**).
+> Última atualização: **2026-06-19** — smoke OK: #36, #41, #42, #43 **Done** no Project.
 
 ---
 
@@ -15,10 +15,16 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | Plugin WordPress (`zelo-assistente.php`) | **2.17.0** |
 | PWA (`zelo-build.js` / `sw.js`) | **build 149** |
 
-**Produção:** plugin **2.15.2**; PWA **build 145** — deploy **2.16.0 / 146** pendente (#41).
+**Produção (repo):** plugin **2.17.0** + PWA **149** — smoke validado (#36, #41, #42, #43).
 
 ### Entregas recentes (Done no Project / issues fechadas)
 
+| Issue | Entrega |
+|-------|---------|
+| [#43](https://github.com/esvianna/ZELO/issues/43) | Excluir linha escala pending/accepted na lista (PWA 148) — **Done** smoke §5m2 |
+| [#42](https://github.com/esvianna/ZELO/issues/42) | Reset push + consent v3 + fingerprint (plugin 2.17.0 / PWA 147) — **Done** smoke §15.9–15.12 |
+| [#41](https://github.com/esvianna/ZELO/issues/41) | Aprovação cadastro voluntários (plugin 2.16.0 / PWA 146–149) — **Done** smoke §16 |
+| [#36](https://github.com/esvianna/ZELO/issues/36) | Web Push VAPID + subscribe PWA (plugin 2.14.x / PWA 142+) — **Done** smoke §15 |
 | Issue | Entrega |
 |-------|---------|
 | [#40](https://github.com/esvianna/ZELO/issues/40) | Ícones PWA — favicon coração + manifest wordmark; atalho desktop (PWA 145) — **Done** Project 18/06 |
@@ -57,10 +63,13 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 ### Backend (`zelo-assistente` v2.17.0)
 
 - [x] Reset push (#42): truncate ao regenerar VAPID; botão limpar subscriptions; fingerprint REST; histórico ops
+- [x] Aprovação voluntários (#41): fila pós-e-mail; REST approve/reject; migração legados
 
-### Frontend (PWA build 147)
+### Frontend (PWA build 149)
 
 - [x] Push consent v3 + fingerprint + logout unsub + re-subscribe VAPID (#42)
+- [x] Cadastros pendentes admin + hotfix navegação (#41, 149)
+- [x] Lixeira escala pending/accepted na lista (#43, 148)
 
 ### Backend (`zelo-assistente` v2.15.2)
 
@@ -90,12 +99,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## O que está pendente
 
-| Issue | Entrega | Project | Smoke |
-|-------|---------|---------|-------|
-| [#41](https://github.com/esvianna/ZELO/issues/41) | Aprovação cadastro voluntários (2.16.0 / PWA 146–149) | **In review** | §16 |
-| [#36](https://github.com/esvianna/ZELO/issues/36) | Web Push VAPID (PWA 142 + plugin 2.14.x) | **In review** | §15 |
-| [#42](https://github.com/esvianna/ZELO/issues/42) | Reset subscriptions push + consent v3 (pós-smoke #36) | **In review** | §15.9–15.12 |
-| [#43](https://github.com/esvianna/ZELO/issues/43) | Excluir linha escala pending/accepted (responsáveis turno) | **In review** | §5m2, §5m2b |
+*Nenhuma issue em **In review** / **Ready** no Project (pacote #36–#43 validado).*
 
 **Ops / conteúdo (sem issue aberta):** post Novidades slug `imprensa-autoridades`; config Curitiba/2026 (desactivar transporte/Wi‑Fi/credenciamento; activar imprensa).
 
@@ -103,18 +107,16 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## Próximos passos lógicos
 
-1. Smoke `TESTING.md` §16 (#41 aprovação voluntários) + deploy plugin 2.16.0 / PWA 146.
-2. Smoke `TESTING.md` §15 (#36 Web Push).
-2. Criar post `imprensa-autoridades` quando conteúdo estiver pronto.
-3. Config Curitiba/2026: desactivar transporte/Wi‑Fi/credenciamento; activar imprensa.
+1. Conteúdo: post `imprensa-autoridades` quando texto estiver pronto.
+2. Config Curitiba/2026: desactivar transporte/Wi‑Fi/credenciamento; activar imprensa.
+3. Novas tarefas → issue no [Project 3](https://github.com/users/esvianna/projects/3) (Backlog → Ready).
 
 ---
 
-## Última sessão (2026-06-18)
+## Última sessão (2026-06-19)
 
-- **#41 / PWA 149 (hotfix):** «Gerir cadastros» ficava em «Carregando…» — `router.navigate('cadastros-pendentes')` não chamava `renderVolunteerApprovals()`. Corrigido; smoke §16.3.
-- **#43 / PWA 148:** lixeira na lista do turno para linhas `pending` (incl. «Escala alterada»), `declined` e `accepted`; modal com avisos por estado. Card **In review** — smoke §5m, §5m2, §5m2b.
-- **#41 / plugin 2.16.0 / PWA 146:** gate aprovação voluntário — registo `subscriber`, fila PWA admin, `/news` + `/indoor-map` com `zelo_view_ops`, notificação e-mail + push, migração legados. Card **In review** — smoke §16.
+- **Validação smoke:** #36 (Web Push), #41 (aprovação voluntários), #42 (reset push), #43 (excluir linha escala) — **Done** no Project; issues fechadas.
+- Versões validadas: plugin **2.17.0**, PWA **149** (incl. hotfix #41 em 149 e #43 em 148).
 - **#40 / PWA 145:** **Done** — smoke §7 **7n1** OK; favicon coração na aba; manifest wordmark; atalho desktop Windows via «Alterar ícone» quando `.lnk` mostra «Z» (limitação Chrome/shell).
 - **Validação anterior:** **Done** [#37](https://github.com/esvianna/ZELO/issues/37), [#38](https://github.com/esvianna/ZELO/issues/38), [#39](https://github.com/esvianna/ZELO/issues/39).
 

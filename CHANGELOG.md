@@ -13,6 +13,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | Versão | Entrega |
 |--------|---------|
 | PWA **148** | Lixeira na lista para `pending`, `schedule_changed` e `accepted` (além de `declined`); modal com avisos por estado; `canRemoveScheduleAssignment` |
+| Validação | **Done** no Project (#43) — smoke §5m, §5m2, §5m2b |
 
 ### Adicionado — reset push / VAPID (#42)
 
@@ -20,6 +21,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 |--------|---------|
 | Plugin **2.17.0** | Truncate subscriptions ao regenerar VAPID; botão «Limpar subscriptions»; fingerprint VAPID no REST; auditoria `history`; contagem admin |
 | PWA **147** | Consent `v3`; fingerprint localStorage; logout desactiva push; re-subscribe se chave browser ≠ VAPID; UI «Reactivação necessária» |
+| Validação | **Done** no Project (#42) — smoke §15.9–15.12 |
 
 ### Segurança — aprovação de voluntários (#41)
 
@@ -28,6 +30,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | Plugin **2.16.0** | Registo PWA → `subscriber`; fila aprovação pós-e-mail; REST approve/reject (`manage_options`); notificação e-mail + push; migração legados |
 | PWA **146** | Fila «Cadastros pendentes» (admin); gates `/news` e `/indoor-map`; banner pendente; cache ops limpo para subscriber |
 | PWA **149** | Fix: `router.navigate('cadastros-pendentes')` chama `renderVolunteerApprovals()` (lista deixava de carregar) |
+| Validação | **Done** no Project (#41) — smoke §16 |
 
 ### Corrigido — ícones PWA instalação desktop (#40)
 
@@ -79,6 +82,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 |--------|---------|
 | Plugin **2.14.0** | Tabela `wp_zelo_push_subscriptions`; VAPID no admin (Operação → Config); `minishlink/web-push`; REST subscribe/unsubscribe/status/test; push em Novidades, escala alterada, check-in/out (cron) |
 | PWA **141** | `pushManager.subscribe`; prompt `zelo_push_consent_v2` no login; secção Perfil activar/desactivar; i18n pt/en/es |
+| Validação | **Done** no Project (#36) — smoke §15 |
 
 ### Adicionado — atalhos para instruções Imprensa e Autoridades (PWA 140, #35)
 
