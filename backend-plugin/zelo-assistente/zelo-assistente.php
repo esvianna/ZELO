@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Zelo Assistente
  * Description: Backend plugin for Zelo PWA. Manages Locations and Event Info.
- * Version: 2.16.0
+ * Version: 2.17.0
  * Author: Zelo Team
  * Text Domain: zelo-assistente
  */

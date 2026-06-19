@@ -120,7 +120,9 @@ Orientação de testes **manual** (prioritário hoje) e caminho para automação
 | 5l4 | Escala — filtro estado participação | voluntário | Select no bloco «Minhas designações»: Todos / Pendentes / Aceitas / Recusadas |
 | 5l5 | Vista equipa (supervisor) | homem-chave | Recusas de colegas **continuam** visíveis na escala da equipa |
 | 5m | **Remover linha recusada** (PWA **134+** / plugin **2.13.7+**, #31) | homem-chave / gestor | Ícone lixeira em linha `declined` no turno do escopo; modal com resumo → Confirmar remove linha |
-| 5m2 | Cancelar no modal | responsável | Linha permanece; sem alteração na API |
+| 5m2 | **Remover linha pending** (PWA **148+**, #43) | homem-chave / gestor | Lixeira em `pending` ou «Escala alterada — confirme»; modal com aviso; confirmar remove linha |
+| 5m2b | **Remover linha accepted** (#43) | responsável | Lixeira visível; modal avisa que já confirmou (ou check-in); remove designação e compromisso |
+| 5m2c | Cancelar no modal | responsável | Linha permanece; sem alteração na API |
 | 5m3 | Swap pendente na linha | responsável | Modal avisa; após remover, pedido fica `rejected` |
 | 5m4 | Voluntário comum | view_ops | **Sem** botão remover em linhas de colegas |
 | 5m5 | Homem-chave outro turno | view_ops | Sem botão; `POST /ops/schedule` omitindo linha → **403** |

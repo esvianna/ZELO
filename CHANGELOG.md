@@ -8,6 +8,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Adicionado — excluir linha escala pending/accepted (#43)
+
+| Versão | Entrega |
+|--------|---------|
+| PWA **148** | Lixeira na lista para `pending`, `schedule_changed` e `accepted` (além de `declined`); modal com avisos por estado; `canRemoveScheduleAssignment` |
+
 ### Adicionado — reset push / VAPID (#42)
 
 | Versão | Entrega |

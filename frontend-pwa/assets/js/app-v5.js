@@ -4089,10 +4089,29 @@ const app = {
         ) || null;
     },
 
-    canRemoveDeclinedAssignment(item) {
+    canRemoveScheduleAssignment(item) {
         if (!item || !item.id) return false;
-        if (this.getCommitmentStatus(item.id) !== 'declined') return false;
-        return this.canEditScheduleScope(item.day, item.shift);
+        if (!this.canEditScheduleScope(item.day, item.shift)) return false;
+        const st = this.getCommitmentStatus(item.id);
+        return st === 'pending' || st === 'declined' || st === 'accepted';
+    },
+
+    getRemoveScheduleWarningNote(assignmentId) {
+        const st = this.getCommitmentStatus(assignmentId);
+        if (st === 'accepted') {
+            const presence = this.getCheckinStatus(assignmentId).status || 'pending';
+            if (presence === 'checked_in') {
+                return i18n.t('ops_remove_schedule_checked_in_note');
+            }
+            return i18n.t('ops_remove_schedule_accepted_note');
+        }
+        if (st === 'pending' && this.getCommitmentPendingReason(assignmentId) === 'schedule_changed') {
+            return i18n.t('ops_remove_schedule_changed_note');
+        }
+        if (st === 'pending') {
+            return i18n.t('ops_remove_schedule_pending_note');
+        }
+        return '';
     },
 
     buildScheduleScopeRowsExcluding(assignmentId) {
@@ -4353,7 +4372,7 @@ const app = {
 
     openRemoveDeclinedModal(assignmentId) {
         const item = this.findOpsScheduleRow(assignmentId);
-        if (!item || !this.canRemoveDeclinedAssignment(item)) return;
+        if (!item || !this.canRemoveScheduleAssignment(item)) return;
         this._removeDeclinedModal = { assignmentId, item };
         this._removeDeclinedSaving = false;
         this.renderRemoveDeclinedModal();
@@ -4381,6 +4400,10 @@ const app = {
         const swapNote = pendingSwap
             ? `<p class="ops-confirm-warning">${this.escapeHtml(i18n.t('ops_remove_declined_swap_note'))}</p>`
             : '';
+        const commitmentNote = this.getRemoveScheduleWarningNote(mod.assignmentId);
+        const commitmentHtml = commitmentNote
+            ? `<p class="ops-confirm-warning">${this.escapeHtml(commitmentNote)}</p>`
+            : '';
         const saving = !!this._removeDeclinedSaving;
         let overlay = document.getElementById('ops-remove-declined-overlay');
         if (!overlay) {
@@ -4403,6 +4426,7 @@ const app = {
                     <p class="ops-confirm-meta text-muted">${day} · ${shift} · ${loc}</p>
                     <p class="ops-confirm-meta text-muted">${timeRange}</p>
                     <p class="ops-confirm-note">${this.escapeHtml(i18n.t('ops_remove_declined_body'))}</p>
+                    ${commitmentHtml}
                     ${swapNote}
                 </div>
                 <footer class="ops-confirm-footer">
@@ -5202,7 +5226,7 @@ const app = {
             if (mineRow && this.getCommitmentStatus(item.id) === 'declined') {
                 inlineActions += this.renderOpsIconButton('ops_request_swap', `app.requestSwap('${idEsc}')`, 'swap', 'accent');
             }
-            if (this.canRemoveDeclinedAssignment(item)) {
+            if (this.canRemoveScheduleAssignment(item)) {
                 inlineActions += this.renderOpsIconButton('ops_remove_declined_btn', `app.openRemoveDeclinedModal('${idEsc}')`, 'remove', 'danger');
             }
             if (this.canEditScheduleRow(item)) {
@@ -5381,7 +5405,7 @@ const app = {
         const reallocBtn = canRealloc
             ? `<button type="button" class="ops-btn" onclick="app.doReallocate('${String(item.id).replace(/'/g, "\\'")}')">${this.escapeHtml(i18n.t('ops_reallocate'))}</button>`
             : '';
-        const removeBtn = this.canRemoveDeclinedAssignment(item)
+        const removeBtn = this.canRemoveScheduleAssignment(item)
             ? `<button type="button" class="ops-btn ops-btn--danger" onclick="app.openRemoveDeclinedModal('${String(item.id).replace(/'/g, "\\'")}')">${this.escapeHtml(i18n.t('ops_remove_declined_btn'))}</button>`
             : '';
         const editRowBtn = this.canEditScheduleRow(item)

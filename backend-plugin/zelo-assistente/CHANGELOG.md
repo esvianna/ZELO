@@ -7,6 +7,9 @@ Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqu
 ### Adicionado
 - **Reset push (#42):** `zelo_push_delete_all_subscriptions()`; regenerar VAPID trunca subscriptions após gravar chaves; botão admin «Limpar subscriptions push»; `vapidPublicKeyFingerprint` em REST; contagem de dispositivos na aba Config; histórico `push_vapid_rotated` / `push_subscriptions_cleared`.
 
+### Corrigido
+- Cabeçalho do plugin (`Version:`) alinhado com `ZELO_VERSION` (2.17.0).
+
 ## [2.16.0] - 2026-06-18
 
 ### Adicionado
