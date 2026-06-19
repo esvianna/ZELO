@@ -103,6 +103,8 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 **Ops / conteúdo (sem issue aberta):** post Novidades slug `imprensa-autoridades`; config Curitiba/2026 (desactivar transporte/Wi‑Fi/credenciamento; activar imprensa).
 
+**Backlog (análise):** [#44](https://github.com/esvianna/ZELO/issues/44) — limite e-mails Titan Mail (300/h, 1.000/dia); agrupar lembretes de escala por utilizador/dia.
+
 ---
 
 ## Próximos passos lógicos
