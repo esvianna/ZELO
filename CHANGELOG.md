@@ -27,6 +27,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 |--------|---------|
 | Plugin **2.16.0** | Registo PWA → `subscriber`; fila aprovação pós-e-mail; REST approve/reject (`manage_options`); notificação e-mail + push; migração legados |
 | PWA **146** | Fila «Cadastros pendentes» (admin); gates `/news` e `/indoor-map`; banner pendente; cache ops limpo para subscriber |
+| PWA **149** | Fix: `router.navigate('cadastros-pendentes')` chama `renderVolunteerApprovals()` (lista deixava de carregar) |
 
 ### Corrigido — ícones PWA instalação desktop (#40)
 

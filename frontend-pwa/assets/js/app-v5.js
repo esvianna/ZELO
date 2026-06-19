@@ -386,6 +386,8 @@ const app = {
                 } else if (viewId === 'profile') {
                     app.renderProfileLanguages();
                     app.populateProfileForm();
+                } else if (viewId === 'cadastros-pendentes') {
+                    app.renderVolunteerApprovals();
                 } else if (viewId === 'blog') {
                     app.renderBlog();
                 } else if (viewId === 'blog-post') {

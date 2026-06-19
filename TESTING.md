@@ -357,7 +357,7 @@ Pré-requisitos: HTTPS; Chrome/Android ou Safari 16.4+ (iOS com limitações). A
 |---|-------|----------|
 | 16.1 | Registo PWA → confirmar e-mail | Role `subscriber`; login OK; **403** `/ops/voluntarios`, `/news`, `/indoor-map` |
 | 16.2 | Home subscriber pendente | Banner «aguardando aprovação»; secção Operação oculta |
-| 16.3 | Admin (`manage_options`) → Perfil → Gerir cadastros | Lista pendentes; badge com contagem |
+| 16.3 | Admin (`manage_options`) → Perfil → Gerir cadastros | Lista pendentes (não «Carregando…» infinito); badge com contagem; **PWA 149+** |
 | 16.4 | Aprovar candidato | Role `zelo_voluntario`; após re-login ops OK |
 | 16.5 | Reprovar candidato pendente | Mantém `subscriber`; ops 403; banner reprovado |
 | 16.6 | Após aprovado | **Sem** botão reprovar na fila |
