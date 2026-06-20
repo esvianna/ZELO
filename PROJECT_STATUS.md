@@ -134,6 +134,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | [#44](https://github.com/esvianna/ZELO/issues/44) | **In review** | Plugin 2.18.0 — digest e-mail + fila; **smoke pendente** |
 | [#51](https://github.com/esvianna/ZELO/issues/51) | **In review** | Registro apoio delegados — ADR-039; plugin 2.19.0 / PWA 152 |
 | [#52](https://github.com/esvianna/ZELO/issues/52) | **In review** | Auditoria pt_br — pt-PT residual removido (PWA 158) |
+| [#54](https://github.com/esvianna/ZELO/issues/54) | **Backlog** | Planejar integração SMS (Contele) — decisões de canal, LGPD, API |
 
 **Ops / conteúdo (sem issue aberta):** post Novidades slug `imprensa-autoridades`; config Curitiba/2026 (desactivar transporte/Wi‑Fi/credenciamento; activar imprensa; **desactivar um lembrete antecipado** — requer plugin **2.17.1+** ou JSON).
 
