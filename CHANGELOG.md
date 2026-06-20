@@ -15,6 +15,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | Plugin **2.19.0** | REST `POST/GET /ops/delegate-support-reports` + export CSV/PDF; option `zelo_delegate_support_reports`; rate limit 10/h |
 | PWA **152** | Card Home Operação; formulário voluntário; lista + export gestor; i18n pt-BR (ADR-039) |
 | Plugin **2.19.1** / PWA **153** | Gestor: editar e excluir registro na lista (`PATCH`/`DELETE` por id) |
+| PWA **154** | Lista delegados: tabela com bordas/padding; cards empilhados no mobile |
 
 ### Corrigido — admin Config checkboxes lembretes (plugin 2.17.1)
 

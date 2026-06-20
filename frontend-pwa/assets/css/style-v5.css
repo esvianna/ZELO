@@ -4881,28 +4881,91 @@ body.ops-modal-open {
     margin-bottom: 1rem;
 }
 
+#delegate-support-list-container.delegate-support-container {
+    max-width: none;
+    padding: 1rem 0.85rem 2.5rem;
+}
+
 .delegate-support-table-wrap {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--border-radius, 8px);
+    box-shadow: var(--box-shadow, 0 1px 3px rgba(0, 0, 0, 0.08));
+    background: var(--surface-color, #fff);
+}
+
+.delegate-support-table {
+    width: 100%;
+    min-width: 56rem;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    background: var(--surface-color, #fff);
+}
+
+.delegate-support-table th,
+.delegate-support-table td {
+    padding: 0.65rem 0.85rem;
+    border: 1px solid #e2e8f0;
+    text-align: left;
+    vertical-align: top;
+    line-height: 1.4;
+}
+
+.delegate-support-table thead th {
+    background: #f1f5f9;
+    font-weight: 600;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #475569;
+    white-space: nowrap;
+}
+
+.delegate-support-table tbody tr:nth-child(even) {
+    background: #f8fafc;
+}
+
+.delegate-support-table tbody tr:hover {
+    background: #eff6ff;
+}
+
+.delegate-support-table .delegate-support-col-time {
+    min-width: 8.5rem;
+    white-space: nowrap;
+}
+
+.delegate-support-table .delegate-support-col-location {
+    min-width: 10rem;
+    max-width: 14rem;
+}
+
+.delegate-support-table .delegate-support-col-name {
+    min-width: 7rem;
 }
 
 .delegate-support-table .delegate-support-desc-cell {
-    min-width: 160px;
-    max-width: 280px;
+    min-width: 11rem;
+    max-width: 18rem;
     white-space: pre-wrap;
     word-break: break-word;
 }
 
 .delegate-support-actions-cell {
-    min-width: 108px;
+    min-width: 6.5rem;
     white-space: nowrap;
     vertical-align: top;
+}
+
+.delegate-support-actions-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
 }
 
 .delegate-support-action-btn {
     display: block;
     width: 100%;
-    margin-bottom: 0.35rem;
-    padding: 0.35rem 0.5rem;
+    padding: 0.4rem 0.55rem;
     font-size: 0.78rem;
     border: 1px solid var(--primary-color);
     border-radius: 6px;
@@ -4923,6 +4986,76 @@ body.ops-modal-open {
 .delegate-support-edit-panel .ops-confirm-body {
     max-height: min(70vh, 520px);
     overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+    .delegate-support-table-wrap {
+        overflow-x: visible;
+        box-shadow: none;
+        background: transparent;
+    }
+
+    .delegate-support-table {
+        min-width: 0;
+        border-collapse: separate;
+        border-spacing: 0 0.75rem;
+        background: transparent;
+    }
+
+    .delegate-support-table thead {
+        display: none;
+    }
+
+    .delegate-support-table tbody tr.delegate-support-row {
+        display: block;
+        background: var(--surface-color, #fff);
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        padding: 0.65rem 0.85rem;
+    }
+
+    .delegate-support-table tbody tr.delegate-support-row:nth-child(even),
+    .delegate-support-table tbody tr.delegate-support-row:hover {
+        background: var(--surface-color, #fff);
+    }
+
+    .delegate-support-table td {
+        display: block;
+        border: none;
+        padding: 0.45rem 0;
+        max-width: none;
+        min-width: 0;
+    }
+
+    .delegate-support-table td::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 0.68rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #64748b;
+        margin-bottom: 0.2rem;
+    }
+
+    .delegate-support-table .delegate-support-actions-cell {
+        border-top: 1px solid #e2e8f0;
+        margin-top: 0.5rem;
+        padding-top: 0.65rem;
+    }
+
+    .delegate-support-actions-group {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .delegate-support-action-btn {
+        width: auto;
+        flex: 1 1 calc(50% - 0.25rem);
+        min-width: 7rem;
+    }
 }
 
 @media (min-width: 520px) {

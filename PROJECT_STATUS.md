@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-20** — #51 implementado (ADR-039, plugin 2.19.0 / PWA 152) **In review**; #44 smoke pendente.
+> Última atualização: **2026-06-20** — #51 UX lista (PWA 154: cards mobile + tabela delimitada); plugin 2.19.1 / PWA 153 **In review**; #44 smoke pendente.
 
 ---
 
@@ -145,7 +145,8 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## Última sessão (2026-06-20)
 
-- **#51 (ADR-039):** registro apoio delegados — backend `zelo-delegate-support-reports.php`; PWA 152 (formulário + lista/export); strings pt-BR; **In review**.
+- **#51 (ADR-039):** registro apoio delegados — backend `zelo-delegate-support-reports.php`; PWA 152–154 (formulário + lista/export + UX tabela); strings pt-BR; **In review**.
+- **PWA 154:** lista «Registros — apoio a delegados» — cards empilhados no mobile (rótulo por campo); desktop com bordas, padding e scroll horizontal.
 - **Validação smoke:** #45–#50, #46 — **Done** no Project (§6p6, §12b, §12 O1–O6).
 - **#44 (plugin 2.18.0):** digest e-mail — **In review**, smoke pendente.
 - Versões repo: plugin **2.19.0**, PWA **152**.

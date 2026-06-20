@@ -6484,29 +6484,40 @@ const app = {
             }
             const rows = items.map((item) => {
                 const idJs = JSON.stringify(item.id || '');
-                return `<tr>
-                    <td>${this.escapeHtml(this.formatDelegateSupportDateTime(item.occurred_at))}</td>
-                    <td>${this.escapeHtml(item.location || '')}</td>
-                    <td>${this.escapeHtml(item.delegate_name || '')}</td>
-                    <td>${this.escapeHtml(item.contact_name || '')}</td>
-                    <td>${this.escapeHtml(item.volunteer_name || '')}</td>
-                    <td class="delegate-support-desc-cell">${this.escapeHtml(item.description || '')}</td>
-                    <td class="delegate-support-actions-cell">
-                        <button type="button" class="delegate-support-action-btn" onclick="app.openDelegateSupportEditModal(${idJs})">${this.escapeHtml(i18n.t('delegate_support_edit'))}</button>
-                        <button type="button" class="delegate-support-action-btn delegate-support-action-btn--danger" onclick="app.openDelegateSupportDeleteModal(${idJs})">${this.escapeHtml(i18n.t('delegate_support_delete'))}</button>
+                const lbl = {
+                    occurred: this.escapeHtml(i18n.t('delegate_support_occurred_at')),
+                    location: this.escapeHtml(i18n.t('delegate_support_location')),
+                    delegate: this.escapeHtml(i18n.t('delegate_support_delegate_name')),
+                    contact: this.escapeHtml(i18n.t('delegate_support_contact_name')),
+                    volunteer: this.escapeHtml(i18n.t('delegate_support_volunteer_label')),
+                    description: this.escapeHtml(i18n.t('delegate_support_description')),
+                    actions: this.escapeHtml(i18n.t('ops_actions_label'))
+                };
+                return `<tr class="delegate-support-row">
+                    <td data-label="${lbl.occurred}">${this.escapeHtml(this.formatDelegateSupportDateTime(item.occurred_at))}</td>
+                    <td data-label="${lbl.location}">${this.escapeHtml(item.location || '')}</td>
+                    <td data-label="${lbl.delegate}">${this.escapeHtml(item.delegate_name || '')}</td>
+                    <td data-label="${lbl.contact}">${this.escapeHtml(item.contact_name || '')}</td>
+                    <td data-label="${lbl.volunteer}">${this.escapeHtml(item.volunteer_name || '')}</td>
+                    <td class="delegate-support-desc-cell" data-label="${lbl.description}">${this.escapeHtml(item.description || '')}</td>
+                    <td class="delegate-support-actions-cell" data-label="${lbl.actions}">
+                        <div class="delegate-support-actions-group">
+                            <button type="button" class="delegate-support-action-btn" onclick="app.openDelegateSupportEditModal(${idJs})">${this.escapeHtml(i18n.t('delegate_support_edit'))}</button>
+                            <button type="button" class="delegate-support-action-btn delegate-support-action-btn--danger" onclick="app.openDelegateSupportDeleteModal(${idJs})">${this.escapeHtml(i18n.t('delegate_support_delete'))}</button>
+                        </div>
                     </td>
                 </tr>`;
             }).join('');
             container.innerHTML = `${toolbar}${msgHtml}
                 <div class="delegate-support-table-wrap">
-                    <table class="ops-table delegate-support-table">
+                    <table class="delegate-support-table">
                         <thead>
                             <tr>
-                                <th>${this.escapeHtml(i18n.t('delegate_support_occurred_at'))}</th>
-                                <th>${this.escapeHtml(i18n.t('delegate_support_location'))}</th>
-                                <th>${this.escapeHtml(i18n.t('delegate_support_delegate_name'))}</th>
-                                <th>${this.escapeHtml(i18n.t('delegate_support_contact_name'))}</th>
-                                <th>${this.escapeHtml(i18n.t('delegate_support_volunteer_label'))}</th>
+                                <th class="delegate-support-col-time">${this.escapeHtml(i18n.t('delegate_support_occurred_at'))}</th>
+                                <th class="delegate-support-col-location">${this.escapeHtml(i18n.t('delegate_support_location'))}</th>
+                                <th class="delegate-support-col-name">${this.escapeHtml(i18n.t('delegate_support_delegate_name'))}</th>
+                                <th class="delegate-support-col-name">${this.escapeHtml(i18n.t('delegate_support_contact_name'))}</th>
+                                <th class="delegate-support-col-name">${this.escapeHtml(i18n.t('delegate_support_volunteer_label'))}</th>
                                 <th>${this.escapeHtml(i18n.t('delegate_support_description'))}</th>
                                 <th>${this.escapeHtml(i18n.t('ops_actions_label'))}</th>
                             </tr>
