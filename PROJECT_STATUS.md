@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-19** — smoke OK: #36, #41, #42, #43 **Done** no Project.
+> Última atualização: **2026-06-20** — #45 **Done**; #46 auditoria offline entregue; #44 smoke pendente.
 
 ---
 
@@ -12,15 +12,16 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Referência no repo | Versão |
 |--------------------|--------|
-| Plugin WordPress (`zelo-assistente.php`) | **2.17.0** |
-| PWA (`zelo-build.js` / `sw.js`) | **build 149** |
+| Plugin WordPress (`zelo-assistente.php`) | **2.18.0** |
+| PWA (`zelo-build.js` / `sw.js`) | **build 151** |
 
-**Produção (repo):** plugin **2.17.0** + PWA **149** — smoke validado (#36, #41, #42, #43).
+**Produção (repo):** plugin **2.17.0** + PWA **149** validados; **2.18.0** + **151** aguardam deploy/smoke (#44).
 
 ### Entregas recentes (Done no Project / issues fechadas)
 
 | Issue | Entrega |
 |-------|---------|
+| [#45](https://github.com/esvianna/ZELO/issues/45) | Info Posto Médico — título acima do texto (PWA 150) — **Done** smoke §6p6 |
 | [#43](https://github.com/esvianna/ZELO/issues/43) | Excluir linha escala pending/accepted na lista (PWA 148) — **Done** smoke §5m2 |
 | [#42](https://github.com/esvianna/ZELO/issues/42) | Reset push + consent v3 + fingerprint (plugin 2.17.0 / PWA 147) — **Done** smoke §15.9–15.12 |
 | [#41](https://github.com/esvianna/ZELO/issues/41) | Aprovação cadastro voluntários (plugin 2.16.0 / PWA 146–149) — **Done** smoke §16 |
@@ -99,27 +100,35 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## O que está pendente
 
-*Nenhuma issue em **In review** / **Ready** no Project (pacote #36–#43 validado).*
+| Issue | Estado | Notas |
+|-------|--------|-------|
+| [#44](https://github.com/esvianna/ZELO/issues/44) | **In review** | Plugin 2.18.0 — digest e-mail + fila; **smoke pendente** |
+| [#46](https://github.com/esvianna/ZELO/issues/46) | **In review** | Auditoria offline — entregue |
+| [#47](https://github.com/esvianna/ZELO/issues/47)–[#50](https://github.com/esvianna/ZELO/issues/50) | **In review** | ADR-038 implementado (PWA **151**) |
+
+**Implementação ADR-038:** concluída em PWA 151 — smoke §12b pendente.
 
 **Ops / conteúdo (sem issue aberta):** post Novidades slug `imprensa-autoridades`; config Curitiba/2026 (desactivar transporte/Wi‑Fi/credenciamento; activar imprensa; **desactivar um lembrete antecipado** — requer plugin **2.17.1+** ou JSON).
-
-**Backlog (análise):** [#44](https://github.com/esvianna/ZELO/issues/44) — **In review** (plugin 2.18.0). [#45](https://github.com/esvianna/ZELO/issues/45) — **In review** (PWA 150). [#46](https://github.com/esvianna/ZELO/issues/46) — auditoria offline-first rede lenta.
 
 ---
 
 ## Próximos passos lógicos
 
-1. Conteúdo: post `imprensa-autoridades` quando texto estiver pronto.
-2. Config Curitiba/2026: desactivar transporte/Wi‑Fi/credenciamento; activar imprensa.
-3. Novas tarefas → issue no [Project 3](https://github.com/users/esvianna/projects/3) (Backlog → Ready).
+1. Smoke **#44** (e-mails digest/fila) após deploy plugin 2.18.0.
+2. Smoke **#47–#50** (§12b Slow 3G + regressão §12 O1–O6) após deploy PWA 151.
+
+3. Deploy **PWA 151** + plugin **2.18.0** em produção.
+4. Conteúdo: post `imprensa-autoridades`; config Curitiba/2026.
 
 ---
 
 ## Última sessão (2026-06-20)
 
-- **#45 (PWA 150):** card Segurança — «Posto Médico» com título acima do texto (`info-safety-medical`); Emergência/192 inalterado.
-- **#44 (plugin 2.18.0):** digest e-mail, push-first, fila — **In review**.
-- Versões repo: plugin **2.18.0**, PWA **150**.
+- **#47–#50 (PWA 151):** ADR-038 — SWR + timeout `api-v5.js`; `init` allSettled + hidratação; banner rede degradada; `refreshSession` paralelo.
+- **#46:** auditoria offline — matriz + §12b + ADR-038.
+- **#45 (PWA 150):** Posto Médico — **Done**.
+- **#44 (plugin 2.18.0):** digest e-mail — **In review**, smoke pendente.
+- Versões repo: plugin **2.18.0**, PWA **151**.
 
 ## Sessão anterior (2026-06-19)
 

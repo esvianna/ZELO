@@ -48,13 +48,153 @@ const app = {
 
     syncStaleFlags() {
         if (typeof API === 'undefined' || !API.lastFetchFromCache) return;
-        this._dataStale.locais = !!API.lastFetchFromCache.locais;
-        this._dataStale.ops = !!API.lastFetchFromCache.volunteerOps;
-        this._dataStale.clima = !!API.lastFetchFromCache.clima;
-        this._dataStale.evento = !!API.lastFetchFromCache.evento;
-        this._dataStale.news = !!API.lastFetchFromCache.news;
-        this._dataStale.newsCarousel = !!API.lastFetchFromCache.newsCarousel;
-        this._dataStale.indoorMap = !!API.lastFetchFromCache.indoorMap;
+        this._dataStale.locais = !!API.lastFetchFromCache.locais || !!API.lastFetchRevalidating.locais;
+        this._dataStale.ops = !!API.lastFetchFromCache.volunteerOps || !!API.lastFetchRevalidating.volunteerOps;
+        this._dataStale.clima = !!API.lastFetchFromCache.clima || !!API.lastFetchRevalidating.clima;
+        this._dataStale.evento = !!API.lastFetchFromCache.evento || !!API.lastFetchRevalidating.evento;
+        this._dataStale.news = !!API.lastFetchFromCache.news || !!API.lastFetchRevalidating.news;
+        this._dataStale.newsCarousel = !!API.lastFetchFromCache.newsCarousel || !!API.lastFetchRevalidating.newsCarousel;
+        this._dataStale.indoorMap = !!API.lastFetchFromCache.indoorMap || !!API.lastFetchRevalidating.indoorMap;
+        this.updateNetworkDegradedBanner();
+    },
+
+    updateNetworkDegradedBanner() {
+        const el = document.getElementById('network-degraded-banner');
+        if (!el || typeof API === 'undefined') return;
+        const revalidating = API.isAnyRevalidating && API.isAnyRevalidating();
+        const staleOnline = navigator.onLine && API.hasStaleOrRevalidating && API.hasStaleOrRevalidating();
+        const noData = !this.data.evento || !Object.keys(this.data.evento).length;
+        if (noData && !navigator.onLine) {
+            el.hidden = false;
+            el.textContent = i18n.t('network_no_data');
+            return;
+        }
+        if (revalidating) {
+            el.hidden = false;
+            el.textContent = i18n.t('network_revalidating');
+            return;
+        }
+        if (staleOnline && Object.values(API.lastFetchFromCache).some(Boolean)) {
+            el.hidden = false;
+            el.textContent = i18n.t('network_slow_cached');
+            return;
+        }
+        el.hidden = true;
+    },
+
+    _hydrateFromSnapshots() {
+        if (typeof API === 'undefined') return;
+        const locais = API.readSnapshot('zelo_locais');
+        if (locais) {
+            this.data.locais = locais;
+            API.lastFetchFromCache.locais = true;
+        }
+        const evento = API.readSnapshot('zelo_evento');
+        if (evento) {
+            this.data.evento = evento;
+            API.lastFetchFromCache.evento = true;
+        }
+        const categorias = API.readSnapshot('zelo_categorias');
+        if (categorias) {
+            API.lastFetchFromCache.categorias = true;
+        }
+        const clima = API.readSnapshot('zelo_clima');
+        if (clima) {
+            this.data.clima = clima;
+            API.lastFetchFromCache.clima = true;
+        }
+        const indoor = API.readSnapshot(API.indoorMapSnapshotKey);
+        if (indoor && indoor.image_url) {
+            this.data.indoorMap = indoor;
+            API.lastFetchFromCache.indoorMap = true;
+        }
+        const ops = API.readSnapshot('zelo_volunteer_ops');
+        if (ops) {
+            this.data.volunteerOps = ops;
+            API.lastFetchFromCache.volunteerOps = true;
+        }
+        if (categorias) {
+            this.data.categoriesMeta = this.buildCategoryMeta(categorias);
+        }
+    },
+
+    _applyRevalidatedData(scope, data) {
+        if (!data) return;
+        switch (scope) {
+            case 'locais':
+                this.data.locais = data;
+                break;
+            case 'evento':
+                this.data.evento = data;
+                break;
+            case 'categorias':
+                this.data.categoriesMeta = this.buildCategoryMeta(data || []);
+                break;
+            case 'clima':
+                this.data.clima = data;
+                break;
+            case 'indoorMap':
+                this.data.indoorMap = (data && data.image_url) ? data : null;
+                break;
+            case 'volunteerOps':
+                if (data && !data.__authError) {
+                    this.data.volunteerOps = data;
+                }
+                break;
+            default:
+                break;
+        }
+    },
+
+    _refreshCurrentView() {
+        const viewId = this.router.currentView;
+        if (!viewId) return;
+        if (viewId === 'home') {
+            this.renderHomeWeatherWidget();
+            this.renderHomeVolunteerDashboard();
+            this.renderHomeNewsCard();
+            this.renderEventBanner();
+            this.renderHomeMap();
+        } else if (viewId === 'evento') {
+            this.renderEventInfo();
+        } else if (viewId === 'escala') {
+            this.renderVolunteerOps();
+        } else if (viewId === 'tempo') {
+            this.renderWeather();
+        } else if (viewId === 'mapa-evento') {
+            this.renderIndoorEventMap();
+        } else if (viewId === 'mapa') {
+            MapManager.setCategoryMeta(this.data.categoriesMeta);
+            MapManager.addMarkers(this.data.locais);
+        } else if (viewId === 'avisos' || viewId === 'blog') {
+            this.renderAvisos();
+        }
+    },
+
+    _renderBootstrapUI() {
+        this.auth.refreshAuthChrome();
+        this.renderEventBanner();
+        this.renderHomeMap();
+        this.renderHomeVolunteerDashboard();
+        this.renderHomeNewsCard();
+        this.renderHomeWeatherWidget();
+        this.toggleHomeVisitorExtrasCollapse();
+        this.updateHomeOpsVisibility();
+        this.updateNotificationsBadge();
+        this.updateHomePressInstructionsBtn();
+        this.syncStaleFlags();
+    },
+
+    _bindDataRevalidationListener() {
+        if (this._revalidationBound) return;
+        this._revalidationBound = true;
+        window.addEventListener('zelo:data-revalidated', (e) => {
+            const detail = e.detail || {};
+            this._applyRevalidatedData(detail.scope, detail.data);
+            this.syncStaleFlags();
+            this._renderBootstrapUI();
+            this._refreshCurrentView();
+        });
     },
 
     async cacheUserAvatar(url) {
@@ -911,83 +1051,96 @@ const app = {
             buildEl.textContent = 'v' + String(window.ZELO_APP_BUILD);
         }
 
-        // Mock data loading or real API
-        try {
-            // Init Auth
-            this.auth.init();
+        this._bindDataRevalidationListener();
 
-            let sessionSynced = false;
-            if (this.auth.user) {
-                const synced = await API.refreshSession();
-                if (synced) {
-                    this.auth.user = synced;
-                    app.cacheUserAvatar(synced.avatar);
-                    sessionSynced = true;
-                }
+        try {
+            this.auth.init();
+            this._hydrateFromSnapshots();
+            this.syncStaleFlags();
+            this._renderBootstrapUI();
+
+            const verifyParamsEarly = new URLSearchParams(window.location.search);
+            if (verifyParamsEarly.get('zelo_verified') !== '1') {
+                this.resolveInitialNavigation();
+                this._initialNavDone = true;
             }
 
-            // Load initial data
+            const sessionPromise = this.auth.user
+                ? API.refreshSession().then((synced) => {
+                    if (synced) {
+                        this.auth.user = synced;
+                        app.cacheUserAvatar(synced.avatar);
+                        this.auth.refreshAuthChrome();
+                    }
+                    return synced;
+                })
+                : Promise.resolve(null);
+
             const indoorPromise = (this.auth.user && this.auth.user.caps && this.auth.user.caps.view_ops)
                 ? API.getIndoorMap(true).catch(() => ({}))
                 : Promise.resolve({});
 
-            const [locais, evento, categorias, clima, indoorMap] = await Promise.all([
-                API.getLocais(), // Fetch all initially
+            const results = await Promise.allSettled([
+                API.getLocais(),
                 API.getEvento(),
                 API.getCategorias(),
                 API.getClima().catch(() => null),
                 indoorPromise
             ]);
 
-            this.data.locais = locais || [];
-            this.data.evento = evento || {};
-            this.data.clima = clima || null;
-            this.data.indoorMap = (indoorMap && indoorMap.image_url) ? indoorMap : null;
-            this.data.categoriesMeta = this.buildCategoryMeta(categorias || []);
-            this.syncStaleFlags();
+            const pick = (idx, fallback) => {
+                const r = results[idx];
+                return r && r.status === 'fulfilled' ? r.value : fallback;
+            };
 
-            const sessionOk = sessionSynced;
+            this.data.locais = pick(0, this.data.locais) || [];
+            this.data.evento = pick(1, this.data.evento) || {};
+            const categoriasData = pick(2, API.readSnapshot('zelo_categorias') || []);
+            this.data.categoriesMeta = this.buildCategoryMeta(categoriasData || []);
+            this.data.clima = pick(3, this.data.clima);
+            const indoorMap = pick(4, {});
+            this.data.indoorMap = (indoorMap && indoorMap.image_url) ? indoorMap : this.data.indoorMap;
+
+            this.syncStaleFlags();
+            this._renderBootstrapUI();
 
             if (this.auth.user && this.auth.user.caps && this.auth.user.caps.view_ops) {
-                if (sessionOk) {
-                    this.data.volunteerOps = await this.loadVolunteerOps(true);
-                    if (!this._opsAuthFailed) {
-                        this.auth.clearOpsAuthFailure();
-                    }
-                } else {
-                    const cachedOps = await this.loadVolunteerOps(true);
-                    if (!cachedOps) {
-                        this.auth.handleOpsAuthFailure();
-                    }
+                const opsResult = await Promise.allSettled([
+                    sessionPromise,
+                    this.loadVolunteerOps(true)
+                ]);
+                const sessionSynced = opsResult[0].status === 'fulfilled' && opsResult[0].value;
+                const opsVal = opsResult[1].status === 'fulfilled' ? opsResult[1].value : null;
+                if (opsVal && opsVal.__authError) {
+                    this.auth.handleOpsAuthFailure();
+                } else if (!sessionSynced && !opsVal && !this.data.volunteerOps) {
+                    this.auth.handleOpsAuthFailure();
+                } else if (sessionSynced && !this._opsAuthFailed) {
+                    this.auth.clearOpsAuthFailure();
                 }
+            } else {
+                await sessionPromise;
             }
 
             if (this.auth.user && this.canViewOps()) {
-                await Promise.all([this.loadNews(), this.loadNewsCarousel()]);
+                Promise.all([this.loadNews(), this.loadNewsCarousel()]).then(() => {
+                    this._renderBootstrapUI();
+                    this._refreshCurrentView();
+                });
             } else if (this.auth.user) {
                 API.clearOpsRelatedSnapshots(this.auth.user.id);
                 this.data.news = null;
                 this.data.newsCarousel = null;
-                this.data.indoorMap = null;
+                if (!this.canViewOps()) {
+                    this.data.indoorMap = null;
+                }
             }
 
             console.log('Data loaded', this.data);
 
-            this.auth.refreshAuthChrome();
-
-            this.renderEventBanner();
-            this.renderHomeMap();
-            this.renderHomeVolunteerDashboard();
-            this.renderHomeNewsCard();
-            this.renderHomeWeatherWidget();
-            this.toggleHomeVisitorExtrasCollapse();
-            this.updateHomeOpsVisibility();
-            this.updateNotificationsBadge();
-            this.updateHomePressInstructionsBtn();
-
         } catch (err) {
             console.error('Failed to load data', err);
-            // Show offline message if needed
+            this.updateNetworkDegradedBanner();
         }
 
         const verifyParams = new URLSearchParams(window.location.search);
@@ -997,7 +1150,7 @@ const app = {
             const cleanUrl = window.location.pathname + (qs ? `?${qs}` : '') + window.location.hash;
             history.replaceState({}, '', cleanUrl);
             this.router.navigate('email-verified', {}, { persist: false });
-        } else {
+        } else if (!this._initialNavDone) {
             this.resolveInitialNavigation();
         }
 
@@ -1005,7 +1158,6 @@ const app = {
             setTimeout(() => this.maybePromptPushConsent(), 800);
         }
 
-        // Request location
         this.getUserLocation();
 
         document.addEventListener('visibilitychange', () => {
@@ -6142,8 +6294,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    window.addEventListener('online', updateNetworkStatus);
-    window.addEventListener('offline', updateNetworkStatus);
+    window.addEventListener('online', () => {
+        updateNetworkStatus();
+        if (typeof app !== 'undefined' && app.updateNetworkDegradedBanner) {
+            app.updateNetworkDegradedBanner();
+        }
+    });
+    window.addEventListener('offline', () => {
+        updateNetworkStatus();
+        if (typeof app !== 'undefined' && app.updateNetworkDegradedBanner) {
+            app.updateNetworkDegradedBanner();
+        }
+    });
 
     // Initial check
     updateNetworkStatus();

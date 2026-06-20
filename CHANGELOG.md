@@ -19,6 +19,22 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | Versão | Entrega |
 |--------|---------|
 | PWA **150** | Card Segurança: «Posto Médico» em bloco (título acima do texto); classes CSS `info-safety-*` |
+| Validação | **Done** no Project (#45) — smoke §6p6 |
+
+### Análise — auditoria offline / rede degradada (#46, ADR-038)
+
+| Entrega | Detalhe |
+|---------|---------|
+| Matriz | Issue #46 — **In review** |
+| Implementação | PWA **151** — #47–#50 (SWR, init, banner, sessão paralela) |
+| `TESTING.md` | §12b D1–D10 |
+| `DECISIONS.md` | ADR-038 decidido |
+
+### Adicionado — rede degradada SWR (ADR-038, PWA 151, #47–#50)
+
+| Versão | Entrega |
+|--------|---------|
+| PWA **151** | `fetchWithStaleFallback` + timeout 5 s; `init` allSettled + hidratação; banner rede lenta; `refreshSession` paralelo |
 
 ### Adicionado — e-mails escala digest + fila (#44, ADR-037, plugin 2.18.0)
 

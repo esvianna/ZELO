@@ -408,6 +408,23 @@ Teto Titan (**1.000/dia**) fica confortável com ADR-037; **actual** aproxima-se
 
 ---
 
+## ADR-038 — Rede degradada: stale-while-revalidate + timeout (#46, 2026-06-20)
+
+**Contexto:** Auditoria #46 — offline total (modo avião) funciona razoavelmente graças a snapshots `localStorage` (ADR-015, ADR-024, ADR-025) e precache SW (ADR-002). **Rede lenta/instável** era pior: `fetch` não falhava, snapshots não eram usados; `init()` bloqueava.
+
+**Decisão (implementada PWA 151, issues #47–#50):**
+
+1. **Stale-while-revalidate (SWR)** nos GET com snapshot: devolver cache imediato; revalidar em paralelo; evento `zelo:data-revalidated` actualiza UI.
+2. **Timeout ~5 s** por request (`FETCH_TIMEOUT_MS`); após timeout usa snapshot.
+3. **`init()` não bloqueante:** hidratação síncrona; `Promise.allSettled`; navegação inicial cedo; `refreshSession` em paralelo.
+4. **SW** continua sem interceptar `/wp-json/` (ADR-002).
+5. **Mutações ops** sem fila offline.
+6. **Testes:** `TESTING.md` §12b.
+
+**Consequências:** `api-v5.js` (`fetchWithStaleFallback`); `app-v5.js` (init, banner); i18n PT/EN/ES; PWA **151+**.
+
+---
+
 ## Template para nova ADR
 
 ```markdown

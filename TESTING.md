@@ -305,6 +305,25 @@ Até lá, **checklist manual acima é a fonte de verdade**.
 | O5 | Abrir **Mapa do evento** online; depois modo avião (122+, ADR-024) | Diagrama + orientações visíveis; badge «Mapa do evento em cache»; imagem JPG carrega do SW |
 | O6 | **Novidades:** abrir lista online (prefetch); abrir 1 artigo; modo avião → mesmo artigo (123+, ADR-025) | Corpo HTML completo; badge «Novidade em cache»; artigo nunca aberto → mensagem amigável offline |
 
+### 12b. Rede degradada (Slow 3G / instável) — ADR-038 (#46, PWA 151+)
+
+Pré-requisito: **uma visita online prévia** (snapshots gravados). DevTools → Network → **Slow 3G** (ou Fast 3G + **Disable cache**). Não usar modo avião.
+
+| # | Passo | Esperado (build 151+) |
+|---|-------|------------------------|
+| D1 | Abrir PWA com sessão activa (voluntário ops) | UI com snapshots em **< 2 s**; banner «A actualizar dados…»; navegação inicial não bloqueada |
+| D2 | Slow 3G → **Info evento** | Conteúdo do snapshot imediato; actualiza após revalidação |
+| D3 | Slow 3G → **Home** (voluntário) | Escala em cache visível; banner stale/revalidating |
+| D4 | Slow 3G → **Escala** | Tabela com snapshot; badge stale; sem «Carregando…» prolongado |
+| D5 | Slow 3G → **Mapa do evento** | Diagrama do snapshot; revalidação em background |
+| D6 | Slow 3G → **Mapa locais** | Marcadores do snapshot após init |
+| D7 | Slow 3G → **Check-in** | Aguarda POST; mensagem de erro se falhar (sem fila offline) |
+| D8 | Slow 3G → **Emergência** | Telefones do evento em memória |
+| D9 | Primeira visita **sem** snapshot + Slow 3G | Banner «Sem dados — ligue-se à rede» |
+| D10 | Rede lenta online | Banner ou badge stale durante revalidação |
+
+Regressão offline: §12 O1–O6 inalterados.
+
 ---
 
 ## 13. i18n completo (PWA build 89+)

@@ -1,1 +1,1 @@
-window.ZELO_APP_BUILD = '150';
+window.ZELO_APP_BUILD = '151';

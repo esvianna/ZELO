@@ -20,6 +20,20 @@ const API = {
         indoorMap: false
     },
 
+    lastFetchRevalidating: {
+        locais: false,
+        volunteerOps: false,
+        evento: false,
+        categorias: false,
+        clima: false,
+        news: false,
+        newsCarousel: false,
+        newsDetail: false,
+        indoorMap: false
+    },
+
+    FETCH_TIMEOUT_MS: 5000,
+
     readSnapshot(key) {
         try {
             const raw = localStorage.getItem(key);
@@ -153,139 +167,199 @@ const API = {
         return err.message || t('session_error_default');
     },
 
+    isAnyRevalidating() {
+        return Object.values(this.lastFetchRevalidating).some(Boolean);
+    },
+
+    hasStaleOrRevalidating() {
+        return this.isAnyRevalidating() || Object.values(this.lastFetchFromCache).some(Boolean);
+    },
+
+    notifyRevalidation(scope, data) {
+        if (typeof window === 'undefined') return;
+        window.dispatchEvent(new CustomEvent('zelo:data-revalidated', { detail: { scope, data } }));
+    },
+
+    fetchWithTimeout(url, options = {}, timeoutMs) {
+        const ms = timeoutMs != null ? timeoutMs : this.FETCH_TIMEOUT_MS;
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), ms);
+        return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
+    },
+
+    async fetchWithStaleFallback(cfg) {
+        const {
+            url,
+            fetchOpts = {},
+            snapshotKey,
+            staleFlag,
+            cacheProp,
+            parseResponse,
+            persistSnapshot = () => true,
+            onFresh,
+            emptyFallback = null,
+            throwIfNoSnapshot = false,
+            authFromResponse
+        } = cfg;
+
+        const markFresh = (data) => {
+            if (cacheProp) this.cache[cacheProp] = data;
+            if (snapshotKey && persistSnapshot(data)) {
+                this.writeSnapshot(snapshotKey, data);
+            }
+            this.lastFetchFromCache[staleFlag] = false;
+            this.lastFetchRevalidating[staleFlag] = false;
+            if (onFresh) onFresh(data);
+            this.notifyRevalidation(staleFlag, data);
+            return data;
+        };
+
+        const markStale = (cached) => {
+            if (cacheProp) this.cache[cacheProp] = cached;
+            this.lastFetchFromCache[staleFlag] = true;
+            return cached;
+        };
+
+        const runFetch = async () => {
+            const response = await this.fetchWithTimeout(url, fetchOpts);
+            if (authFromResponse) {
+                const authResult = authFromResponse(response);
+                if (authResult !== undefined) {
+                    this.lastFetchRevalidating[staleFlag] = false;
+                    return authResult;
+                }
+            }
+            const data = await parseResponse(response);
+            return markFresh(data);
+        };
+
+        const cached = snapshotKey ? this.readSnapshot(snapshotKey) : null;
+
+        if (cached != null) {
+            markStale(cached);
+            this.lastFetchRevalidating[staleFlag] = true;
+            runFetch().catch((err) => {
+                console.warn('Revalidate failed:', staleFlag, err);
+                this.lastFetchRevalidating[staleFlag] = false;
+            });
+            return cached;
+        }
+
+        this.lastFetchRevalidating[staleFlag] = true;
+        try {
+            return await runFetch();
+        } catch (err) {
+            this.lastFetchRevalidating[staleFlag] = false;
+            console.warn('Fetch failed, no snapshot:', staleFlag, err);
+            if (throwIfNoSnapshot) throw err;
+            return emptyFallback;
+        }
+    },
+
     async getLocais(params = {}) {
-        // Add timestamp to prevent caching
         params._t = Date.now();
         const query = new URLSearchParams(params).toString();
         const url = `${this.baseUrl}/locais?${query}`;
 
-        try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error('Network response was not ok');
-            const data = await response.json();
-
-            // Update cache
-            if ('caches' in self) {
-                // We cache the CLEAN url (without timestamp) so offline works with a "latest known" version if strict matching isn't used, 
-                // OR we accept that offline might use the last cached timestamped URL if Strategy allows.
-                // Better: Cache the data logic in SW handles this. 
-                // However, for explicit cache busting:
+        return this.fetchWithStaleFallback({
+            url,
+            snapshotKey: 'zelo_locais',
+            staleFlag: 'locais',
+            cacheProp: 'locais',
+            emptyFallback: null,
+            parseResponse: async (response) => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
             }
-            this.cache.locais = data;
-            this.writeSnapshot('zelo_locais', data);
-            this.lastFetchFromCache.locais = false;
-            return data;
-        } catch (error) {
-            console.warn('Network failed, trying cache for locais', error);
-            const cached = this.readSnapshot('zelo_locais');
-            if (cached) {
-                this.cache.locais = cached;
-                this.lastFetchFromCache.locais = true;
-                return cached;
-            }
-            return null;
-        }
+        });
     },
 
     async getEvento() {
         const url = `${this.baseUrl}/evento?_t=${Date.now()}`;
-        try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error('Network response was not ok');
-            const data = await response.json();
-
-            this.cache.evento = data;
-            this.writeSnapshot('zelo_evento', data);
-            this.lastFetchFromCache.evento = false;
-            return data;
-        } catch (error) {
-            console.warn('Fetch failed, trying cache', error);
-            const cached = this.readSnapshot('zelo_evento');
-            if (cached) {
-                this.cache.evento = cached;
-                this.lastFetchFromCache.evento = true;
-                return cached;
+        return this.fetchWithStaleFallback({
+            url,
+            snapshotKey: 'zelo_evento',
+            staleFlag: 'evento',
+            cacheProp: 'evento',
+            throwIfNoSnapshot: true,
+            parseResponse: async (response) => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
             }
-            throw error;
-        }
+        });
     },
 
     async getCategorias() {
         const url = `${this.baseUrl}/categorias?_t=${Date.now()}`;
-        try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error('Network response was not ok');
-            const data = await response.json();
-
-            this.cache.categorias = data;
-            this.writeSnapshot('zelo_categorias', data);
-            this.lastFetchFromCache.categorias = false;
-            return data;
-        } catch (error) {
-            console.warn('Fetch categorias falhou, tentando cache', error);
-            const cached = this.readSnapshot('zelo_categorias');
-            if (cached) {
-                this.cache.categorias = cached;
-                this.lastFetchFromCache.categorias = true;
-                return cached;
+        return this.fetchWithStaleFallback({
+            url,
+            snapshotKey: 'zelo_categorias',
+            staleFlag: 'categorias',
+            cacheProp: 'categorias',
+            emptyFallback: [],
+            parseResponse: async (response) => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
             }
-            return [];
-        }
+        });
     },
 
     async getVolunteerOps(mine = false) {
         const mineParam = mine ? '&mine=1' : '';
         const url = `${this.baseUrl}/ops/voluntarios?_t=${Date.now()}${mineParam}`;
-        try {
-            const response = await fetch(url, {
+        const cacheKey = mine ? 'zelo_volunteer_ops_mine' : 'zelo_volunteer_ops';
+
+        const result = await this.fetchWithStaleFallback({
+            url,
+            fetchOpts: {
                 headers: this.getAuthHeaders(),
                 credentials: 'include'
-            });
-            if (response.status === 401 || response.status === 403) {
-                return { __authError: true, status: response.status };
+            },
+            snapshotKey: cacheKey,
+            staleFlag: 'volunteerOps',
+            cacheProp: 'volunteerOps',
+            emptyFallback: null,
+            authFromResponse: (response) => {
+                if (response.status === 401 || response.status === 403) {
+                    return { __authError: true, status: response.status };
+                }
+                return undefined;
+            },
+            parseResponse: async (response) => {
+                if (!response.ok) throw new Error('Ops API unavailable');
+                return response.json();
             }
-            if (!response.ok) throw new Error('Ops API unavailable');
-            const data = await response.json();
-            this.cache.volunteerOps = data;
-            const cacheKey = mine ? 'zelo_volunteer_ops_mine' : 'zelo_volunteer_ops';
-            this.writeSnapshot(cacheKey, data);
-            this.lastFetchFromCache.volunteerOps = false;
-            return data;
-        } catch (error) {
-            if (!error || !error.__authError) {
-                console.warn('Falha ao carregar operação de voluntários', error);
-            }
-            const cacheKey = mine ? 'zelo_volunteer_ops_mine' : 'zelo_volunteer_ops';
-            const cached = this.readSnapshot(cacheKey);
-            if (cached) {
-                this.cache.volunteerOps = cached;
-                this.lastFetchFromCache.volunteerOps = true;
-                return { ...cached, __fromCache: true };
-            }
-            return null;
+        });
+
+        if (result && this.lastFetchFromCache.volunteerOps) {
+            return { ...result, __fromCache: true };
         }
+        return result;
     },
 
     async getClima() {
         const url = `${this.baseUrl}/clima?_t=${Date.now()}`;
         try {
-            const response = await fetch(url);
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) {
-                const err = new Error(data.message || 'Falha ao carregar previsão do tempo');
-                err.code = data.code || null;
-                this.lastClimaError = err;
-                throw err;
-            }
-            this.lastClimaError = null;
-            this.cache.clima = data;
-            if (data && data.enabled !== false && data.current) {
-                this.writeSnapshot('zelo_clima', data);
-            }
-            this.lastFetchFromCache.clima = false;
-            return data;
+            return await this.fetchWithStaleFallback({
+                url,
+                snapshotKey: 'zelo_clima',
+                staleFlag: 'clima',
+                cacheProp: 'clima',
+                throwIfNoSnapshot: true,
+                persistSnapshot: (data) => !!(data && data.enabled !== false && data.current),
+                parseResponse: async (response) => {
+                    const data = await response.json().catch(() => ({}));
+                    if (!response.ok) {
+                        const err = new Error(data.message || 'Falha ao carregar previsão do tempo');
+                        err.code = data.code || null;
+                        this.lastClimaError = err;
+                        throw err;
+                    }
+                    this.lastClimaError = null;
+                    return data;
+                }
+            });
         } catch (error) {
-            console.warn('Fetch clima falhou, tentando cache', error);
             const cached = this.readSnapshot('zelo_clima');
             if (cached) {
                 this.cache.clima = cached;
@@ -338,37 +412,47 @@ const API = {
             ? { credentials: 'include', headers: this.getAuthHeaders() }
             : { credentials: 'include' };
 
-        try {
-            const r = await fetch(url, fetchOpts);
+        const authFromResponse = (r) => {
             if (r.status === 401 || r.status === 403) {
                 this.cache.indoorMap = null;
                 localStorage.removeItem(snapKey);
                 this.lastFetchFromCache.indoorMap = false;
+                this.lastFetchRevalidating.indoorMap = false;
                 return {};
             }
-            if (!r.ok) throw new Error('Network response was not ok');
-            const data = await r.json();
-            if (data && data.image_url) {
-                this.cache.indoorMap = data;
-                this.writeSnapshot(snapKey, data);
-                this.lastFetchFromCache.indoorMap = false;
-                await this.prefetchToSwCache(data.image_url);
-                return data;
+            return undefined;
+        };
+
+        const cached = this.readSnapshot(snapKey);
+        const hasUsableCache = cached && cached.image_url;
+
+        const result = await this.fetchWithStaleFallback({
+            url,
+            fetchOpts,
+            snapshotKey: hasUsableCache ? snapKey : null,
+            staleFlag: 'indoorMap',
+            cacheProp: 'indoorMap',
+            emptyFallback: {},
+            authFromResponse,
+            onFresh: (data) => {
+                if (data && data.image_url) {
+                    this.prefetchToSwCache(data.image_url);
+                }
+            },
+            parseResponse: async (r) => {
+                if (!r.ok) throw new Error('Network response was not ok');
+                const data = await r.json();
+                return data || {};
             }
-            this.cache.indoorMap = data || {};
-            this.writeSnapshot(snapKey, data || {});
-            this.lastFetchFromCache.indoorMap = false;
-            return data || {};
-        } catch (error) {
-            console.warn('Fetch indoor-map falhou, tentando cache', error);
-            const cached = this.readSnapshot(snapKey);
-            if (cached && cached.image_url) {
-                this.cache.indoorMap = cached;
-                this.lastFetchFromCache.indoorMap = true;
-                return cached;
-            }
-            return {};
+        });
+
+        if (result && result.image_url) {
+            return result;
         }
+        if (hasUsableCache && !result.image_url) {
+            return cached;
+        }
+        return result || {};
     },
 
     async getOpsLanguages() {
