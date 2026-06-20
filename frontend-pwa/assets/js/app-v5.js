@@ -5800,6 +5800,82 @@ const app = {
         }
     },
 
+    syncOpsFiltersFromDom() {
+        const dayEl = document.getElementById('ops-day-filter');
+        if (!dayEl) return;
+        this._opsLastFilters = {
+            day: dayEl.value || '',
+            shift: document.getElementById('ops-shift-filter')?.value || '',
+            location: document.getElementById('ops-location-filter')?.value || '',
+            name: document.getElementById('ops-name-filter')?.value || '',
+            language: document.getElementById('ops-language-filter')?.value || '',
+            responsible: document.getElementById('ops-responsible-filter')?.value || ''
+        };
+    },
+
+    getOpsFilterValues() {
+        const preset = this._opsFilterPreset || {};
+        const lf = this._opsLastFilters || {};
+        const dayEl = document.getElementById('ops-day-filter');
+        const nameRaw = document.getElementById('ops-name-filter')?.value ?? lf.name ?? '';
+        const languageRaw = document.getElementById('ops-language-filter')?.value ?? lf.language ?? '';
+        return {
+            selectedDay: dayEl?.value || preset.day || lf.day || '',
+            selectedShift: document.getElementById('ops-shift-filter')?.value || preset.shift || lf.shift || '',
+            selectedLocation: (document.getElementById('ops-location-filter')?.value || lf.location || '').trim(),
+            selectedResponsible: (document.getElementById('ops-responsible-filter')?.value || lf.responsible || '').trim(),
+            nameFilterValue: String(nameRaw),
+            nameQuery: String(nameRaw).trim().toLowerCase(),
+            languageFilterValue: String(languageRaw),
+            languageQuery: String(languageRaw).trim().toLowerCase()
+        };
+    },
+
+    filterOpsScheduleItems(schedule, f) {
+        let items = (schedule || []).slice();
+        if (f.selectedDay) items = items.filter((i) => i.day === f.selectedDay);
+        if (f.selectedShift) items = items.filter((i) => i.shift === f.selectedShift);
+        if (f.selectedLocation) items = items.filter((i) => (i.location || '') === f.selectedLocation);
+        if (f.nameQuery) {
+            items = items.filter((i) => String(i.volunteer_name || '').toLowerCase().includes(f.nameQuery));
+        }
+        if (f.languageQuery) {
+            items = items.filter((i) => (i.languages || []).some((lang) => String(lang).toLowerCase().includes(f.languageQuery)));
+        }
+        if (f.selectedResponsible) {
+            items = items.filter((i) => this.itemMatchesOpsResponsibleFilter(i, f.selectedResponsible));
+        }
+        return items;
+    },
+
+    handleOpsTextFilterInput(event) {
+        const el = event && event.target;
+        if (!el || (el.id !== 'ops-name-filter' && el.id !== 'ops-language-filter')) return;
+        if (!this._opsLastFilters) this._opsLastFilters = {};
+        if (el.id === 'ops-name-filter') {
+            this._opsLastFilters.name = el.value;
+        } else {
+            this._opsLastFilters.language = el.value;
+        }
+        this.refreshOpsScheduleFromFilters();
+    },
+
+    refreshOpsScheduleFromFilters() {
+        const scheduleEl = document.getElementById('ops-schedule-by-day');
+        const ops = this.data.volunteerOps;
+        if (!scheduleEl || !ops || !Array.isArray(ops.schedule)) {
+            this.renderVolunteerOps();
+            return;
+        }
+        const f = this.getOpsFilterValues();
+        const items = this.filterOpsScheduleItems(ops.schedule, f);
+        const uid = this.auth.user?.id;
+        const viewMode = this.getOpsScheduleViewMode();
+        scheduleEl.innerHTML = viewMode === 'list'
+            ? this.renderOpsDayGroups(items, uid, true)
+            : this.renderOpsShiftSchedule(items, uid, true);
+    },
+
     renderVolunteerOps() {
         const container = document.getElementById('volunteer-ops-container');
         if (!container) return;
@@ -5821,25 +5897,18 @@ const app = {
 
         const staleBanner = this._dataStale.ops ? `<div class="zelo-stale-banner">${this.renderStaleBadge('ops')}</div>` : '';
         const preset = this._opsFilterPreset || {};
-        const dayEl = document.getElementById('ops-day-filter');
-        if (dayEl) {
-            this._opsLastFilters = {
-                day: dayEl.value || '',
-                shift: document.getElementById('ops-shift-filter')?.value || '',
-                location: document.getElementById('ops-location-filter')?.value || '',
-                name: document.getElementById('ops-name-filter')?.value || '',
-                language: document.getElementById('ops-language-filter')?.value || '',
-                responsible: document.getElementById('ops-responsible-filter')?.value || ''
-            };
-        }
-        const lf = this._opsLastFilters || {};
-        const selectedDay = dayEl?.value || preset.day || lf.day || '';
-        const selectedShift = document.getElementById('ops-shift-filter')?.value || preset.shift || lf.shift || '';
-        const selectedLanguage = (document.getElementById('ops-language-filter')?.value || lf.language || '').toLowerCase();
-        const selectedLocation = (document.getElementById('ops-location-filter')?.value || lf.location || '').trim();
-        const selectedResponsible = (document.getElementById('ops-responsible-filter')?.value || lf.responsible || '').trim();
-        const nameQuery = (document.getElementById('ops-name-filter')?.value || lf.name || '').trim().toLowerCase();
+        this.syncOpsFiltersFromDom();
+        const f = this.getOpsFilterValues();
         if (preset.day || preset.shift) this._opsFilterPreset = null;
+
+        const {
+            selectedDay,
+            selectedShift,
+            selectedLocation,
+            selectedResponsible,
+            nameFilterValue,
+            languageFilterValue
+        } = f;
 
         const uid = this.auth.user.id;
         const myHtml = this.renderOpsMyAssignmentsBlock(uid);
@@ -5853,19 +5922,7 @@ const app = {
 
         const histBlock = this.renderOpsHistoryBlock(ops.history);
 
-        let items = ops.schedule.slice();
-        if (selectedDay) items = items.filter((i) => i.day === selectedDay);
-        if (selectedShift) items = items.filter((i) => i.shift === selectedShift);
-        if (selectedLocation) items = items.filter((i) => (i.location || '') === selectedLocation);
-        if (nameQuery) {
-            items = items.filter((i) => String(i.volunteer_name || '').toLowerCase().includes(nameQuery));
-        }
-        if (selectedLanguage) {
-            items = items.filter((i) => (i.languages || []).some((lang) => String(lang).toLowerCase().includes(selectedLanguage)));
-        }
-        if (selectedResponsible) {
-            items = items.filter((i) => this.itemMatchesOpsResponsibleFilter(i, selectedResponsible));
-        }
+        const items = this.filterOpsScheduleItems(ops.schedule, f);
 
         const locations = [...new Set((ops.schedule || []).map((i) => i.location).filter(Boolean))].sort();
         const responsibleNames = this.collectOpsShiftResponsibleNames();
@@ -5926,14 +5983,14 @@ const app = {
                         <option value="">${this.escapeHtml(i18n.t('ops_filter_all_responsibles'))}</option>
                         ${responsibleOptions}
                     </select>` : ''}
-                    <input id="ops-name-filter" class="ops-filter-control ops-filters-span-full" value="${this.escapeHtml(nameQuery)}" oninput="app.renderVolunteerOps()" placeholder="${this.escapeHtml(i18n.t('ops_filter_name_placeholder'))}">
-                    <input id="ops-language-filter" class="ops-filter-control ops-filters-span-full" value="${this.escapeHtml(selectedLanguage)}" oninput="app.renderVolunteerOps()" placeholder="${this.escapeHtml(i18n.t('ops_filter_language_placeholder'))}">
+                    <input id="ops-name-filter" class="ops-filter-control ops-filters-span-full" value="${this.escapeHtml(nameFilterValue)}" oninput="app.handleOpsTextFilterInput(event)" placeholder="${this.escapeHtml(i18n.t('ops_filter_name_placeholder'))}">
+                    <input id="ops-language-filter" class="ops-filter-control ops-filters-span-full" value="${this.escapeHtml(languageFilterValue)}" oninput="app.handleOpsTextFilterInput(event)" placeholder="${this.escapeHtml(i18n.t('ops_filter_language_placeholder'))}">
                 </div>
                 <div class="ops-toolbar-actions">${editBtn}${exportBtn}</div>
             </div>
             ${governanceHtml ? `<details class="ops-governance-details"><summary>${this.escapeHtml(i18n.t('ops_governance_title'))}</summary><div class="ops-governance-grid">${governanceHtml}</div></details>` : ''}
             <h3 class="ops-schedule-heading">${this.escapeHtml(i18n.t('ops_team_schedule'))}</h3>
-            <div class="ops-schedule-by-day">${scheduleHtml}</div>
+            <div id="ops-schedule-by-day" class="ops-schedule-by-day">${scheduleHtml}</div>
         `;
     },
 
