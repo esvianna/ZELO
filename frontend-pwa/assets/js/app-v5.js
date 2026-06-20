@@ -6619,8 +6619,8 @@ const app = {
                     <td class="delegate-support-desc-cell" data-label="${lbl.description}">${this.escapeHtml(item.description || '')}</td>
                     <td class="delegate-support-actions-cell" data-label="${lbl.actions}">
                         <div class="delegate-support-actions-group">
-                            <button type="button" class="delegate-support-action-btn" onclick="app.openDelegateSupportEditModal(${idJs})">${this.escapeHtml(i18n.t('delegate_support_edit'))}</button>
-                            <button type="button" class="delegate-support-action-btn delegate-support-action-btn--danger" onclick="app.openDelegateSupportDeleteModal(${idJs})">${this.escapeHtml(i18n.t('delegate_support_delete'))}</button>
+                            <button type="button" class="delegate-support-action-btn" onclick='app.openDelegateSupportEditModal(${idJs})'>${this.escapeHtml(i18n.t('delegate_support_edit'))}</button>
+                            <button type="button" class="delegate-support-action-btn delegate-support-action-btn--danger" onclick='app.openDelegateSupportDeleteModal(${idJs})'>${this.escapeHtml(i18n.t('delegate_support_delete'))}</button>
                         </div>
                     </td>
                 </tr>`;

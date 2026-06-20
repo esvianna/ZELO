@@ -22,6 +22,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | Versão | Entrega |
 |--------|---------|
 | PWA **155** | News SWR + hidratação snapshot no boot; refresh ao voltar ao app; SW `postMessage` → sininho; toast foreground; click push navega ao post |
+| PWA **156** | Fix botões Editar/Excluir lista delegados (onclick + UUID) |
 
 ### Corrigido — admin Config checkboxes lembretes (plugin 2.17.1)
 
