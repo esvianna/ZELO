@@ -341,6 +341,7 @@ Regressão offline: §12 O1–O6 inalterados.
 | I3 | Header «Offline» / «Online» | Traduz ao mudar idioma |
 | I4 | Home com ES selecionado (sem sair da view) | Dashboard, widget clima e banner atualizam na hora |
 | I5 | Home «Minhas designações» (2+ turnos) | Título `Dia · data` + turno à direita; meta `Local · horário`; aviso «escala alterada» acima dos botões; **mobile (≤480px):** Aceitar/Não posso empilhados largura total; **tablet/desktop:** lado a lado (121+) |
+| I6 | Idioma PT (#52, PWA 158+) → Perfil push, Escala editor, banner rede, Novidades offline | Sem «activ/actual/utilizador/guardar/contacte/equipa/registo/ligue-se/definições» em pt_br; fallbacks `index.html` pt-BR |
 
 ---
 

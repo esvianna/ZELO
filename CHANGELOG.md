@@ -25,6 +25,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | PWA **156** | Fix botões Editar/Excluir lista delegados (onclick + UUID) |
 | PWA **157** | Detalhe novidades: listas numeradas/marcadores com recuo e hierarquia |
 
+### Corrigido — auditoria pt_br (#52, PWA 158)
+
+| Versão | Entrega |
+|--------|---------|
+| PWA **158** | pt_br: Activ→Ativar, actual→atual, utilizador→usuário, guardar→salvar, equipa→equipe, ligação→conexão, etc.; `index.html` + `api-v5.js` |
+
 ### Corrigido — admin Config checkboxes lembretes (plugin 2.17.1)
 
 | Versão | Entrega |

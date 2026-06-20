@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-20** — #53 push/sininho live refresh (PWA 155) **In review**; #51 UX lista PWA 154; #44 smoke pendente.
+> Última atualização: **2026-06-20** — #52 auditoria pt_br (PWA 158) **In review**; #53 push/sininho PWA 155; #51 PWA 154–157.
 
 ---
 
@@ -129,7 +129,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 |-------|--------|-------|
 | [#44](https://github.com/esvianna/ZELO/issues/44) | **In review** | Plugin 2.18.0 — digest e-mail + fila; **smoke pendente** |
 | [#51](https://github.com/esvianna/ZELO/issues/51) | **In review** | Registro apoio delegados — ADR-039; plugin 2.19.0 / PWA 152 |
-| [#52](https://github.com/esvianna/ZELO/issues/52) | **Backlog** | Auditoria pt_br — remover pt-PT residual no frontend |
+| [#52](https://github.com/esvianna/ZELO/issues/52) | **In review** | Auditoria pt_br — pt-PT residual removido (PWA 158) |
 
 **Ops / conteúdo (sem issue aberta):** post Novidades slug `imprensa-autoridades`; config Curitiba/2026 (desactivar transporte/Wi‑Fi/credenciamento; activar imprensa; **desactivar um lembrete antecipado** — requer plugin **2.17.1+** ou JSON).
 
@@ -148,6 +148,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 - **#51 (ADR-039):** registro apoio delegados — backend `zelo-delegate-support-reports.php`; PWA 152–154 (formulário + lista/export + UX tabela); strings pt-BR; **In review**.
 - **PWA 154:** lista «Registros — apoio a delegados» — cards empilhados no mobile (rótulo por campo); desktop com bordas, padding e scroll horizontal.
 - **#53 (PWA 155):** novidades/push — news SWR + snapshot boot; refresh `visibilitychange`; SW→app `postMessage`; toast foreground; click push navega — **In review**.
+- **#52 (PWA 158):** auditoria pt_br — 40+ strings pt-PT→pt-BR (push, rede, ops, news); `index.html` + `api-v5.js` — **In review**.
 - **Validação smoke:** #45–#50, #46 — **Done** no Project (§6p6, §12b, §12 O1–O6).
 - **#44 (plugin 2.18.0):** digest e-mail — **In review**, smoke pendente.
 - Versões repo: plugin **2.19.0**, PWA **152**.

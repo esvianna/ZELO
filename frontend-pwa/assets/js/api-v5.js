@@ -667,7 +667,7 @@ const API = {
             body: JSON.stringify(subscription || {})
         });
         const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.message || 'Falha ao activar push');
+        if (!response.ok) throw new Error(data.message || 'Falha ao ativar push');
         return data;
     },
 
@@ -680,7 +680,7 @@ const API = {
             body: JSON.stringify(endpoint ? { endpoint } : {})
         });
         const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.message || 'Falha ao desactivar push');
+        if (!response.ok) throw new Error(data.message || 'Falha ao desativar push');
         return data;
     },
 
@@ -724,8 +724,8 @@ const API = {
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-            const msg = data.message || data.code || 'Falha ao guardar escala';
-            throw new Error(typeof msg === 'string' ? msg : 'Falha ao guardar escala');
+            const msg = data.message || data.code || 'Falha ao salvar escala';
+            throw new Error(typeof msg === 'string' ? msg : 'Falha ao salvar escala');
         }
         if (data.data) {
             this.cache.volunteerOps = data.data;
