@@ -400,6 +400,12 @@ const app = {
             if (viewId === 'mapa-evento' || viewId === 'blog' || viewId === 'blog-post') {
                 return app.canViewOps();
             }
+            if (viewId === 'delegado-registro') {
+                return app.canViewOps();
+            }
+            if (viewId === 'delegado-lista') {
+                return app.canManageOps();
+            }
             if (viewId === 'cadastros-pendentes') {
                 return !!(app.auth.user && app.auth.user.site_admin);
             }
@@ -532,6 +538,10 @@ const app = {
                     app.renderBlog();
                 } else if (viewId === 'blog-post') {
                     app.renderBlogPost(params.id);
+                } else if (viewId === 'delegado-registro') {
+                    app.renderDelegateSupportForm();
+                } else if (viewId === 'delegado-lista') {
+                    app.renderDelegateSupportList();
                 }
 
                 // Render Home components if on home
@@ -545,6 +555,7 @@ const app = {
                     app.toggleHomeVisitorExtrasCollapse();
                     app.updateNotificationsBadge();
                     app.updateHomePressInstructionsBtn();
+                    app.updateHomeDelegateListBtn();
                 }
 
                 if (options.persist !== false) {
@@ -1176,7 +1187,7 @@ const app = {
             this.router.navigate(viewId, params);
             return;
         }
-        if (viewId === 'escala' || viewId === 'profile' || viewId === 'blog' || viewId === 'blog-post' || viewId === 'mapa-evento' || viewId === 'cadastros-pendentes') {
+        if (viewId === 'escala' || viewId === 'profile' || viewId === 'blog' || viewId === 'blog-post' || viewId === 'mapa-evento' || viewId === 'cadastros-pendentes' || viewId === 'delegado-registro' || viewId === 'delegado-lista') {
             if (!this.auth.user) {
                 this.router.navigate('login', {}, { persist: false });
             } else {
@@ -1205,6 +1216,7 @@ const app = {
                 this.toggleHomeVisitorExtrasCollapse();
                 this.updateNotificationsBadge();
                 this.updateHomePressInstructionsBtn();
+                this.updateHomeDelegateListBtn();
                 break;
             case 'lista':
                 if (this.data.currentCategory) {
@@ -1256,6 +1268,12 @@ const app = {
                 break;
             case 'blog-post':
                 this.renderBlogPost(params.id);
+                break;
+            case 'delegado-registro':
+                this.renderDelegateSupportForm();
+                break;
+            case 'delegado-lista':
+                this.renderDelegateSupportList();
                 break;
             default:
                 break;
@@ -2658,6 +2676,14 @@ const app = {
         const block = document.getElementById('home-ops-extras-block');
         if (block) {
             block.hidden = !this.canViewOps();
+        }
+        this.updateHomeDelegateListBtn();
+    },
+
+    updateHomeDelegateListBtn() {
+        const btn = document.getElementById('home-delegate-list-btn');
+        if (btn) {
+            btn.hidden = !this.canManageOps();
         }
     },
 
@@ -6253,6 +6279,441 @@ const app = {
                     L.marker([lat, lng]).addTo(map);
                 }
             }, 200);
+        }
+    },
+
+    formatDelegateSupportDateTime(value) {
+        if (!value) return '—';
+        const normalized = String(value).replace(' ', 'T');
+        const d = new Date(normalized);
+        if (Number.isNaN(d.getTime())) return value;
+        try {
+            return d.toLocaleString(i18n.current === 'en' ? 'en-US' : (i18n.current === 'es' ? 'es-ES' : 'pt-BR'), {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (e) {
+            return value;
+        }
+    },
+
+    defaultDelegateSupportDateTimeLocal() {
+        const d = new Date();
+        d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+        return d.toISOString().slice(0, 16);
+    },
+
+    mysqlToDelegateDatetimeLocal(value) {
+        if (!value) return this.defaultDelegateSupportDateTimeLocal();
+        const normalized = String(value).replace(' ', 'T');
+        const d = new Date(normalized);
+        if (Number.isNaN(d.getTime())) return this.defaultDelegateSupportDateTimeLocal();
+        d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+        return d.toISOString().slice(0, 16);
+    },
+
+    findDelegateSupportItem(id) {
+        const items = this._delegateSupportItems || [];
+        return items.find((item) => item.id === id) || null;
+    },
+
+    findNearestLocalName(lat, lng) {
+        const locais = Array.isArray(this.data.locais) ? this.data.locais : [];
+        let best = null;
+        let bestDist = Infinity;
+        locais.forEach((item) => {
+            if (item.lat == null || item.lng == null) return;
+            const dist = this.calculateDistance(lat, lng, item.lat, item.lng);
+            if (dist < bestDist) {
+                bestDist = dist;
+                best = item;
+            }
+        });
+        if (best && bestDist <= 0.5 && best.nome) {
+            return best.endereco ? `${best.nome} — ${best.endereco}` : best.nome;
+        }
+        return null;
+    },
+
+    fillDelegateSupportLocationFromGps() {
+        const input = document.getElementById('delegate-support-location');
+        if (!input) return;
+        const loc = this.data.userLocation;
+        if (!loc || loc.lat == null || loc.lng == null) {
+            if (!navigator.geolocation) {
+                alert(i18n.t('delegate_support_location_unavailable'));
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    this.data.userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                    this.fillDelegateSupportLocationFromGps();
+                },
+                () => alert(i18n.t('delegate_support_location_unavailable')),
+                { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 }
+            );
+            return;
+        }
+        const nearest = this.findNearestLocalName(loc.lat, loc.lng);
+        input.value = nearest || i18n.t('delegate_support_location_gps', loc.lat.toFixed(5), loc.lng.toFixed(5));
+    },
+
+    renderDelegateSupportForm() {
+        const container = document.getElementById('delegate-support-form-container');
+        if (!container) return;
+        if (!this.auth.user || !this.canViewOps()) {
+            container.innerHTML = `<div class="loading">${this.escapeHtml(i18n.t('ops_no_permission'))}</div>`;
+            return;
+        }
+        container.innerHTML = `
+            <div class="delegate-support-banner" role="note">${this.escapeHtml(i18n.t('delegate_support_banner'))}</div>
+            <form id="delegate-support-form" class="profile-form delegate-support-form" onsubmit="app.submitDelegateSupportForm(event)">
+                <div class="form-group">
+                    <label for="delegate-support-occurred-at">${this.escapeHtml(i18n.t('delegate_support_occurred_at'))}</label>
+                    <input type="datetime-local" id="delegate-support-occurred-at" class="form-input" required value="${this.escapeHtml(this.defaultDelegateSupportDateTimeLocal())}">
+                </div>
+                <div class="form-group">
+                    <label for="delegate-support-location">${this.escapeHtml(i18n.t('delegate_support_location'))}</label>
+                    <div class="delegate-support-location-row">
+                        <input type="text" id="delegate-support-location" class="form-input" required maxlength="200" autocomplete="off">
+                        <button type="button" class="btn-block outline delegate-support-gps-btn" onclick="app.fillDelegateSupportLocationFromGps()">${this.escapeHtml(i18n.t('delegate_support_use_location'))}</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="delegate-support-delegate-name">${this.escapeHtml(i18n.t('delegate_support_delegate_name'))}</label>
+                    <input type="text" id="delegate-support-delegate-name" class="form-input" required maxlength="120" autocomplete="name">
+                </div>
+                <div class="form-group">
+                    <label for="delegate-support-contact-name">${this.escapeHtml(i18n.t('delegate_support_contact_name'))}</label>
+                    <input type="text" id="delegate-support-contact-name" class="form-input" required maxlength="120" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="delegate-support-description">${this.escapeHtml(i18n.t('delegate_support_description'))}</label>
+                    <textarea id="delegate-support-description" class="form-input" rows="4" required minlength="10" maxlength="2000"></textarea>
+                </div>
+                <div id="delegate-support-form-msg" class="profile-form-msg" style="display:none;" role="status"></div>
+                <button type="submit" id="delegate-support-submit-btn" class="btn-block">${this.escapeHtml(i18n.t('delegate_support_submit'))}</button>
+            </form>`;
+    },
+
+    async submitDelegateSupportForm(event) {
+        event.preventDefault();
+        if (!navigator.onLine) {
+            alert(i18n.t('delegate_support_offline'));
+            return;
+        }
+        const occurredAt = document.getElementById('delegate-support-occurred-at')?.value || '';
+        const location = document.getElementById('delegate-support-location')?.value.trim() || '';
+        const delegateName = document.getElementById('delegate-support-delegate-name')?.value.trim() || '';
+        const contactName = document.getElementById('delegate-support-contact-name')?.value.trim() || '';
+        const description = document.getElementById('delegate-support-description')?.value.trim() || '';
+        const msgEl = document.getElementById('delegate-support-form-msg');
+        const btn = document.getElementById('delegate-support-submit-btn');
+
+        if (!occurredAt || !location || !delegateName || !contactName || description.length < 10) {
+            if (msgEl) {
+                msgEl.style.display = 'block';
+                msgEl.className = 'profile-form-msg error';
+                msgEl.textContent = i18n.t('delegate_support_required');
+            }
+            return;
+        }
+        if (msgEl) msgEl.style.display = 'none';
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = i18n.t('delegate_support_saving');
+        }
+        try {
+            await API.submitDelegateSupportReport({
+                occurred_at: occurredAt,
+                location,
+                delegate_name: delegateName,
+                contact_name: contactName,
+                description
+            });
+            if (msgEl) {
+                msgEl.style.display = 'block';
+                msgEl.className = 'profile-form-msg success';
+                msgEl.textContent = i18n.t('delegate_support_success');
+            }
+            const form = document.getElementById('delegate-support-form');
+            if (form) form.reset();
+            const when = document.getElementById('delegate-support-occurred-at');
+            if (when) when.value = this.defaultDelegateSupportDateTimeLocal();
+        } catch (e) {
+            if (msgEl) {
+                msgEl.style.display = 'block';
+                msgEl.className = 'profile-form-msg error';
+                msgEl.textContent = e.message || i18n.t('delegate_support_fail');
+            }
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = i18n.t('delegate_support_submit');
+            }
+        }
+    },
+
+    async renderDelegateSupportList() {
+        const container = document.getElementById('delegate-support-list-container');
+        if (!container) return;
+        if (!this.auth.user || !this.canManageOps()) {
+            container.innerHTML = `<div class="loading">${this.escapeHtml(i18n.t('ops_no_permission'))}</div>`;
+            return;
+        }
+        container.innerHTML = `<div class="loading">${this.escapeHtml(i18n.t('loading'))}</div>`;
+        try {
+            const data = await API.getDelegateSupportReports();
+            const items = Array.isArray(data.items) ? data.items : [];
+            this._delegateSupportItems = items;
+            const toolbar = `
+                <div class="delegate-support-toolbar">
+                    <button type="button" id="delegate-support-export-csv-btn" class="ops-btn ops-btn--accent" onclick="app.downloadDelegateSupportExport('csv')">${this.escapeHtml(i18n.t('delegate_support_export_csv'))}</button>
+                    <button type="button" id="delegate-support-export-pdf-btn" class="ops-btn ops-btn--accent" onclick="app.downloadDelegateSupportExport('pdf')">${this.escapeHtml(i18n.t('delegate_support_export_pdf'))}</button>
+                </div>`;
+            const msgHtml = this._delegateSupportListMsg
+                ? `<div class="profile-form-msg success delegate-support-list-msg" role="status">${this.escapeHtml(this._delegateSupportListMsg)}</div>`
+                : '';
+            if (!items.length) {
+                container.innerHTML = `${toolbar}${msgHtml}<div class="loading">${this.escapeHtml(i18n.t('delegate_support_list_empty'))}</div>`;
+                this._delegateSupportListMsg = '';
+                return;
+            }
+            const rows = items.map((item) => {
+                const idJs = JSON.stringify(item.id || '');
+                return `<tr>
+                    <td>${this.escapeHtml(this.formatDelegateSupportDateTime(item.occurred_at))}</td>
+                    <td>${this.escapeHtml(item.location || '')}</td>
+                    <td>${this.escapeHtml(item.delegate_name || '')}</td>
+                    <td>${this.escapeHtml(item.contact_name || '')}</td>
+                    <td>${this.escapeHtml(item.volunteer_name || '')}</td>
+                    <td class="delegate-support-desc-cell">${this.escapeHtml(item.description || '')}</td>
+                    <td class="delegate-support-actions-cell">
+                        <button type="button" class="delegate-support-action-btn" onclick="app.openDelegateSupportEditModal(${idJs})">${this.escapeHtml(i18n.t('delegate_support_edit'))}</button>
+                        <button type="button" class="delegate-support-action-btn delegate-support-action-btn--danger" onclick="app.openDelegateSupportDeleteModal(${idJs})">${this.escapeHtml(i18n.t('delegate_support_delete'))}</button>
+                    </td>
+                </tr>`;
+            }).join('');
+            container.innerHTML = `${toolbar}${msgHtml}
+                <div class="delegate-support-table-wrap">
+                    <table class="ops-table delegate-support-table">
+                        <thead>
+                            <tr>
+                                <th>${this.escapeHtml(i18n.t('delegate_support_occurred_at'))}</th>
+                                <th>${this.escapeHtml(i18n.t('delegate_support_location'))}</th>
+                                <th>${this.escapeHtml(i18n.t('delegate_support_delegate_name'))}</th>
+                                <th>${this.escapeHtml(i18n.t('delegate_support_contact_name'))}</th>
+                                <th>${this.escapeHtml(i18n.t('delegate_support_volunteer_label'))}</th>
+                                <th>${this.escapeHtml(i18n.t('delegate_support_description'))}</th>
+                                <th>${this.escapeHtml(i18n.t('ops_actions_label'))}</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>`;
+            this._delegateSupportListMsg = '';
+        } catch (e) {
+            container.innerHTML = `<div class="loading">${this.escapeHtml(e.message || i18n.t('error_generic'))}</div>`;
+        }
+    },
+
+    openDelegateSupportEditModal(id) {
+        const item = this.findDelegateSupportItem(id);
+        if (!item || !this.canManageOps()) return;
+        this._delegateSupportEditModal = { id: item.id, item, error: '' };
+        this._delegateSupportEditSaving = false;
+        this.renderDelegateSupportEditModal();
+    },
+
+    closeDelegateSupportEditModal() {
+        this._delegateSupportEditModal = null;
+        this._delegateSupportEditSaving = false;
+        const overlay = document.getElementById('delegate-support-edit-overlay');
+        if (overlay) overlay.remove();
+        document.body.classList.remove('ops-modal-open');
+    },
+
+    renderDelegateSupportEditModal() {
+        const mod = this._delegateSupportEditModal;
+        if (!mod) return;
+        const item = mod.item;
+        const saving = !!this._delegateSupportEditSaving;
+        const errorHtml = mod.error
+            ? `<div class="profile-form-msg error">${this.escapeHtml(mod.error)}</div>`
+            : '';
+        let overlay = document.getElementById('delegate-support-edit-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'delegate-support-edit-overlay';
+            overlay.className = 'ops-confirm-overlay';
+            document.body.appendChild(overlay);
+        }
+        overlay.innerHTML = `
+            <div class="ops-confirm-panel delegate-support-edit-panel" role="dialog" aria-modal="true">
+                <header class="ops-confirm-header">
+                    <h3>${this.escapeHtml(i18n.t('delegate_support_edit_title'))}</h3>
+                </header>
+                <div class="ops-confirm-body profile-form">
+                    ${errorHtml}
+                    <div class="form-group">
+                        <label for="delegate-support-edit-occurred-at">${this.escapeHtml(i18n.t('delegate_support_occurred_at'))}</label>
+                        <input type="datetime-local" id="delegate-support-edit-occurred-at" class="form-input" required value="${this.escapeHtml(this.mysqlToDelegateDatetimeLocal(item.occurred_at))}">
+                    </div>
+                    <div class="form-group">
+                        <label for="delegate-support-edit-location">${this.escapeHtml(i18n.t('delegate_support_location'))}</label>
+                        <input type="text" id="delegate-support-edit-location" class="form-input" required maxlength="200" value="${this.escapeHtml(item.location || '')}">
+                    </div>
+                    <div class="form-group">
+                        <label for="delegate-support-edit-delegate-name">${this.escapeHtml(i18n.t('delegate_support_delegate_name'))}</label>
+                        <input type="text" id="delegate-support-edit-delegate-name" class="form-input" required maxlength="120" value="${this.escapeHtml(item.delegate_name || '')}">
+                    </div>
+                    <div class="form-group">
+                        <label for="delegate-support-edit-contact-name">${this.escapeHtml(i18n.t('delegate_support_contact_name'))}</label>
+                        <input type="text" id="delegate-support-edit-contact-name" class="form-input" required maxlength="120" value="${this.escapeHtml(item.contact_name || '')}">
+                    </div>
+                    <div class="form-group">
+                        <label for="delegate-support-edit-description">${this.escapeHtml(i18n.t('delegate_support_description'))}</label>
+                        <textarea id="delegate-support-edit-description" class="form-input" rows="4" required minlength="10" maxlength="2000">${this.escapeHtml(item.description || '')}</textarea>
+                    </div>
+                </div>
+                <footer class="ops-confirm-footer">
+                    <button type="button" class="btn-block outline" onclick="app.closeDelegateSupportEditModal()" ${saving ? 'disabled' : ''}>${this.escapeHtml(i18n.t('delegate_support_delete_cancel'))}</button>
+                    <button type="button" class="btn-block" onclick="app.saveDelegateSupportEditModal()" ${saving ? 'disabled' : ''}>${this.escapeHtml(saving ? i18n.t('delegate_support_saving') : i18n.t('delegate_support_save_changes'))}</button>
+                </footer>
+            </div>`;
+        document.body.classList.add('ops-modal-open');
+    },
+
+    async saveDelegateSupportEditModal() {
+        const mod = this._delegateSupportEditModal;
+        if (!mod || this._delegateSupportEditSaving) return;
+        if (!navigator.onLine) {
+            mod.error = i18n.t('delegate_support_offline');
+            this.renderDelegateSupportEditModal();
+            return;
+        }
+        const payload = {
+            occurred_at: document.getElementById('delegate-support-edit-occurred-at')?.value || '',
+            location: document.getElementById('delegate-support-edit-location')?.value.trim() || '',
+            delegate_name: document.getElementById('delegate-support-edit-delegate-name')?.value.trim() || '',
+            contact_name: document.getElementById('delegate-support-edit-contact-name')?.value.trim() || '',
+            description: document.getElementById('delegate-support-edit-description')?.value.trim() || ''
+        };
+        if (!payload.occurred_at || !payload.location || !payload.delegate_name || !payload.contact_name || payload.description.length < 10) {
+            mod.error = i18n.t('delegate_support_required');
+            this.renderDelegateSupportEditModal();
+            return;
+        }
+        this._delegateSupportEditSaving = true;
+        mod.error = '';
+        this.renderDelegateSupportEditModal();
+        try {
+            await API.updateDelegateSupportReport(mod.id, payload);
+            this.closeDelegateSupportEditModal();
+            this._delegateSupportListMsg = i18n.t('delegate_support_updated_success');
+            await this.renderDelegateSupportList();
+        } catch (e) {
+            this._delegateSupportEditSaving = false;
+            mod.error = e.message || i18n.t('delegate_support_fail');
+            this.renderDelegateSupportEditModal();
+        }
+    },
+
+    openDelegateSupportDeleteModal(id) {
+        const item = this.findDelegateSupportItem(id);
+        if (!item || !this.canManageOps()) return;
+        this._delegateSupportDeleteModal = { id: item.id, item };
+        this._delegateSupportDeleteSaving = false;
+        this.renderDelegateSupportDeleteModal();
+    },
+
+    closeDelegateSupportDeleteModal() {
+        this._delegateSupportDeleteModal = null;
+        this._delegateSupportDeleteSaving = false;
+        const overlay = document.getElementById('delegate-support-delete-overlay');
+        if (overlay) overlay.remove();
+        document.body.classList.remove('ops-modal-open');
+    },
+
+    renderDelegateSupportDeleteModal() {
+        const mod = this._delegateSupportDeleteModal;
+        if (!mod) return;
+        const item = mod.item;
+        const saving = !!this._delegateSupportDeleteSaving;
+        let overlay = document.getElementById('delegate-support-delete-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'delegate-support-delete-overlay';
+            overlay.className = 'ops-confirm-overlay';
+            document.body.appendChild(overlay);
+        }
+        overlay.innerHTML = `
+            <div class="ops-confirm-panel" role="dialog" aria-modal="true">
+                <header class="ops-confirm-header">
+                    <h3 id="delegate-support-delete-title">${this.escapeHtml(i18n.t('delegate_support_delete_title'))}</h3>
+                </header>
+                <div class="ops-confirm-body">
+                    <p class="ops-confirm-note">${this.escapeHtml(i18n.t('delegate_support_delete_body'))}</p>
+                    <p><strong>${this.escapeHtml(item.delegate_name || '—')}</strong> · ${this.escapeHtml(this.formatDelegateSupportDateTime(item.occurred_at))}</p>
+                </div>
+                <footer class="ops-confirm-footer">
+                    <button type="button" class="btn-block outline" onclick="app.closeDelegateSupportDeleteModal()" ${saving ? 'disabled' : ''}>${this.escapeHtml(i18n.t('delegate_support_delete_cancel'))}</button>
+                    <button type="button" class="btn-block ops-confirm-danger-btn" onclick="app.confirmDelegateSupportDelete()" ${saving ? 'disabled' : ''}>${this.escapeHtml(saving ? i18n.t('delegate_support_saving') : i18n.t('delegate_support_delete_confirm'))}</button>
+                </footer>
+            </div>`;
+        document.body.classList.add('ops-modal-open');
+    },
+
+    async confirmDelegateSupportDelete() {
+        const mod = this._delegateSupportDeleteModal;
+        if (!mod || this._delegateSupportDeleteSaving) return;
+        if (!navigator.onLine) {
+            alert(i18n.t('delegate_support_offline'));
+            return;
+        }
+        this._delegateSupportDeleteSaving = true;
+        this.renderDelegateSupportDeleteModal();
+        try {
+            await API.deleteDelegateSupportReport(mod.id);
+            this.closeDelegateSupportDeleteModal();
+            this._delegateSupportListMsg = i18n.t('delegate_support_deleted_success');
+            await this.renderDelegateSupportList();
+        } catch (e) {
+            this._delegateSupportDeleteSaving = false;
+            alert(e.message || i18n.t('delegate_support_fail'));
+            this.renderDelegateSupportDeleteModal();
+        }
+    },
+
+    async downloadDelegateSupportExport(format) {
+        const csvBtn = document.getElementById('delegate-support-export-csv-btn');
+        const pdfBtn = document.getElementById('delegate-support-export-pdf-btn');
+        const btn = format === 'pdf' ? pdfBtn : csvBtn;
+        const prev = btn ? btn.textContent : '';
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = i18n.t('delegate_support_exporting');
+        }
+        try {
+            const blob = await API.downloadDelegateSupportExport(format);
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = format === 'pdf' ? 'zelo-delegados.pdf' : 'zelo-delegados.csv';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        } catch (e) {
+            alert(e.message || i18n.t('delegate_support_export_error'));
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = prev || i18n.t(format === 'pdf' ? 'delegate_support_export_pdf' : 'delegate_support_export_csv');
+            }
         }
     }
 };

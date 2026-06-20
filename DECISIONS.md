@@ -425,6 +425,44 @@ Teto Titan (**1.000/dia**) fica confortável com ADR-037; **actual** aproxima-se
 
 ---
 
+## ADR-039 — Registro apoio delegados estrangeiros (#51, 2026-06-20)
+
+**Contexto:** Comunicado operacional — em emergência/caso delicado com delegado estrangeiro, voluntário contacta responsável no verso do crachá e deve registrar horário, local, nomes e descrição.
+
+**Decisões de produto (aprovadas):**
+
+1. **Notificação:** **sem** e-mail/push automático ao registrar; supervisores/gestores consultam lista na **PWA** e exportam **CSV/PDF**.
+2. **Atalho voluntário:** só **Home → Operação** (não Escala).
+3. **Retenção:** **arquivo permanente** (não TTL pós-evento); export para análise quando necessário.
+4. **Formulário:** 5 campos do comunicado + metadados voluntário; banner «só emergência/delicado»; submit online; voluntário **não** edita após envio; gestor (`zelo_manage_ops`) **pode editar/excluir** na lista PWA.
+5. **Permissões:** envio `zelo_view_ops`; listagem + export `zelo_manage_ops` (padrão export escala).
+
+**Fora de scope MVP:** notificação imediata; rascunho offline; painel WP dedicado (consulta via PWA).
+
+**Strings UI (locale `pt_br` — ortografia Brasil, não Portugal):**
+
+| Chave i18n (proposta) | Texto pt_br |
+|-----------------------|-------------|
+| `delegate_support_card_title` | Apoio a delegados |
+| `delegate_support_card_hint` | Registro — situações especiais |
+| `delegate_support_title` | Registro — apoio a delegados |
+| `delegate_support_banner` | Use apenas em emergência ou casos delicados (delegado perdido, desorientado, assistência especial). Situações simples de informação **não** precisam de registro. |
+| `delegate_support_occurred_at` | Horário da ocorrência |
+| `delegate_support_location` | Local |
+| `delegate_support_use_location` | Usar local atual |
+| `delegate_support_delegate_name` | Nome do delegado |
+| `delegate_support_contact_name` | Pessoa contatada (verso do crachá) |
+| `delegate_support_description` | Descrição da situação |
+| `delegate_support_submit` | Enviar registro |
+| `delegate_support_success` | Registro enviado. Obrigado. |
+| `delegate_support_list_title` | Registros — apoio a delegados |
+| `delegate_support_export_csv` | Exportar CSV |
+| `delegate_support_export_pdf` | Exportar PDF |
+
+**Consequências:** Issue #51; REST dedicado; option/array separado (não inflar `/ops/voluntarios`); reutilizar padrão export escala para PDF/CSV; **todas** as strings novas em pt_br conforme tabela acima.
+
+---
+
 ## Template para nova ADR
 
 ```markdown

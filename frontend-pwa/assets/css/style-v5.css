@@ -4844,3 +4844,97 @@ body.ops-modal-open {
     text-decoration: underline;
     padding: 0;
 }
+
+/* Delegate support (#51) */
+.delegate-support-container {
+    padding: 1rem;
+    max-width: 640px;
+    margin: 0 auto;
+}
+
+.delegate-support-banner {
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    color: #92400e;
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    margin-bottom: 1rem;
+}
+
+.delegate-support-location-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.delegate-support-gps-btn {
+    flex-shrink: 0;
+    font-size: 0.9rem;
+}
+
+.delegate-support-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.delegate-support-table-wrap {
+    overflow-x: auto;
+}
+
+.delegate-support-table .delegate-support-desc-cell {
+    min-width: 160px;
+    max-width: 280px;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.delegate-support-actions-cell {
+    min-width: 108px;
+    white-space: nowrap;
+    vertical-align: top;
+}
+
+.delegate-support-action-btn {
+    display: block;
+    width: 100%;
+    margin-bottom: 0.35rem;
+    padding: 0.35rem 0.5rem;
+    font-size: 0.78rem;
+    border: 1px solid var(--primary-color);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--primary-color);
+    cursor: pointer;
+}
+
+.delegate-support-action-btn--danger {
+    border-color: var(--danger-color, #dc2626);
+    color: var(--danger-color, #dc2626);
+}
+
+.delegate-support-list-msg {
+    margin-bottom: 0.75rem;
+}
+
+.delegate-support-edit-panel .ops-confirm-body {
+    max-height: min(70vh, 520px);
+    overflow-y: auto;
+}
+
+@media (min-width: 520px) {
+    .delegate-support-location-row {
+        flex-direction: row;
+        align-items: stretch;
+    }
+    .delegate-support-location-row .form-input {
+        flex: 1;
+    }
+    .delegate-support-gps-btn {
+        width: auto;
+        align-self: stretch;
+    }
+}

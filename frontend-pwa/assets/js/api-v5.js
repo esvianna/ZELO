@@ -390,6 +390,76 @@ const API = {
         return response.blob();
     },
 
+    async submitDelegateSupportReport(payload) {
+        const url = `${this.baseUrl}/ops/delegate-support-reports`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...this.getAuthHeaders() },
+            credentials: 'include',
+            body: JSON.stringify(payload || {})
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'Falha ao enviar registro');
+        return data;
+    },
+
+    async updateDelegateSupportReport(id, payload) {
+        const url = `${this.baseUrl}/ops/delegate-support-reports/${encodeURIComponent(id)}`;
+        const response = await fetch(url, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', ...this.getAuthHeaders() },
+            credentials: 'include',
+            body: JSON.stringify(payload || {})
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'Falha ao atualizar registro');
+        return data;
+    },
+
+    async deleteDelegateSupportReport(id) {
+        const url = `${this.baseUrl}/ops/delegate-support-reports/${encodeURIComponent(id)}`;
+        const response = await fetch(url, {
+            method: 'DELETE',
+            headers: this.getAuthHeaders(),
+            credentials: 'include'
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'Falha ao excluir registro');
+        return data;
+    },
+
+    async getDelegateSupportReports() {
+        const url = `${this.baseUrl}/ops/delegate-support-reports?_t=${Date.now()}`;
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: this.getAuthHeaders(),
+            credentials: 'include'
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'Falha ao carregar registros');
+        return data;
+    },
+
+    async downloadDelegateSupportExport(format = 'csv') {
+        const qs = new URLSearchParams({ format: format || 'csv' });
+        const url = `${this.baseUrl}/ops/delegate-support-reports/export?${qs.toString()}&_t=${Date.now()}`;
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: this.getAuthHeaders(),
+            credentials: 'include'
+        });
+        if (!response.ok) {
+            const ct = response.headers.get('content-type') || '';
+            let msg = 'Falha ao exportar registros';
+            if (ct.indexOf('application/json') !== -1) {
+                const data = await response.json().catch(() => ({}));
+                msg = data.message || msg;
+            }
+            throw new Error(msg);
+        }
+        return response.blob();
+    },
+
     async prefetchToSwCache(url) {
         if (!url || typeof caches === 'undefined') return;
         try {

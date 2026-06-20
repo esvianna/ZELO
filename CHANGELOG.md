@@ -8,6 +8,14 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Adicionado — registro apoio delegados (#51, ADR-039, plugin 2.19.0, PWA 152)
+
+| Versão | Entrega |
+|--------|---------|
+| Plugin **2.19.0** | REST `POST/GET /ops/delegate-support-reports` + export CSV/PDF; option `zelo_delegate_support_reports`; rate limit 10/h |
+| PWA **152** | Card Home Operação; formulário voluntário; lista + export gestor; i18n pt-BR (ADR-039) |
+| Plugin **2.19.1** / PWA **153** | Gestor: editar e excluir registro na lista (`PATCH`/`DELETE` por id) |
+
 ### Corrigido — admin Config checkboxes lembretes (plugin 2.17.1)
 
 | Versão | Entrega |
@@ -25,16 +33,18 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 | Entrega | Detalhe |
 |---------|---------|
-| Matriz | Issue #46 — **In review** |
+| Matriz | Issue #46 — auditoria entregue |
 | Implementação | PWA **151** — #47–#50 (SWR, init, banner, sessão paralela) |
 | `TESTING.md` | §12b D1–D10 |
 | `DECISIONS.md` | ADR-038 decidido |
+| Validação | **Done** no Project (#46) |
 
 ### Adicionado — rede degradada SWR (ADR-038, PWA 151, #47–#50)
 
 | Versão | Entrega |
 |--------|---------|
 | PWA **151** | `fetchWithStaleFallback` + timeout 5 s; `init` allSettled + hidratação; banner rede lenta; `refreshSession` paralelo |
+| Validação | **Done** no Project (#47–#50) — smoke §12b + regressão §12 O1–O6 |
 
 ### Adicionado — e-mails escala digest + fila (#44, ADR-037, plugin 2.18.0)
 

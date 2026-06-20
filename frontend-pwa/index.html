@@ -21,7 +21,7 @@
     <!-- CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <link rel="stylesheet" href="assets/css/style-v5.css?v=151">
+    <link rel="stylesheet" href="assets/css/style-v5.css?v=153">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -184,6 +184,20 @@
                     <span data-i18n="ops_press_instructions_title">Imprensa / Autoridades</span>
                     <span class="action-card-subhint" data-i18n="ops_press_instructions_hint">Como agir</span>
                 </button>
+                <button type="button" class="action-card delegate-support-card" onclick="app.router.navigate('delegado-registro')">
+                    <span class="action-icon" style="background:#fce7f3; color:#be185d;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                    </span>
+                    <span data-i18n="delegate_support_card_title">Apoio a delegados</span>
+                    <span class="action-card-subhint" data-i18n="delegate_support_card_hint">Registro — situações especiais</span>
+                </button>
+                <button type="button" id="home-delegate-list-btn" class="action-card delegate-support-list-card" hidden onclick="app.router.navigate('delegado-lista')">
+                    <span class="action-icon" style="background:#ede9fe; color:#6d28d9;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
+                    </span>
+                    <span data-i18n="delegate_support_list_card_title">Registros de delegados</span>
+                    <span class="action-card-subhint" data-i18n="delegate_support_list_card_hint">Consultar e exportar</span>
+                </button>
             </div>
             </div>
             </details>
@@ -237,6 +251,28 @@
             </div>
             <div id="detail-container">
                 <!-- Details injected here -->
+            </div>
+        </section>
+
+        <!-- Delegate support — registro (voluntário) -->
+        <section id="view-delegado-registro" class="view">
+            <div class="view-header">
+                <button class="back-btn" onclick="app.router.back()" data-i18n="back">Voltar</button>
+                <h2 data-i18n="delegate_support_title">Registro — apoio a delegados</h2>
+            </div>
+            <div id="delegate-support-form-container" class="delegate-support-container">
+                <div class="loading" data-i18n="loading">Carregando...</div>
+            </div>
+        </section>
+
+        <!-- Delegate support — lista (gestor) -->
+        <section id="view-delegado-lista" class="view">
+            <div class="view-header">
+                <button class="back-btn" onclick="app.router.back()" data-i18n="back">Voltar</button>
+                <h2 data-i18n="delegate_support_list_title">Registros — apoio a delegados</h2>
+            </div>
+            <div id="delegate-support-list-container" class="delegate-support-container">
+                <div class="loading" data-i18n="loading">Carregando...</div>
             </div>
         </section>
 
@@ -601,11 +637,11 @@
 
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script src="assets/js/zelo-build.js?v=151"></script>
-    <script src="assets/js/i18n.js?v=151"></script>
-    <script src="assets/js/api-v5.js?v=151"></script>
-    <script src="assets/js/map-manager.js?v=151"></script>
-    <script src="assets/js/app-v5.js?v=151"></script>
+    <script src="assets/js/zelo-build.js?v=153"></script>
+    <script src="assets/js/i18n.js?v=153"></script>
+    <script src="assets/js/api-v5.js?v=153"></script>
+    <script src="assets/js/map-manager.js?v=153"></script>
+    <script src="assets/js/app-v5.js?v=153"></script>
 
     <script>
         // Register Service Worker

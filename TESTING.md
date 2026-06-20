@@ -146,6 +146,12 @@ Orientação de testes **manual** (prioritário hoje) e caminho para automação
 | 5n11 | Nonce admin (#38, plugin **2.14.8+**) | `manage_options` | «Salvar abas» **não** mostra «Este link expirou»; dedupe e save funcionam no mesmo form |
 | 5n12 | Salvar por aba (#39, plugin **2.15.0+**, fix persist **2.15.2+**, checkboxes **2.17.1+**) | `manage_options` | Cada aba tem botão **Salvar**; notice na mesma página (sem tela branca); Config grava push/VAPID sem validar escala; Turnos salva sem erro de duplicata na escala; **F5** confirma alteração gravada; **desmarcar** «Lembrete 24h» ou «Presença 1 dia antes» permanece desmarcado após Salvar |
 | 5n13 | Troca de abas admin (#39, plugin **2.15.1+**) | `manage_options` | Clicar abas muda conteúdo (não só `#hash`); consola sem `SyntaxError`; F5 com `#tab-config` abre Config |
+| D51 | **Apoio delegados — card Home** (#51, PWA **152+**, ADR-039) | `view_ops` | Home → Operação: card «Apoio a delegados»; **sem** card na Escala |
+| D51b | **Formulário registro** (#51, plugin **2.19.0+**) | `view_ops` | Banner emergência; 5 campos + metadados; «Usar local atual» preenche GPS/local próximo; envio online → sucesso; **403** sem cap |
+| D51c | Validação formulário (#51) | `view_ops` | Campos vazios / descrição &lt;10 chars → erro; offline → alerta «requer conexão» |
+| D51d | **Lista gestor** (#51) | `manage_ops` | Card «Registros de delegados» só gestor; tabela ordenada por horário; export CSV e PDF baixam ficheiro |
+| D51e | Permissões lista/export (#51) | `view_ops` sem manage | **403** em `GET /ops/delegate-support-reports` e export; card lista oculto |
+| D51f | **Editar / excluir registro** (#51, plugin **2.19.1+** / PWA **153+**) | `manage_ops` | Coluna Ações: Editar abre modal e persiste (F5); Excluir confirma e remove da lista |
 | 5o | Layout toolbar escala (PWA **137+**, #33) | gestor / mobile 375px | Filtro status «Todos os status»; selects com estilo uniforme; filtros legíveis (grid 2 col.) |
 | 5o2 | Botões Montar escala + Export PDF | gestor | Mesma altura, mesma linha |
 | 5o3 | Regressão filtros escala | homem-chave | Dia/turno/local/responsável/nome/idioma e export PDF inalterados |

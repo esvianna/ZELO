@@ -2,6 +2,16 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.19.1] - 2026-06-20
+
+### Adicionado
+- **Registro delegados (#51):** `PATCH`/`DELETE /ops/delegate-support-reports/{id}` para gestores; metadados `updated_at` / `updated_by_name`.
+
+## [2.19.0] - 2026-06-20
+
+### Adicionado
+- **Registro apoio delegados (#51, ADR-039):** `POST/GET /ops/delegate-support-reports`; export CSV/PDF; option `zelo_delegate_support_reports`; rate limit 10/h por utilizador; permissões `zelo_view_ops` (envio) e `zelo_manage_ops` (lista/export).
+
 ## [2.18.0] - 2026-06-20
 
 ### Adicionado
