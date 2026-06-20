@@ -4827,10 +4827,104 @@ body.ops-modal-open {
 }
 
 .blog-post-body {
-    padding: 0.75rem 1rem 1.25rem;
+    padding: 0.75rem 1.15rem 1.35rem;
     font-size: 0.95rem;
-    line-height: 1.6;
+    line-height: 1.65;
     color: #334155;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.blog-post-body ul,
+.blog-post-body ol {
+    margin: 0.35rem 0 0.85rem;
+    padding-inline-start: 1.5rem;
+    list-style-position: outside;
+}
+
+.blog-post-body ul {
+    list-style-type: disc;
+}
+
+.blog-post-body ol {
+    list-style-type: decimal;
+}
+
+.blog-post-body ul ul {
+    list-style-type: circle;
+    margin-top: 0.35rem;
+    margin-bottom: 0.35rem;
+}
+
+.blog-post-body ol ol {
+    list-style-type: lower-alpha;
+    margin-top: 0.35rem;
+    margin-bottom: 0.35rem;
+}
+
+.blog-post-body ul ol,
+.blog-post-body ol ul {
+    margin-top: 0.35rem;
+    margin-bottom: 0.35rem;
+}
+
+.blog-post-body li {
+    margin-bottom: 0.45rem;
+    padding-inline-start: 0.2rem;
+}
+
+.blog-post-body li:last-child {
+    margin-bottom: 0;
+}
+
+.blog-post-body li > ul,
+.blog-post-body li > ol {
+    margin-top: 0.4rem;
+}
+
+.blog-post-body li > p {
+    margin-bottom: 0.35rem;
+}
+
+.blog-post-body li > p:last-child {
+    margin-bottom: 0;
+}
+
+.blog-post-body .wp-block-list {
+    padding-inline-start: 1.5rem;
+}
+
+.blog-post-body h2,
+.blog-post-body h3,
+.blog-post-body h4 {
+    margin: 1.1rem 0 0.5rem;
+    line-height: 1.35;
+    color: #1e293b;
+}
+
+.blog-post-body h2 { font-size: 1.15rem; }
+.blog-post-body h3 { font-size: 1.05rem; }
+.blog-post-body h4 { font-size: 1rem; }
+
+.blog-post-body blockquote {
+    margin: 0.75rem 0;
+    padding: 0.65rem 0.85rem;
+    border-left: 3px solid var(--primary-color, #137fec);
+    background: #f8fafc;
+    border-radius: 0 8px 8px 0;
+    color: #475569;
+}
+
+.blog-post-body a {
+    color: var(--primary-color, #137fec);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.blog-post-body strong,
+.blog-post-body b {
+    font-weight: 600;
+    color: #1e293b;
 }
 
 .blog-post-body img {
