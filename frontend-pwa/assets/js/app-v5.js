@@ -116,6 +116,20 @@ const app = {
         if (categorias) {
             this.data.categoriesMeta = this.buildCategoryMeta(categorias);
         }
+        if (this.auth.user && this.canViewOps()) {
+            const uid = this.auth.user.id;
+            const news = API.readSnapshot(API.newsSnapshotKey(uid));
+            if (news) {
+                this.data.news = news;
+                API.cache.news = news;
+                API.lastFetchFromCache.news = true;
+            }
+            const carousel = API.readSnapshot(API.newsCarouselSnapshotKey(uid));
+            if (carousel && Array.isArray(carousel.items)) {
+                this.data.newsCarousel = carousel;
+                API.lastFetchFromCache.newsCarousel = true;
+            }
+        }
     },
 
     _applyRevalidatedData(scope, data) {
@@ -140,6 +154,12 @@ const app = {
                 if (data && !data.__authError) {
                     this.data.volunteerOps = data;
                 }
+                break;
+            case 'news':
+                this.data.news = data;
+                break;
+            case 'newsCarousel':
+                this.data.newsCarousel = data && Array.isArray(data.items) ? data : null;
                 break;
             default:
                 break;
@@ -166,9 +186,103 @@ const app = {
         } else if (viewId === 'mapa') {
             MapManager.setCategoryMeta(this.data.categoriesMeta);
             MapManager.addMarkers(this.data.locais);
-        } else if (viewId === 'avisos' || viewId === 'blog') {
+        } else if (viewId === 'avisos') {
             this.renderAvisos();
+        } else if (viewId === 'blog') {
+            this.renderBlog();
         }
+    },
+
+    _bindServiceWorkerMessages() {
+        if (this._swMessageBound || !('serviceWorker' in navigator)) return;
+        this._swMessageBound = true;
+        navigator.serviceWorker.addEventListener('message', (event) => {
+            const msg = event.data || {};
+            if (msg.type === 'zelo:push' || msg.type === 'zelo:notificationclick') {
+                this.handlePushClientMessage(msg);
+            }
+        });
+    },
+
+    navigateFromPushUrl(url) {
+        if (!url) return;
+        try {
+            const u = new URL(url, window.location.href);
+            const raw = (u.hash || '').replace(/^#/, '');
+            if (!raw) return;
+            const qIdx = raw.indexOf('?');
+            const viewId = qIdx >= 0 ? raw.slice(0, qIdx) : raw;
+            const qs = qIdx >= 0 ? raw.slice(qIdx + 1) : '';
+            const params = Object.fromEntries(new URLSearchParams(qs));
+            if (this.router.canAccessView(viewId)) {
+                this.router.navigate(viewId, params);
+            }
+        } catch (e) {
+            console.warn('Push URL inválida', url, e);
+        }
+    },
+
+    showPushForegroundToast(title, body, url) {
+        let el = document.getElementById('zelo-push-toast');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'zelo-push-toast';
+            el.className = 'zelo-push-toast';
+            el.setAttribute('role', 'button');
+            el.tabIndex = 0;
+            document.body.appendChild(el);
+        }
+        const safeTitle = this.escapeHtml(title || i18n.t('push_toast_default_title'));
+        const safeBody = body ? `<div class="zelo-push-toast-body">${this.escapeHtml(body)}</div>` : '';
+        el.innerHTML = `<div class="zelo-push-toast-title">${safeTitle}</div>${safeBody}<div class="zelo-push-toast-action">${this.escapeHtml(i18n.t('push_toast_open'))}</div>`;
+        el.hidden = false;
+        el.onclick = () => {
+            el.hidden = true;
+            if (url) {
+                this.navigateFromPushUrl(url);
+            }
+        };
+        clearTimeout(this._pushToastTimer);
+        this._pushToastTimer = setTimeout(() => {
+            el.hidden = true;
+        }, 9000);
+    },
+
+    async refreshNewsLive() {
+        if (!this.auth.user || !this.canViewOps()) {
+            return;
+        }
+        await Promise.all([this.loadNews(1, false), this.loadNewsCarousel()]);
+        this._renderBootstrapUI();
+        this._refreshCurrentView();
+    },
+
+    async handlePushClientMessage(msg) {
+        if (this.auth.user && this.canViewOps()) {
+            await this.refreshNewsLive();
+        }
+        if (msg.type === 'zelo:notificationclick' && msg.url) {
+            this.navigateFromPushUrl(msg.url);
+            return;
+        }
+        if (msg.type === 'zelo:push' && document.visibilityState === 'visible') {
+            this.showPushForegroundToast(msg.title, msg.body, msg.url);
+        }
+    },
+
+    _maybeRefreshNewsOnVisible() {
+        if (document.visibilityState !== 'visible' || !navigator.onLine) {
+            return;
+        }
+        if (!this.auth.user || !this.canViewOps()) {
+            return;
+        }
+        const now = Date.now();
+        if (this._lastNewsVisibleRefreshAt && now - this._lastNewsVisibleRefreshAt < 15000) {
+            return;
+        }
+        this._lastNewsVisibleRefreshAt = now;
+        this.refreshNewsLive();
     },
 
     _renderBootstrapUI() {
@@ -1063,6 +1177,7 @@ const app = {
         }
 
         this._bindDataRevalidationListener();
+        this._bindServiceWorkerMessages();
 
         try {
             this.auth.init();
@@ -1172,11 +1287,13 @@ const app = {
         this.getUserLocation();
 
         document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible' && this.router.currentView === 'tempo' && navigator.onLine) {
-                if (this.shouldRefreshWeather()) {
-                    this.refreshWeather();
-                }
+            if (document.visibilityState !== 'visible' || !navigator.onLine) {
+                return;
             }
+            if (this.router.currentView === 'tempo' && this.shouldRefreshWeather()) {
+                this.refreshWeather();
+            }
+            this._maybeRefreshNewsOnVisible();
         });
     },
 

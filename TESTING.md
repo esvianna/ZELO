@@ -379,6 +379,9 @@ Pré-requisitos: HTTPS; Chrome/Android ou Safari 16.4+ (iOS com limitações). A
 | 15.10 | Admin: «Gerar novo par VAPID» + confirm (#42) | Novo par + subscriptions removidas; voluntário re-activa; `vapidPublicKeyFingerprint` muda |
 | 15.11 | Logout → login outra conta mesmo telefone (#42, PWA 147+) | Push do user A não chega após B activar; cada conta re-activa no Perfil |
 | 15.12 | Fingerprint: `subscribed:true` sem `zelo_push_vapid_fp` local (#42) | Perfil «Reactivação necessária»; Activar → push Novidades OK |
+| 15.13 | PWA aberta (foreground) → publicar Novidade com notificar (#53, PWA 155+) | Sininho actualiza **sem F5** (≤15 s); toast in-app opcional |
+| 15.14 | App em background → push Novidade → voltar ao app (#53) | Badge actualizado; lista avisos inclui post novo |
+| 15.15 | Clicar notificação push Novidade (#53) | Abre `#blog-post?id=` correcto |
 
 ---
 

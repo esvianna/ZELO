@@ -761,55 +761,102 @@ const API = {
         if (params.notifications_only) sp.set('notifications_only', '1');
         if (params.carousel_only) sp.set('carousel_only', '1');
         const url = `${this.baseUrl}/news?${sp.toString()}`;
-        const snapKey = params.carousel_only
+        const isCarousel = !!params.carousel_only;
+        const page = params.page || 1;
+        const snapKey = isCarousel
             ? this.newsCarouselSnapshotKey(userId)
             : this.newsSnapshotKey(userId);
+        const staleFlag = isCarousel ? 'newsCarousel' : 'news';
 
-        try {
-            const response = await fetch(url, {
-                method: 'GET',
-                credentials: 'include',
-                headers: this.getAuthHeaders()
-            });
+        const authFromResponse = (response) => {
             if (response.status === 401 || response.status === 403) {
-                if (params.carousel_only) {
+                if (isCarousel) {
                     this.lastFetchFromCache.newsCarousel = false;
                 } else {
                     this.cache.news = null;
                     this.lastFetchFromCache.news = false;
                 }
+                this.lastFetchRevalidating[staleFlag] = false;
                 return null;
             }
+            return undefined;
+        };
+
+        const parseResponse = async (response) => {
             if (!response.ok) throw new Error('Network response was not ok');
-            const data = await response.json();
-            if (params.carousel_only) {
-                this.lastFetchFromCache.newsCarousel = false;
-            } else {
-                this.cache.news = data;
-                this.lastFetchFromCache.news = false;
-            }
-            this.writeSnapshot(snapKey, data);
-            if (!params.carousel_only && userId != null && Array.isArray(data.items) && data.items.length) {
+            return response.json();
+        };
+
+        const onFresh = (data) => {
+            if (!isCarousel && userId != null && Array.isArray(data.items) && data.items.length) {
                 this.prefetchNewsItemDetails(data.items, userId);
             }
-            return data;
-        } catch (error) {
-            console.warn('Fetch news falhou, tentando cache', error);
-            const cached = this.readSnapshot(snapKey);
-            if (cached) {
-                if (params.carousel_only) {
-                    this.lastFetchFromCache.newsCarousel = true;
-                } else {
-                    this.cache.news = cached;
-                    this.lastFetchFromCache.news = true;
-                }
-                return cached;
-            }
-            if (params.carousel_only) {
+        };
+
+        const markFreshFlags = (data, persistSnapshot) => {
+            if (isCarousel) {
                 this.lastFetchFromCache.newsCarousel = false;
+            } else if (!params.notifications_only) {
+                this.cache.news = data;
+                this.lastFetchFromCache.news = false;
+                if (persistSnapshot) {
+                    this.writeSnapshot(snapKey, data);
+                }
             }
-            return null;
+            onFresh(data);
+        };
+
+        if (page > 1 || params.notifications_only) {
+            try {
+                const response = await this.fetchWithTimeout(url, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: this.getAuthHeaders()
+                });
+                const authResult = authFromResponse(response);
+                if (authResult !== undefined) {
+                    return authResult;
+                }
+                const data = await parseResponse(response);
+                markFreshFlags(data, page === 1 && !params.notifications_only);
+                return data;
+            } catch (error) {
+                console.warn('Fetch news direct falhou', error);
+                if (params.notifications_only) {
+                    return null;
+                }
+                const cached = this.readSnapshot(snapKey);
+                if (cached) {
+                    if (isCarousel) {
+                        this.lastFetchFromCache.newsCarousel = true;
+                    } else {
+                        this.cache.news = cached;
+                        this.lastFetchFromCache.news = true;
+                    }
+                    return cached;
+                }
+                if (isCarousel) {
+                    this.lastFetchFromCache.newsCarousel = false;
+                }
+                return null;
+            }
         }
+
+        return this.fetchWithStaleFallback({
+            url,
+            fetchOpts: {
+                method: 'GET',
+                credentials: 'include',
+                headers: this.getAuthHeaders()
+            },
+            snapshotKey: snapKey,
+            staleFlag,
+            cacheProp: isCarousel ? null : 'news',
+            emptyFallback: null,
+            authFromResponse,
+            onFresh,
+            parseResponse
+        });
     },
 
     async prefetchNewsItemDetails(items, userId) {

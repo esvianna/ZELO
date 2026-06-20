@@ -17,6 +17,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | Plugin **2.19.1** / PWA **153** | Gestor: editar e excluir registro na lista (`PATCH`/`DELETE` por id) |
 | PWA **154** | Lista delegados: tabela com bordas/padding; cards empilhados no mobile |
 
+### Corrigido — novidades/push live refresh (#53, PWA 155)
+
+| Versão | Entrega |
+|--------|---------|
+| PWA **155** | News SWR + hidratação snapshot no boot; refresh ao voltar ao app; SW `postMessage` → sininho; toast foreground; click push navega ao post |
+
 ### Corrigido — admin Config checkboxes lembretes (plugin 2.17.1)
 
 | Versão | Entrega |

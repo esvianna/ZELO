@@ -1,14 +1,14 @@
-const CACHE_NAME = 'zelo-cache-v154';
+const CACHE_NAME = 'zelo-cache-v155';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
     './manifest.json',
-    './assets/js/zelo-build.js?v=154',
-    './assets/css/style-v5.css?v=154',
-    './assets/js/i18n.js?v=154',
-    './assets/js/app-v5.js?v=154',
-    './assets/js/api-v5.js?v=154',
-    './assets/js/map-manager.js?v=154',
+    './assets/js/zelo-build.js?v=155',
+    './assets/css/style-v5.css?v=155',
+    './assets/js/i18n.js?v=155',
+    './assets/js/app-v5.js?v=155',
+    './assets/js/api-v5.js?v=155',
+    './assets/js/map-manager.js?v=155',
     './assets/icons/icon-192x192.png',
     './assets/icons/icon-256x256.png',
     './assets/icons/icon-512x512.png',
@@ -95,6 +95,19 @@ self.addEventListener('activate', (event) => {
     );
 });
 
+function zeloNotifyOpenClients(message) {
+    return clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+        list.forEach((client) => {
+            try {
+                client.postMessage(message);
+            } catch (e) {
+                /* ignore */
+            }
+        });
+        return list;
+    });
+}
+
 // Web Push (Fase 3 — requer VAPID e subscribe no servidor)
 self.addEventListener('push', (event) => {
     let payload = { title: 'Zelo', body: '' };
@@ -106,19 +119,30 @@ self.addEventListener('push', (event) => {
         payload.body = event.data ? event.data.text() : '';
     }
     const title = payload.title || 'Zelo';
+    const pushUrl = payload.url || './';
     const options = {
         body: payload.body || '',
         icon: './images/logo-zelo.png',
-        data: { url: payload.url || './' }
+        data: { url: pushUrl }
     };
-    event.waitUntil(self.registration.showNotification(title, options));
+    const clientMsg = {
+        type: 'zelo:push',
+        title,
+        body: options.body,
+        url: pushUrl
+    };
+    event.waitUntil(Promise.all([
+        self.registration.showNotification(title, options),
+        zeloNotifyOpenClients(clientMsg)
+    ]));
 });
 
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
     const url = (event.notification.data && event.notification.data.url) || './';
+    const clientMsg = { type: 'zelo:notificationclick', url };
     event.waitUntil(
-        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+        zeloNotifyOpenClients(clientMsg).then((list) => {
             for (const client of list) {
                 if ('focus' in client) {
                     return client.focus();
