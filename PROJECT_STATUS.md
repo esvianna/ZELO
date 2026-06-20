@@ -103,7 +103,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 **Ops / conteúdo (sem issue aberta):** post Novidades slug `imprensa-autoridades`; config Curitiba/2026 (desactivar transporte/Wi‑Fi/credenciamento; activar imprensa; **desactivar um lembrete antecipado** — requer plugin **2.17.1+** ou JSON).
 
-**Backlog (análise):** [#44](https://github.com/esvianna/ZELO/issues/44) — **In review** (implementação ADR-037, plugin 2.18.0). [#45](https://github.com/esvianna/ZELO/issues/45) — UX Info Posto Médico. [#46](https://github.com/esvianna/ZELO/issues/46) — auditoria offline-first rede lenta.
+**Backlog (análise):** [#44](https://github.com/esvianna/ZELO/issues/44) — **In review** (plugin 2.18.0). [#45](https://github.com/esvianna/ZELO/issues/45) — **In review** (PWA 150). [#46](https://github.com/esvianna/ZELO/issues/46) — auditoria offline-first rede lenta.
 
 ---
 
@@ -117,9 +117,9 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## Última sessão (2026-06-20)
 
-- **#44 implementado (plugin 2.18.0, ADR-037):** digest e-mail user/dia; push-first check-in/out/minutos; fila + throttle; contadores Config; hotfix checkboxes Config (2.17.1).
-- **Produção:** lembrete antecipado único via JSON (validado); publicar **2.18.0** antes do evento.
-- Versões repo: plugin **2.18.0**, PWA **149** (sem bump PWA nesta entrega).
+- **#45 (PWA 150):** card Segurança — «Posto Médico» com título acima do texto (`info-safety-medical`); Emergência/192 inalterado.
+- **#44 (plugin 2.18.0):** digest e-mail, push-first, fila — **In review**.
+- Versões repo: plugin **2.18.0**, PWA **150**.
 
 ## Sessão anterior (2026-06-19)
 

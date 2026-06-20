@@ -1425,6 +1425,32 @@ body {
     gap: 0.5rem;
 }
 
+/* Info — card Segurança (#45) */
+.info-safety-medical {
+    margin-bottom: 0.75rem;
+}
+
+.info-safety-medical__label {
+    display: block;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.35rem;
+}
+
+.info-safety-medical__text {
+    display: block;
+    color: var(--text-primary);
+    line-height: 1.45;
+    word-break: break-word;
+}
+
+.info-safety-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+}
+
 /* Map Preview in Card */
 .map-preview {
     width: 100%;

@@ -14,6 +14,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 |--------|---------|
 | Plugin **2.17.1** | Desmarcar «Lembrete 24h» / «Presença 1 dia antes» persiste após Salvar |
 
+### Adicionado — UX Info Posto Médico (#45, PWA 150)
+
+| Versão | Entrega |
+|--------|---------|
+| PWA **150** | Card Segurança: «Posto Médico» em bloco (título acima do texto); classes CSS `info-safety-*` |
+
 ### Adicionado — e-mails escala digest + fila (#44, ADR-037, plugin 2.18.0)
 
 | Versão | Entrega |

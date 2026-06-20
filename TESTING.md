@@ -37,6 +37,7 @@ Orientação de testes **manual** (prioritário hoje) e caminho para automação
 | 6p3 | Compat. evento existente | — | Secções com dados antigos permanecem visíveis até desactivar no admin |
 | 6p4 | Instruções imprensa (#35, PWA **140+**) | Post WP slug `imprensa-autoridades` + «Exibir no app Zelo»; voluntário logado | Card Info: link **Ver instruções completas**; Home ops: botão **Imprensa / Autoridades** / *Como agir* — ambos abrem o mesmo `blog-post` |
 | 6p5 | Sem post ainda (#35) | Card imprensa activo, post não criado | Link e botão **ocultos** até publicar o post |
+| 6p6 | Posto Médico layout (#45, PWA **150+**) | Info → card Segurança; `medical_loc` longo | Rótulo **acima** do texto; quebra de linha legível em mobile ~375px; linha Emergência/192 inalterada (lado a lado) |
 | 7 | Widget tempo na home | Resumo + toque abre previsão completa |
 | 8 | Sino (avisos) | Lista evento + (voluntário) turno/check-in/swap |
 | 9 | Trocar idioma PT/EN/ES | Strings principais traduzidas |

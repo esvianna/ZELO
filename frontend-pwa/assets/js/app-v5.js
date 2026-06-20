@@ -6023,11 +6023,11 @@ const app = {
                     ${pressHtml}
                     <div class="info-card highlight-red">
                         <div class="card-title" style="color: #d63384;">⛑️ ${this.escapeHtml(i18n.t('event_safety_title'))}</div>
-                        <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
-                            <span>${this.escapeHtml(i18n.t('event_medical_post'))}</span>
-                            <strong>${this.escapeHtml(info.medical_loc || i18n.t('event_medical_fallback'))}</strong>
+                        <div class="info-safety-medical">
+                            <span class="info-safety-medical__label">${this.escapeHtml(i18n.t('event_medical_post'))}</span>
+                            <span class="info-safety-medical__text">${this.escapeHtml(info.medical_loc || i18n.t('event_medical_fallback'))}</span>
                         </div>
-                        <div style="display:flex; justify-content:space-between;">
+                        <div class="info-safety-row">
                             <span>${this.escapeHtml(i18n.t('event_emergency_label'))}</span>
                             <strong style="color:var(--danger-color);">${this.escapeHtml(info.emergency_phone || '192')}</strong>
                         </div>
