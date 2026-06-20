@@ -90,6 +90,23 @@ function zelo_ops_handle_registration_admin_post() {
 	return '';
 }
 
+/**
+ * Lê checkbox admin (hidden value=0 + checkbox value=1).
+ *
+ * @param string $name Nome do campo POST.
+ * @return bool
+ */
+function zelo_ops_admin_checkbox_from_post( $name ) {
+	if ( ! isset( $_POST[ $name ] ) ) {
+		return false;
+	}
+	$raw = wp_unslash( $_POST[ $name ] );
+	if ( is_array( $raw ) ) {
+		$raw = end( $raw );
+	}
+	return (string) $raw === '1';
+}
+
 function zelo_parse_languages_csv( $s ) {
 	$out = array();
 	foreach ( explode( ',', (string) $s ) as $p ) {
@@ -528,12 +545,12 @@ function zelo_ops_save_tab_config( &$data ) {
 	if ( ! isset( $data['settings'] ) || ! is_array( $data['settings'] ) ) {
 		$data['settings'] = array();
 	}
-	$data['settings']['notify_24h']            = ! empty( $_POST['set_notify_24h'] );
+	$data['settings']['notify_24h']            = zelo_ops_admin_checkbox_from_post( 'set_notify_24h' );
 	$data['settings']['notify_before_min']     = isset( $_POST['set_notify_min'] ) ? max( 5, (int) $_POST['set_notify_min'] ) : 30;
 	$data['settings']['commitment_deadline']   = isset( $_POST['set_commitment_deadline'] ) ? sanitize_text_field( wp_unslash( $_POST['set_commitment_deadline'] ) ) : '';
-	$data['settings']['registration_required'] = ! empty( $_POST['set_registration_required'] );
+	$data['settings']['registration_required'] = zelo_ops_admin_checkbox_from_post( 'set_registration_required' );
 	$data['settings']['presence']              = array(
-		'notify_1_day_before'   => ! empty( $_POST['set_presence_1day'] ),
+		'notify_1_day_before'   => zelo_ops_admin_checkbox_from_post( 'set_presence_1day' ),
 		'notify_minutes_before' => isset( $_POST['set_presence_min'] ) ? max( 5, (int) $_POST['set_presence_min'] ) : 15,
 		'checkin_from'          => isset( $_POST['set_checkin_from'] ) ? sanitize_text_field( wp_unslash( $_POST['set_checkin_from'] ) ) : 'shift_start',
 		'checkin_until'         => isset( $_POST['set_checkin_until'] ) ? sanitize_text_field( wp_unslash( $_POST['set_checkin_until'] ) ) : 'shift_end',
@@ -603,8 +620,8 @@ function zelo_ops_save_from_post_tabs() {
 	}
 
 	$handler = $handlers[ $tab ];
-	// PHP 8: variável-função preserva &$data; call_user_func( $handler, $data ) não.
-	$msg     = $handler( $data );
+	// PHP 8: call_user_func( $handler, $data ) e variável-função podem não passar &$data; array( &$data ) sim.
+	$msg = call_user_func_array( $handler, array( &$data ) );
 	zelo_ops_persist_volunteer_ops_data( $data, $tab );
 
 	return $msg;
@@ -673,7 +690,13 @@ add_action( 'admin_menu', 'zelo_register_volunteer_ops_admin_pages' );
 function zelo_render_volunteer_ops_admin_tabs() {
 	$msg          = '';
 	$notice_class = 'notice-success';
+	$flash        = zelo_ops_get_admin_flash();
+	if ( $flash ) {
+		$msg          = $flash['msg'];
+		$notice_class = $flash['notice_class'];
+	}
 	if ( isset( $_SERVER['REQUEST_METHOD'] ) && 'POST' === $_SERVER['REQUEST_METHOD'] ) {
+		$msg  = '';
 		$msg  = zelo_ops_handle_link_request_admin_post();
 		$msg_reg = zelo_ops_handle_registration_admin_post();
 		if ( $msg_reg ) {
@@ -682,6 +705,15 @@ function zelo_render_volunteer_ops_admin_tabs() {
 		$msg_tabs = zelo_ops_save_from_post_tabs();
 		if ( $msg_tabs ) {
 			$msg = $msg ? $msg . ' ' . $msg_tabs : $msg_tabs;
+			if ( strpos( $msg_tabs, 'Sessão expirada' ) === false ) {
+				$tab = zelo_ops_resolve_active_tab();
+				$user_id = get_current_user_id();
+				if ( $user_id && in_array( $tab, zelo_ops_allowed_admin_tabs(), true ) ) {
+					update_user_meta( $user_id, 'zelo_ops_active_tab', $tab );
+				}
+				zelo_ops_set_admin_flash( $msg );
+				zelo_ops_redirect_after_post();
+			}
 		}
 		$msg_dedupe = zelo_ops_handle_dedupe_schedule_post();
 		if ( $msg_dedupe ) {
@@ -865,10 +897,10 @@ function zelo_render_volunteer_ops_admin_tabs() {
 				?>
 				<table class="form-table">
 					<tr><th><?php esc_html_e( 'Prazo para aceitar designações', 'zelo-assistente' ); ?></th><td><input type="date" name="set_commitment_deadline" value="<?php echo esc_attr( isset( $set['commitment_deadline'] ) ? $set['commitment_deadline'] : '' ); ?>" /><p class="description"><?php esc_html_e( 'Data limite (fim do dia) para voluntários confirmarem participação.', 'zelo-assistente' ); ?></p></td></tr>
-					<tr><th><?php esc_html_e( 'Cadastro obrigatório', 'zelo-assistente' ); ?></th><td><label><input type="checkbox" name="set_registration_required" value="1" <?php checked( ! isset( $set['registration_required'] ) || ! empty( $set['registration_required'] ) ); ?> /> <?php esc_html_e( 'Todos na escala devem ter conta no app', 'zelo-assistente' ); ?></label></td></tr>
-					<tr><th><?php esc_html_e( 'Lembrete 24h antes', 'zelo-assistente' ); ?></th><td><label><input type="checkbox" name="set_notify_24h" value="1" <?php checked( ! empty( $set['notify_24h'] ) ); ?> /> <?php esc_html_e( 'Ativo', 'zelo-assistente' ); ?></label></td></tr>
+					<tr><th><?php esc_html_e( 'Cadastro obrigatório', 'zelo-assistente' ); ?></th><td><label><input type="hidden" name="set_registration_required" value="0" /><input type="checkbox" name="set_registration_required" value="1" <?php checked( ! isset( $set['registration_required'] ) || ! empty( $set['registration_required'] ) ); ?> /> <?php esc_html_e( 'Todos na escala devem ter conta no app', 'zelo-assistente' ); ?></label></td></tr>
+					<tr><th><?php esc_html_e( 'Lembrete 24h antes', 'zelo-assistente' ); ?></th><td><label><input type="hidden" name="set_notify_24h" value="0" /><input type="checkbox" name="set_notify_24h" value="1" <?php checked( ! empty( $set['notify_24h'] ) ); ?> /> <?php esc_html_e( 'Ativo', 'zelo-assistente' ); ?></label></td></tr>
 					<tr><th><?php esc_html_e( 'Lembrete X minutos antes', 'zelo-assistente' ); ?></th><td><input type="number" name="set_notify_min" min="5" max="240" value="<?php echo esc_attr( isset( $set['notify_before_min'] ) ? (int) $set['notify_before_min'] : 30 ); ?>" /></td></tr>
-					<tr><th><?php esc_html_e( 'Presença: lembrete 1 dia antes', 'zelo-assistente' ); ?></th><td><label><input type="checkbox" name="set_presence_1day" value="1" <?php checked( ! empty( $presence['notify_1_day_before'] ) ); ?> /> <?php esc_html_e( 'Ativo', 'zelo-assistente' ); ?></label></td></tr>
+					<tr><th><?php esc_html_e( 'Presença: lembrete 1 dia antes', 'zelo-assistente' ); ?></th><td><label><input type="hidden" name="set_presence_1day" value="0" /><input type="checkbox" name="set_presence_1day" value="1" <?php checked( ! empty( $presence['notify_1_day_before'] ) ); ?> /> <?php esc_html_e( 'Ativo', 'zelo-assistente' ); ?></label><p class="description"><?php esc_html_e( 'Mantenha apenas um lembrete antecipado activo (24h ou 1 dia). E-mails antecipados são agrupados por voluntário e dia (#44).', 'zelo-assistente' ); ?></p></td></tr>
 					<tr><th><?php esc_html_e( 'Presença: minutos antes do turno', 'zelo-assistente' ); ?></th><td><input type="number" name="set_presence_min" min="5" max="240" value="<?php echo esc_attr( isset( $presence['notify_minutes_before'] ) ? (int) $presence['notify_minutes_before'] : 15 ); ?>" /></td></tr>
 					<tr><th><?php esc_html_e( 'Check-in a partir de', 'zelo-assistente' ); ?></th><td><select name="set_checkin_from"><option value="shift_start" <?php selected( isset( $presence['checkin_from'] ) ? $presence['checkin_from'] : '', 'shift_start' ); ?>>Início do turno</option><option value="day_before" <?php selected( isset( $presence['checkin_from'] ) ? $presence['checkin_from'] : '', 'day_before' ); ?>>1 dia antes</option><option value="minutes_before:15" <?php selected( isset( $presence['checkin_from'] ) ? $presence['checkin_from'] : '', 'minutes_before:15' ); ?>>15 min antes</option></select></td></tr>
 					<tr><th><?php esc_html_e( 'Check-in até', 'zelo-assistente' ); ?></th><td><select name="set_checkin_until"><option value="shift_end" <?php selected( isset( $presence['checkin_until'] ) ? $presence['checkin_until'] : '', 'shift_end' ); ?>>Fim do turno</option></select></td></tr>
@@ -880,6 +912,25 @@ function zelo_render_volunteer_ops_admin_tabs() {
 						<p>Domingo: <input name="set_date_domingo" value="<?php echo esc_attr( isset( $dates['domingo'] ) ? $dates['domingo'] : '' ); ?>" /></p>
 					</td></tr>
 					<?php
+					if ( function_exists( 'zelo_notify_mail_stats_summary' ) ) {
+						$mail_stats = zelo_notify_mail_stats_summary();
+						?>
+					<tr><th><?php esc_html_e( 'E-mails operacionais (hoje)', 'zelo-assistente' ); ?></th><td>
+						<p><?php
+						printf(
+							/* translators: 1: hour count, 2: hourly max, 3: day count, 4: daily max, 5: queue count */
+							esc_html__( 'Esta hora: %1$d / %2$d · Hoje: %3$d / %4$d · Na fila: %5$d', 'zelo-assistente' ),
+							(int) $mail_stats['hour_count'],
+							(int) $mail_stats['hourly_max'],
+							(int) $mail_stats['day_count'],
+							(int) $mail_stats['daily_max'],
+							(int) $mail_stats['queue_count']
+						);
+						?></p>
+						<p class="description"><?php esc_html_e( 'Limites internos (margem Titan 300/h, 1000/d). Alerta ao admin ~80%.', 'zelo-assistente' ); ?></p>
+					</td></tr>
+						<?php
+					}
 					if ( function_exists( 'zelo_push_render_admin_fields' ) ) {
 						zelo_push_render_admin_fields();
 					}
@@ -1059,7 +1110,7 @@ function zelo_render_volunteer_ops_admin_tabs() {
 	function zeloBindSchedRow(tr){var sh=tr.querySelector('.sched-shift');if(sh){sh.addEventListener('change',function(){zeloOnShiftChange(sh);});zeloOnShiftChange(sh);}}
 	function zeloOpsStripEmptyCatalogRows(bodyId,nameSelector,opts){var tb=document.getElementById(bodyId);if(!tb)return;tb.querySelectorAll('tr').forEach(function(tr){var n=tr.querySelector(nameSelector);if(n&&!String(n.value||'').trim()){tr.remove();}});if(opts){zeloReindexCatalogRows(bodyId,opts);}}
 	function zeloOpsPrepareSaveForm(tabId){var strip={'tab-turnos':['zelo-cat-shifts-body','input[name="cat_shift_code[]"]',{activePrefix:'cat_shift_active'}],'tab-locais':['zelo-cat-locs-body','input[name="cat_loc_name[]"]',{activePrefix:'cat_loc_active'}],'tab-idiomas':['zelo-cat-langs-body','input[name="cat_lang_name[]"]',{activePrefix:'cat_lang_active'}],'tab-voluntarios':['zelo-cat-vols-body','input[name="cat_vol_name[]"]',{activePrefix:'cat_vol_active',roster:true}]};if(strip[tabId]){var s=strip[tabId];zeloOpsStripEmptyCatalogRows(s[0],s[1],s[2]);}}
-	document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('#zelo-sched-body tr').forEach(zeloBindSchedRow);zeloOpsActivateTabFromHash();window.addEventListener('hashchange',zeloOpsActivateTabFromHash);var f=document.getElementById('zelo-ops-tabs-form');if(f){f.addEventListener('submit',function(ev){var isDedupe=ev.submitter&&ev.submitter.name==='zelo_ops_dedupe_schedule';if(isDedupe){return;}var saveBtn=ev.submitter&&ev.submitter.name==='zelo_ops_save_tab'?ev.submitter:null;if(saveBtn){var tabId=saveBtn.getAttribute('data-zelo-tab')||saveBtn.value||'';if(tabId){zeloOpsPrepareSaveForm(tabId);var hf=document.getElementById('zelo_ops_active_tab');if(hf)hf.value=tabId;}setTimeout(function(){if(saveBtn&&!saveBtn.disabled){saveBtn.disabled=true;saveBtn.textContent=<?php echo wp_json_encode( __( 'A guardar…', 'zelo-assistente' ) ); ?>;}},0);}});}});
+	document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('#zelo-sched-body tr').forEach(zeloBindSchedRow);zeloOpsActivateTabFromHash();window.addEventListener('hashchange',zeloOpsActivateTabFromHash);var f=document.getElementById('zelo-ops-tabs-form');if(f){f.addEventListener('submit',function(ev){var isDedupe=ev.submitter&&ev.submitter.name==='zelo_ops_dedupe_schedule';if(isDedupe){return;}if(!ev.submitter){var tabHf=document.getElementById('zelo_ops_active_tab');if(tabHf&&tabHf.value){var activeBtn=document.querySelector('button.zelo-ops-save-tab-btn[data-zelo-tab="'+tabHf.value+'"]');if(activeBtn){ev.preventDefault();activeBtn.click();return;}}}var saveBtn=ev.submitter&&ev.submitter.name==='zelo_ops_save_tab'?ev.submitter:null;if(saveBtn){var tabId=saveBtn.getAttribute('data-zelo-tab')||saveBtn.value||'';if(tabId){zeloOpsPrepareSaveForm(tabId);var hf=document.getElementById('zelo_ops_active_tab');if(hf)hf.value=tabId;}setTimeout(function(){if(saveBtn&&!saveBtn.disabled){saveBtn.disabled=true;saveBtn.textContent=<?php echo wp_json_encode( __( 'A guardar…', 'zelo-assistente' ) ); ?>;}},0);}});}});
 	function zeloRemoveSchedRow(btn){var tr=btn.closest('tr');if(tr)tr.remove();}
 	function zeloOpsSubmitPushGenerate(){if(!window.confirm(<?php echo wp_json_encode( __( 'Gerar novo par VAPID e remover TODAS as subscriptions push? Os voluntários terão de re-activar notificações no Perfil da PWA.', 'zelo-assistente' ) ); ?>)){return;}var nonce=document.querySelector('input[name="zelo_push_gen_nonce"]');var tab=document.getElementById('zelo_ops_active_tab');var f=document.createElement('form');f.method='POST';f.action=window.location.href.split('#')[0];function add(n,v){var i=document.createElement('input');i.type='hidden';i.name=n;i.value=v;f.appendChild(i);}add('zelo_push_generate','1');if(nonce){add('zelo_push_gen_nonce',nonce.value);}if(tab){add('zelo_ops_active_tab',tab.value);}document.body.appendChild(f);f.submit();}
 	function zeloOpsSubmitPushClear(){if(!window.confirm(<?php echo wp_json_encode( __( 'Remover TODAS as subscriptions push? As chaves VAPID não serão alteradas. Os voluntários terão de re-activar notificações no Perfil da PWA.', 'zelo-assistente' ) ); ?>)){return;}var nonce=document.querySelector('input[name="zelo_push_clear_nonce"]');var tab=document.getElementById('zelo_ops_active_tab');var f=document.createElement('form');f.method='POST';f.action=window.location.href.split('#')[0];function add(n,v){var i=document.createElement('input');i.type='hidden';i.name=n;i.value=v;f.appendChild(i);}add('zelo_push_clear_subs','1');if(nonce){add('zelo_push_clear_nonce',nonce.value);}if(tab){add('zelo_ops_active_tab',tab.value);}document.body.appendChild(f);f.submit();}

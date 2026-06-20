@@ -101,9 +101,9 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 *Nenhuma issue em **In review** / **Ready** no Project (pacote #36–#43 validado).*
 
-**Ops / conteúdo (sem issue aberta):** post Novidades slug `imprensa-autoridades`; config Curitiba/2026 (desactivar transporte/Wi‑Fi/credenciamento; activar imprensa).
+**Ops / conteúdo (sem issue aberta):** post Novidades slug `imprensa-autoridades`; config Curitiba/2026 (desactivar transporte/Wi‑Fi/credenciamento; activar imprensa; **desactivar um lembrete antecipado** — requer plugin **2.17.1+** ou JSON).
 
-**Backlog (análise):** [#44](https://github.com/esvianna/ZELO/issues/44) — limite e-mails Titan Mail (300/h, 1.000/dia); agrupar lembretes de escala por utilizador/dia.
+**Backlog (análise):** [#44](https://github.com/esvianna/ZELO/issues/44) — **In review** (implementação ADR-037, plugin 2.18.0). [#45](https://github.com/esvianna/ZELO/issues/45) — UX Info Posto Médico. [#46](https://github.com/esvianna/ZELO/issues/46) — auditoria offline-first rede lenta.
 
 ---
 
@@ -115,7 +115,13 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ---
 
-## Última sessão (2026-06-19)
+## Última sessão (2026-06-20)
+
+- **#44 implementado (plugin 2.18.0, ADR-037):** digest e-mail user/dia; push-first check-in/out/minutos; fila + throttle; contadores Config; hotfix checkboxes Config (2.17.1).
+- **Produção:** lembrete antecipado único via JSON (validado); publicar **2.18.0** antes do evento.
+- Versões repo: plugin **2.18.0**, PWA **149** (sem bump PWA nesta entrega).
+
+## Sessão anterior (2026-06-19)
 
 - **Validação smoke:** #36 (Web Push), #41 (aprovação voluntários), #42 (reset push), #43 (excluir linha escala) — **Done** no Project; issues fechadas.
 - Versões validadas: plugin **2.17.0**, PWA **149** (incl. hotfix #41 em 149 e #43 em 148).

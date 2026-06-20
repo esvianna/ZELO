@@ -2,6 +2,16 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.18.0] - 2026-06-20
+
+### Adicionado
+- **E-mails escala (#44, ADR-037):** digest por voluntário+dia (24h, escala alterada, compromisso); push-first para check-in/out e minutos antes; fila + throttle 250/h e 800/d; contadores e alerta admin ~80%; painel resumo na aba Config.
+
+## [2.17.1] - 2026-06-20
+
+### Corrigido
+- **Admin Config:** checkboxes «Lembrete 24h» / «Presença 1 dia antes» (e push) voltavam a «Ativo» após Salvar — `call_user_func_array( …, array( &$data ) )` para persistência PHP 8; hidden `value=0` + parse explícito; `zelo_ops_normalize_settings` preserva `false`; redirect PRG após save por aba; Enter na aba activa usa o Salvar correcto (não «Limpar duplicatas»).
+
 ## [2.17.0] - 2026-06-18
 
 ### Adicionado

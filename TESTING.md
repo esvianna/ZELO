@@ -108,7 +108,12 @@ Orientação de testes **manual** (prioritário hoje) e caminho para automação
 | 5e | Montar escala: alterar só horário de **uma** linha | homem-chave + 2 voluntários no turno | Só o afetado fica `pending` + `pending_reason: schedule_changed`; outro mantém `accepted`; PWA sino → «A sua escala mudou — confirme» |
 | 5e2 | Voluntário já tinha **accepted** → alterar horário da linha | homem-chave | Em `wp_options` / payload: `prior_commitment.committed_at` e `committed_by` do aceite anterior permanecem; `status` = `pending` |
 | 5f | Troca de voluntário na mesma linha (`id` preservado) | homem-chave | Antigo: compromisso removido (sem reconfirmar); novo: `pending` + aviso schedule_changed |
-| 5g | E-mail escala alterada | voluntário com e-mail verificado | Após 5e: no próximo `zelo_volunteer_notify_tick` (≤1h), e-mail «Sua escala mudou»; dedup — não reenvia após aceitar |
+| 5g | E-mail escala alterada | voluntário com e-mail verificado | Após 5e: no próximo `zelo_volunteer_notify_tick` (≤1h), **um** e-mail digest «Sua escala mudou» (várias linhas no mesmo dia); dedup — não reenvia após aceitar |
+| 5p | Digest lembretes 24h (#44, plugin **2.18.0+**, ADR-037) | voluntário com 2+ turnos no mesmo dia | **Um** e-mail listando todos os turnos ~24h antes (não 1 por linha) |
+| 5p2 | Push-first check-in (#44) | voluntário **com** push activo | Push na janela check-in; **sem** e-mail duplicado se push entregue |
+| 5p3 | E-mail fallback check-in (#44) | voluntário **sem** subscription push | E-mail «Faça seu check-in» na janela (imediato, não fila) |
+| 5p4 | Fila e contadores (#44) | `manage_options` | Config → «E-mails operacionais (hoje)» mostra hora/dia/fila; fila drena no cron horário |
+| 5p5 | Alerta 80% (#44) | simular contador alto (opcional) | Admin recebe aviso ~80% do teto horário/diário (1× por hora/dia) |
 | 5h | Vista **Por turno** (padrão) | view_ops | Mesma faixa horária mostra vários voluntários num bloco; cores por faixa; turno A1/B1 em cards separados |
 | 5i | Toggle **Lista** | view_ops | Volta à tabela linha a linha; preferência persiste após refresh (`zelo_ops_schedule_view`) |
 | 5j | **Montar este turno** no card | homem-chave | Abre editor com dia+turno corretos |
@@ -138,7 +143,7 @@ Orientação de testes **manual** (prioritário hoje) e caminho para automação
 | 5n9 | Regressão form admin (#38, plugin **2.14.6+**) | `manage_options` | «Limpar duplicatas» e «Salvar abas» no **mesmo** `<form>` (sem form aninhado); ambos mostram notice após redirect |
 | 5n10 | Hotfix save + notice (#38, plugin **2.14.7+**) | `manage_options` | «Salvar abas» → redirect + notice verde/amarelo; alteração persiste após F5; dedupe não dispara save das abas |
 | 5n11 | Nonce admin (#38, plugin **2.14.8+**) | `manage_options` | «Salvar abas» **não** mostra «Este link expirou»; dedupe e save funcionam no mesmo form |
-| 5n12 | Salvar por aba (#39, plugin **2.15.0+**, fix persist **2.15.2+**) | `manage_options` | Cada aba tem botão **Salvar**; notice na mesma página (sem tela branca); Config grava push/VAPID sem validar escala; Turnos salva sem erro de duplicata na escala; **F5** confirma alteração gravada |
+| 5n12 | Salvar por aba (#39, plugin **2.15.0+**, fix persist **2.15.2+**, checkboxes **2.17.1+**) | `manage_options` | Cada aba tem botão **Salvar**; notice na mesma página (sem tela branca); Config grava push/VAPID sem validar escala; Turnos salva sem erro de duplicata na escala; **F5** confirma alteração gravada; **desmarcar** «Lembrete 24h» ou «Presença 1 dia antes» permanece desmarcado após Salvar |
 | 5n13 | Troca de abas admin (#39, plugin **2.15.1+**) | `manage_options` | Clicar abas muda conteúdo (não só `#hash`); consola sem `SyntaxError`; F5 com `#tab-config` abre Config |
 | 5o | Layout toolbar escala (PWA **137+**, #33) | gestor / mobile 375px | Filtro status «Todos os status»; selects com estilo uniforme; filtros legíveis (grid 2 col.) |
 | 5o2 | Botões Montar escala + Export PDF | gestor | Mesma altura, mesma linha |

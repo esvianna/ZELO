@@ -380,6 +380,34 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 ---
 
+## ADR-037 — E-mails de lembretes de escala: push-first + digest + fila (#44, 2026-06-20)
+
+**Contexto:** Titan Mail Premium (HostGator): **300 e-mails/hora**, **1.000/dia**. Cron horário envia hoje **1 e-mail por designação** por janela (`zelo-volunteer-notifications.php`). Escala Curitiba/2026: **~46 voluntários**, **292 linhas** de designação (3 dias), média **6,3** designações/voluntário; **106/108** combinações vol+dia com **2+ slots** (máx. **4**/dia).
+
+**Decisões de produto (2026-06-20):**
+
+1. **E-mail continua obrigatório** para quem **não** tem push activo — não adoptar «só push» para check-in.
+2. **Um único lembrete antecipado** por e-mail (24h **ou** 1 dia — não ambos); desactivar o segundo no admin.
+3. **Push-first** para check-in, check-out e lembrete «X minutos antes»; e-mail só como fallback sem subscription.
+4. **Digest por utilizador + dia** para lembretes antecipados informativos (`before_24h` / `before_1day` unificado), `schedule_changed`, `commitment_due`.
+5. **Fila + throttle** (~250/h) com atraso até **1 h** aceitável para lembretes antecipados; **check-in sem atraso** na fila (prioridade alta).
+6. **Monitorização:** contador diário/horário + alerta admin a 80% do teto Titan.
+
+**Estimativa de volume (escala PDF 20/06/2026, ~85% accepted):**
+
+| Cenário | E-mails/dia (ordem de grandeza) | Pico/h |
+|---------|----------------------------------|--------|
+| **Actual** (2 lembretes antecipados × linha + check-in e-mail) | **250–400+** ops | **40–90** (manhã 07:00) |
+| **ADR-037** (digest + push-first 70%) | **~100–130** ops | **~15–25** |
+
+Teto Titan (**1.000/dia**) fica confortável com ADR-037; **actual** aproxima-se do limite no pior dia se push adoption for baixa.
+
+**Consequências:** Issue filha de implementação; alterar `zelo-volunteer-notifications.php`, possível fila em `wp_options`/tabela, admin Config (um toggle antecipado), `TESTING.md` novo § e-mail ops.
+
+**Alternativas descartadas por agora:** ESP externo (SES/SendGrid); «só push» sem e-mail fallback.
+
+---
+
 ## Template para nova ADR
 
 ```markdown

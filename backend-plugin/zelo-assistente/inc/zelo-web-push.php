@@ -221,7 +221,9 @@ function zelo_push_save_admin_settings( $post ) {
 	if ( $subject !== '' && strpos( $subject, 'mailto:' ) !== 0 && strpos( $subject, 'https://' ) !== 0 ) {
 		$subject = 'mailto:' . $subject;
 	}
-	$cfg['enabled'] = ! empty( $post['zelo_push_enabled'] ) ? 1 : 0;
+	$cfg['enabled'] = ( function_exists( 'zelo_ops_admin_checkbox_from_post' )
+		? zelo_ops_admin_checkbox_from_post( 'zelo_push_enabled' )
+		: ! empty( $post['zelo_push_enabled'] ) ) ? 1 : 0;
 	$cfg['subject'] = $subject;
 	update_option( ZELO_PUSH_CONFIG_OPTION, $cfg );
 }
@@ -717,7 +719,7 @@ function zelo_push_render_admin_fields( $cfg = null ) {
 	<tr><th colspan="2"><h3><?php esc_html_e( 'Web Push (VAPID)', 'zelo-assistente' ); ?></h3></th></tr>
 	<tr>
 		<th><?php esc_html_e( 'Activar push', 'zelo-assistente' ); ?></th>
-		<td><label><input type="checkbox" name="zelo_push_enabled" value="1" <?php checked( ! empty( $cfg['enabled'] ) ); ?> /> <?php esc_html_e( 'Enviar notificações push na PWA', 'zelo-assistente' ); ?></label></td>
+		<td><label><input type="hidden" name="zelo_push_enabled" value="0" /><input type="checkbox" name="zelo_push_enabled" value="1" <?php checked( ! empty( $cfg['enabled'] ) ); ?> /> <?php esc_html_e( 'Enviar notificações push na PWA', 'zelo-assistente' ); ?></label></td>
 	</tr>
 	<tr>
 		<th><label for="zelo_push_subject"><?php esc_html_e( 'Assunto VAPID (mailto: ou https://)', 'zelo-assistente' ); ?></label></th>

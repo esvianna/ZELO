@@ -36,14 +36,25 @@ function zelo_ops_default_commitment_settings() {
  * @return array
  */
 function zelo_ops_normalize_settings( $settings ) {
-	$def = zelo_get_volunteer_ops_default_data();
-	$base = isset( $def['settings'] ) && is_array( $def['settings'] ) ? $def['settings'] : array();
+	$def   = zelo_get_volunteer_ops_default_data();
+	$base  = isset( $def['settings'] ) && is_array( $def['settings'] ) ? $def['settings'] : array();
 	$extra = zelo_ops_default_commitment_settings();
-	$out   = array_merge( $base, $extra, is_array( $settings ) ? $settings : array() );
+	$saved = is_array( $settings ) ? $settings : array();
+	$out   = array_merge( $base, $extra, $saved );
 	if ( ! isset( $out['presence'] ) || ! is_array( $out['presence'] ) ) {
 		$out['presence'] = $extra['presence'];
 	} else {
 		$out['presence'] = array_merge( $extra['presence'], $out['presence'] );
+	}
+	// Preservar false explícito — defaults têm notify_* = true.
+	foreach ( array( 'notify_24h', 'registration_required' ) as $bool_key ) {
+		if ( array_key_exists( $bool_key, $saved ) ) {
+			$out[ $bool_key ] = (bool) $saved[ $bool_key ];
+		}
+	}
+	if ( isset( $saved['presence'] ) && is_array( $saved['presence'] )
+		&& array_key_exists( 'notify_1_day_before', $saved['presence'] ) ) {
+		$out['presence']['notify_1_day_before'] = (bool) $saved['presence']['notify_1_day_before'];
 	}
 	return $out;
 }

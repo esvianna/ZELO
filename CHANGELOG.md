@@ -8,6 +8,28 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Corrigido — admin Config checkboxes lembretes (plugin 2.17.1)
+
+| Versão | Entrega |
+|--------|---------|
+| Plugin **2.17.1** | Desmarcar «Lembrete 24h» / «Presença 1 dia antes» persiste após Salvar |
+
+### Adicionado — e-mails escala digest + fila (#44, ADR-037, plugin 2.18.0)
+
+| Versão | Entrega |
+|--------|---------|
+| Plugin **2.18.0** | Digest user/dia; push-first check-in/out/minutos; fila throttle 250/h; monitorização Config |
+
+### Planeado — e-mails escala (#44, ADR-037)
+
+| Decisão | Detalhe |
+|---------|---------|
+| E-mail sem push | Obrigatório (fallback) |
+| Lembretes antecipados | **Um** por e-mail (digest user/dia) |
+| Push-first | check-in, check-out, minutos antes |
+| Fila | até 1 h OK; check-in prioritário |
+| Volume escala PDF | 46 vol., 292 linhas → ~100–130 e-mails/dia pós-ADR vs. 250–400+ actual |
+
 ### Adicionado — excluir linha escala pending/accepted (#43)
 
 | Versão | Entrega |
