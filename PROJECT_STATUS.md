@@ -147,7 +147,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 - **#51 (ADR-039):** registro apoio delegados — backend `zelo-delegate-support-reports.php`; PWA 152–154 (formulário + lista/export + UX tabela); strings pt-BR; **In review**.
 - **PWA 154:** lista «Registros — apoio a delegados» — cards empilhados no mobile (rótulo por campo); desktop com bordas, padding e scroll horizontal.
-- **#53 (PWA 155):** novidades/push — news SWR + snapshot boot; refresh `visibilitychange`; SW→app `postMessage`; toast foreground; click push navega — **In review**.
+- **#53 (PWA 155–159):** novidades/push — SWR + refresh live; **159** corrige banner «Atualizando» preso + `forceFresh` na view Novidades.
 - **#52 (PWA 158):** auditoria pt_br — 40+ strings pt-PT→pt-BR (push, rede, ops, news); `index.html` + `api-v5.js` — **In review**.
 - **Validação smoke:** #45–#50, #46 — **Done** no Project (§6p6, §12b, §12 O1–O6).
 - **#44 (plugin 2.18.0):** digest e-mail — **In review**, smoke pendente.

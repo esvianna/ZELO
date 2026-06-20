@@ -252,7 +252,10 @@ const app = {
         if (!this.auth.user || !this.canViewOps()) {
             return;
         }
-        await Promise.all([this.loadNews(1, false), this.loadNewsCarousel()]);
+        await Promise.all([
+            this.loadNews(1, false, { forceFresh: true }),
+            this.loadNewsCarousel({ forceFresh: true })
+        ]);
         this._renderBootstrapUI();
         this._refreshCurrentView();
     },
@@ -1454,12 +1457,15 @@ const app = {
         return ymd === todayYmd;
     },
 
-    async loadNews(page = 1, append = false) {
+    async loadNews(page = 1, append = false, options = {}) {
         if (!this.auth.user || !this.canViewOps()) {
             this.data.news = null;
             return null;
         }
-        const data = await API.getNews({ page, per_page: 20 }, this.auth.user.id);
+        const data = await API.getNews(
+            { page, per_page: 20, forceFresh: !!options.forceFresh },
+            this.auth.user.id
+        );
         if (!data) {
             if (!append) {
                 this.data.news = null;
@@ -1539,13 +1545,13 @@ const app = {
         item.hidden = !this.canViewOps();
     },
 
-    async loadNewsCarousel() {
+    async loadNewsCarousel(options = {}) {
         if (!this.auth.user || !this.canViewOps()) {
             this.data.newsCarousel = null;
             return null;
         }
         const data = await API.getNews(
-            { carousel_only: true, per_page: 8, page: 1 },
+            { carousel_only: true, per_page: 8, page: 1, forceFresh: !!options.forceFresh },
             this.auth.user.id
         );
         this.data.newsCarousel = data && Array.isArray(data.items) ? data : null;
@@ -1658,7 +1664,7 @@ const app = {
         if (!options.keepPage) {
             container.innerHTML = `<div class="loading">${this.escapeHtml(i18n.t('loading'))}</div>`;
             this._blogPage = 1;
-            await this.loadNews(1, false);
+            await this.loadNews(1, false, { forceFresh: true });
         }
 
         const stale = this._dataStale.news ? this.renderStaleBadge('news') : '';

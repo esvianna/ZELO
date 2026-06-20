@@ -32,6 +32,8 @@ const API = {
         indoorMap: false
     },
 
+    _revalidateInflight: {},
+
     FETCH_TIMEOUT_MS: 5000,
 
     readSnapshot(key) {
@@ -226,6 +228,7 @@ const API = {
                 const authResult = authFromResponse(response);
                 if (authResult !== undefined) {
                     this.lastFetchRevalidating[staleFlag] = false;
+                    this.notifyRevalidation(staleFlag, authResult || null);
                     return authResult;
                 }
             }
@@ -237,11 +240,19 @@ const API = {
 
         if (cached != null) {
             markStale(cached);
+            if (this._revalidateInflight[staleFlag]) {
+                return cached;
+            }
             this.lastFetchRevalidating[staleFlag] = true;
-            runFetch().catch((err) => {
-                console.warn('Revalidate failed:', staleFlag, err);
-                this.lastFetchRevalidating[staleFlag] = false;
-            });
+            this._revalidateInflight[staleFlag] = runFetch()
+                .catch((err) => {
+                    console.warn('Revalidate failed:', staleFlag, err);
+                    this.lastFetchRevalidating[staleFlag] = false;
+                    this.notifyRevalidation(staleFlag, null);
+                })
+                .finally(() => {
+                    delete this._revalidateInflight[staleFlag];
+                });
             return cached;
         }
 
@@ -794,6 +805,7 @@ const API = {
         };
 
         const markFreshFlags = (data, persistSnapshot) => {
+            this.lastFetchRevalidating[staleFlag] = false;
             if (isCarousel) {
                 this.lastFetchFromCache.newsCarousel = false;
             } else if (!params.notifications_only) {
@@ -806,7 +818,7 @@ const API = {
             onFresh(data);
         };
 
-        if (page > 1 || params.notifications_only) {
+        if (page > 1 || params.notifications_only || params.forceFresh) {
             try {
                 const response = await this.fetchWithTimeout(url, {
                     method: 'GET',
@@ -815,29 +827,35 @@ const API = {
                 });
                 const authResult = authFromResponse(response);
                 if (authResult !== undefined) {
+                    this.notifyRevalidation(staleFlag, authResult || null);
                     return authResult;
                 }
                 const data = await parseResponse(response);
                 markFreshFlags(data, page === 1 && !params.notifications_only);
+                this.notifyRevalidation(staleFlag, data);
                 return data;
             } catch (error) {
                 console.warn('Fetch news direct falhou', error);
+                this.lastFetchRevalidating[staleFlag] = false;
                 if (params.notifications_only) {
+                    this.notifyRevalidation(staleFlag, null);
                     return null;
                 }
-                const cached = this.readSnapshot(snapKey);
-                if (cached) {
+                const cachedSnap = this.readSnapshot(snapKey);
+                if (cachedSnap) {
                     if (isCarousel) {
                         this.lastFetchFromCache.newsCarousel = true;
                     } else {
-                        this.cache.news = cached;
+                        this.cache.news = cachedSnap;
                         this.lastFetchFromCache.news = true;
                     }
-                    return cached;
+                    this.notifyRevalidation(staleFlag, null);
+                    return cachedSnap;
                 }
                 if (isCarousel) {
                     this.lastFetchFromCache.newsCarousel = false;
                 }
+                this.notifyRevalidation(staleFlag, null);
                 return null;
             }
         }

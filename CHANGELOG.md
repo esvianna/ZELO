@@ -30,6 +30,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | Versão | Entrega |
 |--------|---------|
 | PWA **158** | pt_br: Activ→Ativar, actual→atual, utilizador→usuário, guardar→salvar, equipa→equipe, ligação→conexão, etc.; `index.html` + `api-v5.js` |
+| PWA **159** | Fix banner «Atualizando dados» preso (SWR notify ao falhar; Novidades `forceFresh`) |
 
 ### Corrigido — admin Config checkboxes lembretes (plugin 2.17.1)
 
