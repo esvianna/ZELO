@@ -3671,6 +3671,10 @@ const app = {
             return;
         }
         el.innerHTML = `<div class="loading">${i18n.t('loading')}</div>`;
+        if (this._indoorGestureAbort) {
+            this._indoorGestureAbort();
+            this._indoorGestureAbort = null;
+        }
         const cfg = await API.getIndoorMap(true);
         this.data.indoorMap = cfg;
         this.syncStaleFlags();
@@ -3768,6 +3772,7 @@ const app = {
                     </div>
                 </div>
             </div>`;
+        if (ui) ui._diagramLayoutApplied = false;
         this._indoorDirectionsText = dirText || '';
         this._syncIndoorDiagramFullscreen();
         if (guideTabActive) {
@@ -4124,12 +4129,15 @@ const app = {
                     applied = this._fitIndoorDiagram(viewport, layer, zoom);
                 }
                 if (applied) ui._focusDiagram = false;
-            } else if (!zoom.scale || zoom.scale <= 0.01 || !isFinite(zoom.scale)) {
+            } else if (!ui._diagramLayoutApplied || !zoom.scale || zoom.scale <= 0.01 || !isFinite(zoom.scale)) {
                 applied = this._fitIndoorDiagram(viewport, layer, zoom);
             } else {
                 applied = true;
             }
-            if (applied) this._applyIndoorDiagramTransform(zoom);
+            if (applied) {
+                ui._diagramLayoutApplied = true;
+                this._applyIndoorDiagramTransform(zoom);
+            }
             return applied;
         };
 
@@ -4137,7 +4145,7 @@ const app = {
         const tryApplyLayout = () => {
             if (applyFocusIfNeeded()) return;
             layoutRetries += 1;
-            if (layoutRetries < 12 && (ui._focusDiagram === 'fit' || ui._focusDiagram === 'place' || !zoom.scale || zoom.scale <= 0.01)) {
+            if (layoutRetries < 12 && (ui._focusDiagram === 'fit' || ui._focusDiagram === 'place' || !ui._diagramLayoutApplied)) {
                 requestAnimationFrame(tryApplyLayout);
             }
         };
@@ -4150,7 +4158,7 @@ const app = {
 
         if (typeof ResizeObserver !== 'undefined') {
             const ro = new ResizeObserver(() => {
-                if (ui._focusDiagram === 'fit' || ui._focusDiagram === 'place' || !zoom.scale || zoom.scale <= 0.01) {
+                if (ui._focusDiagram === 'fit' || ui._focusDiagram === 'place') {
                     applyFocusIfNeeded();
                 }
             });
@@ -4294,9 +4302,115 @@ const app = {
         return String(str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     },
 
+    _indoorDiagramDomReady() {
+        return !!document.getElementById('indoor-map-viewport')
+            && !!document.getElementById('indoor-map-transform')
+            && !!this.data.indoorMap
+            && !!this.data.indoorMap.image_url;
+    },
+
+    _updateIndoorDiagramGoDestBtn() {
+        const ui = this.data.indoorMapUi || {};
+        const btn = document.querySelector('.indoor-diagram-panel .indoor-diagram-btn.primary');
+        if (!btn) return;
+        const enabled = !!(ui.destId || ui.boothId);
+        btn.disabled = !enabled;
+    },
+
+    _applyIndoorDiagramFocusInPlace() {
+        if (!this._indoorDiagramDomReady()) return false;
+        const viewport = document.getElementById('indoor-map-viewport');
+        const layer = document.getElementById('indoor-map-transform');
+        const img = document.getElementById('indoor-map-img');
+        const ui = this.data.indoorMapUi || {};
+        if (!ui.zoom) ui.zoom = { scale: 1, tx: 0, ty: 0 };
+        const cfg = this.data.indoorMap;
+        const places = Array.isArray(cfg.places) ? cfg.places : [];
+        const focusMode = ui._focusDiagram;
+
+        const apply = () => {
+            if (!focusMode || !this._indoorDiagramLayoutReady(viewport, img)) return false;
+            let ok = false;
+            if (focusMode === 'fit') {
+                ok = this._fitIndoorDiagram(viewport, layer, ui.zoom);
+            } else if (focusMode === 'place') {
+                const focusId = ui.destId || ui.boothId;
+                const place = places.find((p) => p.id === focusId);
+                const targetScale = this.isIndoorMobileLayout() ? 2.5 : 2;
+                if (place) {
+                    this._focusIndoorDiagramOnPlace(viewport, layer, place, ui.zoom, targetScale);
+                    ok = true;
+                } else {
+                    ok = this._fitIndoorDiagram(viewport, layer, ui.zoom);
+                }
+            }
+            if (ok) {
+                ui._focusDiagram = false;
+                ui._diagramLayoutApplied = true;
+                this._applyIndoorDiagramTransform(ui.zoom);
+                this._updateIndoorDiagramGoDestBtn();
+            }
+            return ok;
+        };
+
+        if (apply()) return true;
+        requestAnimationFrame(() => {
+            apply();
+            if (!this._indoorGestureAbort) {
+                this.initIndoorDiagramGestures(cfg, places);
+            }
+        });
+        return true;
+    },
+
+    _syncIndoorTabDom(tab) {
+        const container = document.getElementById('indoor-map-container');
+        const screen = container && container.querySelector('.indoor-map-screen');
+        if (!screen || !this.data.indoorMap || !this.data.indoorMap.image_url) return false;
+
+        const ui = this.data.indoorMapUi;
+        const guideActive = tab === 'guide';
+        const mapActive = tab === 'map';
+        const tabs = screen.querySelectorAll('.indoor-map-tab');
+        tabs.forEach((btn, idx) => {
+            btn.classList.toggle('active', (idx === 0 && guideActive) || (idx === 1 && mapActive));
+        });
+
+        screen.querySelectorAll('.indoor-panel').forEach((panel) => {
+            const isDiagram = panel.classList.contains('indoor-diagram-panel');
+            panel.classList.toggle('hidden', isDiagram ? !mapActive : !guideActive);
+        });
+
+        this._syncIndoorDiagramFullscreen();
+        const cfg = this.data.indoorMap;
+        const places = Array.isArray(cfg.places) ? cfg.places : [];
+
+        if (mapActive) {
+            const viewport = document.getElementById('indoor-map-viewport');
+            const afterVisible = () => {
+                if (ui._diagramLayoutApplied && ui.zoom) {
+                    this._applyIndoorDiagramTransform(ui.zoom);
+                } else {
+                    ui._focusDiagram = 'fit';
+                    this._applyIndoorDiagramFocusInPlace();
+                }
+                if (!this._indoorGestureAbort) {
+                    this.initIndoorDiagramGestures(cfg, places);
+                }
+            };
+            requestAnimationFrame(afterVisible);
+        } else {
+            const dests = places.filter((p) => p.kind !== 'booth');
+            this.initIndoorDestCombobox(dests);
+            this.refreshIndoorDirectionsPanel();
+        }
+        return true;
+    },
+
     indoorDiagramFitAll() {
         if (!this.data.indoorMapUi) this.data.indoorMapUi = {};
         this.data.indoorMapUi._focusDiagram = 'fit';
+        if (this._applyIndoorDiagramFocusInPlace()) return;
         this.renderIndoorEventMap();
     },
 
@@ -4304,6 +4418,7 @@ const app = {
         if (!this.data.indoorMapUi) this.data.indoorMapUi = {};
         if (!this.data.indoorMapUi.destId && !this.data.indoorMapUi.boothId) return;
         this.data.indoorMapUi._focusDiagram = 'place';
+        if (this._applyIndoorDiagramFocusInPlace()) return;
         this.renderIndoorEventMap();
     },
 
@@ -4311,6 +4426,7 @@ const app = {
         if (!this.data.indoorMapUi) this.data.indoorMapUi = {};
         this.data.indoorMapUi._userPickedTab = true;
         this.data.indoorMapUi.tab = tab;
+        if (this._syncIndoorTabDom(tab)) return;
         if (tab === 'map') {
             this.data.indoorMapUi._focusDiagram = 'fit';
         }

@@ -8,11 +8,18 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Corrigido — mapa evento diagrama (#55, PWA 163)
+
+| Versão | Entrega |
+|--------|---------|
+| PWA **163** | Aba Diagrama: troca Guia↔Diagrama sem re-render completo; zoom preservado; ResizeObserver só em focus explícito |
+
 ### Planejado — SMS Comtele (#54, ADR-040)
 
 | Entrega | Detalhe |
 |---------|---------|
 | Smoke API | **Validado** 2026-06-22 — balance, routes, envio SMS recebido no celular |
+| Smoke admin S54a | **Validado** 2026-06-22 — Config save (2.20.1) + botão «Enviar SMS de teste» → celular |
 | Plugin **2.20.0** / PWA **162** | Cliente Comtele V4, fila SMS, paralelo push/e-mail, admin Config, aviso LGPD cadastro/perfil |
 | Plugin **2.20.1** | Fix salvar aba Config com escala grande (max_input_vars) |
 

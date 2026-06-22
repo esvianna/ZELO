@@ -91,6 +91,7 @@ Orientação de testes **manual** (prioritário hoje) e caminho para automação
 | 2x | **Mapa evento** — admin: upload JPG + 2 balcões + 1 destino com direções (2.12+) | manage_options | Detalhes → direções Balcão 1/2; **Salvar abas** permanece na aba Mapa evento; `GET /indoor-map` tem `routes` com texto |
 | 2y | **Mapa evento** PWA: balcão + destino | **view_ops** (#41) | Diagrama: Balcão 1 azul / Balcão 2 teal + legenda (115+); combobox destinos; copiar instruções; **403** sem `view_ops` |
 | 2z | **Mapa evento** PWA mobile (110+) | iPhone / ≤768px | Abre em **Orientar**; aba Diagrama: **header + bottom nav visíveis** (124+); pinch; botões **Mapa completo** / **Ir ao destino** |
+| 2z1 | **Mapa evento** aba Diagrama sem piscar (#55, PWA **163+**) | view_ops | Guia ↔ Diagrama: **sem flicker** perceptível; zoom/pan e «Mapa completo» / «Ir ao destino» OK |
 | 2aa | **Novidades / blog** (#26, 2.13.0 / PWA 116+) | **view_ops** (#41) | Admin: post com «Publicar na PWA» → `GET /news` OK; card/menu → lista + detalhe PT; subscriber **403** |
 | 2ac | **Carrossel novidades** (#15, 2.13.3 / PWA 126+) | **view_ops** (#41) | Admin: post carrossel → home com swipe; subscriber/anónimo sem carrossel |
 | 2ad | **Emergência — hierarquia visual** (#17, PWA 127+) | Visitante | Home: card Emergência full-width rosa vs Hospitais/Farmácias; view emergência com hero + tel. destaque admin; lista/pesquisa destaca categoria `emergencia`; S.O.S. bottom nav OK; regressão mapa/nav |
