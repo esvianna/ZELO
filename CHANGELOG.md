@@ -14,6 +14,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 |---------|---------|
 | Smoke API | **Validado** 2026-06-22 — balance, routes, envio SMS recebido no celular |
 | Plugin **2.20.0** / PWA **162** | Cliente Comtele V4, fila SMS, paralelo push/e-mail, admin Config, aviso LGPD cadastro/perfil |
+| Plugin **2.20.1** | Fix salvar aba Config com escala grande (max_input_vars) |
 
 ### Adicionado — registro apoio delegados (#51, ADR-039, plugin 2.19.0, PWA 152)
 

@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.20.1] - 2026-06-22
+
+### Corrigido
+- **Admin Config (#54):** salvar aba Config (SMS/push) falhava silenciosamente com escala grande — JS desactiva campos das outras abas no POST; aba Onboarding fora do form principal; aviso se `max_input_vars` truncar envio.
+
 ## [2.20.0] - 2026-06-22
 
 ### Adicionado

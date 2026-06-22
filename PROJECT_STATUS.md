@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-22** — #54 SMS Comtele plugin **2.20.0** + PWA **162** **In review**.
+> Última atualização: **2026-06-22** — #54 fix admin Config save plugin **2.20.1**; SMS Comtele **2.20.0** + PWA **162** **In review**.
 
 ---
 
@@ -12,7 +12,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Referência no repo | Versão |
 |--------------------|--------|
-| Plugin WordPress (`zelo-assistente.php`) | **2.20.0** |
+| Plugin WordPress (`zelo-assistente.php`) | **2.20.1** |
 | PWA (`zelo-build.js` / `sw.js`) | **build 162** |
 
 **Produção (repo):** PWA **151** validada (#45–#50, #46); plugin **2.18.0** + **2.19.0** / PWA **152** aguardam deploy/smoke (#44, #51).

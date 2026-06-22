@@ -630,6 +630,42 @@ function zelo_ops_save_from_post_tabs() {
 	return $msg;
 }
 
+/**
+ * Detecta POST do form principal truncado (ex.: max_input_vars) — save_tab ausente.
+ *
+ * @return string Mensagem de erro ou vazio.
+ */
+function zelo_ops_truncated_main_form_post_message() {
+	if ( ! isset( $_SERVER['REQUEST_METHOD'] ) || 'POST' !== $_SERVER['REQUEST_METHOD'] ) {
+		return '';
+	}
+	if ( ! current_user_can( 'manage_options' ) ) {
+		return '';
+	}
+	$handled_keys = array(
+		'zelo_ops_save_tab',
+		'zelo_ops_dedupe_schedule',
+		'zelo_push_generate',
+		'zelo_push_clear_subs',
+		'zelo_comtele_test_sms',
+		'zelo_reg_admin',
+		'zelo_link_admin',
+		'zelo_save_ops_json_adv',
+	);
+	foreach ( $handled_keys as $key ) {
+		if ( ! empty( $_POST[ $key ] ) ) {
+			return '';
+		}
+	}
+	if ( empty( $_POST['zelo_ops_tabs_nonce'] ) ) {
+		return '';
+	}
+	if ( ! check_admin_referer( 'zelo_ops_tabs_nonce', 'zelo_ops_tabs_nonce', false ) ) {
+		return '';
+	}
+	return __( 'O formulário não foi salvo — o envio chegou incompleto ao servidor (escala grande + outras abas). Recarregue a página e tente novamente. Se persistir, aumente max_input_vars no PHP.', 'zelo-assistente' );
+}
+
 function zelo_ops_save_json_advanced() {
 	if ( ! isset( $_POST['zelo_save_ops_json_adv'] ) || ! check_admin_referer( 'zelo_save_ops_json_adv_nonce', 'zelo_save_ops_json_adv_nonce', false ) ) {
 		return '';
@@ -644,6 +680,135 @@ function zelo_ops_save_json_advanced() {
 		return __( 'JSON avançado salvo.', 'zelo-assistente' );
 	}
 	return __( 'JSON inválido.', 'zelo-assistente' );
+}
+
+/**
+ * Aba Onboarding — fora do form principal (evita forms aninhados).
+ *
+ * @param string $active_tab Aba activa.
+ */
+function zelo_ops_render_onboarding_admin_tab( $active_tab ) {
+	$onboard      = function_exists( 'zelo_build_onboarding_report' ) ? zelo_build_onboarding_report() : array( 'items' => array(), 'link_requests' => array(), 'commitment_stats' => array() );
+	$stats        = isset( $onboard['commitment_stats'] ) ? $onboard['commitment_stats'] : array();
+	$pending_regs = function_exists( 'zelo_get_users_pending_email_verification' ) ? zelo_get_users_pending_email_verification() : array();
+	?>
+	<div id="tab-onboarding" class="zelo-ops-tab" style="display:<?php echo $active_tab === 'tab-onboarding' ? 'block' : 'none'; ?>;">
+		<h3><?php esc_html_e( 'Cadastros aguardando confirmação de e-mail', 'zelo-assistente' ); ?></h3>
+		<p class="description"><?php esc_html_e( 'Usuários que se cadastraram na PWA mas ainda não confirmaram o e-mail (ou usaram e-mail inválido). Aprove manualmente para liberar o login.', 'zelo-assistente' ); ?></p>
+		<?php
+		if ( empty( $pending_regs ) ) {
+			echo '<p class="description">' . esc_html__( 'Nenhum cadastro pendente.', 'zelo-assistente' ) . '</p>';
+		} else {
+			echo '<table class="widefat striped"><thead><tr>';
+			echo '<th>' . esc_html__( 'Nome', 'zelo-assistente' ) . '</th>';
+			echo '<th>' . esc_html__( 'E-mail', 'zelo-assistente' ) . '</th>';
+			echo '<th>' . esc_html__( 'Cadastro em', 'zelo-assistente' ) . '</th>';
+			echo '<th>' . esc_html__( 'Ações', 'zelo-assistente' ) . '</th>';
+			echo '</tr></thead><tbody>';
+			foreach ( $pending_regs as $pending_user ) {
+				if ( ! $pending_user instanceof WP_User ) {
+					continue;
+				}
+				$registered = $pending_user->user_registered ? mysql2date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $pending_user->user_registered ) : '—';
+				echo '<tr>';
+				echo '<td>' . esc_html( $pending_user->display_name ) . '</td>';
+				echo '<td>' . esc_html( $pending_user->user_email ) . '</td>';
+				echo '<td>' . esc_html( $registered ) . '</td>';
+				echo '<td>';
+				?>
+				<form method="post" style="display:inline;">
+					<?php wp_nonce_field( 'zelo_reg_admin_nonce', 'zelo_reg_admin_nonce' ); ?>
+					<input type="hidden" name="zelo_reg_admin" value="1" />
+					<input type="hidden" name="user_id" value="<?php echo esc_attr( (string) $pending_user->ID ); ?>" />
+					<input type="hidden" name="reg_action" value="approve" />
+					<input type="hidden" name="zelo_ops_active_tab" value="tab-onboarding" />
+					<button type="submit" class="button button-primary"><?php esc_html_e( 'Confirmar cadastro', 'zelo-assistente' ); ?></button>
+				</form>
+				<?php
+				echo '</td></tr>';
+			}
+			echo '</tbody></table>';
+		}
+		?>
+		<h3><?php esc_html_e( 'Compromissos (confirmação antecipada)', 'zelo-assistente' ); ?></h3>
+		<p><?php printf( esc_html__( 'Pendentes: %d | Aceitos: %d | Recusados: %d | Total de designações: %d', 'zelo-assistente' ), (int) ( $stats['pending'] ?? 0 ), (int) ( $stats['accepted'] ?? 0 ), (int) ( $stats['declined'] ?? 0 ), (int) ( $stats['total'] ?? 0 ) ); ?></p>
+		<p class="description"><?php esc_html_e( 'Cada linha da escala (dia + turno) gera um compromisso. O roster abaixo agrupa por voluntário cadastrado.', 'zelo-assistente' ); ?></p>
+		<?php
+		$sched_items = isset( $onboard['schedule_items'] ) ? $onboard['schedule_items'] : array();
+		if ( ! empty( $sched_items ) ) :
+			?>
+		<details style="margin:12px 0;">
+			<summary><strong><?php printf( esc_html__( 'Ver todas as designações (%d)', 'zelo-assistente' ), count( $sched_items ) ); ?></strong></summary>
+			<table class="widefat striped" style="margin-top:8px;">
+				<thead><tr><th><?php esc_html_e( 'Voluntário', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'Dia', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'Turno', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'Compromisso', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'Roster', 'zelo-assistente' ); ?></th></tr></thead>
+				<tbody>
+				<?php foreach ( $sched_items as $si ) : ?>
+					<tr>
+						<td><?php echo esc_html( $si['volunteer_name'] ?? '' ); ?></td>
+						<td><?php echo esc_html( $si['day_label'] ?? ( $si['day'] ?? '' ) ); ?></td>
+						<td><?php echo esc_html( $si['shift'] ?? '' ); ?></td>
+						<td><?php echo esc_html( $si['commitment_status'] ?? 'pending' ); ?></td>
+						<td><?php echo ! empty( $si['roster_volunteer_id'] ) ? '<code>' . esc_html( $si['roster_volunteer_id'] ) . '</code>' : '<span class="description">' . esc_html__( 'sem vínculo', 'zelo-assistente' ) . '</span>'; ?></td>
+					</tr>
+				<?php endforeach; ?>
+				</tbody>
+			</table>
+		</details>
+		<?php endif; ?>
+		<h3><?php esc_html_e( 'Fila de vínculos (cadastro)', 'zelo-assistente' ); ?></h3>
+		<?php
+		$links = isset( $onboard['link_requests'] ) ? $onboard['link_requests'] : array();
+		if ( empty( $links ) ) {
+			echo '<p class="description">' . esc_html__( 'Nenhum pedido pendente.', 'zelo-assistente' ) . '</p>';
+		} else {
+			echo '<table class="widefat striped"><thead><tr><th>ID</th><th>User</th><th>Roster</th><th>Ações</th></tr></thead><tbody>';
+			foreach ( $links as $lr ) {
+				$uid = isset( $lr['user_id'] ) ? (int) $lr['user_id'] : 0;
+				$u   = $uid ? get_userdata( $uid ) : null;
+				echo '<tr><td><code>' . esc_html( $lr['id'] ?? '' ) . '</code></td>';
+				echo '<td>' . esc_html( $u ? $u->display_name . ' (' . $u->user_email . ')' : (string) $uid ) . '</td>';
+				echo '<td>' . esc_html( $lr['roster_volunteer_id'] ?? '' ) . '</td><td>';
+				?>
+				<form method="post" style="display:inline;">
+					<?php wp_nonce_field( 'zelo_link_admin_nonce', 'zelo_link_admin_nonce' ); ?>
+					<input type="hidden" name="zelo_link_admin" value="1" />
+					<input type="hidden" name="link_id" value="<?php echo esc_attr( $lr['id'] ?? '' ); ?>" />
+					<input type="hidden" name="link_action" value="approve" />
+					<input type="hidden" name="zelo_ops_active_tab" value="tab-onboarding" />
+					<button type="submit" class="button button-primary"><?php esc_html_e( 'Aprovar', 'zelo-assistente' ); ?></button>
+				</form>
+				<form method="post" style="display:inline;margin-left:4px;">
+					<?php wp_nonce_field( 'zelo_link_admin_nonce', 'zelo_link_admin_nonce' ); ?>
+					<input type="hidden" name="zelo_link_admin" value="1" />
+					<input type="hidden" name="link_id" value="<?php echo esc_attr( $lr['id'] ?? '' ); ?>" />
+					<input type="hidden" name="link_action" value="reject" />
+					<input type="hidden" name="zelo_ops_active_tab" value="tab-onboarding" />
+					<button type="submit" class="button"><?php esc_html_e( 'Rejeitar', 'zelo-assistente' ); ?></button>
+				</form>
+				<?php
+				echo '</td></tr>';
+			}
+			echo '</tbody></table>';
+		}
+		?>
+		<h3><?php printf( esc_html__( 'Roster × cadastro (%d voluntários)', 'zelo-assistente' ), count( isset( $onboard['items'] ) ? $onboard['items'] : array() ) ); ?></h3>
+		<table class="widefat striped">
+			<thead><tr><th><?php esc_html_e( 'Nome', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'E-mail esperado', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'Idiomas', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'Status', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'Designações', 'zelo-assistente' ); ?></th></tr></thead>
+			<tbody>
+			<?php foreach ( isset( $onboard['items'] ) ? $onboard['items'] : array() as $ob ) : ?>
+				<tr>
+					<td><?php echo esc_html( $ob['name'] ?? '' ); ?></td>
+					<td><?php echo esc_html( $ob['expected_email'] ?? '' ); ?></td>
+					<td><?php echo esc_html( $ob['language_labels'] ?? '' ); ?></td>
+					<td><?php echo esc_html( $ob['registration_status'] ?? '' ); ?></td>
+					<td><?php echo esc_html( (string) ( $ob['assignments_count'] ?? 0 ) ); ?></td>
+				</tr>
+			<?php endforeach; ?>
+			</tbody>
+		</table>
+		<p class="description"><?php esc_html_e( 'Edite e-mail esperado e status na aba Voluntários. Link de cadastro: /zelo/ → Cadastro.', 'zelo-assistente' ); ?></p>
+	</div>
+	<?php
 }
 
 function zelo_register_volunteer_ops_admin_pages() {
@@ -704,6 +869,10 @@ function zelo_render_volunteer_ops_admin_tabs() {
 		$msg_reg = zelo_ops_handle_registration_admin_post();
 		if ( $msg_reg ) {
 			$msg = $msg ? $msg . ' ' . $msg_reg : $msg_reg;
+		}
+		$msg_trunc = zelo_ops_truncated_main_form_post_message();
+		if ( $msg_trunc ) {
+			$msg = $msg ? $msg . ' ' . $msg_trunc : $msg_trunc;
 		}
 		$msg_tabs = zelo_ops_save_from_post_tabs();
 		if ( $msg_tabs ) {
@@ -949,125 +1118,6 @@ function zelo_render_volunteer_ops_admin_tabs() {
 				<?php zelo_ops_render_tab_save_button( 'tab-config' ); ?>
 			</div>
 
-			<div id="tab-onboarding" class="zelo-ops-tab" style="display:<?php echo $active_tab === 'tab-onboarding' ? 'block' : 'none'; ?>;">
-				<?php
-				$onboard       = function_exists( 'zelo_build_onboarding_report' ) ? zelo_build_onboarding_report() : array( 'items' => array(), 'link_requests' => array(), 'commitment_stats' => array() );
-				$stats         = isset( $onboard['commitment_stats'] ) ? $onboard['commitment_stats'] : array();
-				$pending_regs  = function_exists( 'zelo_get_users_pending_email_verification' ) ? zelo_get_users_pending_email_verification() : array();
-				?>
-				<h3><?php esc_html_e( 'Cadastros aguardando confirmação de e-mail', 'zelo-assistente' ); ?></h3>
-				<p class="description"><?php esc_html_e( 'Usuários que se cadastraram na PWA mas ainda não confirmaram o e-mail (ou usaram e-mail inválido). Aprove manualmente para liberar o login.', 'zelo-assistente' ); ?></p>
-				<?php
-				if ( empty( $pending_regs ) ) {
-					echo '<p class="description">' . esc_html__( 'Nenhum cadastro pendente.', 'zelo-assistente' ) . '</p>';
-				} else {
-					echo '<table class="widefat striped"><thead><tr>';
-					echo '<th>' . esc_html__( 'Nome', 'zelo-assistente' ) . '</th>';
-					echo '<th>' . esc_html__( 'E-mail', 'zelo-assistente' ) . '</th>';
-					echo '<th>' . esc_html__( 'Cadastro em', 'zelo-assistente' ) . '</th>';
-					echo '<th>' . esc_html__( 'Ações', 'zelo-assistente' ) . '</th>';
-					echo '</tr></thead><tbody>';
-					foreach ( $pending_regs as $pending_user ) {
-						if ( ! $pending_user instanceof WP_User ) {
-							continue;
-						}
-						$registered = $pending_user->user_registered ? mysql2date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $pending_user->user_registered ) : '—';
-						echo '<tr>';
-						echo '<td>' . esc_html( $pending_user->display_name ) . '</td>';
-						echo '<td>' . esc_html( $pending_user->user_email ) . '</td>';
-						echo '<td>' . esc_html( $registered ) . '</td>';
-						echo '<td>';
-						?>
-						<form method="post" style="display:inline;">
-							<?php wp_nonce_field( 'zelo_reg_admin_nonce', 'zelo_reg_admin_nonce' ); ?>
-							<input type="hidden" name="zelo_reg_admin" value="1" />
-							<input type="hidden" name="user_id" value="<?php echo esc_attr( (string) $pending_user->ID ); ?>" />
-							<input type="hidden" name="reg_action" value="approve" />
-							<button type="submit" class="button button-primary"><?php esc_html_e( 'Confirmar cadastro', 'zelo-assistente' ); ?></button>
-						</form>
-						<?php
-						echo '</td></tr>';
-					}
-					echo '</tbody></table>';
-				}
-				?>
-				<h3><?php esc_html_e( 'Compromissos (confirmação antecipada)', 'zelo-assistente' ); ?></h3>
-				<p><?php printf( esc_html__( 'Pendentes: %d | Aceitos: %d | Recusados: %d | Total de designações: %d', 'zelo-assistente' ), (int) ( $stats['pending'] ?? 0 ), (int) ( $stats['accepted'] ?? 0 ), (int) ( $stats['declined'] ?? 0 ), (int) ( $stats['total'] ?? 0 ) ); ?></p>
-				<p class="description"><?php esc_html_e( 'Cada linha da escala (dia + turno) gera um compromisso. O roster abaixo agrupa por voluntário cadastrado.', 'zelo-assistente' ); ?></p>
-				<?php
-				$sched_items = isset( $onboard['schedule_items'] ) ? $onboard['schedule_items'] : array();
-				if ( ! empty( $sched_items ) ) :
-					?>
-				<details style="margin:12px 0;">
-					<summary><strong><?php printf( esc_html__( 'Ver todas as designações (%d)', 'zelo-assistente' ), count( $sched_items ) ); ?></strong></summary>
-					<table class="widefat striped" style="margin-top:8px;">
-						<thead><tr><th><?php esc_html_e( 'Voluntário', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'Dia', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'Turno', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'Compromisso', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'Roster', 'zelo-assistente' ); ?></th></tr></thead>
-						<tbody>
-						<?php foreach ( $sched_items as $si ) : ?>
-							<tr>
-								<td><?php echo esc_html( $si['volunteer_name'] ?? '' ); ?></td>
-								<td><?php echo esc_html( $si['day_label'] ?? ( $si['day'] ?? '' ) ); ?></td>
-								<td><?php echo esc_html( $si['shift'] ?? '' ); ?></td>
-								<td><?php echo esc_html( $si['commitment_status'] ?? 'pending' ); ?></td>
-								<td><?php echo ! empty( $si['roster_volunteer_id'] ) ? '<code>' . esc_html( $si['roster_volunteer_id'] ) . '</code>' : '<span class="description">' . esc_html__( 'sem vínculo', 'zelo-assistente' ) . '</span>'; ?></td>
-							</tr>
-						<?php endforeach; ?>
-						</tbody>
-					</table>
-				</details>
-				<?php endif; ?>
-				<h3><?php esc_html_e( 'Fila de vínculos (cadastro)', 'zelo-assistente' ); ?></h3>
-				<?php
-				$links = isset( $onboard['link_requests'] ) ? $onboard['link_requests'] : array();
-				if ( empty( $links ) ) {
-					echo '<p class="description">' . esc_html__( 'Nenhum pedido pendente.', 'zelo-assistente' ) . '</p>';
-				} else {
-					echo '<table class="widefat striped"><thead><tr><th>ID</th><th>User</th><th>Roster</th><th>Ações</th></tr></thead><tbody>';
-					foreach ( $links as $lr ) {
-						$uid = isset( $lr['user_id'] ) ? (int) $lr['user_id'] : 0;
-						$u   = $uid ? get_userdata( $uid ) : null;
-						echo '<tr><td><code>' . esc_html( $lr['id'] ?? '' ) . '</code></td>';
-						echo '<td>' . esc_html( $u ? $u->display_name . ' (' . $u->user_email . ')' : (string) $uid ) . '</td>';
-						echo '<td>' . esc_html( $lr['roster_volunteer_id'] ?? '' ) . '</td><td>';
-						?>
-						<form method="post" style="display:inline;">
-							<?php wp_nonce_field( 'zelo_link_admin_nonce', 'zelo_link_admin_nonce' ); ?>
-							<input type="hidden" name="zelo_link_admin" value="1" />
-							<input type="hidden" name="link_id" value="<?php echo esc_attr( $lr['id'] ?? '' ); ?>" />
-							<input type="hidden" name="link_action" value="approve" />
-							<button type="submit" class="button button-primary"><?php esc_html_e( 'Aprovar', 'zelo-assistente' ); ?></button>
-						</form>
-						<form method="post" style="display:inline;margin-left:4px;">
-							<?php wp_nonce_field( 'zelo_link_admin_nonce', 'zelo_link_admin_nonce' ); ?>
-							<input type="hidden" name="zelo_link_admin" value="1" />
-							<input type="hidden" name="link_id" value="<?php echo esc_attr( $lr['id'] ?? '' ); ?>" />
-							<input type="hidden" name="link_action" value="reject" />
-							<button type="submit" class="button"><?php esc_html_e( 'Rejeitar', 'zelo-assistente' ); ?></button>
-						</form>
-						<?php
-						echo '</td></tr>';
-					}
-					echo '</tbody></table>';
-				}
-				?>
-				<h3><?php printf( esc_html__( 'Roster × cadastro (%d voluntários)', 'zelo-assistente' ), count( isset( $onboard['items'] ) ? $onboard['items'] : array() ) ); ?></h3>
-				<table class="widefat striped">
-					<thead><tr><th><?php esc_html_e( 'Nome', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'E-mail esperado', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'Idiomas', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'Status', 'zelo-assistente' ); ?></th><th><?php esc_html_e( 'Designações', 'zelo-assistente' ); ?></th></tr></thead>
-					<tbody>
-					<?php foreach ( isset( $onboard['items'] ) ? $onboard['items'] : array() as $ob ) : ?>
-						<tr>
-							<td><?php echo esc_html( $ob['name'] ?? '' ); ?></td>
-							<td><?php echo esc_html( $ob['expected_email'] ?? '' ); ?></td>
-							<td><?php echo esc_html( $ob['language_labels'] ?? '' ); ?></td>
-							<td><?php echo esc_html( $ob['registration_status'] ?? '' ); ?></td>
-							<td><?php echo esc_html( (string) ( $ob['assignments_count'] ?? 0 ) ); ?></td>
-						</tr>
-					<?php endforeach; ?>
-					</tbody>
-				</table>
-				<p class="description"><?php esc_html_e( 'Edite e-mail esperado e status na aba Voluntários. Link de cadastro: /zelo/ → Cadastro.', 'zelo-assistente' ); ?></p>
-			</div>
-
 			<?php
 			if ( function_exists( 'zelo_render_indoor_map_admin_tab' ) ) {
 				zelo_render_indoor_map_admin_tab(
@@ -1079,6 +1129,8 @@ function zelo_render_volunteer_ops_admin_tabs() {
 			?>
 
 		</form>
+
+		<?php zelo_ops_render_onboarding_admin_tab( $active_tab ); ?>
 
 		<div id="tab-json" class="zelo-ops-tab" style="display:<?php echo $active_tab === 'tab-json' ? 'block' : 'none'; ?>;">
 			<form method="post">
@@ -1119,8 +1171,9 @@ function zelo_render_volunteer_ops_admin_tabs() {
 	function zeloOnShiftChange(sel){var tr=sel.closest('tr');if(!tr)return;var opt=sel.options[sel.selectedIndex];var st=opt?opt.getAttribute('data-start'):'';var en=opt?opt.getAttribute('data-end'):'';var loc=opt?opt.getAttribute('data-location'):'';var si=tr.querySelector('.sched-time-start');var ei=tr.querySelector('.sched-time-end');var ld=tr.querySelector('.sched-loc-display');if(si){si.value=st||'';}if(ei){ei.value=en||'';}if(ld){ld.textContent=loc||'—';}}
 	function zeloBindSchedRow(tr){var sh=tr.querySelector('.sched-shift');if(sh){sh.addEventListener('change',function(){zeloOnShiftChange(sh);});zeloOnShiftChange(sh);}}
 	function zeloOpsStripEmptyCatalogRows(bodyId,nameSelector,opts){var tb=document.getElementById(bodyId);if(!tb)return;tb.querySelectorAll('tr').forEach(function(tr){var n=tr.querySelector(nameSelector);if(n&&!String(n.value||'').trim()){tr.remove();}});if(opts){zeloReindexCatalogRows(bodyId,opts);}}
-	function zeloOpsPrepareSaveForm(tabId){var strip={'tab-turnos':['zelo-cat-shifts-body','input[name="cat_shift_code[]"]',{activePrefix:'cat_shift_active'}],'tab-locais':['zelo-cat-locs-body','input[name="cat_loc_name[]"]',{activePrefix:'cat_loc_active'}],'tab-idiomas':['zelo-cat-langs-body','input[name="cat_lang_name[]"]',{activePrefix:'cat_lang_active'}],'tab-voluntarios':['zelo-cat-vols-body','input[name="cat_vol_name[]"]',{activePrefix:'cat_vol_active',roster:true}]};if(strip[tabId]){var s=strip[tabId];zeloOpsStripEmptyCatalogRows(s[0],s[1],s[2]);}}
-	document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('#zelo-sched-body tr').forEach(zeloBindSchedRow);zeloOpsActivateTabFromHash();window.addEventListener('hashchange',zeloOpsActivateTabFromHash);var f=document.getElementById('zelo-ops-tabs-form');if(f){f.addEventListener('submit',function(ev){var isDedupe=ev.submitter&&ev.submitter.name==='zelo_ops_dedupe_schedule';if(isDedupe){return;}if(!ev.submitter){var tabHf=document.getElementById('zelo_ops_active_tab');if(tabHf&&tabHf.value){var activeBtn=document.querySelector('button.zelo-ops-save-tab-btn[data-zelo-tab="'+tabHf.value+'"]');if(activeBtn){ev.preventDefault();activeBtn.click();return;}}}var saveBtn=ev.submitter&&ev.submitter.name==='zelo_ops_save_tab'?ev.submitter:null;if(saveBtn){var tabId=saveBtn.getAttribute('data-zelo-tab')||saveBtn.value||'';if(tabId){zeloOpsPrepareSaveForm(tabId);var hf=document.getElementById('zelo_ops_active_tab');if(hf)hf.value=tabId;}setTimeout(function(){if(saveBtn&&!saveBtn.disabled){saveBtn.disabled=true;saveBtn.textContent=<?php echo wp_json_encode( __( 'A guardar…', 'zelo-assistente' ) ); ?>;}},0);}});}});
+	function zeloOpsDisableInactiveTabInputs(activeTabId){document.querySelectorAll('#zelo-ops-tabs-form .zelo-ops-tab').forEach(function(panel){var isActive=panel.id===activeTabId;panel.querySelectorAll('input,select,textarea,button').forEach(function(el){if(!isActive){el.disabled=true;}});});}
+	function zeloOpsPrepareSaveForm(tabId){var strip={'tab-turnos':['zelo-cat-shifts-body','input[name="cat_shift_code[]"]',{activePrefix:'cat_shift_active'}],'tab-locais':['zelo-cat-locs-body','input[name="cat_loc_name[]"]',{activePrefix:'cat_loc_active'}],'tab-idiomas':['zelo-cat-langs-body','input[name="cat_lang_name[]"]',{activePrefix:'cat_lang_active'}],'tab-voluntarios':['zelo-cat-vols-body','input[name="cat_vol_name[]"]',{activePrefix:'cat_vol_active',roster:true}]};if(strip[tabId]){var s=strip[tabId];zeloOpsStripEmptyCatalogRows(s[0],s[1],s[2]);}zeloOpsDisableInactiveTabInputs(tabId);}
+	document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('#zelo-sched-body tr').forEach(zeloBindSchedRow);zeloOpsActivateTabFromHash();window.addEventListener('hashchange',zeloOpsActivateTabFromHash);var f=document.getElementById('zelo-ops-tabs-form');if(f){f.addEventListener('submit',function(ev){var isDedupe=ev.submitter&&ev.submitter.name==='zelo_ops_dedupe_schedule';if(isDedupe){zeloOpsDisableInactiveTabInputs('tab-escala');return;}if(!ev.submitter){var tabHf=document.getElementById('zelo_ops_active_tab');if(tabHf&&tabHf.value){var activeBtn=document.querySelector('button.zelo-ops-save-tab-btn[data-zelo-tab="'+tabHf.value+'"]');if(activeBtn){ev.preventDefault();activeBtn.click();return;}}}var saveBtn=ev.submitter&&ev.submitter.name==='zelo_ops_save_tab'?ev.submitter:null;if(saveBtn){var tabId=saveBtn.getAttribute('data-zelo-tab')||saveBtn.value||'';if(tabId){zeloOpsPrepareSaveForm(tabId);var hf=document.getElementById('zelo_ops_active_tab');if(hf)hf.value=tabId;}setTimeout(function(){if(saveBtn&&!saveBtn.disabled){saveBtn.disabled=true;saveBtn.textContent=<?php echo wp_json_encode( __( 'A guardar…', 'zelo-assistente' ) ); ?>;}},0);}});}});
 	function zeloRemoveSchedRow(btn){var tr=btn.closest('tr');if(tr)tr.remove();}
 	function zeloOpsSubmitPushGenerate(){if(!window.confirm(<?php echo wp_json_encode( __( 'Gerar novo par VAPID e remover TODAS as subscriptions push? Os voluntários terão de re-activar notificações no Perfil da PWA.', 'zelo-assistente' ) ); ?>)){return;}var nonce=document.querySelector('input[name="zelo_push_gen_nonce"]');var tab=document.getElementById('zelo_ops_active_tab');var f=document.createElement('form');f.method='POST';f.action=window.location.href.split('#')[0];function add(n,v){var i=document.createElement('input');i.type='hidden';i.name=n;i.value=v;f.appendChild(i);}add('zelo_push_generate','1');if(nonce){add('zelo_push_gen_nonce',nonce.value);}if(tab){add('zelo_ops_active_tab',tab.value);}document.body.appendChild(f);f.submit();}
 	function zeloOpsSubmitPushClear(){if(!window.confirm(<?php echo wp_json_encode( __( 'Remover TODAS as subscriptions push? As chaves VAPID não serão alteradas. Os voluntários terão de re-activar notificações no Perfil da PWA.', 'zelo-assistente' ) ); ?>)){return;}var nonce=document.querySelector('input[name="zelo_push_clear_nonce"]');var tab=document.getElementById('zelo_ops_active_tab');var f=document.createElement('form');f.method='POST';f.action=window.location.href.split('#')[0];function add(n,v){var i=document.createElement('input');i.type='hidden';i.name=n;i.value=v;f.appendChild(i);}add('zelo_push_clear_subs','1');if(nonce){add('zelo_push_clear_nonce',nonce.value);}if(tab){add('zelo_ops_active_tab',tab.value);}document.body.appendChild(f);f.submit();}
