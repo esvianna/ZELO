@@ -328,6 +328,7 @@ Pré-requisito: **uma visita online prévia** (snapshots gravados). DevTools →
 | D8 | Slow 3G → **Emergência** | Telefones do evento em memória |
 | D9 | Primeira visita **sem** snapshot + Slow 3G | Banner «Sem dados — ligue-se à rede» |
 | D10 | Rede lenta online | Banner ou badge stale durante revalidação |
+| D11 | Rede OK após timeout ou prefetch novidades (PWA **161+**) | Banner global some sem F5 quando locais/evento/ops frescos; volta à aba ou evento `online` re-tenta sync |
 
 Regressão offline: §12 O1–O6 inalterados.
 

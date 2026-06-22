@@ -34,6 +34,9 @@ const API = {
 
     _revalidateInflight: {},
 
+    /** Recursos que disparam o banner global (exclui newsDetail/prefetch). */
+    BANNER_CRITICAL_FLAGS: ['locais', 'evento', 'volunteerOps'],
+
     FETCH_TIMEOUT_MS: 5000,
 
     readSnapshot(key) {
@@ -173,6 +176,14 @@ const API = {
         return Object.values(this.lastFetchRevalidating).some(Boolean);
     },
 
+    isAnyCriticalRevalidating() {
+        return this.BANNER_CRITICAL_FLAGS.some((f) => !!this.lastFetchRevalidating[f]);
+    },
+
+    hasBannerCriticalCacheStale() {
+        return this.BANNER_CRITICAL_FLAGS.some((f) => !!this.lastFetchFromCache[f]);
+    },
+
     hasStaleOrRevalidating() {
         return this.isAnyRevalidating() || Object.values(this.lastFetchFromCache).some(Boolean);
     },
@@ -227,6 +238,7 @@ const API = {
             if (authFromResponse) {
                 const authResult = authFromResponse(response);
                 if (authResult !== undefined) {
+                    this.lastFetchFromCache[staleFlag] = false;
                     this.lastFetchRevalidating[staleFlag] = false;
                     this.notifyRevalidation(staleFlag, authResult || null);
                     return authResult;

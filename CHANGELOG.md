@@ -32,6 +32,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | PWA **158** | pt_br: Activ→Ativar, actual→atual, utilizador→usuário, guardar→salvar, equipa→equipe, ligação→conexão, etc.; `index.html` + `api-v5.js` |
 | PWA **159** | Fix banner «Atualizando dados» preso (SWR notify ao falhar; Novidades `forceFresh`) |
 | PWA **160** | Escala: filtros nome/idioma não perdem foco ao digitar (atualiza só `#ops-schedule-by-day`) |
+| PWA **161** | Banner rede: só recursos críticos (locais/evento/ops); retry ao voltar online/aba; auth não prende flag; texto «sincronizando» |
 
 ### Corrigido — admin Config checkboxes lembretes (plugin 2.17.1)
 

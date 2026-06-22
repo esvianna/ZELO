@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-20** — PWA **160** fix filtros texto escala; #52 auditoria pt_br (PWA 158) **In review**; #53 push/sininho PWA 155; #51 PWA 154–157.
+> Última atualização: **2026-06-20** — PWA **161** fix banner rede degradada preso; PWA **160** filtros escala.
 
 ---
 
@@ -13,7 +13,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | Referência no repo | Versão |
 |--------------------|--------|
 | Plugin WordPress (`zelo-assistente.php`) | **2.19.1** |
-| PWA (`zelo-build.js` / `sw.js`) | **build 160** |
+| PWA (`zelo-build.js` / `sw.js`) | **build 161** |
 
 **Produção (repo):** PWA **151** validada (#45–#50, #46); plugin **2.18.0** + **2.19.0** / PWA **152** aguardam deploy/smoke (#44, #51).
 
@@ -65,6 +65,10 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 ---
 
 ## O que já foi implementado (resumo por versão actual)
+
+### Frontend (PWA build 161)
+
+- [x] Banner «conexão lenta» preso: só locais/evento/ops; retry online/visibility; limpa flag em auth
 
 ### Frontend (PWA build 160)
 

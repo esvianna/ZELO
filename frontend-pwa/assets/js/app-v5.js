@@ -61,8 +61,8 @@ const app = {
     updateNetworkDegradedBanner() {
         const el = document.getElementById('network-degraded-banner');
         if (!el || typeof API === 'undefined') return;
-        const revalidating = API.isAnyRevalidating && API.isAnyRevalidating();
-        const staleOnline = navigator.onLine && API.hasStaleOrRevalidating && API.hasStaleOrRevalidating();
+        const revalidating = API.isAnyCriticalRevalidating && API.isAnyCriticalRevalidating();
+        const staleCritical = navigator.onLine && API.hasBannerCriticalCacheStale && API.hasBannerCriticalCacheStale();
         const noData = !this.data.evento || !Object.keys(this.data.evento).length;
         if (noData && !navigator.onLine) {
             el.hidden = false;
@@ -74,12 +74,46 @@ const app = {
             el.textContent = i18n.t('network_revalidating');
             return;
         }
-        if (staleOnline && Object.values(API.lastFetchFromCache).some(Boolean)) {
+        if (staleCritical) {
             el.hidden = false;
             el.textContent = i18n.t('network_slow_cached');
             return;
         }
         el.hidden = true;
+    },
+
+    _retryStaleCriticalTimer: null,
+
+    retryStaleCriticalData() {
+        if (!navigator.onLine || typeof API === 'undefined') return;
+        clearTimeout(this._retryStaleCriticalTimer);
+        this._retryStaleCriticalTimer = setTimeout(() => this._runRetryStaleCritical(), 400);
+    },
+
+    async _runRetryStaleCritical() {
+        if (!navigator.onLine || typeof API === 'undefined') return;
+        if (!API.hasBannerCriticalCacheStale || !API.hasBannerCriticalCacheStale()) {
+            this.syncStaleFlags();
+            return;
+        }
+        const tasks = [];
+        if (API.lastFetchFromCache.locais) {
+            tasks.push(API.getLocais());
+        }
+        if (API.lastFetchFromCache.evento) {
+            tasks.push(API.getEvento());
+        }
+        if (API.lastFetchFromCache.volunteerOps && this.auth.user && this.canViewOps()) {
+            tasks.push(this.loadVolunteerOps(true));
+        }
+        if (!tasks.length) {
+            this.syncStaleFlags();
+            return;
+        }
+        await Promise.allSettled(tasks);
+        this.syncStaleFlags();
+        this._renderBootstrapUI();
+        this._refreshCurrentView();
     },
 
     _hydrateFromSnapshots() {
@@ -1289,10 +1323,17 @@ const app = {
 
         this.getUserLocation();
 
+        setTimeout(() => {
+            if (typeof API !== 'undefined' && API.hasBannerCriticalCacheStale && API.hasBannerCriticalCacheStale()) {
+                this.retryStaleCriticalData();
+            }
+        }, 6500);
+
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState !== 'visible' || !navigator.onLine) {
                 return;
             }
+            this.retryStaleCriticalData();
             if (this.router.currentView === 'tempo' && this.shouldRefreshWeather()) {
                 this.refreshWeather();
             }
@@ -6948,8 +6989,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('online', () => {
         updateNetworkStatus();
-        if (typeof app !== 'undefined' && app.updateNetworkDegradedBanner) {
-            app.updateNetworkDegradedBanner();
+        if (typeof app !== 'undefined' && app.retryStaleCriticalData) {
+            app.retryStaleCriticalData();
         }
     });
     window.addEventListener('offline', () => {
