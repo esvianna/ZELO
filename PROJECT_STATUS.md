@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-20** — PWA **161** fix banner rede degradada preso; PWA **160** filtros escala.
+> Última atualização: **2026-06-22** — #54 SMS Comtele plugin **2.20.0** + PWA **162** **In review**.
 
 ---
 
@@ -12,8 +12,8 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Referência no repo | Versão |
 |--------------------|--------|
-| Plugin WordPress (`zelo-assistente.php`) | **2.19.1** |
-| PWA (`zelo-build.js` / `sw.js`) | **build 161** |
+| Plugin WordPress (`zelo-assistente.php`) | **2.20.0** |
+| PWA (`zelo-build.js` / `sw.js`) | **build 162** |
 
 **Produção (repo):** PWA **151** validada (#45–#50, #46); plugin **2.18.0** + **2.19.0** / PWA **152** aguardam deploy/smoke (#44, #51).
 
@@ -65,6 +65,14 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 ---
 
 ## O que já foi implementado (resumo por versão actual)
+
+### Backend (plugin 2.20.0)
+
+- [x] SMS Comtele (#54, ADR-040): cliente V4, fila, cron paralelo, admin Config
+
+### Frontend (PWA build 162)
+
+- [x] Aviso LGPD telefone/SMS no cadastro e perfil (#54)
 
 ### Frontend (PWA build 161)
 
@@ -138,7 +146,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | [#44](https://github.com/esvianna/ZELO/issues/44) | **In review** | Plugin 2.18.0 — digest e-mail + fila; **smoke pendente** |
 | [#51](https://github.com/esvianna/ZELO/issues/51) | **In review** | Registro apoio delegados — ADR-039; plugin 2.19.0 / PWA 152 |
 | [#52](https://github.com/esvianna/ZELO/issues/52) | **In review** | Auditoria pt_br — pt-PT residual removido (PWA 158) |
-| [#54](https://github.com/esvianna/ZELO/issues/54) | **Backlog** | Planejar integração SMS (Contele) — decisões de canal, LGPD, API |
+| [#54](https://github.com/esvianna/ZELO/issues/54) | **In review** | SMS Comtele plugin 2.20.0 + PWA 162 — smoke admin S54a pendente produção |
 
 **Ops / conteúdo (sem issue aberta):** post Novidades slug `imprensa-autoridades`; config Curitiba/2026 (desactivar transporte/Wi‑Fi/credenciamento; activar imprensa; **desactivar um lembrete antecipado** — requer plugin **2.17.1+** ou JSON).
 
@@ -146,9 +154,9 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## Próximos passos lógicos
 
-1. Smoke **#51** (§4 D51) após deploy plugin **2.19.0** + PWA **152**.
-2. Smoke **#44** (e-mails digest/fila) após deploy plugin 2.18.0.
-3. Conteúdo: post `imprensa-autoridades`; config Curitiba/2026.
+1. Smoke **#54** (§4 S54a–S54d) após deploy plugin **2.20.0** — chave produção Comtele no admin.
+2. Smoke **#51** (§4 D51) após deploy plugin **2.19.0** + PWA **152**.
+3. Smoke **#44** (e-mails digest/fila) após deploy plugin 2.18.0.
 
 ---
 

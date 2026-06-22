@@ -21,7 +21,7 @@
     <!-- CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <link rel="stylesheet" href="assets/css/style-v5.css?v=161">
+    <link rel="stylesheet" href="assets/css/style-v5.css?v=162">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -406,8 +406,9 @@
                             <input type="email" id="register-email" class="form-input" autocomplete="email" required>
                         </div>
                         <div class="form-group">
-                            <label>Telefone (opcional)</label>
+                            <label data-i18n="register_phone_label">Telefone (opcional)</label>
                             <input type="tel" id="register-phone" class="form-input" autocomplete="tel">
+                            <p class="description" data-i18n="register_phone_sms_hint">Usado para avisos operacionais do evento por SMS.</p>
                         </div>
                         <div class="form-group">
                             <label id="register-languages-label" data-i18n="register_languages_label">Idiomas que fala (opcional)</label>
@@ -507,6 +508,7 @@
                     <div class="form-group">
                         <label for="profile-input-phone" data-i18n="profile_phone_label">Telefone</label>
                         <input type="tel" id="profile-input-phone" class="form-input" autocomplete="tel">
+                        <p class="description" data-i18n="profile_phone_sms_hint">Usado para avisos operacionais do evento por SMS.</p>
                     </div>
 
                     <h3 class="profile-section-title" data-i18n="profile_password_title">Alterar senha</h3>
@@ -637,11 +639,11 @@
 
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script src="assets/js/zelo-build.js?v=161"></script>
-    <script src="assets/js/i18n.js?v=161"></script>
-    <script src="assets/js/api-v5.js?v=161"></script>
-    <script src="assets/js/map-manager.js?v=161"></script>
-    <script src="assets/js/app-v5.js?v=161"></script>
+    <script src="assets/js/zelo-build.js?v=162"></script>
+    <script src="assets/js/i18n.js?v=162"></script>
+    <script src="assets/js/api-v5.js?v=162"></script>
+    <script src="assets/js/map-manager.js?v=162"></script>
+    <script src="assets/js/app-v5.js?v=162"></script>
 
     <script>
         // Register Service Worker

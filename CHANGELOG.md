@@ -8,6 +8,13 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Planejado — SMS Comtele (#54, ADR-040)
+
+| Entrega | Detalhe |
+|---------|---------|
+| Smoke API | **Validado** 2026-06-22 — balance, routes, envio SMS recebido no celular |
+| Plugin **2.20.0** / PWA **162** | Cliente Comtele V4, fila SMS, paralelo push/e-mail, admin Config, aviso LGPD cadastro/perfil |
+
 ### Adicionado — registro apoio delegados (#51, ADR-039, plugin 2.19.0, PWA 152)
 
 | Versão | Entrega |

@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.20.0] - 2026-06-22
+
+### Adicionado
+- **SMS Comtele (#54, ADR-040):** `zelo-sms-comtele.php` + `zelo-notify-sms-queue.php`; envio paralelo a push/e-mail no cron ops; dedup `zelo_notify_sms_log`; fila SMS; admin Config (chave API, rota, teste, contadores, log); alerta ~80% orçamento.
+
 ## [2.19.1] - 2026-06-20
 
 ### Adicionado

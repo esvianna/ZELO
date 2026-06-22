@@ -272,15 +272,31 @@ function zelo_notify_send_email_immediate( $email, $subject, $body ) {
  * @param string $url     URL PWA.
  * @return bool Entrega tentada com sucesso.
  */
-function zelo_notify_deliver_timely( $user_id, $email, $subject, $body, $title, $url = './#escala' ) {
+function zelo_notify_deliver_timely( $user_id, $email, $subject, $body, $title, $url = './#escala', $sms_meta = null ) {
 	$user_id = (int) $user_id;
+	$ok      = false;
+
 	if ( zelo_notify_user_has_active_push( $user_id ) && function_exists( 'zelo_push_send_to_user' ) ) {
 		$sent = zelo_push_send_to_user( $user_id, $title, $body, $url );
 		if ( $sent > 0 ) {
-			return true;
+			$ok = true;
 		}
 	}
-	return zelo_notify_send_email_immediate( $email, $subject, $body );
+
+	if ( zelo_notify_send_email_immediate( $email, $subject, $body ) ) {
+		$ok = true;
+	}
+
+	if ( is_array( $sms_meta ) && function_exists( 'zelo_notify_sms_deliver_timely' ) ) {
+		$aid = isset( $sms_meta['assignment_id'] ) ? (string) $sms_meta['assignment_id'] : '';
+		$win = isset( $sms_meta['window'] ) ? (string) $sms_meta['window'] : '';
+		$sms_title = isset( $sms_meta['title'] ) ? (string) $sms_meta['title'] : $title;
+		if ( $aid !== '' && $win !== '' && zelo_notify_sms_deliver_timely( $user_id, $sms_title, $aid, $win ) ) {
+			$ok = true;
+		}
+	}
+
+	return $ok;
 }
 
 /**
@@ -292,12 +308,25 @@ function zelo_notify_deliver_timely( $user_id, $email, $subject, $body, $title, 
  * @param string $body    Corpo.
  * @return bool
  */
-function zelo_notify_deliver_digest( $user_id, $email, $subject, $body ) {
+function zelo_notify_deliver_digest( $user_id, $email, $subject, $body, $sms_bundle = null ) {
+	$ok = false;
 	if ( zelo_notify_mail_can_send( 1 ) ) {
-		return zelo_notify_send_email_immediate( $email, $subject, $body );
+		$ok = zelo_notify_send_email_immediate( $email, $subject, $body );
+	} else {
+		zelo_notify_queue_add( $email, $subject, $body, (int) $user_id );
+		$ok = true;
 	}
-	zelo_notify_queue_add( $email, $subject, $body, (int) $user_id );
-	return true;
+
+	if ( is_array( $sms_bundle ) && function_exists( 'zelo_notify_sms_deliver_digest' ) ) {
+		$user = isset( $sms_bundle['user'] ) ? $sms_bundle['user'] : null;
+		$entries = isset( $sms_bundle['entries'] ) ? $sms_bundle['entries'] : array();
+		$intro = isset( $sms_bundle['intro'] ) ? (string) $sms_bundle['intro'] : '';
+		if ( $user instanceof WP_User && zelo_notify_sms_deliver_digest( $user, $entries, $intro ) ) {
+			$ok = true;
+		}
+	}
+
+	return $ok;
 }
 
 /**

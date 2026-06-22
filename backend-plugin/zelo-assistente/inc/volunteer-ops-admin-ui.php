@@ -572,6 +572,9 @@ function zelo_ops_save_tab_config( &$data ) {
 	if ( function_exists( 'zelo_push_save_admin_settings' ) ) {
 		zelo_push_save_admin_settings( $_POST );
 	}
+	if ( function_exists( 'zelo_comtele_save_admin_settings' ) ) {
+		zelo_comtele_save_admin_settings( $_POST );
+	}
 	return __( 'Configurações salvas.', 'zelo-assistente' );
 }
 
@@ -726,6 +729,10 @@ function zelo_render_volunteer_ops_admin_tabs() {
 		$msg_push_clear = zelo_ops_handle_push_clear_post();
 		if ( $msg_push_clear ) {
 			$msg = $msg ? $msg . ' ' . $msg_push_clear : $msg_push_clear;
+		}
+		$msg_sms_test = function_exists( 'zelo_comtele_handle_test_sms_post' ) ? zelo_comtele_handle_test_sms_post() : '';
+		if ( $msg_sms_test ) {
+			$msg = $msg ? $msg . ' ' . $msg_sms_test : $msg_sms_test;
 		}
 		$msg2 = zelo_ops_save_json_advanced();
 		if ( $msg2 ) {
@@ -934,6 +941,9 @@ function zelo_render_volunteer_ops_admin_tabs() {
 					if ( function_exists( 'zelo_push_render_admin_fields' ) ) {
 						zelo_push_render_admin_fields();
 					}
+					if ( function_exists( 'zelo_comtele_render_admin_fields' ) ) {
+						zelo_comtele_render_admin_fields();
+					}
 					?>
 				</table>
 				<?php zelo_ops_render_tab_save_button( 'tab-config' ); ?>
@@ -1114,6 +1124,7 @@ function zelo_render_volunteer_ops_admin_tabs() {
 	function zeloRemoveSchedRow(btn){var tr=btn.closest('tr');if(tr)tr.remove();}
 	function zeloOpsSubmitPushGenerate(){if(!window.confirm(<?php echo wp_json_encode( __( 'Gerar novo par VAPID e remover TODAS as subscriptions push? Os voluntários terão de re-activar notificações no Perfil da PWA.', 'zelo-assistente' ) ); ?>)){return;}var nonce=document.querySelector('input[name="zelo_push_gen_nonce"]');var tab=document.getElementById('zelo_ops_active_tab');var f=document.createElement('form');f.method='POST';f.action=window.location.href.split('#')[0];function add(n,v){var i=document.createElement('input');i.type='hidden';i.name=n;i.value=v;f.appendChild(i);}add('zelo_push_generate','1');if(nonce){add('zelo_push_gen_nonce',nonce.value);}if(tab){add('zelo_ops_active_tab',tab.value);}document.body.appendChild(f);f.submit();}
 	function zeloOpsSubmitPushClear(){if(!window.confirm(<?php echo wp_json_encode( __( 'Remover TODAS as subscriptions push? As chaves VAPID não serão alteradas. Os voluntários terão de re-activar notificações no Perfil da PWA.', 'zelo-assistente' ) ); ?>)){return;}var nonce=document.querySelector('input[name="zelo_push_clear_nonce"]');var tab=document.getElementById('zelo_ops_active_tab');var f=document.createElement('form');f.method='POST';f.action=window.location.href.split('#')[0];function add(n,v){var i=document.createElement('input');i.type='hidden';i.name=n;i.value=v;f.appendChild(i);}add('zelo_push_clear_subs','1');if(nonce){add('zelo_push_clear_nonce',nonce.value);}if(tab){add('zelo_ops_active_tab',tab.value);}document.body.appendChild(f);f.submit();}
+	function zeloOpsSubmitComteleTest(){var phone=document.getElementById('zelo_comtele_test_phone');var nonce=document.querySelector('input[name="zelo_comtele_test_nonce"]');var tab=document.getElementById('zelo_ops_active_tab');var f=document.createElement('form');f.method='POST';f.action=window.location.href.split('#')[0];function add(n,v){var i=document.createElement('input');i.type='hidden';i.name=n;i.value=v;f.appendChild(i);}add('zelo_comtele_test_sms','1');if(nonce){add('zelo_comtele_test_nonce',nonce.value);}if(phone&&phone.value){add('zelo_comtele_test_phone',phone.value);}if(tab){add('zelo_ops_active_tab',tab.value);}document.body.appendChild(f);f.submit();}
 	</script>
 	<?php
 }

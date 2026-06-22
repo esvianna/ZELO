@@ -156,6 +156,11 @@ Orientação de testes **manual** (prioritário hoje) e caminho para automação
 | 5o2 | Botões Montar escala + Export PDF | gestor | Mesma altura, mesma linha |
 | 5o3 | Regressão filtros escala | homem-chave | Dia/turno/local/responsável/nome/idioma e export PDF inalterados |
 | 5o4 | Filtros texto escala (PWA **160+**) | voluntário / gestor | «Buscar por nome» e «Filtrar idioma»: digitar vários caracteres **sem perder foco**; lista filtra em tempo real |
+| S54a | **SMS Comtele admin** (plugin **2.20.0+**) | `manage_options` | Zelo → Operação Voluntários → Config: activar SMS, chave API, rota 16, link curto; «Enviar SMS de teste» → celular recebe |
+| S54b | SMS paralelo cron | voluntário com `zelo_phone` | Check-in/minutos/check-out: push + e-mail + SMS (dedup `assignment_id\|window\|sms`) |
+| S54c | Digest SMS | voluntário | 1 SMS resumido por user+dia (não 1 por linha) |
+| S54d | Sem telefone | voluntário | Só push/e-mail; sem erro |
+| S54e | CLI normalize | dev | `php backend-plugin/zelo-assistente/scripts/test-sms-normalize.php` → OK |
 | 6 | Pedido de substituição | conforme regra | Criado; gestor aprova/rejeita |
 | 6a | Painel «Pedidos de substituição» (PWA **132+**) | gestor / homem-chave | Nome do solicitante, dia·turno·local, motivo e data — **sem** IDs `sw_*` / `asg_*` |
 | 6b | Sino — aviso swap pendente | gestor | Resumo legível («Nome — Sábado · A1 — Balcão 3») |

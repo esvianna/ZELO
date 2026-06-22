@@ -463,6 +463,39 @@ Teto Titan (**1.000/dia**) fica confortável com ADR-037; **actual** aproxima-se
 
 ---
 
+## ADR-040 — SMS operacional via Comtele Gateway V4 (#54, 2026-06-22)
+
+**Contexto:** Notificações ops usam push (ADR-035), e-mail + fila (ADR-037) e telefone já existe em `zelo_phone`. Contrato Comtele **Painel Novo** ([portal.comtele.com.br](https://portal.comtele.com.br/)) — API [Gateway V4](https://developers.comtele.com.br/): `https://api.comtele.com.br`, auth `x-api-key`. Smoke API + envio SMS validado pelo responsável (jun/2026).
+
+**Decisões de produto:**
+
+1. **Cascata:** SMS **em paralelo** a push **e** a e-mail (não substitui nem espera falha de outro canal).
+2. **Eventos:** todos os do cron `zelo_volunteer_notify_tick` (check-in, check-out, minutos antes, digest antecipado, escala alterada, compromisso).
+3. **Destinatários:** voluntários/responsáveis com `wp_user_id` + `zelo_phone` válido; **não** SMS a supervisores em recusa/swap.
+4. **Sem telefone:** ignora SMS; mantém push/e-mail.
+5. **Conteúdo:** templates ≤140 chars, só PT, link encurtado para PWA.
+6. **LGPD (mínimo):** aviso no cadastro/perfil («telefone para avisos operacionais por SMS»); opt-in checkbox = fase 2.
+7. **Orçamento inicial:** 1.000 SMS / R$ 90; **sem** teto diário hard no ZELO; alerta admin ~80% dos créditos.
+8. **Digest SMS:** agrupar por voluntário+dia (não 1 SMS por linha de escala).
+
+**Decisões técnicas:**
+
+1. **API:** `POST /messages/sms/send`; `GET /balance`, `GET /routes`; rota **16** (Marketing) em testes/produção inicial salvo contrário no painel.
+2. **Credenciais:** chave em admin Operação → Config (não no repo); **rotacionar** chave de smoke após validação; produção com chave nova.
+3. **Fila SMS separada** (`zelo_notify_sms_queue`), mesmo cron; contadores espelhando e-mail.
+4. **Dedup:** `user_meta` `zelo_notify_sms_log` — chave `assignment_id|window|sms`.
+5. **Ficheiros:** `inc/zelo-sms-comtele.php`, `inc/zelo-notify-sms-queue.php`; estender `zelo_notify_deliver_*`.
+6. **Telefone:** normalizar BR → E.164 (`55` + DDD + número); campo `custom` na API = id dedup.
+7. **Relatórios/webhook Comtele:** fase 2; fase 1 confia em resposta HTTP + log admin.
+
+**Risco volume:** ~46 vol. / ~292 linhas / todos eventos pode ultrapassar 1.000 SMS no evento — monitorizar contador; mitigar digest longo em SMS se necessário.
+
+**Consequências:** Issue #54; `TESTING.md` § SMS; bump plugin patch ao implementar.
+
+**Alternativas descartadas:** painel antigo (`auth-key` + `sms.comtele.com.br/api/v2`); SMS só como último recurso (opção B); opt-in obrigatório na fase 1.
+
+---
+
 ## Template para nova ADR
 
 ```markdown

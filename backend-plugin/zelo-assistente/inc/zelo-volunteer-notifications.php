@@ -166,7 +166,17 @@ function zelo_volunteer_notify_send_digest( $user, $entries, $catalogs, $intro, 
 	$full    = zelo_volunteer_notify_subject_prefix() . $subject;
 
 	$ok = function_exists( 'zelo_notify_deliver_digest' )
-		? zelo_notify_deliver_digest( (int) $user->ID, $user->user_email, $full, $body )
+		? zelo_notify_deliver_digest(
+			(int) $user->ID,
+			$user->user_email,
+			$full,
+			$body,
+			array(
+				'user'    => $user,
+				'entries' => $entries,
+				'intro'   => $intro,
+			)
+		)
 		: wp_mail( $user->user_email, $full, $body );
 
 	if ( $ok ) {
@@ -321,8 +331,13 @@ function zelo_volunteer_notify_run() {
 					$start_dt->format( 'd/m/Y H:i' )
 				);
 				$title   = __( 'Turno em breve', 'zelo-assistente' );
+				$sms_meta = array(
+					'assignment_id' => (string) $row['id'],
+					'window'        => 'before_min',
+					'title'         => $title,
+				);
 				$deliver = function_exists( 'zelo_notify_deliver_timely' )
-					? zelo_notify_deliver_timely( $uid, $user->user_email, $subject, $body, $title, './#escala' )
+					? zelo_notify_deliver_timely( $uid, $user->user_email, $subject, $body, $title, './#escala', $sms_meta )
 					: wp_mail( $user->user_email, $subject, $body );
 				if ( $deliver ) {
 					zelo_volunteer_notify_mark_sent( $uid, $row['id'], 'before_min' );
@@ -337,8 +352,13 @@ function zelo_volunteer_notify_run() {
 				$subject = zelo_volunteer_notify_subject_prefix() . __( 'Faça seu check-in no Zelo', 'zelo-assistente' );
 				$body    = __( 'Sua janela de check-in está aberta. Confirme sua chegada no aplicativo.', 'zelo-assistente' );
 				$title   = __( 'Check-in disponível', 'zelo-assistente' );
+				$sms_meta = array(
+					'assignment_id' => (string) $row['id'],
+					'window'        => 'checkin_open',
+					'title'         => $title,
+				);
 				$deliver = function_exists( 'zelo_notify_deliver_timely' )
-					? zelo_notify_deliver_timely( $uid, $user->user_email, $subject, $body, $title, './#escala' )
+					? zelo_notify_deliver_timely( $uid, $user->user_email, $subject, $body, $title, './#escala', $sms_meta )
 					: wp_mail( $user->user_email, $subject, $body );
 				if ( $deliver ) {
 					zelo_volunteer_notify_mark_sent( $uid, $row['id'], 'checkin_open' );
@@ -353,8 +373,13 @@ function zelo_volunteer_notify_run() {
 				$subject = zelo_volunteer_notify_subject_prefix() . __( 'Faça seu check-out no Zelo', 'zelo-assistente' );
 				$body    = __( 'Sua janela de check-out está aberta. Confirme sua saída no aplicativo.', 'zelo-assistente' );
 				$title   = __( 'Check-out disponível', 'zelo-assistente' );
+				$sms_meta = array(
+					'assignment_id' => (string) $row['id'],
+					'window'        => 'checkout_open',
+					'title'         => $title,
+				);
 				$deliver = function_exists( 'zelo_notify_deliver_timely' )
-					? zelo_notify_deliver_timely( $uid, $user->user_email, $subject, $body, $title, './#escala' )
+					? zelo_notify_deliver_timely( $uid, $user->user_email, $subject, $body, $title, './#escala', $sms_meta )
 					: wp_mail( $user->user_email, $subject, $body );
 				if ( $deliver ) {
 					zelo_volunteer_notify_mark_sent( $uid, $row['id'], 'checkout_open' );
@@ -413,5 +438,8 @@ function zelo_volunteer_notify_run() {
 
 	if ( function_exists( 'zelo_notify_queue_process' ) ) {
 		zelo_notify_queue_process();
+	}
+	if ( function_exists( 'zelo_notify_sms_queue_process' ) ) {
+		zelo_notify_sms_queue_process();
 	}
 }
