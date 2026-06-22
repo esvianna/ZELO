@@ -8,6 +8,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Adicionado — swap notificações (#56, ADR-041)
+
+| Versão | Entrega |
+|--------|---------|
+| Plugin **2.21.0** / PWA **165** | Recusar: modal + justificativa obrigatória + histórico ops; Aprovar: selector roster WP + substituto obrigatório; notificação imediata solicitante/substituto (sino + e-mail + SMS #54); admin swaps alinhado |
+
 ### Corrigido — mapa evento diagrama (#55, PWA 163)
 
 | Versão | Entrega |

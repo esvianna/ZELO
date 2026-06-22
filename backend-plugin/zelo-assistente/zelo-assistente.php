@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define( 'ZELO_VERSION', '2.20.1' );
+define( 'ZELO_VERSION', '2.21.0' );
 define( 'ZELO_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 
 if ( file_exists( ZELO_PLUGIN_DIR . 'vendor/autoload.php' ) ) {

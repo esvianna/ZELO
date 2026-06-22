@@ -193,7 +193,7 @@ function zelo_ops_schedule_editor_catalogs( $catalogs ) {
 		$out_roster[] = array(
 			'id'            => sanitize_text_field( $rv['id'] ),
 			'name'          => isset( $rv['name'] ) ? sanitize_text_field( $rv['name'] ) : '',
-			'wp_user_id'    => isset( $rv['wp_user_id'] ) ? max( 0, (int) $rv['wp_user_id'] ) : 0,
+			'wp_user_id'    => ! empty( $rv['linked_wp_user_id'] ) ? max( 0, (int) $rv['linked_wp_user_id'] ) : ( isset( $rv['wp_user_id'] ) ? max( 0, (int) $rv['wp_user_id'] ) : 0 ),
 			'language_ids'  => isset( $rv['language_ids'] ) && is_array( $rv['language_ids'] ) ? array_map( 'sanitize_text_field', $rv['language_ids'] ) : array(),
 		);
 	}

@@ -355,11 +355,22 @@ function zelo_get_volunteer_ops_payload( $args = array() ) {
 			$swap_requests = $all_sw;
 		} elseif ( $uid > 0 ) {
 			foreach ( $all_sw as $s ) {
+				$include = false;
 				if ( isset( $s['requester_id'] ) && (int) $s['requester_id'] === $uid ) {
+					$include = true;
+				} elseif ( isset( $s['status'], $s['replacement_user_id'] ) && $s['status'] === 'approved' && (int) $s['replacement_user_id'] === $uid ) {
+					$include = true;
+				}
+				if ( $include ) {
 					$swap_requests[] = $s;
 				}
 			}
 		}
+	}
+
+	$swap_roster_candidates = array();
+	if ( $uid > 0 && ( zelo_is_ops_manager( $uid ) || zelo_is_reallocator( $uid ) ) && function_exists( 'zelo_swap_get_roster_candidates' ) ) {
+		$swap_roster_candidates = zelo_swap_get_roster_candidates();
 	}
 
 	$commitments = function_exists( 'zelo_get_volunteer_commitments' ) ? zelo_get_volunteer_commitments() : array();
@@ -470,5 +481,6 @@ function zelo_get_volunteer_ops_payload( $args = array() ) {
 		'recent_declines'  => array_slice( $recent_declines, 0, 50 ),
 		'history'          => $history_out,
 		'swap_requests'    => $swap_requests,
+		'swap_roster_candidates' => $swap_roster_candidates,
 	);
 }

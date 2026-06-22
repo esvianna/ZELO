@@ -1745,8 +1745,8 @@ function zelo_render_volunteer_swaps_admin_page() {
 		$sid    = sanitize_text_field( wp_unslash( $_POST['swap_id'] ) );
 		$action = sanitize_key( wp_unslash( $_POST['swap_action'] ) );
 		$extra  = array(
-			'replacement_volunteer_name' => isset( $_POST['replacement_name'] ) ? sanitize_text_field( wp_unslash( $_POST['replacement_name'] ) ) : '',
-			'replacement_user_id'        => isset( $_POST['replacement_uid'] ) ? (int) $_POST['replacement_uid'] : 0,
+			'replacement_user_id' => isset( $_POST['replacement_uid'] ) ? (int) $_POST['replacement_uid'] : 0,
+			'rejection_reason'    => isset( $_POST['rejection_reason'] ) ? wp_unslash( $_POST['rejection_reason'] ) : '',
 		);
 		if ( in_array( $action, array( 'approved', 'rejected' ), true ) ) {
 			$res = zelo_swap_set_status( $sid, $action, get_current_user_id(), $extra );
@@ -1757,7 +1757,8 @@ function zelo_render_volunteer_swaps_admin_page() {
 			}
 		}
 	}
-	$list = zelo_get_swap_requests();
+	$list      = zelo_get_swap_requests();
+	$candidates = function_exists( 'zelo_swap_get_roster_candidates' ) ? zelo_swap_get_roster_candidates() : array();
 	?>
 	<div class="wrap">
 		<h1><?php esc_html_e( 'Pedidos de substituição', 'zelo-assistente' ); ?></h1>
@@ -1775,18 +1776,29 @@ function zelo_render_volunteer_swaps_admin_page() {
 						<td><?php echo esc_html( $s['status'] ); ?></td>
 						<td>
 							<?php if ( $s['status'] === 'pending' ) : ?>
-								<form method="post" style="display:inline-block;">
+								<form method="post" style="display:inline-block;max-width:320px;">
 									<?php wp_nonce_field( 'zelo_swap_admin_nonce' ); ?>
 									<input type="hidden" name="swap_id" value="<?php echo esc_attr( $s['id'] ); ?>" />
 									<input type="hidden" name="swap_action" value="approved" />
-									<input name="replacement_name" placeholder="<?php esc_attr_e( 'Nome substituto', 'zelo-assistente' ); ?>" />
-									<input name="replacement_uid" type="number" placeholder="user id" style="width:90px" />
+									<select name="replacement_uid" required>
+										<option value=""><?php esc_html_e( 'Substituto (roster + WP)', 'zelo-assistente' ); ?></option>
+										<?php
+										$req_id = isset( $s['requester_id'] ) ? (int) $s['requester_id'] : 0;
+										foreach ( $candidates as $c ) :
+											if ( $req_id > 0 && (int) $c['wp_user_id'] === $req_id ) {
+												continue;
+											}
+											?>
+											<option value="<?php echo esc_attr( (string) $c['wp_user_id'] ); ?>"><?php echo esc_html( $c['name'] ); ?></option>
+										<?php endforeach; ?>
+									</select>
 									<button type="submit" name="zelo_swap_admin" class="button button-primary"><?php esc_html_e( 'Aprovar', 'zelo-assistente' ); ?></button>
 								</form>
-								<form method="post" style="display:inline-block;margin-left:8px;">
+								<form method="post" style="display:inline-block;margin-left:8px;max-width:280px;">
 									<?php wp_nonce_field( 'zelo_swap_admin_nonce' ); ?>
 									<input type="hidden" name="swap_id" value="<?php echo esc_attr( $s['id'] ); ?>" />
 									<input type="hidden" name="swap_action" value="rejected" />
+									<textarea name="rejection_reason" rows="2" required placeholder="<?php esc_attr_e( 'Justificativa da recusa', 'zelo-assistente' ); ?>" style="width:100%;"></textarea>
 									<button type="submit" name="zelo_swap_admin" class="button"><?php esc_html_e( 'Recusar', 'zelo-assistente' ); ?></button>
 								</form>
 							<?php else : ?>

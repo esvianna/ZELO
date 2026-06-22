@@ -6,6 +6,16 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 ---
 
+## ADR-041 — Swap: modais, substituto roster WP e notificações imediatas (#56) (2026-06-22)
+
+**Contexto:** Aprovar/recusar pedido de substituição usava `prompt()` na PWA, sem notificar solicitante/substituto. Issue [#56](https://github.com/esvianna/ZELO/issues/56).
+
+**Decisão:** Recusar exige justificativa (modal PWA + histórico ops `swap_rejected`). Aprovar exige substituto do **roster com `linked_wp_user_id`**. Notificação **imediata** via sino (feed derivado de `swap_requests`), `zelo_notify_deliver_timely` e SMS Comtele (#54) — templates backend **PT apenas**; fora do digest #44. Push nativo continua fora (ADR-026).
+
+**Consequências:** Plugin **2.21.0**, PWA **165**. Sem aprovação «substituição pendente» sem substituto.
+
+---
+
 ## ADR-034 — Config API (#21) escopo mínimo (2026-06-04)
 
 **Contexto:** Issue [#21](https://github.com/esvianna/ZELO/issues/21) (ROADMAP C3) previa estratégia por ambiente. Análise em `docs/ISSUE-21-CONFIG-AMBIENTE.md`. Produção same-origin já resolve `baseUrl`/`siteUrl` via `window.location.origin`; lacuna: hardcode duplicado no login (`app-v5.js`).

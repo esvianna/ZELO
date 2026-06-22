@@ -1943,6 +1943,51 @@ const app = {
                     });
                 });
             }
+
+            if (uid) {
+                (ops.swap_requests || []).forEach((s) => {
+                    if (s.status === 'rejected' && s.requester_id === uid) {
+                        const row = this.findOpsScheduleRow(s.assignment_id);
+                        const ctx = this.formatOpsAssignmentBrief(row);
+                        const reason = (s.rejection_reason || '').trim();
+                        items.push({
+                            id: `swap-rejected-${s.id}`,
+                            category: 'personal',
+                            icon: '❌',
+                            title: i18n.t('avisos_swap_rejected'),
+                            summary: reason
+                                ? i18n.t('avisos_swap_rejected_summary').replace('{0}', ctx).replace('{1}', reason)
+                                : ctx,
+                            time: this.formatOpsSwapCreatedAt(s.resolved_at || s.created_at),
+                            action: 'escala'
+                        });
+                    } else if (s.status === 'approved' && s.requester_id === uid) {
+                        const row = this.findOpsScheduleRow(s.assignment_id);
+                        items.push({
+                            id: `swap-approved-req-${s.id}`,
+                            category: 'personal',
+                            icon: '✅',
+                            title: i18n.t('avisos_swap_approved_requester'),
+                            summary: i18n.t('avisos_swap_approved_requester_summary')
+                                .replace('{0}', this.formatOpsAssignmentBrief(row))
+                                .replace('{1}', s.replacement_name || '—'),
+                            time: this.formatOpsSwapCreatedAt(s.resolved_at || s.created_at),
+                            action: 'escala'
+                        });
+                    } else if (s.status === 'approved' && s.replacement_user_id === uid) {
+                        const row = this.findOpsScheduleRow(s.assignment_id);
+                        items.push({
+                            id: `swap-assigned-${s.id}`,
+                            category: 'personal',
+                            icon: '📋',
+                            title: i18n.t('avisos_swap_assigned'),
+                            summary: i18n.t('avisos_swap_assigned_summary').replace('{0}', this.formatOpsAssignmentBrief(row)),
+                            time: this.formatOpsSwapCreatedAt(s.resolved_at || s.created_at),
+                            action: 'escala'
+                        });
+                    }
+                });
+            }
         }
 
         return items;
@@ -4573,23 +4618,179 @@ const app = {
         }
     },
 
-    async resolveSwap(id, status, replacementName, replacementUid) {
+    async resolveSwap(id, status, extra = {}) {
         try {
-            const res = await API.patchSwapRequest(id, status, {
-                replacement_volunteer_name: replacementName || '',
-                replacement_user_id: replacementUid || 0
-            });
+            const res = await API.patchSwapRequest(id, status, extra);
             if (res.data) this.data.volunteerOps = res.data;
+            this.closeSwapResolveModal();
             this.renderVolunteerOps();
+            this.updateNotificationsBadge();
         } catch (e) {
-            alert(e.message || i18n.t('ops_swap_generic_fail'));
+            if (this._swapResolveModal) {
+                this._swapResolveModal.error = e.message || i18n.t('ops_swap_generic_fail');
+                this._swapResolveModal.saving = false;
+                this.renderSwapResolveModal();
+            } else {
+                alert(e.message || i18n.t('ops_swap_generic_fail'));
+            }
         }
     },
 
-    resolveSwapPrompt(id) {
-        const name = prompt(i18n.t('ops_swap_substitute_name')) || '';
-        const rid = parseInt(prompt(i18n.t('ops_swap_substitute_id')) || '0', 10) || 0;
-        this.resolveSwap(id, 'approved', name, rid);
+    openSwapRejectModal(id) {
+        const swap = (this.data.volunteerOps?.swap_requests || []).find((s) => s.id === id);
+        if (!swap) return;
+        this._swapResolveModal = {
+            mode: 'reject',
+            swapId: id,
+            swap,
+            rejectionReason: '',
+            replacementUserId: 0,
+            saving: false,
+            error: ''
+        };
+        this.renderSwapResolveModal();
+    },
+
+    openSwapApproveModal(id) {
+        const swap = (this.data.volunteerOps?.swap_requests || []).find((s) => s.id === id);
+        if (!swap) return;
+        this._swapResolveModal = {
+            mode: 'approve',
+            swapId: id,
+            swap,
+            rejectionReason: '',
+            replacementUserId: 0,
+            saving: false,
+            error: ''
+        };
+        this.renderSwapResolveModal();
+    },
+
+    closeSwapResolveModal() {
+        this._swapResolveModal = null;
+        const overlay = document.getElementById('ops-swap-resolve-overlay');
+        if (overlay) overlay.remove();
+        document.body.classList.remove('ops-modal-open');
+        this._unbindSwapResolveEscape();
+    },
+
+    buildSwapSubstituteOptions(selectedUid, excludeRequesterId) {
+        const candidates = this.data.volunteerOps?.swap_roster_candidates || [];
+        let html = `<option value="">${this.escapeHtml(i18n.t('ops_swap_pick_substitute'))}</option>`;
+        candidates.forEach((c) => {
+            const uid = parseInt(c.wp_user_id, 10) || 0;
+            if (!uid || uid === excludeRequesterId) return;
+            const sel = uid === selectedUid ? ' selected' : '';
+            html += `<option value="${uid}"${sel}>${this.escapeHtml(c.name || String(uid))}</option>`;
+        });
+        return html;
+    },
+
+    renderSwapResolveModal() {
+        const mod = this._swapResolveModal;
+        if (!mod) return;
+        const swap = mod.swap || {};
+        const row = this.findOpsScheduleRow(swap.assignment_id);
+        const name = this.getSwapRequesterDisplayName(swap, row);
+        const context = this.escapeHtml(this.formatOpsAssignmentBrief(row));
+        const isReject = mod.mode === 'reject';
+        const titleKey = isReject ? 'ops_swap_reject_modal_title' : 'ops_swap_approve_modal_title';
+        const saving = !!mod.saving;
+        const errorHtml = mod.error
+            ? `<p class="ops-confirm-error" role="alert">${this.escapeHtml(mod.error)}</p>`
+            : '';
+        const bodyFields = isReject
+            ? `<label class="ops-editor-field ops-editor-field--full">
+                    <span class="ops-editor-field-label">${this.escapeHtml(i18n.t('ops_swap_reject_reason_label'))}</span>
+                    <textarea id="ops-swap-reject-reason" rows="4" ${saving ? 'disabled' : ''} placeholder="${this.escapeAttr(i18n.t('ops_swap_reject_reason_placeholder'))}">${this.escapeHtml(mod.rejectionReason || '')}</textarea>
+               </label>`
+            : `<label class="ops-editor-field ops-editor-field--full">
+                    <span class="ops-editor-field-label">${this.escapeHtml(i18n.t('ops_swap_substitute_label'))}</span>
+                    <select id="ops-swap-substitute" ${saving ? 'disabled' : ''}>${this.buildSwapSubstituteOptions(mod.replacementUserId, swap.requester_id)}</select>
+               </label>`;
+        const confirmKey = isReject ? 'ops_swap_reject_confirm' : 'ops_swap_approve_confirm';
+        const confirmFn = isReject ? 'app.confirmSwapRejectModal()' : 'app.confirmSwapApproveModal()';
+        let overlay = document.getElementById('ops-swap-resolve-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'ops-swap-resolve-overlay';
+            overlay.className = 'ops-confirm-overlay';
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay && !mod.saving) this.closeSwapResolveModal();
+            });
+            document.body.appendChild(overlay);
+        }
+        overlay.innerHTML = `
+            <div class="ops-confirm-panel ops-confirm-panel--form" role="dialog" aria-modal="true" aria-labelledby="ops-swap-resolve-title">
+                <header class="ops-confirm-header">
+                    <h2 id="ops-swap-resolve-title">${this.escapeHtml(i18n.t(titleKey))}</h2>
+                    <button type="button" class="ops-editor-close-btn" onclick="app.closeSwapResolveModal()" aria-label="${this.escapeHtml(i18n.t('ops_editor_close_aria'))}" ${saving ? 'disabled' : ''}>×</button>
+                </header>
+                <div class="ops-confirm-body">
+                    <p class="ops-confirm-volunteer"><strong>${this.escapeHtml(name)}</strong></p>
+                    <p class="ops-confirm-meta text-muted">${context}</p>
+                    ${bodyFields}
+                    ${errorHtml}
+                </div>
+                <footer class="ops-confirm-footer">
+                    <button type="button" class="btn-block outline" onclick="app.closeSwapResolveModal()" ${saving ? 'disabled' : ''}>${this.escapeHtml(i18n.t('ops_remove_declined_cancel'))}</button>
+                    <button type="button" class="btn-block${isReject ? ' ops-confirm-danger-btn' : ''}" onclick="${confirmFn}" ${saving ? 'disabled' : ''}>${this.escapeHtml(saving ? i18n.t('ops_swap_resolving') : i18n.t(confirmKey))}</button>
+                </footer>
+            </div>
+        `;
+        document.body.classList.add('ops-modal-open');
+        this._bindSwapResolveEscape();
+    },
+
+    confirmSwapRejectModal() {
+        const mod = this._swapResolveModal;
+        if (!mod || mod.saving || mod.mode !== 'reject') return;
+        const el = document.getElementById('ops-swap-reject-reason');
+        const reason = (el ? el.value : mod.rejectionReason || '').trim();
+        if (!reason) {
+            mod.error = i18n.t('ops_swap_reject_reason_required');
+            this.renderSwapResolveModal();
+            return;
+        }
+        mod.rejectionReason = reason;
+        mod.saving = true;
+        mod.error = '';
+        this.renderSwapResolveModal();
+        this.resolveSwap(mod.swapId, 'rejected', { rejection_reason: reason });
+    },
+
+    confirmSwapApproveModal() {
+        const mod = this._swapResolveModal;
+        if (!mod || mod.saving || mod.mode !== 'approve') return;
+        const el = document.getElementById('ops-swap-substitute');
+        const uid = el ? parseInt(el.value, 10) || 0 : mod.replacementUserId;
+        if (!uid) {
+            mod.error = i18n.t('ops_swap_substitute_required');
+            this.renderSwapResolveModal();
+            return;
+        }
+        mod.replacementUserId = uid;
+        mod.saving = true;
+        mod.error = '';
+        this.renderSwapResolveModal();
+        this.resolveSwap(mod.swapId, 'approved', { replacement_user_id: uid });
+    },
+
+    _bindSwapResolveEscape() {
+        if (this._swapResolveEscapeBound) return;
+        this._swapResolveEscapeHandler = (e) => {
+            if (e.key === 'Escape' && this._swapResolveModal && !this._swapResolveModal.saving) {
+                this.closeSwapResolveModal();
+            }
+        };
+        document.addEventListener('keydown', this._swapResolveEscapeHandler);
+        this._swapResolveEscapeBound = true;
+    },
+
+    _unbindSwapResolveEscape() {
+        if (!this._swapResolveEscapeBound) return;
+        document.removeEventListener('keydown', this._swapResolveEscapeHandler);
+        this._swapResolveEscapeBound = false;
     },
 
     async openVolunteerOps() {
@@ -5078,8 +5279,8 @@ const app = {
             ${when ? `<p class="ops-swap-card__meta text-muted">${this.escapeHtml(when)}</p>` : ''}
             ${reasonHtml}
             <div class="ops-swap-actions">
-                <button type="button" class="ops-btn ops-btn--active" onclick="app.resolveSwapPrompt('${idEsc}')">${this.escapeHtml(i18n.t('ops_swap_approve'))}</button>
-                <button type="button" class="ops-btn" onclick="app.resolveSwap('${idEsc}','rejected','',0)">${this.escapeHtml(i18n.t('ops_swap_reject'))}</button>
+                <button type="button" class="ops-btn ops-btn--active" onclick="app.openSwapApproveModal('${idEsc}')">${this.escapeHtml(i18n.t('ops_swap_approve'))}</button>
+                <button type="button" class="ops-btn" onclick="app.openSwapRejectModal('${idEsc}')">${this.escapeHtml(i18n.t('ops_swap_reject'))}</button>
             </div>
         </div>`;
     },
@@ -5119,6 +5320,11 @@ const app = {
             const context = this.formatOpsAssignmentBrief(row);
             const note = h.note ? i18n.t('ops_history_substitution_note').replace('{0}', String(h.note)) : '';
             detail = i18n.t('ops_history_substitution').replace('{0}', context).replace('{1}', note);
+        } else if (type === 'swap_rejected') {
+            const row = this.findOpsScheduleRow(h.assignment_id);
+            const context = this.formatOpsAssignmentBrief(row);
+            const note = h.note ? i18n.t('ops_history_swap_rejected_note').replace('{0}', String(h.note)) : '';
+            detail = i18n.t('ops_history_swap_rejected').replace('{0}', context).replace('{1}', note);
         } else {
             detail = i18n.t('ops_history_generic').replace('{0}', type || '—');
             if (h.assignment_id) {

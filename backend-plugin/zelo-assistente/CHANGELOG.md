@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.21.0] - 2026-06-22
+
+### Adicionado
+- **Swap notificações (#56, ADR-041):** recusa com `rejection_reason` obrigatório e histórico `swap_rejected`; aprovação exige `replacement_user_id` do roster com conta WP; `zelo_notify_deliver_timely` + SMS imediato; `swap_roster_candidates` no payload ops; admin swaps com selector e textarea.
+
 ## [2.20.1] - 2026-06-22
 
 ### Corrigido
