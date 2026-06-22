@@ -4180,6 +4180,16 @@ body.ops-modal-open {
     display: none;
 }
 
+/* Diagrama: evitar flash de transform errado antes do fit (#55) */
+.indoor-diagram-panel.is-preparing .indoor-map-viewport {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.indoor-diagram-panel:not(.is-preparing) .indoor-map-viewport {
+    opacity: 1;
+}
+
 .indoor-field-label {
     display: block;
     font-size: 0.85rem;

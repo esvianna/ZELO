@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-22** — #55 fix flicker aba Diagrama PWA **163** **In review**; #54 S54a validado.
+> Última atualização: **2026-06-22** — #55 fix flicker reforçado PWA **164** **In review**.
 
 ---
 
@@ -13,7 +13,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | Referência no repo | Versão |
 |--------------------|--------|
 | Plugin WordPress (`zelo-assistente.php`) | **2.20.1** |
-| PWA (`zelo-build.js` / `sw.js`) | **build 163** |
+| PWA (`zelo-build.js` / `sw.js`) | **build 164** |
 
 **Produção (repo):** PWA **151** validada (#45–#50, #46); plugin **2.18.0** + **2.19.0** / PWA **152** aguardam deploy/smoke (#44, #51).
 
@@ -69,6 +69,10 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 ### Backend (plugin 2.20.0)
 
 - [x] SMS Comtele (#54, ADR-040): cliente V4, fila, cron paralelo, admin Config
+
+### Frontend (PWA build 164)
+
+- [x] Mapa evento — flicker Diagrama (#55): `is-preparing`, layout único, patch seleção
 
 ### Frontend (PWA build 163)
 
@@ -151,7 +155,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | [#51](https://github.com/esvianna/ZELO/issues/51) | **In review** | Registro apoio delegados — ADR-039; plugin 2.19.0 / PWA 152 |
 | [#52](https://github.com/esvianna/ZELO/issues/52) | **In review** | Auditoria pt_br — pt-PT residual removido (PWA 158) |
 | [#54](https://github.com/esvianna/ZELO/issues/54) | **In review** | SMS Comtele plugin 2.20.1 + PWA 162 — **S54a validado** (Config save + SMS teste); S54b–S54d cron opcional |
-| [#55](https://github.com/esvianna/ZELO/issues/55) | **In review** | Diagrama pisca — fix PWA 163; smoke 2z1 pendente |
+| [#55](https://github.com/esvianna/ZELO/issues/55) | **In review** | Diagrama pisca — fix reforçado PWA **164**; smoke 2z1 |
 
 **Ops / conteúdo (sem issue aberta):** post Novidades slug `imprensa-autoridades`; config Curitiba/2026 (desactivar transporte/Wi‑Fi/credenciamento; activar imprensa; **desactivar um lembrete antecipado** — requer plugin **2.17.1+** ou JSON).
 

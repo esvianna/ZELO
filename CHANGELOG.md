@@ -13,6 +13,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | Versão | Entrega |
 |--------|---------|
 | PWA **163** | Aba Diagrama: troca Guia↔Diagrama sem re-render completo; zoom preservado; ResizeObserver só em focus explícito |
+| PWA **164** | Máscara `is-preparing` até fit; layout único; patch seleção; skip re-render se DOM em cache; fit antes de mostrar painel |
 
 ### Planejado — SMS Comtele (#54, ADR-040)
 

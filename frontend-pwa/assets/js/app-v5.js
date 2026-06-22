@@ -3670,21 +3670,23 @@ const app = {
             el.innerHTML = `<p class="text-muted">${this.escapeHtml(i18n.t('ops_no_access'))}</p>`;
             return;
         }
-        el.innerHTML = `<div class="loading">${i18n.t('loading')}</div>`;
-        if (this._indoorGestureAbort) {
-            this._indoorGestureAbort();
-            this._indoorGestureAbort = null;
+        const hasScreen = !!el.querySelector('.indoor-map-screen');
+        const cachedCfg = this.data.indoorMap;
+        const useCachedDom = hasScreen && cachedCfg && cachedCfg.image_url;
+        if (!useCachedDom) {
+            el.innerHTML = `<div class="loading">${i18n.t('loading')}</div>`;
+            if (this._indoorGestureAbort) {
+                this._indoorGestureAbort();
+                this._indoorGestureAbort = null;
+            }
         }
-        const cfg = await API.getIndoorMap(true);
+        const cfg = useCachedDom ? cachedCfg : await API.getIndoorMap(true);
         this.data.indoorMap = cfg;
         this.syncStaleFlags();
         if (!cfg || !cfg.image_url) {
             el.innerHTML = `<p class="text-muted indoor-map-empty">${i18n.t('indoor_not_configured')}</p>`;
             return;
         }
-        const staleBanner = this._dataStale.indoorMap
-            ? `<div class="zelo-stale-banner indoor-map-stale">${this.renderStaleBadge('indoor')}</div>`
-            : '';
         if (!this.data.indoorMapUi) {
             this.data.indoorMapUi = { boothId: '', destId: '', tab: 'guide', query: '', comboboxOpen: false, comboboxEditing: false };
         }
@@ -3697,6 +3699,25 @@ const app = {
         if (!ui.boothId && booths.length) ui.boothId = booths[0].id;
         if (ui.destId && !dests.find((d) => d.id === ui.destId)) ui.destId = '';
 
+        if (useCachedDom) {
+            const staleBannerEl = el.querySelector('.zelo-stale-banner.indoor-map-stale');
+            if (this._dataStale.indoorMap && !staleBannerEl) {
+                el.insertAdjacentHTML('afterbegin', `<div class="zelo-stale-banner indoor-map-stale">${this.renderStaleBadge('indoor')}</div>`);
+            } else if (!this._dataStale.indoorMap && staleBannerEl) {
+                staleBannerEl.remove();
+            }
+            this._indoorDirectionsText = this.getIndoorDirections(cfg, ui.boothId, ui.destId) || '';
+            this._patchIndoorMapSelection();
+            this._syncIndoorDiagramFullscreen();
+            this._syncIndoorTabDom(ui.tab);
+            return;
+        }
+
+        const dirText = this.getIndoorDirections(cfg, ui.boothId, ui.destId);
+        const notice = cfg.volunteer_notice || {};
+        const lang = i18n.current || 'pt_br';
+        const noticeText = notice[lang] || notice.pt_br || '';
+
         const boothOpts = booths.map((b) => {
             const lab = this.indoorPlaceLabel(b);
             const sel = b.id === ui.boothId ? ' selected' : '';
@@ -3707,27 +3728,14 @@ const app = {
         const comboboxOpenClass = ui.comboboxOpen ? ' is-open' : '';
         const listHtml = this.buildIndoorDestDropdownHtml(dests, ui);
 
-        const dirText = this.getIndoorDirections(cfg, ui.boothId, ui.destId);
-        const notice = cfg.volunteer_notice || {};
-        const lang = i18n.current || 'pt_br';
-        const noticeText = notice[lang] || notice.pt_br || '';
+        const staleBanner = this._dataStale.indoorMap
+            ? `<div class="zelo-stale-banner indoor-map-stale">${this.renderStaleBadge('indoor')}</div>`
+            : '';
 
         const guideTabActive = ui.tab === 'guide';
         const mapTabActive = ui.tab === 'map';
 
-        let pinsHtml = '';
-        places.forEach((p) => {
-            const x = typeof p.x === 'number' ? p.x : parseFloat(p.x) || 0;
-            const y = typeof p.y === 'number' ? p.y : parseFloat(p.y) || 0;
-            const isBooth = p.kind === 'booth';
-            const isSel = p.id === ui.destId || p.id === ui.boothId;
-            const lab = this.indoorPlaceLabel(p);
-            const pinCls = isBooth ? this.indoorBoothPinClasses(p, booths) : 'indoor-pin dest';
-            const boothSlot = isBooth ? this.indoorBoothSlot(p, booths) : 0;
-            const pinLabel = isBooth && boothSlot ? `<span class="indoor-pin-label" aria-hidden="true">${boothSlot}</span>` : '';
-            const ariaLabel = isBooth && boothSlot ? `${lab} (${i18n.t('indoor_legend_booth_' + boothSlot)})` : lab;
-            pinsHtml += `<button type="button" class="${pinCls}${isSel ? ' selected' : ''}" style="left:${x * 100}%;top:${y * 100}%;" title="${this.escapeAttr(lab)}" aria-label="${this.escapeAttr(ariaLabel)}" onclick="app.onIndoorPinClick('${this.escapeAttr(p.id)}','${isBooth ? 'booth' : 'dest'}')">${pinLabel}</button>`;
-        });
+        let pinsHtml = this._buildIndoorPinsHtml(places, booths, ui);
 
         const legendHtml = this.buildIndoorMapLegendHtml(booths);
 
@@ -3798,6 +3806,49 @@ const app = {
         const slot = this.indoorBoothSlot(place, booths);
         if (slot === 2) return 'indoor-pin booth booth-2';
         return 'indoor-pin booth booth-1';
+    },
+
+    _buildIndoorPinsHtml(places, booths, ui) {
+        let pinsHtml = '';
+        (places || []).forEach((p) => {
+            const x = typeof p.x === 'number' ? p.x : parseFloat(p.x) || 0;
+            const y = typeof p.y === 'number' ? p.y : parseFloat(p.y) || 0;
+            const isBooth = p.kind === 'booth';
+            const isSel = p.id === ui.destId || p.id === ui.boothId;
+            const lab = this.indoorPlaceLabel(p);
+            const pinCls = isBooth ? this.indoorBoothPinClasses(p, booths) : 'indoor-pin dest';
+            const boothSlot = isBooth ? this.indoorBoothSlot(p, booths) : 0;
+            const pinLabel = isBooth && boothSlot ? `<span class="indoor-pin-label" aria-hidden="true">${boothSlot}</span>` : '';
+            const ariaLabel = isBooth && boothSlot ? `${lab} (${i18n.t('indoor_legend_booth_' + boothSlot)})` : lab;
+            pinsHtml += `<button type="button" class="${pinCls}${isSel ? ' selected' : ''}" style="left:${x * 100}%;top:${y * 100}%;" title="${this.escapeAttr(lab)}" aria-label="${this.escapeAttr(ariaLabel)}" onclick="app.onIndoorPinClick('${this.escapeAttr(p.id)}','${isBooth ? 'booth' : 'dest'}')">${pinLabel}</button>`;
+        });
+        return pinsHtml;
+    },
+
+    _refreshIndoorDiagramPins(places, booths) {
+        const layer = document.querySelector('#indoor-map-viewport .indoor-pins-layer');
+        if (!layer) return;
+        const ui = this.data.indoorMapUi || {};
+        layer.innerHTML = this._buildIndoorPinsHtml(places, booths, ui);
+    },
+
+    _patchIndoorMapSelection() {
+        if (!document.querySelector('.indoor-map-screen')) return false;
+        const cfg = this.data.indoorMap;
+        if (!cfg) return false;
+        const ui = this.data.indoorMapUi || {};
+        const places = Array.isArray(cfg.places) ? cfg.places : [];
+        const booths = places.filter((p) => p.kind === 'booth');
+        const dests = places.filter((p) => p.kind !== 'booth');
+        const boothSel = document.querySelector('.indoor-booth-select');
+        if (boothSel && ui.boothId) boothSel.value = ui.boothId;
+        const destInput = document.getElementById('indoor-dest-input');
+        if (destInput) destInput.value = this.getIndoorDestInputDisplayValue(ui, dests);
+        this.refreshIndoorDestDropdown(dests);
+        this.refreshIndoorDirectionsPanel();
+        this._refreshIndoorDiagramPins(places, booths);
+        this._updateIndoorDiagramGoDestBtn();
+        return true;
     },
 
     buildIndoorMapLegendHtml(booths) {
@@ -4107,9 +4158,17 @@ const app = {
         const ui = this.data.indoorMapUi || {};
         if (!ui.zoom) ui.zoom = { scale: 1, tx: 0, ty: 0 };
         const zoom = ui.zoom;
+        const diagramPanel = viewport.closest('.indoor-diagram-panel');
+        if (diagramPanel && !ui._diagramLayoutApplied) {
+            diagramPanel.classList.add('is-preparing');
+        }
 
         const ac = new AbortController();
         this._indoorGestureAbort = () => ac.abort();
+
+        const revealDiagram = () => {
+            if (diagramPanel) diagramPanel.classList.remove('is-preparing');
+        };
 
         const applyFocusIfNeeded = () => {
             if (!this._indoorDiagramLayoutReady(viewport, img)) return false;
@@ -4137,6 +4196,7 @@ const app = {
             if (applied) {
                 ui._diagramLayoutApplied = true;
                 this._applyIndoorDiagramTransform(zoom);
+                revealDiagram();
             }
             return applied;
         };
@@ -4145,8 +4205,10 @@ const app = {
         const tryApplyLayout = () => {
             if (applyFocusIfNeeded()) return;
             layoutRetries += 1;
-            if (layoutRetries < 12 && (ui._focusDiagram === 'fit' || ui._focusDiagram === 'place' || !ui._diagramLayoutApplied)) {
+            if (layoutRetries < 4 && (ui._focusDiagram === 'fit' || ui._focusDiagram === 'place' || !ui._diagramLayoutApplied)) {
                 requestAnimationFrame(tryApplyLayout);
+            } else {
+                revealDiagram();
             }
         };
 
@@ -4327,6 +4389,8 @@ const app = {
         const cfg = this.data.indoorMap;
         const places = Array.isArray(cfg.places) ? cfg.places : [];
         const focusMode = ui._focusDiagram;
+        const diagramPanel = viewport.closest('.indoor-diagram-panel');
+        if (diagramPanel && focusMode) diagramPanel.classList.add('is-preparing');
 
         const apply = () => {
             if (!focusMode || !this._indoorDiagramLayoutReady(viewport, img)) return false;
@@ -4349,16 +4413,14 @@ const app = {
                 ui._diagramLayoutApplied = true;
                 this._applyIndoorDiagramTransform(ui.zoom);
                 this._updateIndoorDiagramGoDestBtn();
+                if (diagramPanel) diagramPanel.classList.remove('is-preparing');
             }
             return ok;
         };
 
         if (apply()) return true;
         requestAnimationFrame(() => {
-            apply();
-            if (!this._indoorGestureAbort) {
-                this.initIndoorDiagramGestures(cfg, places);
-            }
+            if (!apply() && diagramPanel) diagramPanel.classList.remove('is-preparing');
         });
         return true;
     },
@@ -4371,6 +4433,17 @@ const app = {
         const ui = this.data.indoorMapUi;
         const guideActive = tab === 'guide';
         const mapActive = tab === 'map';
+        const diagramPanel = screen.querySelector('.indoor-diagram-panel');
+        if (mapActive && diagramPanel) {
+            if (!ui._diagramLayoutApplied) {
+                diagramPanel.classList.add('is-preparing');
+            } else if (ui.zoom) {
+                this._applyIndoorDiagramTransform(ui.zoom);
+            }
+        } else if (!mapActive && diagramPanel) {
+            diagramPanel.classList.remove('is-preparing');
+        }
+
         const tabs = screen.querySelectorAll('.indoor-map-tab');
         tabs.forEach((btn, idx) => {
             btn.classList.toggle('active', (idx === 0 && guideActive) || (idx === 1 && mapActive));
@@ -4386,20 +4459,20 @@ const app = {
         const places = Array.isArray(cfg.places) ? cfg.places : [];
 
         if (mapActive) {
-            const viewport = document.getElementById('indoor-map-viewport');
-            const afterVisible = () => {
+            requestAnimationFrame(() => {
                 if (ui._diagramLayoutApplied && ui.zoom) {
-                    this._applyIndoorDiagramTransform(ui.zoom);
-                } else {
+                    if (diagramPanel) diagramPanel.classList.remove('is-preparing');
+                } else if (!ui._focusDiagram) {
                     ui._focusDiagram = 'fit';
-                    this._applyIndoorDiagramFocusInPlace();
                 }
                 if (!this._indoorGestureAbort) {
                     this.initIndoorDiagramGestures(cfg, places);
+                } else if (ui._focusDiagram) {
+                    this._applyIndoorDiagramFocusInPlace();
                 }
-            };
-            requestAnimationFrame(afterVisible);
+            });
         } else {
+            if (diagramPanel) diagramPanel.classList.remove('is-preparing');
             const dests = places.filter((p) => p.kind !== 'booth');
             this.initIndoorDestCombobox(dests);
             this.refreshIndoorDirectionsPanel();
@@ -4436,6 +4509,7 @@ const app = {
     setIndoorBooth(boothId) {
         if (!this.data.indoorMapUi) this.data.indoorMapUi = {};
         this.data.indoorMapUi.boothId = boothId;
+        if (this._patchIndoorMapSelection()) return;
         this.renderIndoorEventMap();
     },
 
@@ -4445,6 +4519,13 @@ const app = {
         this.data.indoorMapUi.query = '';
         this.data.indoorMapUi.comboboxOpen = false;
         this.data.indoorMapUi.comboboxEditing = false;
+        if (this._patchIndoorMapSelection()) {
+            requestAnimationFrame(() => {
+                const panel = document.getElementById('indoor-directions-panel');
+                if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            });
+            return;
+        }
         this.renderIndoorEventMap();
         requestAnimationFrame(() => {
             const panel = document.getElementById('indoor-directions-panel');
@@ -4461,6 +4542,13 @@ const app = {
             this.data.indoorMapUi.destId = id;
             this.data.indoorMapUi._focusDiagram = 'place';
             this.data.indoorMapUi.tab = 'map';
+        }
+        if (this._patchIndoorMapSelection()) {
+            if (this.data.indoorMapUi.tab === 'map') {
+                this._syncIndoorTabDom('map');
+                this._applyIndoorDiagramFocusInPlace();
+            }
+            return;
         }
         this.renderIndoorEventMap();
     },
