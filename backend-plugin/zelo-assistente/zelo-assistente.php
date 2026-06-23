@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define( 'ZELO_VERSION', '2.21.4' );
+define( 'ZELO_VERSION', '2.21.5' );
 define( 'ZELO_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 
 if ( file_exists( ZELO_PLUGIN_DIR . 'vendor/autoload.php' ) ) {
@@ -44,6 +44,7 @@ require_once ZELO_PLUGIN_DIR . 'inc/zelo-notify-sms-queue.php';
 require_once ZELO_PLUGIN_DIR . 'inc/zelo-volunteer-notifications.php';
 require_once ZELO_PLUGIN_DIR . 'inc/zelo-web-push.php';
 require_once ZELO_PLUGIN_DIR . 'inc/zelo-volunteer-swaps.php';
+require_once ZELO_PLUGIN_DIR . 'inc/zelo-ops-shift-notify.php';
 require_once ZELO_PLUGIN_DIR . 'inc/zelo-delegate-support-reports.php';
 require_once ZELO_PLUGIN_DIR . 'inc/volunteer-ops-admin-ui.php';
 if ( is_admin() ) {

@@ -6123,6 +6123,67 @@ const app = {
         return i >= 0 ? i : 99;
     },
 
+    countShiftCommitmentInSlotMap(slotMap, status) {
+        let count = 0;
+        Object.values(slotMap || {}).forEach((rows) => {
+            (rows || []).forEach((item) => {
+                if (item && item.wp_user_id && this.getCommitmentStatus(item.id) === status) {
+                    count += 1;
+                }
+            });
+        });
+        return count;
+    },
+
+    canNotifyShiftOps() {
+        return this.canManageOps() || this.canSuperviseOps();
+    },
+
+    async remindShiftPending(day, shift, pendingCount) {
+        if (!this.canNotifyShiftOps()) return;
+        const msg = i18n.t('ops_shift_remind_confirm').replace('{0}', String(pendingCount || 0));
+        if (!confirm(msg)) return;
+        const key = `${day}|${shift}`;
+        if (this._shiftNotifyBusy === key) return;
+        this._shiftNotifyBusy = key;
+        try {
+            const res = await API.remindShiftPending(day, shift);
+            if (res.data) this.data.volunteerOps = res.data;
+            const sent = res.sent != null ? res.sent : 0;
+            const skipped = res.skipped != null ? res.skipped : 0;
+            let text = i18n.t('ops_shift_remind_result').replace('{0}', String(sent));
+            if (skipped > 0) {
+                text += ' ' + i18n.t('ops_shift_remind_skipped').replace('{0}', String(skipped));
+            }
+            alert(text);
+            this.renderVolunteerOps();
+        } catch (e) {
+            alert(e.message || i18n.t('ops_shift_remind_fail'));
+        } finally {
+            this._shiftNotifyBusy = null;
+        }
+    },
+
+    async notifyShiftDeclines(day, shift, declinedCount) {
+        if (!this.canNotifyShiftOps()) return;
+        const msg = i18n.t('ops_shift_declines_confirm').replace('{0}', String(declinedCount || 0));
+        if (!confirm(msg)) return;
+        const key = `${day}|${shift}|declines`;
+        if (this._shiftNotifyBusy === key) return;
+        this._shiftNotifyBusy = key;
+        try {
+            const res = await API.notifyShiftDeclines(day, shift);
+            if (res.data) this.data.volunteerOps = res.data;
+            const sent = res.sent != null ? res.sent : 0;
+            alert(i18n.t('ops_shift_declines_result').replace('{0}', String(sent)));
+            this.renderVolunteerOps();
+        } catch (e) {
+            alert(e.message || i18n.t('ops_shift_declines_fail'));
+        } finally {
+            this._shiftNotifyBusy = null;
+        }
+    },
+
     renderOpsVolunteerInSlot(item, uid, showActions) {
         const mineRow = Number(item.wp_user_id) === Number(uid);
         const supRow = showActions && this.canSuperviseOps() && !mineRow;
@@ -6194,14 +6255,26 @@ const app = {
         const dayEsc = String(day).replace(/'/g, "\\'");
         const shiftEsc = String(shift).replace(/'/g, "\\'");
         const canEditScope = showActions && this.canEditScheduleScope(day, shift);
+        const canNotify = showActions && this.canNotifyShiftOps();
+        const pendingCount = canNotify ? this.countShiftCommitmentInSlotMap(slotMap, 'pending') : 0;
+        const declinedCount = canNotify ? this.countShiftCommitmentInSlotMap(slotMap, 'declined') : 0;
+        const deadlinePassed = this.isCommitmentDeadlinePassed();
+        const notifyBusyKey = this._shiftNotifyBusy || '';
+        const shiftBusy = notifyBusyKey === `${day}|${shift}` || notifyBusyKey === `${day}|${shift}|declines`;
         const addBtn = canEditScope
             ? `<button type="button" class="ops-btn ops-btn--accent ops-shift-add-btn" onclick="app.openAddScheduleRowModal('${dayEsc}','${shiftEsc}')">${this.escapeHtml(i18n.t('ops_add_schedule_row_btn'))}</button>`
             : '';
         const editBtn = canEditScope
             ? `<button type="button" class="ops-btn ops-shift-edit-btn" onclick="app.openScheduleEditor('${dayEsc}','${shiftEsc}')">${this.escapeHtml(i18n.t('ops_edit_this_shift'))}</button>`
             : '';
-        const shiftActions = (addBtn || editBtn)
-            ? `<div class="ops-shift-card-actions">${addBtn}${editBtn}</div>`
+        const remindBtn = canNotify && pendingCount > 0 && !deadlinePassed
+            ? `<button type="button" class="ops-btn ops-btn--notify ops-shift-remind-btn" ${shiftBusy ? 'disabled' : ''} onclick="app.remindShiftPending('${dayEsc}','${shiftEsc}',${pendingCount})">${this.escapeHtml(i18n.t('ops_shift_remind_pending_btn').replace('{0}', String(pendingCount)))}</button>`
+            : '';
+        const declinesBtn = canNotify && declinedCount > 0
+            ? `<button type="button" class="ops-btn ops-btn--notify ops-shift-declines-btn" ${shiftBusy ? 'disabled' : ''} onclick="app.notifyShiftDeclines('${dayEsc}','${shiftEsc}',${declinedCount})">${this.escapeHtml(i18n.t('ops_shift_notify_declines_btn').replace('{0}', String(declinedCount)))}</button>`
+            : '';
+        const shiftActions = (addBtn || editBtn || remindBtn || declinesBtn)
+            ? `<div class="ops-shift-card-actions">${remindBtn}${declinesBtn}${addBtn}${editBtn}</div>`
             : '';
         const responsibleLine = this.renderOpsShiftResponsibleLine(day, shift);
         return `

@@ -29,6 +29,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 |--------|---------|
 | PWA **170** | Menu hambúrguer: atalhos do bloco «Operação de voluntários» (escala, mapa evento, imprensa, delegados); fix instruções «Como chegar» ao mudar destino/balcão (rebind combobox pós-navegação + lookup normalizado de rotas) |
 
+### Adicionado — lembrete manual + aviso recusas (#59)
+
+| Versão | Entrega |
+|--------|---------|
+| Plugin **2.21.5** / PWA **171** | REST `POST /ops/shifts/remind-pending` e `notify-declines`; botões no card do turno (gestor/supervisor); cooldown 24h lembrete / 6h digest recusas; histórico ops |
+
 ### Corrigido — mapa evento diagrama (#55, PWA 163)
 
 | Versão | Entrega |

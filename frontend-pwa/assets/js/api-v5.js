@@ -649,6 +649,38 @@ const API = {
         return data;
     },
 
+    async remindShiftPending(day, shift) {
+        const url = `${this.baseUrl}/ops/shifts/remind-pending`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...this.getAuthHeaders()
+            },
+            credentials: 'include',
+            body: JSON.stringify({ day, shift })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'Falha ao enviar lembretes');
+        return data;
+    },
+
+    async notifyShiftDeclines(day, shift) {
+        const url = `${this.baseUrl}/ops/shifts/notify-declines`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...this.getAuthHeaders()
+            },
+            credentials: 'include',
+            body: JSON.stringify({ day, shift })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'Falha ao avisar responsáveis');
+        return data;
+    },
+
     async checkinVolunteer(assignmentId, onBehalf = false) {
         const url = `${this.baseUrl}/ops/checkin`;
         const response = await fetch(url, {

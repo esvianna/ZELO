@@ -176,6 +176,11 @@ Orientação de testes **manual** (prioritário hoje) e caminho para automação
 | 58a | **Menu hambúrguer — atalhos ops** (#58, PWA **170+**) | view_ops | Secção «Operação de voluntários»: Escala, Mapa evento, Apoio delegados; Novidades abaixo; visitante não vê |
 | 58b | **Menu — itens condicionais** (#58) | gestor / admin | Imprensa só se post configurado; Registros delegados só `canManageOps()` |
 | 58c | **Menu — navegação** (#58) | view_ops | Cada item abre view correcta e fecha menu; regressão Instalar / Atualizar cache |
+| 59a | **Lembrar pendentes** (#59, plugin **2.21.5** / PWA **171+**) | gestor / homem-chave | Card turno com pendentes: botão «Lembrar N pendente(s)»; confirm → sino/e-mail/SMS; cooldown 24h por designação |
+| 59b | **Lembrar — prazo** (#59) | gestor | Após deadline confirmação: botão não aparece |
+| 59c | **Avisar responsável recusas** (#59) | gestor / supervisor turno | Com recusas: «Avisar responsável (N recusas)»; e-mail/sino aos supervisores; cooldown 6h |
+| 59d | **Permissão** (#59) | voluntário comum | Sem botões de notificação no card |
+| 59e | **Histórico ops** (#59) | gestor | Após acção: entrada `commitment_reminder_sent` ou `shift_declines_notified` no histórico |
 | 7 | Cron lembretes | admin | `wp cron event list` contém `zelo_volunteer_notify_tick` (se aplicável) |
 
 ---

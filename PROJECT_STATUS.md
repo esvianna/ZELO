@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-22** — #58 menu ops + mapa instruções PWA **170** **In review**.
+> Última atualização: **2026-06-22** — #59 lembrete manual + aviso recusas plugin **2.21.5** / PWA **171** **In review**.
 
 ---
 
@@ -12,8 +12,8 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Referência no repo | Versão |
 |--------------------|--------|
-| Plugin WordPress (`zelo-assistente.php`) | **2.21.4** |
-| PWA (`zelo-build.js` / `sw.js`) | **build 170** |
+| Plugin WordPress (`zelo-assistente.php`) | **2.21.5** |
+| PWA (`zelo-build.js` / `sw.js`) | **build 171** |
 
 **Produção (repo):** PWA **151** validada (#45–#50, #46); plugin **2.18.0** + **2.19.0** / PWA **152** aguardam deploy/smoke (#44, #51).
 
@@ -70,9 +70,17 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 - [x] SMS Comtele (#54, ADR-040): cliente V4, fila, cron paralelo, admin Config
 
+### Backend (plugin 2.21.5)
+
+- [x] Lembretes manuais + aviso recusas por turno (#59): REST remind-pending / notify-declines, cooldown, histórico ops
+
 ### Backend (plugin 2.21.0)
 
 - [x] Swap notificações (#56, ADR-041): recusa c/ justificativa, aprovar c/ roster WP, e-mail/SMS imediato
+
+### Frontend (PWA build 171)
+
+- [x] Botões «Lembrar pendentes» e «Avisar responsável (recusas)» no card do turno (#59)
 
 ### Frontend (PWA build 165)
 
@@ -167,6 +175,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | [#56](https://github.com/esvianna/ZELO/issues/56) | **In review** | Swap modais + notificar — 2.21.1/166 fix lista substitutos; smoke 6d–6f |
 | [#57](https://github.com/esvianna/ZELO/issues/57) | **In review** | Selectors voluntário: optgroup sem escala / já na escala — plugin 2.21.4 / PWA 169; smoke 57a–57c |
 | [#58](https://github.com/esvianna/ZELO/issues/58) | **In review** | Menu hambúrguer atalhos ops + fix instruções mapa — PWA 170; smoke 58a–58c |
+| [#59](https://github.com/esvianna/ZELO/issues/59) | **In review** | Lembrete manual pendentes + aviso recusas — plugin 2.21.5 / PWA 171; smoke 59a–59e |
 
 **Ops / conteúdo (sem issue aberta):** post Novidades slug `imprensa-autoridades`; config Curitiba/2026 (desactivar transporte/Wi‑Fi/credenciamento; activar imprensa; **desactivar um lembrete antecipado** — requer plugin **2.17.1+** ou JSON).
 
@@ -180,7 +189,11 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ---
 
-## Última sessão (2026-06-20)
+## Última sessão (2026-06-22)
+
+- **#59:** lembrete manual a pendentes + aviso responsável sobre recusas — `zelo-ops-shift-notify.php`; REST `remind-pending` / `notify-declines`; botões no card do turno (PWA 171); plugin **2.21.5** — **In review**; smoke `TESTING.md` 59a–59e.
+
+## Sessão anterior (2026-06-20)
 
 - **#51 (ADR-039):** registro apoio delegados — backend `zelo-delegate-support-reports.php`; PWA 152–154 (formulário + lista/export + UX tabela); strings pt-BR; **In review**.
 - **PWA 154:** lista «Registros — apoio a delegados» — cards empilhados no mobile (rótulo por campo); desktop com bordas, padding e scroll horizontal.

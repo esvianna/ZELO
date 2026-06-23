@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.21.5] - 2026-06-22
+
+### Adicionado
+- **Lembretes manuais e aviso de recusas (#59):** `POST /ops/shifts/remind-pending` (cooldown 24h por designação) e `POST /ops/shifts/notify-declines` (cooldown 6h por responsável/turno); histórico `commitment_reminder_sent` e `shift_declines_notified`; permissão gestor ou supervisor do turno.
+
 ## [2.21.4] - 2026-06-22
 
 ### Alterado

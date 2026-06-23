@@ -3602,11 +3602,19 @@ body {
 }
 
 .ops-shift-edit-btn,
-.ops-shift-add-btn {
+.ops-shift-add-btn,
+.ops-shift-remind-btn,
+.ops-shift-declines-btn {
     flex: 0 0 auto;
     min-width: auto;
     padding: 0.4rem 0.65rem;
     font-size: 0.75rem;
+}
+
+.ops-btn--notify {
+    background: var(--ops-notify-bg, rgba(0, 80, 120, 0.08));
+    color: var(--ops-notify-fg, #005078);
+    border: 1px solid var(--ops-notify-border, rgba(0, 80, 120, 0.25));
 }
 
 .ops-confirm-panel--form {
