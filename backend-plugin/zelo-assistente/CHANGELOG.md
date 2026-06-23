@@ -2,6 +2,16 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.21.3] - 2026-06-22
+
+### Alterado
+- **Swap (#56):** selector de substituto lista todos os utilizadores WP cadastrados (`zelo_voluntario`, homem-chave, supervisor, admin) — não depende do catálogo roster do admin.
+
+## [2.21.1] - 2026-06-22
+
+### Corrigido
+- **Swap (#56):** lista de substitutos vazia quando roster tinha conta WP só na escala (sem `linked_wp_user_id` no catálogo); ortografia PT «Selecione».
+
 ## [2.21.0] - 2026-06-22
 
 ### Adicionado

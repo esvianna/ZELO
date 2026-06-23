@@ -1781,7 +1781,7 @@ function zelo_render_volunteer_swaps_admin_page() {
 									<input type="hidden" name="swap_id" value="<?php echo esc_attr( $s['id'] ); ?>" />
 									<input type="hidden" name="swap_action" value="approved" />
 									<select name="replacement_uid" required>
-										<option value=""><?php esc_html_e( 'Substituto (roster + WP)', 'zelo-assistente' ); ?></option>
+										<option value=""><?php esc_html_e( 'Selecione o substituto', 'zelo-assistente' ); ?></option>
 										<?php
 										$req_id = isset( $s['requester_id'] ) ? (int) $s['requester_id'] : 0;
 										foreach ( $candidates as $c ) :

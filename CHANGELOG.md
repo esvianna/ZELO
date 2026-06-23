@@ -13,6 +13,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | Versão | Entrega |
 |--------|---------|
 | Plugin **2.21.0** / PWA **165** | Recusar: modal + justificativa obrigatória + histórico ops; Aprovar: selector roster WP + substituto obrigatório; notificação imediata solicitante/substituto (sino + e-mail + SMS #54); admin swaps alinhado |
+| Plugin **2.21.1** / PWA **166** | Fix lista substitutos vazia: inferir WP da escala quando roster sem `linked_wp_user_id`; ortografia «Selecione» |
+| Plugin **2.21.2** / PWA **167** | Lista ampliada: qualquer designado na escala com `wp_user_id` + role voluntário; hint no modal |
+| Plugin **2.21.3** / PWA **168** | Substitutos = todos os utilizadores WP cadastrados (voluntário/ops/admin); roster admin ignorado |
 
 ### Corrigido — mapa evento diagrama (#55, PWA 163)
 

@@ -167,7 +167,7 @@ Orientação de testes **manual** (prioritário hoje) e caminho para automação
 | 6b | Sino — aviso swap pendente | gestor | Resumo legível («Nome — Sábado · A1 — Balcão 3») |
 | 6c | Aprovar / recusar swap | gestor | Fluxo inalterado; após aprovação, histórico ops com contexto humano |
 | 6d | **Recusar swap** com justificativa (#56, plugin **2.21.0** / PWA **165+**) | gestor / homem-chave | Modal com texto obrigatório; solicitante recebe sino + e-mail (+ SMS se #54); histórico ops «Substituição recusada — … Motivo: …» |
-| 6e | **Aprovar swap** com substituto roster WP (#56) | gestor / homem-chave | Modal selector (só roster com conta); substituto obrigatório; solicitante **e** substituto notificados (sino + e-mail + SMS condicional) |
+| 6e | **Aprovar swap** com substituto (#56) | gestor / homem-chave | Modal lista **todos os utilizadores WP cadastrados** (voluntário/ops/admin); solicitante excluída; notifica ambos |
 | 6f | Regressão swap | voluntário | Pedir substituição inalterado; sem `prompt()` nativo ao aprovar/recusar |
 | 7 | Cron lembretes | admin | `wp cron event list` contém `zelo_volunteer_notify_tick` (se aplicável) |
 

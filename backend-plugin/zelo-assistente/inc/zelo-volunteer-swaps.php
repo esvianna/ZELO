@@ -151,37 +151,65 @@ function zelo_rest_create_swap_request( $request ) {
 }
 
 /**
- * Voluntários do roster com conta WordPress (selector de substituto).
+ * Utilizador WP elegível como substituto (roles voluntário / ops / admin).
+ *
+ * @param int $wp_user_id User id.
+ * @return bool
+ */
+function zelo_swap_is_eligible_substitute_user( $wp_user_id ) {
+	$wp_user_id = (int) $wp_user_id;
+	if ( $wp_user_id < 1 ) {
+		return false;
+	}
+	$user = get_user_by( 'id', $wp_user_id );
+	if ( ! $user || ! $user->exists() ) {
+		return false;
+	}
+	$roles = array(
+		'zelo_voluntario',
+		'zelo_homem_chave',
+		'zelo_supervisor_grupo',
+		'zelo_supervisor_app',
+		'administrator',
+	);
+	foreach ( $roles as $role ) {
+		if ( in_array( $role, (array) $user->roles, true ) ) {
+			return true;
+		}
+	}
+	return user_can( $user, 'zelo_view_ops' );
+}
+
+/**
+ * Utilizadores cadastrados elegíveis como substituto (roles voluntário / ops / admin).
  *
  * @return array<int, array{roster_id: string, name: string, wp_user_id: int}>
  */
 function zelo_swap_get_roster_candidates() {
-	$data     = zelo_get_volunteer_ops_data();
-	$catalogs = isset( $data['catalogs'] ) && is_array( $data['catalogs'] ) ? $data['catalogs'] : array();
-	$roster   = isset( $catalogs['roster_volunteers'] ) && is_array( $catalogs['roster_volunteers'] ) ? $catalogs['roster_volunteers'] : array();
-	$out      = array();
-	foreach ( $roster as $rv ) {
-		if ( empty( $rv['id'] ) ) {
+	$out = array();
+	if ( ! function_exists( 'zelo_get_zelo_volunteer_users' ) ) {
+		return $out;
+	}
+	foreach ( zelo_get_zelo_volunteer_users() as $user ) {
+		if ( ! $user instanceof WP_User ) {
 			continue;
 		}
-		if ( isset( $rv['active'] ) && ! $rv['active'] ) {
-			continue;
-		}
-		$wp = 0;
-		if ( ! empty( $rv['linked_wp_user_id'] ) ) {
-			$wp = (int) $rv['linked_wp_user_id'];
-		} elseif ( ! empty( $rv['wp_user_id'] ) ) {
-			$wp = (int) $rv['wp_user_id'];
-		}
-		if ( $wp < 1 ) {
+		$wp = (int) $user->ID;
+		if ( $wp < 1 || ! zelo_swap_is_eligible_substitute_user( $wp ) ) {
 			continue;
 		}
 		$out[] = array(
-			'roster_id'   => sanitize_text_field( $rv['id'] ),
-			'name'        => isset( $rv['name'] ) ? sanitize_text_field( $rv['name'] ) : '',
-			'wp_user_id'  => $wp,
+			'roster_id'  => '',
+			'name'       => sanitize_text_field( $user->display_name ),
+			'wp_user_id' => $wp,
 		);
 	}
+	usort(
+		$out,
+		function ( $a, $b ) {
+			return strcasecmp( $a['name'], $b['name'] );
+		}
+	);
 	return $out;
 }
 
@@ -193,7 +221,7 @@ function zelo_swap_get_roster_candidates() {
 function zelo_swap_validate_replacement_user( $wp_user_id, $exclude_requester_id = 0 ) {
 	$wp_user_id = (int) $wp_user_id;
 	if ( $wp_user_id < 1 ) {
-		return new WP_Error( 'zelo_swap_no_replacement', __( 'Seleccione um substituto com conta na PWA.', 'zelo-assistente' ), array( 'status' => 400 ) );
+		return new WP_Error( 'zelo_swap_no_replacement', __( 'Selecione um substituto com conta na PWA.', 'zelo-assistente' ), array( 'status' => 400 ) );
 	}
 	if ( $exclude_requester_id > 0 && $wp_user_id === (int) $exclude_requester_id ) {
 		return new WP_Error( 'zelo_swap_same_user', __( 'O substituto não pode ser o próprio solicitante.', 'zelo-assistente' ), array( 'status' => 400 ) );
@@ -210,7 +238,7 @@ function zelo_swap_validate_replacement_user( $wp_user_id, $exclude_requester_id
 		}
 	}
 	if ( ! $found ) {
-		return new WP_Error( 'zelo_swap_not_roster', __( 'O substituto deve constar no roster com conta WordPress vinculada.', 'zelo-assistente' ), array( 'status' => 400 ) );
+		return new WP_Error( 'zelo_swap_not_roster', __( 'O substituto deve ser um utilizador cadastrado na PWA (voluntário ou admin).', 'zelo-assistente' ), array( 'status' => 400 ) );
 	}
 	return true;
 }

@@ -4651,13 +4651,18 @@ const app = {
         this.renderSwapResolveModal();
     },
 
-    openSwapApproveModal(id) {
+    async openSwapApproveModal(id) {
         const swap = (this.data.volunteerOps?.swap_requests || []).find((s) => s.id === id);
         if (!swap) return;
+        try {
+            await this.loadVolunteerOps(true);
+        } catch (e) {
+            /* usa cache se rede falhar */
+        }
         this._swapResolveModal = {
             mode: 'approve',
             swapId: id,
-            swap,
+            swap: (this.data.volunteerOps?.swap_requests || []).find((s) => s.id === id) || swap,
             rejectionReason: '',
             replacementUserId: 0,
             saving: false,
@@ -4674,12 +4679,30 @@ const app = {
         this._unbindSwapResolveEscape();
     },
 
+    getSwapSubstituteCandidates(excludeRequesterId) {
+        const ops = this.data.volunteerOps || {};
+        const exclude = parseInt(excludeRequesterId, 10) || 0;
+        const byWp = {};
+        const add = (c) => {
+            const uid = parseInt(c.wp_user_id, 10) || 0;
+            if (!uid || uid === exclude) return;
+            byWp[uid] = { wp_user_id: uid, name: c.name || String(uid) };
+        };
+        (ops.swap_roster_candidates || []).forEach(add);
+        if (!Object.keys(byWp).length) {
+            (ops.catalogs?.wp_users || []).forEach((u) => {
+                add({ wp_user_id: u.id, name: u.name });
+            });
+        }
+        return Object.values(byWp).sort((a, b) => String(a.name).localeCompare(String(b.name), 'pt-BR'));
+    },
+
     buildSwapSubstituteOptions(selectedUid, excludeRequesterId) {
-        const candidates = this.data.volunteerOps?.swap_roster_candidates || [];
+        const candidates = this.getSwapSubstituteCandidates(excludeRequesterId);
         let html = `<option value="">${this.escapeHtml(i18n.t('ops_swap_pick_substitute'))}</option>`;
         candidates.forEach((c) => {
             const uid = parseInt(c.wp_user_id, 10) || 0;
-            if (!uid || uid === excludeRequesterId) return;
+            if (!uid) return;
             const sel = uid === selectedUid ? ' selected' : '';
             html += `<option value="${uid}"${sel}>${this.escapeHtml(c.name || String(uid))}</option>`;
         });
@@ -4699,6 +4722,10 @@ const app = {
         const errorHtml = mod.error
             ? `<p class="ops-confirm-error" role="alert">${this.escapeHtml(mod.error)}</p>`
             : '';
+        const substituteCount = !isReject ? this.getSwapSubstituteCandidates(swap.requester_id).length : 0;
+        const emptySubstitutesHtml = !isReject && substituteCount === 0
+            ? `<p class="ops-confirm-warning">${this.escapeHtml(i18n.t('ops_swap_no_substitutes'))}</p>`
+            : '';
         const bodyFields = isReject
             ? `<label class="ops-editor-field ops-editor-field--full">
                     <span class="ops-editor-field-label">${this.escapeHtml(i18n.t('ops_swap_reject_reason_label'))}</span>
@@ -4706,6 +4733,7 @@ const app = {
                </label>`
             : `<label class="ops-editor-field ops-editor-field--full">
                     <span class="ops-editor-field-label">${this.escapeHtml(i18n.t('ops_swap_substitute_label'))}</span>
+                    <p class="ops-confirm-meta text-muted">${this.escapeHtml(i18n.t('ops_swap_substitute_hint'))}</p>
                     <select id="ops-swap-substitute" ${saving ? 'disabled' : ''}>${this.buildSwapSubstituteOptions(mod.replacementUserId, swap.requester_id)}</select>
                </label>`;
         const confirmKey = isReject ? 'ops_swap_reject_confirm' : 'ops_swap_approve_confirm';
@@ -4729,6 +4757,7 @@ const app = {
                 <div class="ops-confirm-body">
                     <p class="ops-confirm-volunteer"><strong>${this.escapeHtml(name)}</strong></p>
                     <p class="ops-confirm-meta text-muted">${context}</p>
+                    ${emptySubstitutesHtml}
                     ${bodyFields}
                     ${errorHtml}
                 </div>

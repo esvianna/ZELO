@@ -14,6 +14,10 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 **Consequências:** Plugin **2.21.0**, PWA **165**. Sem aprovação «substituição pendente» sem substituto.
 
+**Emenda 2026-06-22 (b):** lista de substitutos = **todos os utilizadores WP cadastrados** (`zelo_get_zelo_volunteer_users` — voluntário, homem-chave, supervisor, admin). Catálogo roster do admin deixa de ser critério — plugin **2.21.3** / PWA **168**.
+
+**Emenda 2026-06-22 (a):** lista de substitutos inclui também linhas da **escala com `wp_user_id`** — substituída pela emenda (b).
+
 ---
 
 ## ADR-034 — Config API (#21) escopo mínimo (2026-06-04)
