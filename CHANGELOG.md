@@ -16,24 +16,28 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | Plugin **2.21.1** / PWA **166** | Fix lista substitutos vazia: inferir WP da escala quando roster sem `linked_wp_user_id`; ortografia «Selecione» |
 | Plugin **2.21.2** / PWA **167** | Lista ampliada: qualquer designado na escala com `wp_user_id` + role voluntário; hint no modal |
 | Plugin **2.21.3** / PWA **168** | Substitutos = todos os utilizadores WP cadastrados (voluntário/ops/admin); roster admin ignorado |
+| Validação | **Done** no Project (#56) |
 
 ### Alterado — selectors voluntário (#57)
 
 | Versão | Entrega |
 |--------|---------|
 | Plugin **2.21.4** / PWA **169** | Selectors (swap, add/edit linha, editor turno, admin swaps): optgroup «Sem linha na escala» antes de «Já na escala»; lista única se não houver mistura |
+| Validação | **Done** no Project (#57) |
 
 ### Adicionado / corrigido — menu ops + mapa evento (#58)
 
 | Versão | Entrega |
 |--------|---------|
 | PWA **170** | Menu hambúrguer: atalhos do bloco «Operação de voluntários» (escala, mapa evento, imprensa, delegados); fix instruções «Como chegar» ao mudar destino/balcão (rebind combobox pós-navegação + lookup normalizado de rotas) |
+| Validação | **Done** no Project (#58) |
 
 ### Adicionado — lembrete manual + aviso recusas (#59)
 
 | Versão | Entrega |
 |--------|---------|
 | Plugin **2.21.5** / PWA **171** | REST `POST /ops/shifts/remind-pending` e `notify-declines`; botões no card do turno (gestor/supervisor); cooldown 24h lembrete / 6h digest recusas; histórico ops |
+| Validação | **Done** no Project (#59) |
 
 ### Corrigido — mapa evento diagrama (#55, PWA 163)
 
@@ -41,6 +45,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 |--------|---------|
 | PWA **163** | Aba Diagrama: troca Guia↔Diagrama sem re-render completo; zoom preservado; ResizeObserver só em focus explícito |
 | PWA **164** | Máscara `is-preparing` até fit; layout único; patch seleção; skip re-render se DOM em cache; fit antes de mostrar painel |
+| Validação | **Done** no Project (#55) |
 
 ### Planejado — SMS Comtele (#54, ADR-040)
 
@@ -50,6 +55,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | Smoke admin S54a | **Validado** 2026-06-22 — Config save (2.20.1) + botão «Enviar SMS de teste» → celular |
 | Plugin **2.20.0** / PWA **162** | Cliente Comtele V4, fila SMS, paralelo push/e-mail, admin Config, aviso LGPD cadastro/perfil |
 | Plugin **2.20.1** | Fix salvar aba Config com escala grande (max_input_vars) |
+| Validação | **Done** no Project (#54) |
 
 ### Adicionado — registro apoio delegados (#51, ADR-039, plugin 2.19.0, PWA 152)
 
@@ -59,6 +65,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | PWA **152** | Card Home Operação; formulário voluntário; lista + export gestor; i18n pt-BR (ADR-039) |
 | Plugin **2.19.1** / PWA **153** | Gestor: editar e excluir registro na lista (`PATCH`/`DELETE` por id) |
 | PWA **154** | Lista delegados: tabela com bordas/padding; cards empilhados no mobile |
+| Validação | **Done** no Project (#51) |
 
 ### Corrigido — novidades/push live refresh (#53, PWA 155)
 
@@ -67,6 +74,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | PWA **155** | News SWR + hidratação snapshot no boot; refresh ao voltar ao app; SW `postMessage` → sininho; toast foreground; click push navega ao post |
 | PWA **156** | Fix botões Editar/Excluir lista delegados (onclick + UUID) |
 | PWA **157** | Detalhe novidades: listas numeradas/marcadores com recuo e hierarquia |
+| Validação | **Done** no Project (#53) |
 
 ### Corrigido — auditoria pt_br (#52, PWA 158)
 
@@ -76,6 +84,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | PWA **159** | Fix banner «Atualizando dados» preso (SWR notify ao falhar; Novidades `forceFresh`) |
 | PWA **160** | Escala: filtros nome/idioma não perdem foco ao digitar (atualiza só `#ops-schedule-by-day`) |
 | PWA **161** | Banner rede: só recursos críticos (locais/evento/ops); retry ao voltar online/aba; auth não prende flag; texto «sincronizando» |
+| Validação | **Done** no Project (#52) |
 
 ### Corrigido — admin Config checkboxes lembretes (plugin 2.17.1)
 
@@ -112,6 +121,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | Versão | Entrega |
 |--------|---------|
 | Plugin **2.18.0** | Digest user/dia; push-first check-in/out/minutos; fila throttle 250/h; monitorização Config |
+| Validação | **Done** no Project (#44) |
 
 ### Planeado — e-mails escala (#44, ADR-037)
 

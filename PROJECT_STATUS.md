@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-22** — #59 lembrete manual + aviso recusas plugin **2.21.5** / PWA **171** **In review**.
+> Última atualização: **2026-06-23** — sync Project → docs (#44–#59 **Done**); backlog dev vazio.
 
 ---
 
@@ -165,27 +165,32 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## O que está pendente
 
-| Issue | Estado | Notas |
-|-------|--------|-------|
-| [#44](https://github.com/esvianna/ZELO/issues/44) | **In review** | Plugin 2.18.0 — digest e-mail + fila; **smoke pendente** |
-| [#51](https://github.com/esvianna/ZELO/issues/51) | **In review** | Registro apoio delegados — ADR-039; plugin 2.19.0 / PWA 152 |
-| [#52](https://github.com/esvianna/ZELO/issues/52) | **In review** | Auditoria pt_br — pt-PT residual removido (PWA 158) |
-| [#54](https://github.com/esvianna/ZELO/issues/54) | **In review** | SMS Comtele plugin 2.20.1 + PWA 162 — **S54a validado** (Config save + SMS teste); S54b–S54d cron opcional |
-| [#55](https://github.com/esvianna/ZELO/issues/55) | **In review** | Diagrama pisca — fix reforçado PWA **164**; smoke 2z1 |
-| [#56](https://github.com/esvianna/ZELO/issues/56) | **In review** | Swap modais + notificar — 2.21.1/166 fix lista substitutos; smoke 6d–6f |
-| [#57](https://github.com/esvianna/ZELO/issues/57) | **In review** | Selectors voluntário: optgroup sem escala / já na escala — plugin 2.21.4 / PWA 169; smoke 57a–57c |
-| [#58](https://github.com/esvianna/ZELO/issues/58) | **In review** | Menu hambúrguer atalhos ops + fix instruções mapa — PWA 170; smoke 58a–58c |
-| [#59](https://github.com/esvianna/ZELO/issues/59) | **In review** | Lembrete manual pendentes + aviso recusas — plugin 2.21.5 / PWA 171; smoke 59a–59e |
+*Nenhuma issue em Backlog / Ready / In progress / In review no [Project 3](https://github.com/users/esvianna/projects/3) (2026-06-23).*
 
-**Ops / conteúdo (sem issue aberta):** post Novidades slug `imprensa-autoridades`; config Curitiba/2026 (desactivar transporte/Wi‑Fi/credenciamento; activar imprensa; **desactivar um lembrete antecipado** — requer plugin **2.17.1+** ou JSON).
+### Validadas no Project (Done) — sync 2026-06-23
+
+| Issue | Entrega |
+|-------|---------|
+| [#44](https://github.com/esvianna/ZELO/issues/44) | Digest e-mail + fila — plugin 2.18.0 |
+| [#51](https://github.com/esvianna/ZELO/issues/51) | Registro apoio delegados — plugin 2.19.0 / PWA 152–154 |
+| [#52](https://github.com/esvianna/ZELO/issues/52) | Auditoria pt_br — PWA 158 |
+| [#53](https://github.com/esvianna/ZELO/issues/53) | Novidades/push live refresh — PWA 155–159 |
+| [#54](https://github.com/esvianna/ZELO/issues/54) | SMS Comtele — plugin 2.20.1 / PWA 162 |
+| [#55](https://github.com/esvianna/ZELO/issues/55) | Mapa evento diagrama — PWA 164 |
+| [#56](https://github.com/esvianna/ZELO/issues/56) | Swap modais + notificar — plugin 2.21.x / PWA 165–168 |
+| [#57](https://github.com/esvianna/ZELO/issues/57) | Selectors voluntário optgroup — plugin 2.21.4 / PWA 169 |
+| [#58](https://github.com/esvianna/ZELO/issues/58) | Menu ops + fix mapa — PWA 170 |
+| [#59](https://github.com/esvianna/ZELO/issues/59) | Lembrete manual + aviso recusas — plugin 2.21.5 / PWA 171 |
+
+**Conteúdo operacional Curitiba/2026** (imprensa, toggles evento, lembrete antecipado, post `imprensa-autoridades`): funcionalidade entregue (#34, #35, Config ops); configuração no WP — confirmada pelo responsável.
 
 ---
 
 ## Próximos passos lógicos
 
-1. Mover **#54** para **Done** no Project (smoke S54a OK) ou validar S54b–S54d em evento real.
-2. Smoke **#51** (§4 D51) após deploy plugin **2.19.0** + PWA **152**.
-3. Smoke **#44** (e-mails digest/fila) após deploy plugin 2.18.0.
+1. **Conteúdo:** manter locais (farmácias, hospitais, etc.) e escala no WP — sem tarefa de dev aberta.
+2. **Deploy:** alinhar produção com plugin **2.21.5** + PWA **171** se ainda não publicados.
+3. Nova demanda → issue no Project 3 (Backlog) antes de codificar.
 
 ---
 
