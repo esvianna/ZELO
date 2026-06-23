@@ -1757,8 +1757,9 @@ function zelo_render_volunteer_swaps_admin_page() {
 			}
 		}
 	}
-	$list      = zelo_get_swap_requests();
+	$list       = zelo_get_swap_requests();
 	$candidates = function_exists( 'zelo_swap_get_roster_candidates' ) ? zelo_swap_get_roster_candidates() : array();
+	$ops_data   = zelo_get_volunteer_ops_data();
 	?>
 	<div class="wrap">
 		<h1><?php esc_html_e( 'Pedidos de substituição', 'zelo-assistente' ); ?></h1>
@@ -1784,13 +1785,44 @@ function zelo_render_volunteer_swaps_admin_page() {
 										<option value=""><?php esc_html_e( 'Selecione o substituto', 'zelo-assistente' ); ?></option>
 										<?php
 										$req_id = isset( $s['requester_id'] ) ? (int) $s['requester_id'] : 0;
-										foreach ( $candidates as $c ) :
+										$filtered = array();
+										foreach ( $candidates as $c ) {
 											if ( $req_id > 0 && (int) $c['wp_user_id'] === $req_id ) {
 												continue;
 											}
-											?>
-											<option value="<?php echo esc_attr( (string) $c['wp_user_id'] ); ?>"><?php echo esc_html( $c['name'] ); ?></option>
-										<?php endforeach; ?>
+											$filtered[] = $c;
+										}
+										$groups = function_exists( 'zelo_swap_partition_candidates_by_schedule' )
+											? zelo_swap_partition_candidates_by_schedule( $filtered, $ops_data )
+											: array(
+												'unallocated' => $filtered,
+												'on_schedule' => array(),
+												'show_groups' => false,
+											);
+										$render_swap_candidate = function ( $c ) {
+											echo '<option value="' . esc_attr( (string) $c['wp_user_id'] ) . '">' . esc_html( $c['name'] ) . '</option>';
+										};
+										if ( ! empty( $groups['show_groups'] ) ) {
+											if ( ! empty( $groups['unallocated'] ) ) {
+												echo '<optgroup label="' . esc_attr__( 'Sem linha na escala', 'zelo-assistente' ) . '">';
+												foreach ( $groups['unallocated'] as $c ) {
+													$render_swap_candidate( $c );
+												}
+												echo '</optgroup>';
+											}
+											if ( ! empty( $groups['on_schedule'] ) ) {
+												echo '<optgroup label="' . esc_attr__( 'Já na escala', 'zelo-assistente' ) . '">';
+												foreach ( $groups['on_schedule'] as $c ) {
+													$render_swap_candidate( $c );
+												}
+												echo '</optgroup>';
+											}
+										} else {
+											foreach ( array_merge( $groups['unallocated'], $groups['on_schedule'] ) as $c ) {
+												$render_swap_candidate( $c );
+											}
+										}
+										?>
 									</select>
 									<button type="submit" name="zelo_swap_admin" class="button button-primary"><?php esc_html_e( 'Aprovar', 'zelo-assistente' ); ?></button>
 								</form>

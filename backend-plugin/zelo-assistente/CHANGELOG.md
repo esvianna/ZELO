@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.21.4] - 2026-06-22
+
+### Alterado
+- **Selectors voluntário (#57):** swap (PWA + admin), add/edit linha e editor de turno listam primeiro quem não está em nenhuma linha da escala (`<optgroup>`); lista única A–Z quando todos alocados ou só um grupo.
+
 ## [2.21.3] - 2026-06-22
 
 ### Alterado

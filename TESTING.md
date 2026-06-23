@@ -167,8 +167,11 @@ Orientação de testes **manual** (prioritário hoje) e caminho para automação
 | 6b | Sino — aviso swap pendente | gestor | Resumo legível («Nome — Sábado · A1 — Balcão 3») |
 | 6c | Aprovar / recusar swap | gestor | Fluxo inalterado; após aprovação, histórico ops com contexto humano |
 | 6d | **Recusar swap** com justificativa (#56, plugin **2.21.0** / PWA **165+**) | gestor / homem-chave | Modal com texto obrigatório; solicitante recebe sino + e-mail (+ SMS se #54); histórico ops «Substituição recusada — … Motivo: …» |
-| 6e | **Aprovar swap** com substituto (#56) | gestor / homem-chave | Modal lista **todos os utilizadores WP cadastrados** (voluntário/ops/admin); solicitante excluída; notifica ambos |
+| 6e | **Aprovar swap** com substituto (#56) | gestor / homem-chave | Modal lista **todos os utilizadores WP cadastrados** (voluntário/ops/admin); solicitante excluída; notifica ambos; **#57:** optgroups se houver mistura |
 | 6f | Regressão swap | voluntário | Pedir substituição inalterado; sem `prompt()` nativo ao aprovar/recusar |
+| 57a | **Selector — prioridade sem escala** (#57, PWA **169+**) | gestor / homem-chave | Escala parcial: grupos «Sem linha na escala» + «Já na escala»; A–Z em cada grupo (swap, + Adicionar, Editar, Montar turno) |
+| 57b | **Selector — lista única** (#57) | gestor | Escala vazia ou todos já alocados → uma lista A–Z, sem optgroup |
+| 57c | **Admin swaps** selector (#57, plugin **2.21.4+**) | `manage_options` | Mesma particão que PWA ao aprovar pedido |
 | 7 | Cron lembretes | admin | `wp cron event list` contém `zelo_volunteer_notify_tick` (se aplicável) |
 
 ---

@@ -4679,6 +4679,79 @@ const app = {
         this._unbindSwapResolveEscape();
     },
 
+    getScheduleAllocatedRefs() {
+        const refs = new Set();
+        (this.data.volunteerOps?.schedule || []).forEach((row) => {
+            const ref = this.volunteerRefFromRow(row);
+            if (ref) refs.add(ref);
+        });
+        return refs;
+    },
+
+    isVolunteerRefOnSchedule(ref) {
+        return !!ref && this.getScheduleAllocatedRefs().has(ref);
+    },
+
+    isWpUserOnSchedule(wpUserId) {
+        const uid = parseInt(wpUserId, 10) || 0;
+        if (uid < 1) return false;
+        if (this.isVolunteerRefOnSchedule(`wp:${uid}`)) return true;
+        const roster = this.data.volunteerOps?.catalogs?.roster_volunteers || [];
+        for (let i = 0; i < roster.length; i++) {
+            const rv = roster[i];
+            const linked = parseInt(rv.linked_wp_user_id || rv.wp_user_id, 10) || 0;
+            if (linked === uid && rv.id && this.isVolunteerRefOnSchedule(`rv:${rv.id}`)) return true;
+        }
+        return false;
+    },
+
+    _sortVolunteerPickerItems(items) {
+        return [...items].sort((a, b) =>
+            String(a.name || a.label || '').localeCompare(String(b.name || b.label || ''), 'pt-BR')
+        );
+    },
+
+    partitionVolunteerPickerItems(items, isOnSchedule) {
+        const unallocated = [];
+        const onSchedule = [];
+        items.forEach((item) => {
+            if (isOnSchedule(item)) onSchedule.push(item);
+            else unallocated.push(item);
+        });
+        const unallocatedSorted = this._sortVolunteerPickerItems(unallocated);
+        const onScheduleSorted = this._sortVolunteerPickerItems(onSchedule);
+        return {
+            unallocated: unallocatedSorted,
+            onSchedule: onScheduleSorted,
+            showGroups: unallocatedSorted.length > 0 && onScheduleSorted.length > 0
+        };
+    },
+
+    buildVolunteerPickerSelectHtml(emptyOptionHtml, groups, renderOption) {
+        let html = emptyOptionHtml || '';
+        if (!groups.showGroups) {
+            [...groups.unallocated, ...groups.onSchedule].forEach((item) => {
+                html += renderOption(item);
+            });
+            return html;
+        }
+        if (groups.unallocated.length) {
+            html += `<optgroup label="${this.escapeAttr(i18n.t('ops_volunteer_group_unallocated'))}">`;
+            groups.unallocated.forEach((item) => {
+                html += renderOption(item);
+            });
+            html += '</optgroup>';
+        }
+        if (groups.onSchedule.length) {
+            html += `<optgroup label="${this.escapeAttr(i18n.t('ops_volunteer_group_allocated'))}">`;
+            groups.onSchedule.forEach((item) => {
+                html += renderOption(item);
+            });
+            html += '</optgroup>';
+        }
+        return html;
+    },
+
     getSwapSubstituteCandidates(excludeRequesterId) {
         const ops = this.data.volunteerOps || {};
         const exclude = parseInt(excludeRequesterId, 10) || 0;
@@ -4694,19 +4767,22 @@ const app = {
                 add({ wp_user_id: u.id, name: u.name });
             });
         }
-        return Object.values(byWp).sort((a, b) => String(a.name).localeCompare(String(b.name), 'pt-BR'));
+        return Object.values(byWp);
     },
 
     buildSwapSubstituteOptions(selectedUid, excludeRequesterId) {
         const candidates = this.getSwapSubstituteCandidates(excludeRequesterId);
-        let html = `<option value="">${this.escapeHtml(i18n.t('ops_swap_pick_substitute'))}</option>`;
-        candidates.forEach((c) => {
+        const groups = this.partitionVolunteerPickerItems(
+            candidates,
+            (c) => this.isWpUserOnSchedule(c.wp_user_id)
+        );
+        const empty = `<option value="">${this.escapeHtml(i18n.t('ops_swap_pick_substitute'))}</option>`;
+        return this.buildVolunteerPickerSelectHtml(empty, groups, (c) => {
             const uid = parseInt(c.wp_user_id, 10) || 0;
-            if (!uid) return;
+            if (!uid) return '';
             const sel = uid === selectedUid ? ' selected' : '';
-            html += `<option value="${uid}"${sel}>${this.escapeHtml(c.name || String(uid))}</option>`;
+            return `<option value="${uid}"${sel}>${this.escapeHtml(c.name || String(uid))}</option>`;
         });
-        return html;
     },
 
     renderSwapResolveModal() {
@@ -5658,16 +5734,25 @@ const app = {
 
     buildVolunteerRefOptions(selected) {
         const cats = this.data.volunteerOps?.catalogs || {};
-        let html = `<option value="">${this.escapeHtml(i18n.t('ops_editor_pick_volunteer'))}</option>`;
+        const items = [];
         (cats.wp_users || []).forEach((u) => {
             const ref = `wp:${u.id}`;
-            html += `<option value="${this.escapeHtml(ref)}"${ref === selected ? ' selected' : ''}>${this.escapeHtml(u.name)} (WP)</option>`;
+            items.push({ ref, name: `${u.name} (WP)` });
         });
         (cats.roster_volunteers || []).forEach((rv) => {
             const ref = `rv:${rv.id}`;
-            html += `<option value="${this.escapeHtml(ref)}"${ref === selected ? ' selected' : ''}>${this.escapeHtml(rv.name)}</option>`;
+            items.push({ ref, name: rv.name || rv.id });
         });
-        return html;
+        const groups = this.partitionVolunteerPickerItems(
+            items,
+            (item) => this.isVolunteerRefOnSchedule(item.ref)
+        );
+        const empty = `<option value="">${this.escapeHtml(i18n.t('ops_editor_pick_volunteer'))}</option>`;
+        return this.buildVolunteerPickerSelectHtml(empty, groups, (item) => {
+            const ref = item.ref;
+            const sel = ref === selected ? ' selected' : '';
+            return `<option value="${this.escapeHtml(ref)}"${sel}>${this.escapeHtml(item.name)}</option>`;
+        });
     },
 
     getShiftBoundsLabel(shiftCode) {

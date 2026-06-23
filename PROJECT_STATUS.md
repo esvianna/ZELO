@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-22** — #56 substitutos = todos utilizadores WP plugin **2.21.3** / PWA **168**.
+> Última atualização: **2026-06-22** — #57 selectors priorizam sem escala plugin **2.21.4** / PWA **169** **In review**.
 
 ---
 
@@ -12,8 +12,8 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Referência no repo | Versão |
 |--------------------|--------|
-| Plugin WordPress (`zelo-assistente.php`) | **2.21.3** |
-| PWA (`zelo-build.js` / `sw.js`) | **build 168** |
+| Plugin WordPress (`zelo-assistente.php`) | **2.21.4** |
+| PWA (`zelo-build.js` / `sw.js`) | **build 169** |
 
 **Produção (repo):** PWA **151** validada (#45–#50, #46); plugin **2.18.0** + **2.19.0** / PWA **152** aguardam deploy/smoke (#44, #51).
 
@@ -165,6 +165,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | [#54](https://github.com/esvianna/ZELO/issues/54) | **In review** | SMS Comtele plugin 2.20.1 + PWA 162 — **S54a validado** (Config save + SMS teste); S54b–S54d cron opcional |
 | [#55](https://github.com/esvianna/ZELO/issues/55) | **In review** | Diagrama pisca — fix reforçado PWA **164**; smoke 2z1 |
 | [#56](https://github.com/esvianna/ZELO/issues/56) | **In review** | Swap modais + notificar — 2.21.1/166 fix lista substitutos; smoke 6d–6f |
+| [#57](https://github.com/esvianna/ZELO/issues/57) | **In review** | Selectors voluntário: optgroup sem escala / já na escala — plugin 2.21.4 / PWA 169; smoke 57a–57c |
 
 **Ops / conteúdo (sem issue aberta):** post Novidades slug `imprensa-autoridades`; config Curitiba/2026 (desactivar transporte/Wi‑Fi/credenciamento; activar imprensa; **desactivar um lembrete antecipado** — requer plugin **2.17.1+** ou JSON).
 

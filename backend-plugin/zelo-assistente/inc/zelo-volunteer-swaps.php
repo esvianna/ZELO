@@ -214,6 +214,84 @@ function zelo_swap_get_roster_candidates() {
 }
 
 /**
+ * WP user ids present on schedule (direct wp_user_id or roster line linked to WP).
+ *
+ * @param array|null $data Ops data; loads default if null.
+ * @return int[]
+ */
+function zelo_swap_schedule_allocated_wp_user_ids( $data = null ) {
+	if ( null === $data ) {
+		$data = zelo_get_volunteer_ops_data();
+	}
+	$schedule = isset( $data['schedule'] ) && is_array( $data['schedule'] ) ? $data['schedule'] : array();
+	$catalogs = isset( $data['catalogs'] ) && is_array( $data['catalogs'] ) ? $data['catalogs'] : array();
+	$roster_to_wp = array();
+	$roster       = isset( $catalogs['roster_volunteers'] ) && is_array( $catalogs['roster_volunteers'] ) ? $catalogs['roster_volunteers'] : array();
+	foreach ( $roster as $rv ) {
+		if ( empty( $rv['id'] ) ) {
+			continue;
+		}
+		$wp = 0;
+		if ( ! empty( $rv['linked_wp_user_id'] ) ) {
+			$wp = (int) $rv['linked_wp_user_id'];
+		} elseif ( ! empty( $rv['wp_user_id'] ) ) {
+			$wp = (int) $rv['wp_user_id'];
+		}
+		if ( $wp > 0 ) {
+			$roster_to_wp[ sanitize_text_field( $rv['id'] ) ] = $wp;
+		}
+	}
+	$ids = array();
+	foreach ( $schedule as $row ) {
+		if ( ! is_array( $row ) ) {
+			continue;
+		}
+		if ( ! empty( $row['wp_user_id'] ) ) {
+			$ids[ (int) $row['wp_user_id'] ] = true;
+		}
+		$rv = isset( $row['roster_volunteer_id'] ) ? sanitize_text_field( $row['roster_volunteer_id'] ) : '';
+		if ( $rv !== '' && isset( $roster_to_wp[ $rv ] ) ) {
+			$ids[ $roster_to_wp[ $rv ] ] = true;
+		}
+	}
+	return array_keys( $ids );
+}
+
+/**
+ * Partition swap candidates by schedule allocation (optgroups in admin).
+ *
+ * @param array      $candidates From zelo_swap_get_roster_candidates.
+ * @param array|null $data       Ops data.
+ * @return array{unallocated: array, on_schedule: array, show_groups: bool}
+ */
+function zelo_swap_partition_candidates_by_schedule( $candidates, $data = null ) {
+	$allocated   = array_flip( zelo_swap_schedule_allocated_wp_user_ids( $data ) );
+	$unallocated = array();
+	$on_schedule = array();
+	foreach ( $candidates as $c ) {
+		$wp = isset( $c['wp_user_id'] ) ? (int) $c['wp_user_id'] : 0;
+		if ( $wp < 1 ) {
+			continue;
+		}
+		if ( isset( $allocated[ $wp ] ) ) {
+			$on_schedule[] = $c;
+		} else {
+			$unallocated[] = $c;
+		}
+	}
+	$sort = function ( $a, $b ) {
+		return strcasecmp( $a['name'], $b['name'] );
+	};
+	usort( $unallocated, $sort );
+	usort( $on_schedule, $sort );
+	return array(
+		'unallocated' => $unallocated,
+		'on_schedule' => $on_schedule,
+		'show_groups' => ! empty( $unallocated ) && ! empty( $on_schedule ),
+	);
+}
+
+/**
  * @param int $wp_user_id WP user.
  * @param int $exclude_requester_id Optional requester to exclude.
  * @return true|WP_Error

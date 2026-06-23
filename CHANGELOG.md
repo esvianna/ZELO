@@ -17,6 +17,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | Plugin **2.21.2** / PWA **167** | Lista ampliada: qualquer designado na escala com `wp_user_id` + role voluntário; hint no modal |
 | Plugin **2.21.3** / PWA **168** | Substitutos = todos os utilizadores WP cadastrados (voluntário/ops/admin); roster admin ignorado |
 
+### Alterado — selectors voluntário (#57)
+
+| Versão | Entrega |
+|--------|---------|
+| Plugin **2.21.4** / PWA **169** | Selectors (swap, add/edit linha, editor turno, admin swaps): optgroup «Sem linha na escala» antes de «Já na escala»; lista única se não houver mistura |
+
 ### Corrigido — mapa evento diagrama (#55, PWA 163)
 
 | Versão | Entrega |
