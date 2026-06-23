@@ -23,6 +23,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 |--------|---------|
 | Plugin **2.21.4** / PWA **169** | Selectors (swap, add/edit linha, editor turno, admin swaps): optgroup «Sem linha na escala» antes de «Já na escala»; lista única se não houver mistura |
 
+### Adicionado / corrigido — menu ops + mapa evento (#58)
+
+| Versão | Entrega |
+|--------|---------|
+| PWA **170** | Menu hambúrguer: atalhos do bloco «Operação de voluntários» (escala, mapa evento, imprensa, delegados); fix instruções «Como chegar» ao mudar destino/balcão (rebind combobox pós-navegação + lookup normalizado de rotas) |
+
 ### Corrigido — mapa evento diagrama (#55, PWA 163)
 
 | Versão | Entrega |

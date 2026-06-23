@@ -90,6 +90,7 @@ Orientação de testes **manual** (prioritário hoje) e caminho para automação
 | 2w | Nome voluntário/responsável com telefone cadastrado (105+) | view_ops | Nome é link `wa.me`; sem telefone → texto sem link; offline: cache ops; abrir WhatsApp exige rede |
 | 2x | **Mapa evento** — admin: upload JPG + 2 balcões + 1 destino com direções (2.12+) | manage_options | Detalhes → direções Balcão 1/2; **Salvar abas** permanece na aba Mapa evento; `GET /indoor-map` tem `routes` com texto |
 | 2y | **Mapa evento** PWA: balcão + destino | **view_ops** (#41) | Diagrama: Balcão 1 azul / Balcão 2 teal + legenda (115+); combobox destinos; copiar instruções; **403** sem `view_ops` |
+| 2y2 | **Mapa evento** — instruções mudam (#58, PWA **170+**) | view_ops | ≥2 destinos com textos distintos: alternar destino e balcão → «Como chegar» actualiza; sem rota → `indoor_no_route` (não texto anterior) |
 | 2z | **Mapa evento** PWA mobile (110+) | iPhone / ≤768px | Abre em **Orientar**; aba Diagrama: **header + bottom nav visíveis** (124+); pinch; botões **Mapa completo** / **Ir ao destino** |
 | 2z1 | **Mapa evento** aba Diagrama sem piscar (#55, PWA **164+**) | view_ops | Guia ↔ Diagrama: **sem flicker** perceptível; zoom/pan e «Mapa completo» / «Ir ao destino» OK |
 | 2aa | **Novidades / blog** (#26, 2.13.0 / PWA 116+) | **view_ops** (#41) | Admin: post com «Publicar na PWA» → `GET /news` OK; card/menu → lista + detalhe PT; subscriber **403** |
@@ -172,6 +173,9 @@ Orientação de testes **manual** (prioritário hoje) e caminho para automação
 | 57a | **Selector — prioridade sem escala** (#57, PWA **169+**) | gestor / homem-chave | Escala parcial: grupos «Sem linha na escala» + «Já na escala»; A–Z em cada grupo (swap, + Adicionar, Editar, Montar turno) |
 | 57b | **Selector — lista única** (#57) | gestor | Escala vazia ou todos já alocados → uma lista A–Z, sem optgroup |
 | 57c | **Admin swaps** selector (#57, plugin **2.21.4+**) | `manage_options` | Mesma particão que PWA ao aprovar pedido |
+| 58a | **Menu hambúrguer — atalhos ops** (#58, PWA **170+**) | view_ops | Secção «Operação de voluntários»: Escala, Mapa evento, Apoio delegados; Novidades abaixo; visitante não vê |
+| 58b | **Menu — itens condicionais** (#58) | gestor / admin | Imprensa só se post configurado; Registros delegados só `canManageOps()` |
+| 58c | **Menu — navegação** (#58) | view_ops | Cada item abre view correcta e fecha menu; regressão Instalar / Atualizar cache |
 | 7 | Cron lembretes | admin | `wp cron event list` contém `zelo_volunteer_notify_tick` (se aplicável) |
 
 ---

@@ -1559,9 +1559,10 @@ const app = {
 
     updateHomePressInstructionsBtn() {
         const btn = document.getElementById('home-press-instructions-btn');
-        if (!btn) return;
         const show = this.canViewOps() && !!this.getPressInstructionsPostId();
-        btn.hidden = !show;
+        if (btn) btn.hidden = !show;
+        const menuBtn = document.getElementById('header-menu-press');
+        if (menuBtn) menuBtn.hidden = !show;
     },
 
     formatNewsDate(iso) {
@@ -1584,6 +1585,19 @@ const app = {
         const item = document.getElementById('header-menu-news');
         if (!item) return;
         item.hidden = !this.canViewOps();
+    },
+
+    updateHeaderMenuOpsItems() {
+        const canOps = this.canViewOps();
+        const block = document.getElementById('header-menu-ops-block');
+        const divider = document.getElementById('header-menu-ops-divider');
+        if (block) block.hidden = !canOps;
+        if (divider) divider.hidden = !canOps;
+        const press = document.getElementById('header-menu-press');
+        if (press) press.hidden = !canOps || !this.getPressInstructionsPostId();
+        const delegateList = document.getElementById('header-menu-delegate-list');
+        if (delegateList) delegateList.hidden = !this.canManageOps();
+        this.updateNewsMenuItem();
     },
 
     async loadNewsCarousel(options = {}) {
@@ -2887,6 +2901,7 @@ const app = {
             block.hidden = !this.canViewOps();
         }
         this.updateHomeDelegateListBtn();
+        this.updateHeaderMenuOpsItems();
     },
 
     updateHomeDelegateListBtn() {
@@ -2894,6 +2909,8 @@ const app = {
         if (btn) {
             btn.hidden = !this.canManageOps();
         }
+        const menuBtn = document.getElementById('header-menu-delegate-list');
+        if (menuBtn) menuBtn.hidden = !this.canManageOps();
     },
 
     renderProfileAdminSection() {
@@ -3751,10 +3768,13 @@ const app = {
             } else if (!this._dataStale.indoorMap && staleBannerEl) {
                 staleBannerEl.remove();
             }
-            this._indoorDirectionsText = this.getIndoorDirections(cfg, ui.boothId, ui.destId) || '';
             this._patchIndoorMapSelection();
             this._syncIndoorDiagramFullscreen();
             this._syncIndoorTabDom(ui.tab);
+            if (ui.tab !== 'map') {
+                this.initIndoorDestCombobox(dests);
+            }
+            this.refreshIndoorDirectionsPanel();
             return;
         }
 
@@ -4392,10 +4412,19 @@ const app = {
         return labels[lang] || labels.pt_br || labels.en || labels.es || place.id || '';
     },
 
+    _normalizeIndoorPlaceId(id) {
+        return String(id || '').toLowerCase().trim();
+    },
+
     getIndoorDirections(cfg, boothId, destId) {
         if (!boothId || !destId || !cfg || !Array.isArray(cfg.routes)) return '';
         const lang = i18n.current || 'pt_br';
-        const route = cfg.routes.find((r) => r.from_place_id === boothId && r.to_place_id === destId);
+        const from = this._normalizeIndoorPlaceId(boothId);
+        const to = this._normalizeIndoorPlaceId(destId);
+        const route = cfg.routes.find((r) =>
+            this._normalizeIndoorPlaceId(r.from_place_id) === from
+            && this._normalizeIndoorPlaceId(r.to_place_id) === to
+        );
         if (!route || !route.directions) return '';
         const d = route.directions;
         return d[lang] || d.pt_br || d.en || d.es || '';
@@ -4554,17 +4583,25 @@ const app = {
     setIndoorBooth(boothId) {
         if (!this.data.indoorMapUi) this.data.indoorMapUi = {};
         this.data.indoorMapUi.boothId = boothId;
-        if (this._patchIndoorMapSelection()) return;
+        if (this._patchIndoorMapSelection()) {
+            this.refreshIndoorDirectionsPanel();
+            return;
+        }
         this.renderIndoorEventMap();
     },
 
     selectIndoorDest(destId) {
         if (!this.data.indoorMapUi) this.data.indoorMapUi = {};
+        const cfg = this.data.indoorMap;
+        const places = Array.isArray(cfg?.places) ? cfg.places : [];
+        const dests = places.filter((p) => p.kind !== 'booth');
         this.data.indoorMapUi.destId = destId;
         this.data.indoorMapUi.query = '';
         this.data.indoorMapUi.comboboxOpen = false;
         this.data.indoorMapUi.comboboxEditing = false;
+        this.closeIndoorDestCombobox(dests);
         if (this._patchIndoorMapSelection()) {
+            this.refreshIndoorDirectionsPanel();
             requestAnimationFrame(() => {
                 const panel = document.getElementById('indoor-directions-panel');
                 if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -4586,12 +4623,21 @@ const app = {
         } else {
             this.data.indoorMapUi.destId = id;
             this.data.indoorMapUi._focusDiagram = 'place';
-            this.data.indoorMapUi.tab = 'map';
+            if (this.data.indoorMapUi.tab !== 'map') {
+                this.data.indoorMapUi.tab = 'guide';
+            }
         }
         if (this._patchIndoorMapSelection()) {
+            this.refreshIndoorDirectionsPanel();
             if (this.data.indoorMapUi.tab === 'map') {
                 this._syncIndoorTabDom('map');
                 this._applyIndoorDiagramFocusInPlace();
+            } else {
+                this._syncIndoorTabDom('guide');
+                requestAnimationFrame(() => {
+                    const panel = document.getElementById('indoor-directions-panel');
+                    if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                });
             }
             return;
         }
