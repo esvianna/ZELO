@@ -4503,8 +4503,8 @@ body.ops-modal-open {
 
 @media (max-width: 768px) {
     .indoor-diagram-panel .indoor-map-img {
-        width: auto;
-        min-width: 720px;
+        width: 100%;
+        min-width: 0;
         max-width: none;
     }
 

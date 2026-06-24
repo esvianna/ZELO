@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-24** — #61 fix pinos proporcionais PWA **176** **In review**.
+> Última atualização: **2026-06-24** — #61 fix mobile diagrama PWA **177** **In review**.
 
 ---
 

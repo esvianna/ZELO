@@ -4133,12 +4133,31 @@ const app = {
     _indoorDiagramLayoutReady(viewport, img) {
         if (!viewport || !img) return false;
         if (viewport.clientWidth < 40 || viewport.clientHeight < 40) return false;
-        if (!img.offsetWidth || !img.offsetHeight) return false;
-        return true;
+        if (!img.naturalWidth || !img.naturalHeight) return false;
+        this._syncIndoorDiagramImageSize(viewport, img);
+        return img.offsetWidth > 0 && img.offsetHeight > 0;
+    },
+
+    _syncIndoorDiagramImageSize(viewport, img) {
+        if (!viewport || !img) return false;
+        const nw = img.naturalWidth || 0;
+        const nh = img.naturalHeight || 0;
+        if (nw < 1 || nh < 1) return false;
+        const vw = Math.max(viewport.clientWidth || 1, 1);
+        const sizeKey = vw + ':' + nw;
+        if (img.dataset.indoorSizeKey !== sizeKey) {
+            img.style.width = vw + 'px';
+            img.style.height = 'auto';
+            img.style.minWidth = '0';
+            img.style.maxWidth = 'none';
+            img.dataset.indoorSizeKey = sizeKey;
+        }
+        return img.offsetWidth > 0 && img.offsetHeight > 0;
     },
 
     _getIndoorLayerMetrics(viewport, layer) {
         const img = layer.querySelector('.indoor-map-img');
+        if (img) this._syncIndoorDiagramImageSize(viewport, img);
         const lw = img && img.offsetWidth ? img.offsetWidth : 1;
         const lh = img && img.offsetHeight ? img.offsetHeight : 1;
         const vw = Math.max(viewport.clientWidth || 1, 1);
@@ -4193,12 +4212,17 @@ const app = {
     _indoorPinCounterScale(viewport, layer, mapScale) {
         const metrics = this._getIndoorLayerMetrics(viewport, layer);
         const refBase = 18;
-        const minScreen = 8;
+        const minAtFit = this.isIndoorMobileLayout() ? 11 : 13;
+        const minZoomed = 8;
         const maxScreen = 26;
         const natural = refBase * mapScale;
         if (natural <= 0 || !isFinite(natural)) return 1;
-        if (mapScale <= metrics.fitScale * 1.08) return 1;
-        if (natural < minScreen) return minScreen / natural;
+        const atFit = mapScale <= metrics.fitScale * 1.08;
+        if (atFit) {
+            if (natural < minAtFit) return minAtFit / natural;
+            return 1;
+        }
+        if (natural < minZoomed) return minZoomed / natural;
         if (natural > maxScreen) return maxScreen / natural;
         return 1;
     },
@@ -4305,21 +4329,36 @@ const app = {
         const tryApplyLayout = () => {
             if (applyFocusIfNeeded()) return;
             layoutRetries += 1;
-            if (layoutRetries < 4 && (ui._focusDiagram === 'fit' || ui._focusDiagram === 'place' || !ui._diagramLayoutApplied)) {
+            if (layoutRetries < 16 && (ui._focusDiagram === 'fit' || ui._focusDiagram === 'place' || !ui._diagramLayoutApplied)) {
                 requestAnimationFrame(tryApplyLayout);
             } else {
                 revealDiagram();
             }
         };
 
-        if (img && img.complete) {
-            tryApplyLayout();
+        const startLayout = () => {
+            if (img && img.decode) {
+                img.decode().then(tryApplyLayout).catch(tryApplyLayout);
+            } else {
+                tryApplyLayout();
+            }
+        };
+
+        if (img && img.complete && img.naturalWidth) {
+            startLayout();
         } else if (img) {
-            img.onload = () => tryApplyLayout();
+            img.onload = () => startLayout();
         }
 
         if (typeof ResizeObserver !== 'undefined') {
             const ro = new ResizeObserver(() => {
+                if (!img || !img.naturalWidth) return;
+                const prevKey = img.dataset.indoorSizeKey || '';
+                this._syncIndoorDiagramImageSize(viewport, img);
+                if (img.dataset.indoorSizeKey !== prevKey) {
+                    ui._diagramLayoutApplied = false;
+                    ui._focusDiagram = ui._focusDiagram || 'fit';
+                }
                 if (ui._focusDiagram === 'fit' || ui._focusDiagram === 'place') {
                     applyFocusIfNeeded();
                 }
