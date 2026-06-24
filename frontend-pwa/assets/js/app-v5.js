@@ -554,6 +554,9 @@ const app = {
             if (viewId === 'delegado-registro') {
                 return app.canViewOps();
             }
+            if (viewId === 'extras-ops') {
+                return app.canViewOps();
+            }
             if (viewId === 'delegado-lista') {
                 return app.canManageOps();
             }
@@ -693,6 +696,8 @@ const app = {
                     app.renderDelegateSupportForm();
                 } else if (viewId === 'delegado-lista') {
                     app.renderDelegateSupportList();
+                } else if (viewId === 'extras-ops') {
+                    app.renderExtraVolunteersOps();
                 }
 
                 // Render Home components if on home
@@ -1348,7 +1353,7 @@ const app = {
             this.router.navigate(viewId, params);
             return;
         }
-        if (viewId === 'escala' || viewId === 'profile' || viewId === 'blog' || viewId === 'blog-post' || viewId === 'mapa-evento' || viewId === 'cadastros-pendentes' || viewId === 'delegado-registro' || viewId === 'delegado-lista') {
+        if (viewId === 'escala' || viewId === 'profile' || viewId === 'blog' || viewId === 'blog-post' || viewId === 'mapa-evento' || viewId === 'cadastros-pendentes' || viewId === 'delegado-registro' || viewId === 'delegado-lista' || viewId === 'extras-ops') {
             if (!this.auth.user) {
                 this.router.navigate('login', {}, { persist: false });
             } else {
@@ -1435,6 +1440,9 @@ const app = {
                 break;
             case 'delegado-lista':
                 this.renderDelegateSupportList();
+                break;
+            case 'extras-ops':
+                this.renderExtraVolunteersOps();
                 break;
             default:
                 break;
@@ -7560,6 +7568,314 @@ const app = {
             this._delegateSupportDeleteSaving = false;
             alert(e.message || i18n.t('delegate_support_fail'));
             this.renderDelegateSupportDeleteModal();
+        }
+    },
+
+    extraOpsStatusLabel(status) {
+        const map = {
+            available: 'extra_ops_status_available',
+            assigned: 'extra_ops_status_assigned',
+            attended: 'extra_ops_status_attended',
+            open: 'extra_ops_status_open',
+            partial: 'extra_ops_status_partial',
+            closed: 'extra_ops_status_closed'
+        };
+        return i18n.t(map[status] || status || '');
+    },
+
+    extraOpsDayOptions(selected) {
+        const days = (this._extraOpsData && this._extraOpsData.event_days) || { sexta: 'Sexta', sabado: 'Sábado', domingo: 'Domingo' };
+        return Object.keys(days).map((slug) => {
+            const sel = slug === selected ? ' selected' : '';
+            return `<option value="${this.escapeHtml(slug)}"${sel}>${this.escapeHtml(days[slug])}</option>`;
+        }).join('');
+    },
+
+    async loadExtraVolunteersOpsData() {
+        const filters = this._extraOpsFilters || {};
+        this._extraOpsData = await API.getExtraVolunteersOps(filters);
+        return this._extraOpsData;
+    },
+
+    setExtraOpsTab(tab) {
+        this._extraOpsTab = tab || 'extras';
+        this.renderExtraVolunteersOps({ keepData: true });
+    },
+
+    async applyExtraOpsSearch() {
+        this._extraOpsFilters = {
+            q: document.getElementById('extra-ops-search-q')?.value.trim() || '',
+            day: document.getElementById('extra-ops-search-day')?.value || ''
+        };
+        await this.renderExtraVolunteersOps();
+    },
+
+    async renderExtraVolunteersOps(opts = {}) {
+        const container = document.getElementById('extra-ops-container');
+        if (!container) return;
+        if (!this.auth.user || !this.canViewOps()) {
+            container.innerHTML = `<div class="loading">${this.escapeHtml(i18n.t('ops_no_permission'))}</div>`;
+            return;
+        }
+        if (!opts.keepData) {
+            container.innerHTML = `<div class="loading">${this.escapeHtml(i18n.t('loading'))}</div>`;
+        }
+        try {
+            if (!opts.keepData || !this._extraOpsData) {
+                await this.loadExtraVolunteersOpsData();
+            }
+        } catch (e) {
+            container.innerHTML = `<div class="loading">${this.escapeHtml(e.message || i18n.t('error_generic'))}</div>`;
+            return;
+        }
+        const tab = this._extraOpsTab || 'extras';
+        const filters = this._extraOpsFilters || {};
+        const canExport = !!(this._extraOpsData && (this._extraOpsData.can_export || this.canManageOps()));
+        const exportBtns = canExport ? `
+            <div class="delegate-support-export-row">
+                <button type="button" id="extra-ops-export-csv-btn" class="btn-block outline" onclick="app.downloadExtraVolunteersOpsExport('csv')">${this.escapeHtml(i18n.t('extra_ops_export_csv'))}</button>
+                <button type="button" id="extra-ops-export-pdf-btn" class="btn-block outline" onclick="app.downloadExtraVolunteersOpsExport('pdf')">${this.escapeHtml(i18n.t('extra_ops_export_pdf'))}</button>
+            </div>` : '';
+        container.innerHTML = `
+            <div class="extra-ops-toolbar profile-form">
+                <div class="form-group">
+                    <label for="extra-ops-search-q">${this.escapeHtml(i18n.t('extra_ops_search'))}</label>
+                    <input type="search" id="extra-ops-search-q" class="form-input" value="${this.escapeHtml(filters.q || '')}">
+                </div>
+                <div class="form-group">
+                    <label for="extra-ops-search-day">${this.escapeHtml(i18n.t('extra_ops_filter_day'))}</label>
+                    <select id="extra-ops-search-day" class="form-input">
+                        <option value="">${this.escapeHtml(i18n.t('extra_ops_filter_all'))}</option>
+                        ${this.extraOpsDayOptions(filters.day || '')}
+                    </select>
+                </div>
+                <button type="button" class="btn-block outline" onclick="app.applyExtraOpsSearch()">${this.escapeHtml(i18n.t('extra_ops_search'))}</button>
+                ${exportBtns}
+            </div>
+            <div class="extra-ops-tabs" role="tablist">
+                <button type="button" class="extra-ops-tab${tab === 'extras' ? ' is-active' : ''}" onclick="app.setExtraOpsTab('extras')">${this.escapeHtml(i18n.t('extra_ops_tab_extras'))}</button>
+                <button type="button" class="extra-ops-tab${tab === 'requests' ? ' is-active' : ''}" onclick="app.setExtraOpsTab('requests')">${this.escapeHtml(i18n.t('extra_ops_tab_requests'))}</button>
+                <button type="button" class="extra-ops-tab${tab === 'assignments' ? ' is-active' : ''}" onclick="app.setExtraOpsTab('assignments')">${this.escapeHtml(i18n.t('extra_ops_tab_assignments'))}</button>
+            </div>
+            <div id="extra-ops-tab-panel">${this.renderExtraOpsTabPanel(tab)}</div>`;
+    },
+
+    renderExtraOpsTabPanel(tab) {
+        const data = this._extraOpsData || { extras: [], requests: [], assignments: [] };
+        if (tab === 'requests') return this.renderExtraOpsRequestsTab(data);
+        if (tab === 'assignments') return this.renderExtraOpsAssignmentsTab(data);
+        return this.renderExtraOpsExtrasTab(data);
+    },
+
+    renderExtraOpsExtrasTab(data) {
+        const rows = Array.isArray(data.extras) ? data.extras : [];
+        const list = rows.length ? rows.map((row) => `
+            <tr>
+                <td data-label="${this.escapeHtml(i18n.t('extra_ops_name'))}">${this.escapeHtml(row.name)}</td>
+                <td data-label="${this.escapeHtml(i18n.t('extra_ops_phone'))}">${this.escapeHtml(row.phone)}</td>
+                <td data-label="${this.escapeHtml(i18n.t('extra_ops_congregation'))}">${this.escapeHtml(row.congregation || '')}</td>
+                <td data-label="Status">${this.escapeHtml(this.extraOpsStatusLabel(row.status))}</td>
+            </tr>`).join('') : `<tr><td colspan="4">${this.escapeHtml(i18n.t('extra_ops_list_empty'))}</td></tr>`;
+        return `
+            <p class="description">${this.escapeHtml(i18n.t('extra_ops_sms_hint'))}</p>
+            <form class="profile-form" onsubmit="app.submitExtraVolunteerForm(event)">
+                <div class="form-group"><label>${this.escapeHtml(i18n.t('extra_ops_name'))}</label><input type="text" id="extra-vol-name" class="form-input" required maxlength="120"></div>
+                <div class="form-group"><label>${this.escapeHtml(i18n.t('extra_ops_phone'))}</label><input type="tel" id="extra-vol-phone" class="form-input" required autocomplete="tel"></div>
+                <div class="form-group"><label><input type="checkbox" id="extra-vol-whatsapp"> ${this.escapeHtml(i18n.t('extra_ops_whatsapp'))}</label></div>
+                <div class="form-group"><label>${this.escapeHtml(i18n.t('extra_ops_congregation'))}</label><input type="text" id="extra-vol-cong" class="form-input" maxlength="120"></div>
+                <div class="form-group extra-ops-quals">
+                    <label><input type="checkbox" id="extra-vol-elder"> ${this.escapeHtml(i18n.t('extra_ops_qual_elder'))}</label>
+                    <label><input type="checkbox" id="extra-vol-sm"> ${this.escapeHtml(i18n.t('extra_ops_qual_sm'))}</label>
+                    <label><input type="checkbox" id="extra-vol-pr"> ${this.escapeHtml(i18n.t('extra_ops_qual_pr'))}</label>
+                    <label><input type="checkbox" id="extra-vol-pa"> ${this.escapeHtml(i18n.t('extra_ops_qual_pa'))}</label>
+                </div>
+                <div class="form-group"><label>${this.escapeHtml(i18n.t('extra_ops_elder_approver'))}</label><input type="text" id="extra-vol-approver" class="form-input" maxlength="120"></div>
+                <div class="form-group"><label><input type="checkbox" id="extra-vol-sc"> ${this.escapeHtml(i18n.t('extra_ops_service_committee'))}</label></div>
+                <div class="form-group"><label>${this.escapeHtml(i18n.t('extra_ops_notes'))}</label><textarea id="extra-vol-notes" class="form-input" rows="2" maxlength="500"></textarea></div>
+                <button type="submit" class="btn-block">${this.escapeHtml(i18n.t('extra_ops_save'))}</button>
+            </form>
+            <table class="ops-table delegate-support-table"><thead><tr>
+                <th>${this.escapeHtml(i18n.t('extra_ops_name'))}</th>
+                <th>${this.escapeHtml(i18n.t('extra_ops_phone'))}</th>
+                <th>${this.escapeHtml(i18n.t('extra_ops_congregation'))}</th>
+                <th>Status</th>
+            </tr></thead><tbody>${list}</tbody></table>`;
+    },
+
+    renderExtraOpsRequestsTab(data) {
+        const rows = Array.isArray(data.requests) ? data.requests : [];
+        const list = rows.length ? rows.map((row) => `
+            <tr>
+                <td>${this.escapeHtml(row.department)}</td>
+                <td>${this.escapeHtml(row.day)} ${this.escapeHtml(row.time_slot)}</td>
+                <td>${this.escapeHtml(String(row.quantity))}</td>
+                <td>${this.escapeHtml(row.contact_name)} / ${this.escapeHtml(row.contact_phone)}</td>
+                <td>${this.escapeHtml(this.extraOpsStatusLabel(row.status))}</td>
+            </tr>`).join('') : `<tr><td colspan="5">${this.escapeHtml(i18n.t('extra_ops_list_empty'))}</td></tr>`;
+        return `
+            <form class="profile-form" onsubmit="app.submitDeptRequestForm(event)">
+                <h3 class="profile-section-title">${this.escapeHtml(i18n.t('extra_ops_request_new'))}</h3>
+                <div class="form-group"><label>${this.escapeHtml(i18n.t('extra_ops_department'))}</label><input type="text" id="dept-req-dept" class="form-input" required maxlength="120"></div>
+                <div class="form-group"><label>${this.escapeHtml(i18n.t('extra_ops_day'))}</label><select id="dept-req-day" class="form-input" required>${this.extraOpsDayOptions('')}</select></div>
+                <div class="form-group"><label>${this.escapeHtml(i18n.t('extra_ops_time'))}</label><input type="text" id="dept-req-time" class="form-input" required maxlength="40" placeholder="07:00 - 12:30"></div>
+                <div class="form-group"><label>${this.escapeHtml(i18n.t('extra_ops_quantity'))}</label><input type="number" id="dept-req-qty" class="form-input" min="1" max="99" value="1" required></div>
+                <div class="form-group"><label>${this.escapeHtml(i18n.t('extra_ops_volunteer_type'))}</label><input type="text" id="dept-req-type" class="form-input" maxlength="120"></div>
+                <div class="form-group"><label>${this.escapeHtml(i18n.t('extra_ops_contact_name'))}</label><input type="text" id="dept-req-contact" class="form-input" required maxlength="120"></div>
+                <div class="form-group"><label>${this.escapeHtml(i18n.t('extra_ops_contact_phone'))}</label><input type="tel" id="dept-req-phone" class="form-input" required autocomplete="tel"></div>
+                <div class="form-group"><label>${this.escapeHtml(i18n.t('extra_ops_notes'))}</label><textarea id="dept-req-notes" class="form-input" rows="2" maxlength="500"></textarea></div>
+                <button type="submit" class="btn-block">${this.escapeHtml(i18n.t('extra_ops_save'))}</button>
+            </form>
+            <table class="ops-table delegate-support-table"><thead><tr>
+                <th>${this.escapeHtml(i18n.t('extra_ops_department'))}</th>
+                <th>${this.escapeHtml(i18n.t('extra_ops_day'))}</th>
+                <th>${this.escapeHtml(i18n.t('extra_ops_quantity'))}</th>
+                <th>${this.escapeHtml(i18n.t('extra_ops_contact_name'))}</th>
+                <th>Status</th>
+            </tr></thead><tbody>${list}</tbody></table>`;
+    },
+
+    renderExtraOpsAssignmentsTab(data) {
+        const extras = Array.isArray(data.extras) ? data.extras : [];
+        const requests = Array.isArray(data.requests) ? data.requests.filter((r) => r.status !== 'closed') : [];
+        const assignments = Array.isArray(data.assignments) ? data.assignments : [];
+        const extraOpts = extras.map((e) => `<option value="${this.escapeHtml(e.id)}">${this.escapeHtml(e.name)} — ${this.escapeHtml(e.phone)}</option>`).join('');
+        const reqOpts = requests.map((r) => `<option value="${this.escapeHtml(r.id)}">${this.escapeHtml(r.department)} / ${this.escapeHtml(r.day)} ${this.escapeHtml(r.time_slot)}</option>`).join('');
+        const list = assignments.length ? assignments.map((row) => {
+            const att = row.attended === null ? '-' : (row.attended ? i18n.t('extra_ops_attended') + ': Sim' : i18n.t('extra_ops_attended') + ': Não');
+            return `<tr>
+                <td>${this.escapeHtml(row.extra_name)}</td>
+                <td>${this.escapeHtml(row.department)} ${this.escapeHtml(row.day)} ${this.escapeHtml(row.time_slot)}</td>
+                <td>${row.confirmed ? '✓' : '—'}</td>
+                <td>${this.escapeHtml(att)}</td>
+                <td><button type="button" class="btn-block outline" onclick="app.openExtraOpsAttendance('${this.escapeHtml(row.id)}')">${this.escapeHtml(i18n.t('extra_ops_apply_attendance'))}</button></td>
+            </tr>`;
+        }).join('') : `<tr><td colspan="5">${this.escapeHtml(i18n.t('extra_ops_list_empty'))}</td></tr>`;
+        return `
+            <form class="profile-form" onsubmit="app.submitDeptAssignmentForm(event)">
+                <div class="form-group"><label>${this.escapeHtml(i18n.t('extra_ops_select_request'))}</label><select id="dept-asg-request" class="form-input" required><option value="">—</option>${reqOpts}</select></div>
+                <div class="form-group"><label>${this.escapeHtml(i18n.t('extra_ops_select_extra'))}</label><select id="dept-asg-extra" class="form-input" required><option value="">—</option>${extraOpts}</select></div>
+                <div class="form-group"><label><input type="checkbox" id="dept-asg-confirmed"> ${this.escapeHtml(i18n.t('extra_ops_confirmed'))}</label></div>
+                <button type="submit" class="btn-block">${this.escapeHtml(i18n.t('extra_ops_assign'))}</button>
+            </form>
+            <table class="ops-table delegate-support-table"><thead><tr>
+                <th>${this.escapeHtml(i18n.t('extra_ops_select_extra'))}</th>
+                <th>${this.escapeHtml(i18n.t('extra_ops_department'))}</th>
+                <th>${this.escapeHtml(i18n.t('extra_ops_confirmed'))}</th>
+                <th>${this.escapeHtml(i18n.t('extra_ops_attended'))}</th>
+                <th></th>
+            </tr></thead><tbody>${list}</tbody></table>`;
+    },
+
+    async submitExtraVolunteerForm(event) {
+        event.preventDefault();
+        if (!navigator.onLine) { alert(i18n.t('extra_ops_offline')); return; }
+        try {
+            await API.createExtraVolunteer({
+                name: document.getElementById('extra-vol-name')?.value.trim(),
+                phone: document.getElementById('extra-vol-phone')?.value.trim(),
+                whatsapp: !!document.getElementById('extra-vol-whatsapp')?.checked,
+                congregation: document.getElementById('extra-vol-cong')?.value.trim(),
+                is_elder: !!document.getElementById('extra-vol-elder')?.checked,
+                is_sm: !!document.getElementById('extra-vol-sm')?.checked,
+                is_pr: !!document.getElementById('extra-vol-pr')?.checked,
+                is_pa: !!document.getElementById('extra-vol-pa')?.checked,
+                elder_approver: document.getElementById('extra-vol-approver')?.value.trim(),
+                service_committee: !!document.getElementById('extra-vol-sc')?.checked,
+                notes: document.getElementById('extra-vol-notes')?.value.trim()
+            });
+            alert(i18n.t('extra_ops_saved'));
+            await this.renderExtraVolunteersOps();
+        } catch (e) {
+            alert(e.message || i18n.t('extra_ops_fail'));
+        }
+    },
+
+    async submitDeptRequestForm(event) {
+        event.preventDefault();
+        if (!navigator.onLine) { alert(i18n.t('extra_ops_offline')); return; }
+        try {
+            await API.createDeptVolunteerRequest({
+                department: document.getElementById('dept-req-dept')?.value.trim(),
+                day: document.getElementById('dept-req-day')?.value,
+                time_slot: document.getElementById('dept-req-time')?.value.trim(),
+                quantity: parseInt(document.getElementById('dept-req-qty')?.value, 10) || 1,
+                volunteer_type: document.getElementById('dept-req-type')?.value.trim(),
+                contact_name: document.getElementById('dept-req-contact')?.value.trim(),
+                contact_phone: document.getElementById('dept-req-phone')?.value.trim(),
+                notes: document.getElementById('dept-req-notes')?.value.trim()
+            });
+            alert(i18n.t('extra_ops_saved'));
+            await this.renderExtraVolunteersOps();
+        } catch (e) {
+            alert(e.message || i18n.t('extra_ops_fail'));
+        }
+    },
+
+    async submitDeptAssignmentForm(event) {
+        event.preventDefault();
+        if (!navigator.onLine) { alert(i18n.t('extra_ops_offline')); return; }
+        try {
+            await API.createDeptVolunteerAssignment({
+                request_id: document.getElementById('dept-asg-request')?.value,
+                extra_id: document.getElementById('dept-asg-extra')?.value,
+                confirmed: !!document.getElementById('dept-asg-confirmed')?.checked
+            });
+            alert(i18n.t('extra_ops_saved'));
+            await this.renderExtraVolunteersOps();
+        } catch (e) {
+            alert(e.message || i18n.t('extra_ops_fail'));
+        }
+    },
+
+    openExtraOpsAttendance(assignmentId) {
+        const data = this._extraOpsData || {};
+        const row = (data.assignments || []).find((a) => a.id === assignmentId);
+        if (!row) return;
+        const attended = confirm(i18n.t('extra_ops_attended') + '? OK = Sim, Cancelar = Não');
+        if (attended) {
+            this.saveExtraOpsAttendance(assignmentId, true, '');
+            return;
+        }
+        const available = (data.extras || []).filter((e) => e.status === 'available' || e.id === row.extra_id);
+        let subId = '';
+        if (available.length) {
+            const lines = available.map((e, i) => `${i + 1}) ${e.name} (${e.phone})`).join('\n');
+            const pick = prompt(i18n.t('extra_ops_substitute') + '\n' + lines + '\n\nNúmero (ou vazio):', '');
+            if (pick) {
+                const idx = parseInt(pick, 10) - 1;
+                if (idx >= 0 && available[idx]) subId = available[idx].id;
+            }
+        }
+        this.saveExtraOpsAttendance(assignmentId, false, subId);
+    },
+
+    async saveExtraOpsAttendance(assignmentId, attended, substituteExtraId) {
+        if (!navigator.onLine) { alert(i18n.t('extra_ops_offline')); return; }
+        try {
+            const payload = { attended: !!attended };
+            if (!attended && substituteExtraId) payload.substitute_extra_id = substituteExtraId;
+            await API.updateDeptVolunteerAssignment(assignmentId, payload);
+            alert(i18n.t('extra_ops_saved'));
+            await this.renderExtraVolunteersOps();
+        } catch (e) {
+            alert(e.message || i18n.t('extra_ops_fail'));
+        }
+    },
+
+    async downloadExtraVolunteersOpsExport(format) {
+        const filters = this._extraOpsFilters || {};
+        try {
+            const blob = await API.downloadExtraVolunteersOpsExport(format, { ...filters, scope: 'all' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = format === 'pdf' ? 'zelo-extras-ops.pdf' : 'zelo-extras-ops.csv';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        } catch (e) {
+            alert(e.message || i18n.t('extra_ops_export_error'));
         }
     },
 

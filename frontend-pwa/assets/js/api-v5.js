@@ -1029,5 +1029,148 @@ const API = {
             throw new Error(data.message || data.code || 'Falha ao reprovar cadastro');
         }
         return data;
+    },
+
+    async getExtraVolunteersOps(params = {}) {
+        const qs = new URLSearchParams();
+        if (params.q) qs.set('q', params.q);
+        if (params.day) qs.set('day', params.day);
+        if (params.department) qs.set('department', params.department);
+        if (params.status) qs.set('status', params.status);
+        const url = `${this.baseUrl}/ops/extra-volunteers-ops?${qs.toString()}&_t=${Date.now()}`;
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: this.getAuthHeaders(),
+            credentials: 'include'
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'Falha ao carregar voluntários extras');
+        return data;
+    },
+
+    async createExtraVolunteer(payload) {
+        const url = `${this.baseUrl}/ops/extra-volunteers`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...this.getAuthHeaders() },
+            credentials: 'include',
+            body: JSON.stringify(payload || {})
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'Falha ao cadastrar extra');
+        return data;
+    },
+
+    async updateExtraVolunteer(id, payload) {
+        const url = `${this.baseUrl}/ops/extra-volunteers/${encodeURIComponent(id)}`;
+        const response = await fetch(url, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', ...this.getAuthHeaders() },
+            credentials: 'include',
+            body: JSON.stringify(payload || {})
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'Falha ao atualizar extra');
+        return data;
+    },
+
+    async deleteExtraVolunteer(id) {
+        const url = `${this.baseUrl}/ops/extra-volunteers/${encodeURIComponent(id)}`;
+        const response = await fetch(url, {
+            method: 'DELETE',
+            headers: this.getAuthHeaders(),
+            credentials: 'include'
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'Falha ao excluir extra');
+        return data;
+    },
+
+    async createDeptVolunteerRequest(payload) {
+        const url = `${this.baseUrl}/ops/dept-volunteer-requests`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...this.getAuthHeaders() },
+            credentials: 'include',
+            body: JSON.stringify(payload || {})
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'Falha ao registrar pedido');
+        return data;
+    },
+
+    async updateDeptVolunteerRequest(id, payload) {
+        const url = `${this.baseUrl}/ops/dept-volunteer-requests/${encodeURIComponent(id)}`;
+        const response = await fetch(url, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', ...this.getAuthHeaders() },
+            credentials: 'include',
+            body: JSON.stringify(payload || {})
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'Falha ao atualizar pedido');
+        return data;
+    },
+
+    async deleteDeptVolunteerRequest(id) {
+        const url = `${this.baseUrl}/ops/dept-volunteer-requests/${encodeURIComponent(id)}`;
+        const response = await fetch(url, {
+            method: 'DELETE',
+            headers: this.getAuthHeaders(),
+            credentials: 'include'
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'Falha ao excluir pedido');
+        return data;
+    },
+
+    async createDeptVolunteerAssignment(payload) {
+        const url = `${this.baseUrl}/ops/dept-volunteer-assignments`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...this.getAuthHeaders() },
+            credentials: 'include',
+            body: JSON.stringify(payload || {})
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'Falha ao encaminhar');
+        return data;
+    },
+
+    async updateDeptVolunteerAssignment(id, payload) {
+        const url = `${this.baseUrl}/ops/dept-volunteer-assignments/${encodeURIComponent(id)}`;
+        const response = await fetch(url, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', ...this.getAuthHeaders() },
+            credentials: 'include',
+            body: JSON.stringify(payload || {})
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'Falha ao atualizar encaminhamento');
+        return data;
+    },
+
+    async downloadExtraVolunteersOpsExport(format, params = {}) {
+        const qs = new URLSearchParams({ format: format || 'csv', scope: params.scope || 'all' });
+        if (params.q) qs.set('q', params.q);
+        if (params.day) qs.set('day', params.day);
+        if (params.department) qs.set('department', params.department);
+        if (params.status) qs.set('status', params.status);
+        const url = `${this.baseUrl}/ops/extra-volunteers-ops/export?${qs.toString()}&_t=${Date.now()}`;
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: this.getAuthHeaders(),
+            credentials: 'include'
+        });
+        if (!response.ok) {
+            const ct = response.headers.get('content-type') || '';
+            let msg = 'Falha ao exportar';
+            if (ct.indexOf('application/json') !== -1) {
+                const data = await response.json().catch(() => ({}));
+                msg = data.message || msg;
+            }
+            throw new Error(msg);
+        }
+        return response.blob();
     }
 };

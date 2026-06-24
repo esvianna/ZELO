@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Zelo Assistente
  * Description: Backend plugin for Zelo PWA. Manages Locations and Event Info.
- * Version: 2.20.1
+ * Version: 2.22.0
  * Author: Zelo Team
  * Text Domain: zelo-assistente
  */
@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define( 'ZELO_VERSION', '2.21.5' );
+define( 'ZELO_VERSION', '2.22.0' );
 define( 'ZELO_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 
 if ( file_exists( ZELO_PLUGIN_DIR . 'vendor/autoload.php' ) ) {
@@ -46,6 +46,7 @@ require_once ZELO_PLUGIN_DIR . 'inc/zelo-web-push.php';
 require_once ZELO_PLUGIN_DIR . 'inc/zelo-volunteer-swaps.php';
 require_once ZELO_PLUGIN_DIR . 'inc/zelo-ops-shift-notify.php';
 require_once ZELO_PLUGIN_DIR . 'inc/zelo-delegate-support-reports.php';
+require_once ZELO_PLUGIN_DIR . 'inc/zelo-extra-volunteers-ops.php';
 require_once ZELO_PLUGIN_DIR . 'inc/volunteer-ops-admin-ui.php';
 if ( is_admin() ) {
 	require_once ZELO_PLUGIN_DIR . 'inc/admin-categories.php';

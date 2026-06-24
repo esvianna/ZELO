@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.22.0] - 2026-06-23
+
+### Adicionado
+- **Voluntários extras (#60):** Pool B separado (`zelo_extra_volunteers`, pedidos, encaminhamentos); REST `/ops/extra-volunteers*`, `/ops/dept-volunteer-requests*`, `/ops/dept-volunteer-assignments*`, dashboard `/ops/extra-volunteers-ops`; export CSV/PDF; SMS Comtele ao encaminhar (telefone obrigatório no cadastro).
+
 ## [2.21.5] - 2026-06-22
 
 ### Adicionado

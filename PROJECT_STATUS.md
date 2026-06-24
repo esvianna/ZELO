@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-23** — sync Project → docs (#44–#59 **Done**); backlog dev vazio.
+> Última atualização: **2026-06-23** — #60 voluntários extras plugin **2.22.0** / PWA **172** **In review**.
 
 ---
 
@@ -165,7 +165,9 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## O que está pendente
 
-*Nenhuma issue em Backlog / Ready / In progress / In review no [Project 3](https://github.com/users/esvianna/projects/3) (2026-06-23).*
+| Issue | Estado | Notas |
+|-------|--------|-------|
+| [#60](https://github.com/esvianna/ZELO/issues/60) | **In review** | Voluntários extras Pool B — plugin 2.22.0 / PWA 172; smoke 60a–60e |
 
 ### Validadas no Project (Done) — sync 2026-06-23
 
@@ -188,7 +190,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## Próximos passos lógicos
 
-1. **Conteúdo:** manter locais (farmácias, hospitais, etc.) e escala no WP — sem tarefa de dev aberta.
+1. Smoke **#60** (extras, pedidos, encaminhamento, SMS, export) após deploy plugin **2.22.0** + PWA **172**.
 2. **Deploy:** alinhar produção com plugin **2.21.5** + PWA **171** se ainda não publicados.
 3. Nova demanda → issue no Project 3 (Backlog) antes de codificar.
 

@@ -510,6 +510,16 @@ Teto Titan (**1.000/dia**) fica confortável com ADR-037; **actual** aproxima-se
 
 ---
 
+## ADR-042 — Voluntários extras Pool B (#60, 2026-06-23)
+
+**Contexto:** Formulários papel Curitiba 2026; extras de outros departamentos não devem misturar-se com contas WP do dept. Informações.
+
+**Decisões:** Pool B sem login; cadastro/pedidos/encaminhamento por `zelo_view_ops`; telefone obrigatório; SMS Comtele só no encaminhamento (responsável do pedido no texto); export `zelo_manage_ops`; storage em options dedicadas.
+
+**Consequências:** Plugin **2.22.0** / PWA **172**; `inc/zelo-extra-volunteers-ops.php`; `TESTING.md` §17.
+
+---
+
 ## Template para nova ADR
 
 ```markdown

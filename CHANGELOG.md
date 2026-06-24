@@ -8,6 +8,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Adicionado — voluntários extras / encaminhamento (#60)
+
+| Versão | Entrega |
+|--------|---------|
+| Plugin **2.22.0** / PWA **172** | Pool B separado: cadastro extras (form. 01–02), pedidos dept. (03), encaminhamentos + comparecimento (04–05); pesquisa/filtros; export CSV/PDF (gestor); SMS Comtele no encaminhamento; telefone obrigatório |
+
 ### Adicionado — swap notificações (#56, ADR-041)
 
 | Versão | Entrega |

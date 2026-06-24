@@ -426,6 +426,21 @@ Pré-requisitos: HTTPS; Chrome/Android ou Safari 16.4+ (iOS com limitações). A
 
 ---
 
+## 17. Voluntários extras Pool B (#60, plugin 2.22.0+, PWA 172+)
+
+Pré-requisitos: Comtele activo (#54); voluntário logado `zelo_view_ops`; gestor para export.
+
+| # | Passo | Esperado |
+|---|-------|----------|
+| 60a | Home Operação → Voluntários extras → cadastrar extra (telefone obrigatório) | `POST /ops/extra-volunteers` **200**; lista actualiza |
+| 60b | Aba Pedidos → novo pedido (dept., dia, hora, responsável + fone) | `POST /ops/dept-volunteer-requests` **200**; status `open` |
+| 60c | Aba Encaminhamentos → escolher pedido + extra → Encaminhar | Assignment criado; extra `assigned`; **SMS** ao telefone (ou fila se Comtele falhar) |
+| 60d | Comparecimento → Não + substituto (número da lista) | Novo assignment; SMS ao substituto |
+| 60e | Gestor → export CSV/PDF com filtro | Download OK; dados filtrados |
+| 60f | Regressão Pool A | Escala/swap/selectors **não** listam extras |
+
+---
+
 ## Registro de execução
 
 Copie e preencha após cada rodada:
