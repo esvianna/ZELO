@@ -3810,7 +3810,7 @@ const app = {
 
         let pinsHtml = this._buildIndoorPinsHtml(places, booths, ui);
 
-        const legendHtml = this.buildIndoorMapLegendHtml(booths);
+        const legendHtml = this.buildIndoorMapLegendHtml(booths, dests);
 
         el.innerHTML = staleBanner + `
             <div class="indoor-map-screen">
@@ -3881,8 +3881,41 @@ const app = {
         return 'indoor-pin booth booth-1';
     },
 
+    indoorFloorPalette() {
+        return ['#ea580c', '#7c3aed', '#0891b2', '#059669', '#db2777', '#ca8a04', '#2563eb', '#475569'];
+    },
+
+    indoorBuildFloorLegend(places) {
+        const palette = this.indoorFloorPalette();
+        const seen = new Map();
+        (places || []).forEach((p) => {
+            if (p.kind === 'booth') return;
+            const label = String(p.floor || '').trim();
+            if (!label) return;
+            const key = label.toLowerCase();
+            if (!seen.has(key)) seen.set(key, label);
+        });
+        const entries = Array.from(seen.entries()).sort((a, b) =>
+            a[1].localeCompare(b[1], undefined, { numeric: true, sensitivity: 'base' })
+        );
+        return entries.map(([key, label], i) => ({
+            key,
+            label,
+            color: palette[i % palette.length]
+        }));
+    },
+
+    indoorFloorPinColor(floor, legend) {
+        const label = String(floor || '').trim();
+        if (!label) return '#94a3b8';
+        const key = label.toLowerCase();
+        const item = (legend || []).find((x) => x.key === key);
+        return item ? item.color : '#94a3b8';
+    },
+
     _buildIndoorPinsHtml(places, booths, ui) {
         let pinsHtml = '';
+        const floorLegend = this.indoorBuildFloorLegend(places);
         (places || []).forEach((p) => {
             const x = typeof p.x === 'number' ? p.x : parseFloat(p.x) || 0;
             const y = typeof p.y === 'number' ? p.y : parseFloat(p.y) || 0;
@@ -3893,9 +3926,11 @@ const app = {
             const visualCls = isBooth
                 ? (boothSlot === 2 ? 'indoor-pin-visual booth booth-2' : 'indoor-pin-visual booth booth-1')
                 : 'indoor-pin-visual dest';
+            const visualStyle = !isBooth ? ` style="background:${this.indoorFloorPinColor(p.floor, floorLegend)}"` : '';
             const pinLabel = isBooth && boothSlot ? `<span class="indoor-pin-label" aria-hidden="true">${boothSlot}</span>` : '';
             const ariaLabel = isBooth && boothSlot ? `${lab} (${i18n.t('indoor_legend_booth_' + boothSlot)})` : lab;
-            pinsHtml += `<button type="button" class="indoor-pin${isSel ? ' selected' : ''}" style="left:${x * 100}%;top:${y * 100}%;" title="${this.escapeAttr(lab)}" aria-label="${this.escapeAttr(ariaLabel)}" onclick="app.onIndoorPinClick('${this.escapeAttr(p.id)}','${isBooth ? 'booth' : 'dest'}')"><span class="${visualCls}">${pinLabel}</span></button>`;
+            const tipHtml = `<span class="indoor-pin-tooltip" role="tooltip">${this.escapeHtml(lab)}</span>`;
+            pinsHtml += `<button type="button" class="indoor-pin${isSel ? ' selected' : ''}" data-place-id="${this.escapeAttr(p.id)}" style="left:${x * 100}%;top:${y * 100}%;" title="${this.escapeAttr(lab)}" aria-label="${this.escapeAttr(ariaLabel)}" onclick="app.onIndoorPinClick('${this.escapeAttr(p.id)}','${isBooth ? 'booth' : 'dest'}')"><span class="${visualCls}"${visualStyle}>${pinLabel}</span>${tipHtml}</button>`;
         });
         return pinsHtml;
     },
@@ -3926,7 +3961,7 @@ const app = {
         return true;
     },
 
-    buildIndoorMapLegendHtml(booths) {
+    buildIndoorMapLegendHtml(booths, dests) {
         const list = Array.isArray(booths) ? booths : [];
         const b1 = list.find((b) => this.indoorBoothSlot(b, list) === 1) || list[0];
         const b2 = list.find((b) => this.indoorBoothSlot(b, list) === 2) || list[1];
@@ -3936,7 +3971,15 @@ const app = {
         if (b2) {
             items += `<span class="indoor-legend-item"><span class="indoor-legend-swatch booth-2" aria-hidden="true">2</span>${lab2}</span>`;
         }
-        items += `<span class="indoor-legend-item"><span class="indoor-legend-swatch dest" aria-hidden="true"></span>${i18n.t('indoor_legend_dest')}</span>`;
+        const allPlaces = [...list, ...(Array.isArray(dests) ? dests : [])];
+        const floorLegend = this.indoorBuildFloorLegend(allPlaces);
+        if (floorLegend.length) {
+            floorLegend.forEach((fl) => {
+                items += `<span class="indoor-legend-item"><span class="indoor-legend-swatch dest" style="background:${fl.color}" aria-hidden="true"></span>${this.escapeHtml(fl.label)}</span>`;
+            });
+        } else {
+            items += `<span class="indoor-legend-item"><span class="indoor-legend-swatch dest" aria-hidden="true"></span>${i18n.t('indoor_legend_dest')}</span>`;
+        }
         return `<div class="indoor-map-legend" role="note">${items}</div>`;
     },
 
@@ -4630,6 +4673,7 @@ const app = {
 
     indoorDiagramFitAll() {
         if (!this.data.indoorMapUi) this.data.indoorMapUi = {};
+        this._hideIndoorPinTooltip();
         this.data.indoorMapUi._focusDiagram = 'fit';
         if (this._applyIndoorDiagramFocusInPlace()) return;
         this.renderIndoorEventMap();
@@ -4697,6 +4741,30 @@ const app = {
         });
     },
 
+    _hideIndoorPinTooltip() {
+        const ui = this.data.indoorMapUi;
+        if (ui && ui._pinTooltipTimer) {
+            clearTimeout(ui._pinTooltipTimer);
+            ui._pinTooltipTimer = null;
+        }
+        document.querySelectorAll('.indoor-pin.is-tooltip-visible').forEach((el) => {
+            el.classList.remove('is-tooltip-visible');
+        });
+    },
+
+    _showIndoorPinTooltip(placeId) {
+        if (!placeId) return;
+        this._hideIndoorPinTooltip();
+        const btn = document.querySelector(`.indoor-pin[data-place-id="${placeId}"]`);
+        if (!btn) return;
+        btn.classList.add('is-tooltip-visible');
+        const ui = this.data.indoorMapUi || {};
+        ui._pinTooltipTimer = setTimeout(() => {
+            btn.classList.remove('is-tooltip-visible');
+            if (ui._pinTooltipTimer) ui._pinTooltipTimer = null;
+        }, 3500);
+    },
+
     onIndoorPinClick(id, kind) {
         if (!this.data.indoorMapUi) this.data.indoorMapUi = {};
         if (kind === 'booth') {
@@ -4714,6 +4782,7 @@ const app = {
             if (this.data.indoorMapUi.tab === 'map') {
                 this._syncIndoorTabDom('map');
                 this._applyIndoorDiagramFocusInPlace();
+                this._showIndoorPinTooltip(id);
             } else {
                 this._syncIndoorTabDom('guide');
                 requestAnimationFrame(() => {

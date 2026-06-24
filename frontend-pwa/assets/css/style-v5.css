@@ -4593,6 +4593,39 @@ body.ops-modal-open {
     z-index: 3;
 }
 
+.indoor-pin-tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) scale(var(--indoor-pin-counter, 1));
+    transform-origin: center bottom;
+    max-width: min(42vw, 200px);
+    padding: 0.35rem 0.55rem;
+    border-radius: 6px;
+    background: rgba(15, 23, 42, 0.92);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.25;
+    text-align: center;
+    white-space: normal;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.15s ease, visibility 0.15s ease;
+    z-index: 5;
+}
+
+.indoor-pin.is-tooltip-visible .indoor-pin-tooltip {
+    opacity: 1;
+    visibility: visible;
+}
+
+.indoor-pin.is-tooltip-visible {
+    z-index: 4;
+}
+
 .indoor-map-empty {
     padding: 1rem;
 }

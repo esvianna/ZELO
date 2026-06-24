@@ -15,6 +15,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | Plugin **2.23.1** / PWA **175** | Fase A: pinos maiores + hit area 44 px; counter-scale no zoom; auto-foco ao seleccionar balcão/destino; admin modo Posicionar com pinos 2× e highlight |
 | PWA **176** | Fix #61: pinos proporcionais no «Mapa completo» (remove counter-scale fixo); CSS `.indoor-pin-visual`; tecto min/max só após zoom |
 | PWA **177** | Fix #61 mobile: remove `min-width:720px`; dimensiona imagem via `naturalWidth` + largura viewport; decode antes do fit; pinos ~11–13 px no mapa completo |
+| PWA **178** | #61: tooltip com nome do local ao tocar pino na aba Diagrama (3,5 s; mobile + desktop) |
+| Plugin **2.23.2** / PWA **179** | #61: pinos de destino coloridos por pavimento (coluna Pav.); legenda dinâmica admin + PWA |
 
 ### Adicionado — voluntários extras / encaminhamento (#60)
 

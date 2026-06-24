@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.23.2] - 2026-06-24
+
+### Alterado
+- **Mapa evento pinos por pavimento (#61):** destinos com cor por valor da coluna Pav.; legenda dinâmica no admin; balcões mantêm azul/teal.
+
 ## [2.23.1] - 2026-06-24
 
 ### Alterado

@@ -387,6 +387,77 @@ function zelo_indoor_map_routes_ok_count( $place, $booths ) {
 }
 
 /**
+ * Paleta de cores por pavimento (destinos no diagrama).
+ *
+ * @return string[]
+ */
+function zelo_indoor_map_floor_palette() {
+	return array( '#ea580c', '#7c3aed', '#0891b2', '#059669', '#db2777', '#ca8a04', '#2563eb', '#475569' );
+}
+
+/**
+ * Legenda de pavimentos únicos (ordenada) com cor atribuída.
+ *
+ * @param array<int, array<string, mixed>> $places Locais.
+ * @return array<int, array{key:string,label:string,color:string}>
+ */
+function zelo_indoor_map_build_floor_legend( $places ) {
+	$palette = zelo_indoor_map_floor_palette();
+	$seen    = array();
+	$items   = array();
+	foreach ( $places as $place ) {
+		if ( ( $place['kind'] ?? '' ) === 'booth' ) {
+			continue;
+		}
+		$label = trim( (string) ( $place['floor'] ?? '' ) );
+		if ( $label === '' ) {
+			continue;
+		}
+		$key = mb_strtolower( $label );
+		if ( isset( $seen[ $key ] ) ) {
+			continue;
+		}
+		$seen[ $key ] = $label;
+		$items[]      = array(
+			'key'   => $key,
+			'label' => $label,
+		);
+	}
+	usort(
+		$items,
+		function ( $a, $b ) {
+			return strnatcasecmp( $a['label'], $b['label'] );
+		}
+	);
+	foreach ( $items as $i => &$item ) {
+		$item['color'] = $palette[ $i % count( $palette ) ];
+	}
+	unset( $item );
+	return $items;
+}
+
+/**
+ * Cor do pino para um pavimento.
+ *
+ * @param string                              $floor  Pavimento.
+ * @param array<int, array<string, mixed>>    $legend Legenda de zelo_indoor_map_build_floor_legend().
+ * @return string Hex.
+ */
+function zelo_indoor_map_floor_color_for( $floor, $legend ) {
+	$floor = trim( (string) $floor );
+	if ( $floor === '' ) {
+		return '#94a3b8';
+	}
+	$key = mb_strtolower( $floor );
+	foreach ( $legend as $item ) {
+		if ( ( $item['key'] ?? '' ) === $key ) {
+			return $item['color'];
+		}
+	}
+	return '#94a3b8';
+}
+
+/**
  * Label localizado para API/PWA.
  *
  * @param array<string, mixed> $place Place.

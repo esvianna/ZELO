@@ -188,19 +188,28 @@ function zelo_render_indoor_map_admin_tab( $indoor_map, $locations = array(), $a
 		</table>
 
 		<div id="zelo-map-editor-wrap" style="margin:1rem 0;max-width:100%;<?php echo $map['image_url'] ? '' : 'display:none;'; ?>">
-			<p class="description"><?php esc_html_e( 'Selecione «Posicionar» num local e clique no diagrama. Balcão 1 = quadrado azul; Balcão 2 = quadrado teal; destinos = círculo laranja.', 'zelo-assistente' ); ?></p>
-			<div class="zelo-map-legend" style="display:flex;flex-wrap:wrap;gap:0.65rem 1rem;margin:0.5rem 0;font-size:12px;color:#50575e;">
+			<p class="description"><?php esc_html_e( 'Selecione «Posicionar» num local e clique no diagrama. Balcões = quadrados azul/teal; destinos = círculos coloridos por pavimento (coluna Pav.).', 'zelo-assistente' ); ?></p>
+			<div id="zelo-map-legend" class="zelo-map-legend" style="display:flex;flex-wrap:wrap;gap:0.65rem 1rem;margin:0.5rem 0;font-size:12px;color:#50575e;">
 				<?php
 				$b1 = isset( $booths[0] ) ? $booths[0] : null;
 				$b2 = isset( $booths[1] ) ? $booths[1] : null;
 				$lab1 = $b1 ? zelo_indoor_map_place_label( $b1, 'pt_br' ) : __( 'Balcão 1', 'zelo-assistente' );
 				$lab2 = $b2 ? zelo_indoor_map_place_label( $b2, 'pt_br' ) : __( 'Balcão 2', 'zelo-assistente' );
+				$floor_legend = zelo_indoor_map_build_floor_legend( $places );
 				?>
-				<span><span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:3px;background:#1e40af;color:#fff;font-size:9px;font-weight:700;border:2px solid #fff;vertical-align:middle;margin-right:4px;">1</span><?php echo esc_html( $lab1 ); ?></span>
+				<span class="zelo-map-legend-booths"><span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:3px;background:#1e40af;color:#fff;font-size:9px;font-weight:700;border:2px solid #fff;vertical-align:middle;margin-right:4px;">1</span><?php echo esc_html( $lab1 ); ?></span>
 				<?php if ( $b2 ) : ?>
-					<span><span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:3px;background:#0d9488;color:#fff;font-size:9px;font-weight:700;border:2px solid #fff;vertical-align:middle;margin-right:4px;">2</span><?php echo esc_html( $lab2 ); ?></span>
+					<span class="zelo-map-legend-booths"><span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:3px;background:#0d9488;color:#fff;font-size:9px;font-weight:700;border:2px solid #fff;vertical-align:middle;margin-right:4px;">2</span><?php echo esc_html( $lab2 ); ?></span>
 				<?php endif; ?>
-				<span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#ea580c;border:2px solid #fff;vertical-align:middle;margin-right:4px;"></span><?php esc_html_e( 'Destino', 'zelo-assistente' ); ?></span>
+				<span id="zelo-map-legend-floors">
+				<?php if ( ! empty( $floor_legend ) ) : ?>
+					<?php foreach ( $floor_legend as $fl ) : ?>
+						<span class="zelo-map-legend-floor"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:<?php echo esc_attr( $fl['color'] ); ?>;border:2px solid #fff;vertical-align:middle;margin-right:4px;"></span><?php echo esc_html( $fl['label'] ); ?></span>
+					<?php endforeach; ?>
+				<?php else : ?>
+					<span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#ea580c;border:2px solid #fff;vertical-align:middle;margin-right:4px;"></span><?php esc_html_e( 'Destino', 'zelo-assistente' ); ?></span>
+				<?php endif; ?>
+				</span>
 			</div>
 			<p><strong><?php esc_html_e( 'Local seleccionado:', 'zelo-assistente' ); ?></strong> <span id="zelo-map-selected-label">—</span></p>
 			<div id="zelo-map-canvas" style="position:relative;display:inline-block;max-width:100%;cursor:crosshair;border:1px solid #ccd0d4;background:#f6f7f7;">
@@ -264,11 +273,64 @@ function zelo_render_indoor_map_admin_tab( $indoor_map, $locations = array(), $a
 	<script>
 	var ZELO_MAP_PLACE_TPL = <?php echo wp_json_encode( $tpl_place ); ?>;
 	var zeloMapSelectedPlaceId = '';
+	var ZELO_MAP_FLOOR_PALETTE = <?php echo wp_json_encode( zelo_indoor_map_floor_palette() ); ?>;
 
-	function zeloMapBoothPinStyle(kind, tr, positioning) {
+	function zeloMapBuildFloorLegend() {
+		var seen = {};
+		var items = [];
+		document.querySelectorAll('#zelo-map-places-body tr.zelo-map-place-row').forEach(function(tr) {
+			var kind = tr.querySelector('.map-place-kind') ? tr.querySelector('.map-place-kind').value : 'amenity';
+			if (kind === 'booth') return;
+			var floorInp = tr.querySelector('input[name="map_place_floor[]"]');
+			var label = floorInp ? (floorInp.value || '').trim() : '';
+			if (!label) return;
+			var key = label.toLowerCase();
+			if (seen[key]) return;
+			seen[key] = label;
+			items.push({ key: key, label: label });
+		});
+		items.sort(function(a, b) {
+			return a.label.localeCompare(b.label, undefined, { numeric: true, sensitivity: 'base' });
+		});
+		items.forEach(function(it, i) {
+			it.color = ZELO_MAP_FLOOR_PALETTE[i % ZELO_MAP_FLOOR_PALETTE.length];
+		});
+		return items;
+	}
+
+	function zeloMapFloorColor(floor, legend) {
+		var label = (floor || '').trim();
+		if (!label) return '#94a3b8';
+		var key = label.toLowerCase();
+		for (var i = 0; i < legend.length; i++) {
+			if (legend[i].key === key) return legend[i].color;
+		}
+		return '#94a3b8';
+	}
+
+	function zeloMapRefreshLegendFloors(floorLegend) {
+		var host = document.getElementById('zelo-map-legend-floors');
+		if (!host) return;
+		host.innerHTML = '';
+		if (!floorLegend.length) {
+			host.innerHTML = '<span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#ea580c;border:2px solid #fff;vertical-align:middle;margin-right:4px;"></span><?php echo esc_js( __( 'Destino', 'zelo-assistente' ) ); ?></span>';
+			return;
+		}
+		floorLegend.forEach(function(fl) {
+			var span = document.createElement('span');
+			span.className = 'zelo-map-legend-floor';
+			span.style.marginRight = '0.65rem';
+			span.innerHTML = '<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:' + fl.color + ';border:2px solid #fff;vertical-align:middle;margin-right:4px;"></span>' + fl.label;
+			host.appendChild(span);
+		});
+	}
+
+	function zeloMapBoothPinStyle(kind, tr, positioning, floorLegend) {
 		var mult = positioning ? 2 : 1;
 		if (kind !== 'booth') {
-			return { bg: '#ea580c', w: 20 * mult, h: 20 * mult, br: '50%', label: '', fs: (positioning ? 11 : 10) };
+			var floorInp = tr ? tr.querySelector('input[name="map_place_floor[]"]') : null;
+			var floor = floorInp ? floorInp.value : '';
+			return { bg: zeloMapFloorColor(floor, floorLegend), w: 20 * mult, h: 20 * mult, br: '50%', label: '', fs: (positioning ? 11 : 10) };
 		}
 		var slot = tr ? parseInt(tr.getAttribute('data-booth-slot') || '1', 10) : 1;
 		if (slot !== 2) slot = 1;
@@ -285,6 +347,8 @@ function zelo_render_indoor_map_admin_tab( $indoor_map, $locations = array(), $a
 	function zeloMapRefreshPins() {
 		var overlay = document.getElementById('zelo-map-pins-overlay');
 		if (!overlay) return;
+		var floorLegend = zeloMapBuildFloorLegend();
+		zeloMapRefreshLegendFloors(floorLegend);
 		overlay.innerHTML = '';
 		var positioning = !!zeloMapSelectedPlaceId;
 		document.querySelectorAll('#zelo-map-places-body tr.zelo-map-place-row').forEach(function(tr) {
@@ -293,7 +357,7 @@ function zelo_render_indoor_map_admin_tab( $indoor_map, $locations = array(), $a
 			var x = parseFloat(tr.querySelector('.map-place-x').value || '0');
 			var y = parseFloat(tr.querySelector('.map-place-y').value || '0');
 			var name = tr.querySelector('input[name="map_place_name_pt[]"]') ? tr.querySelector('input[name="map_place_name_pt[]"]').value : '';
-			var pin = zeloMapBoothPinStyle(kind, tr, positioning);
+			var pin = zeloMapBoothPinStyle(kind, tr, positioning, floorLegend);
 			var dot = document.createElement('span');
 			dot.title = name || id;
 			dot.style.cssText = 'position:absolute;left:' + (x * 100) + '%;top:' + (y * 100) + '%;transform:translate(-50%,-50%);width:' + pin.w + 'px;height:' + pin.h + 'px;border-radius:' + pin.br + ';background:' + pin.bg + ';border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:' + pin.fs + 'px;font-weight:700;line-height:1;';
@@ -400,8 +464,15 @@ function zelo_render_indoor_map_admin_tab( $indoor_map, $locations = array(), $a
 				zeloMapRefreshPins();
 			});
 		}
+		var placesBody = document.getElementById('zelo-map-places-body');
+		if (placesBody) {
+			placesBody.addEventListener('input', function(ev) {
+				if (ev.target && ev.target.matches('input[name="map_place_floor[]"]')) {
+					zeloMapRefreshPins();
+				}
+			});
+		}
 		zeloMapRefreshPins();
-	});
 	</script>
 	<?php
 }
