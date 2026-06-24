@@ -5244,27 +5244,52 @@ body.ops-modal-open {
 }
 
 .extra-ops-tabs {
-    display: flex;
-    gap: 0.35rem;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.3rem;
     margin: 1rem 0;
-    flex-wrap: wrap;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .extra-ops-tab {
-    flex: 1;
-    min-width: 5.5rem;
-    padding: 0.55rem 0.65rem;
+    min-width: 0;
+    width: 100%;
+    padding: 0.5rem 0.2rem;
     border: 1px solid var(--border-color, #ddd);
     border-radius: 8px;
     background: #fff;
-    font-size: 0.85rem;
+    font-size: 0.78rem;
+    line-height: 1.2;
+    text-align: center;
     cursor: pointer;
+    white-space: normal;
+    hyphens: auto;
+}
+
+.extra-ops-tab-text--short {
+    display: none;
 }
 
 .extra-ops-tab.is-active {
     background: var(--primary-color, #2563eb);
     color: #fff;
     border-color: var(--primary-color, #2563eb);
+}
+
+@media (max-width: 420px) {
+    .extra-ops-tab {
+        font-size: 0.72rem;
+        padding: 0.45rem 0.15rem;
+    }
+
+    .extra-ops-tab-text--full {
+        display: none;
+    }
+
+    .extra-ops-tab-text--short {
+        display: inline;
+    }
 }
 
 .extra-ops-quals label {

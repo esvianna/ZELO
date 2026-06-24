@@ -7653,9 +7653,9 @@ const app = {
                 ${exportBtns}
             </div>
             <div class="extra-ops-tabs" role="tablist">
-                <button type="button" class="extra-ops-tab${tab === 'extras' ? ' is-active' : ''}" onclick="app.setExtraOpsTab('extras')">${this.escapeHtml(i18n.t('extra_ops_tab_extras'))}</button>
-                <button type="button" class="extra-ops-tab${tab === 'requests' ? ' is-active' : ''}" onclick="app.setExtraOpsTab('requests')">${this.escapeHtml(i18n.t('extra_ops_tab_requests'))}</button>
-                <button type="button" class="extra-ops-tab${tab === 'assignments' ? ' is-active' : ''}" onclick="app.setExtraOpsTab('assignments')">${this.escapeHtml(i18n.t('extra_ops_tab_assignments'))}</button>
+                <button type="button" role="tab" aria-selected="${tab === 'extras' ? 'true' : 'false'}" class="extra-ops-tab${tab === 'extras' ? ' is-active' : ''}" onclick="app.setExtraOpsTab('extras')">${this.escapeHtml(i18n.t('extra_ops_tab_extras'))}</button>
+                <button type="button" role="tab" aria-selected="${tab === 'requests' ? 'true' : 'false'}" class="extra-ops-tab${tab === 'requests' ? ' is-active' : ''}" onclick="app.setExtraOpsTab('requests')">${this.escapeHtml(i18n.t('extra_ops_tab_requests'))}</button>
+                <button type="button" role="tab" aria-selected="${tab === 'assignments' ? 'true' : 'false'}" aria-label="${this.escapeHtml(i18n.t('extra_ops_tab_assignments'))}" class="extra-ops-tab${tab === 'assignments' ? ' is-active' : ''}" onclick="app.setExtraOpsTab('assignments')"><span class="extra-ops-tab-text extra-ops-tab-text--full">${this.escapeHtml(i18n.t('extra_ops_tab_assignments'))}</span><span class="extra-ops-tab-text extra-ops-tab-text--short">${this.escapeHtml(i18n.t('extra_ops_tab_assignments_short'))}</span></button>
             </div>
             <div id="extra-ops-tab-panel">${this.renderExtraOpsTabPanel(tab)}</div>`;
     },
