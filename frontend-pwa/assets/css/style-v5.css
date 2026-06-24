@@ -4398,12 +4398,12 @@ body.ops-modal-open {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 14px;
-    height: 14px;
+    width: 18px;
+    height: 18px;
     border: 2px solid #fff;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
     flex-shrink: 0;
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 700;
     color: #fff;
     line-height: 1;
@@ -4481,6 +4481,7 @@ body.ops-modal-open {
 .indoor-map-transform {
     transform-origin: 0 0;
     will-change: transform;
+    --indoor-zoom: 1;
 }
 
 .indoor-map-wrap {
@@ -4527,24 +4528,35 @@ body.ops-modal-open {
 
 .indoor-pin {
     position: absolute;
-    transform: translate(-50%, -50%);
-    width: 12px;
-    height: 12px;
+    transform: translate(-50%, -50%) scale(calc(1 / var(--indoor-zoom, 1)));
+    width: 22px;
+    height: 22px;
     border: 2px solid #fff;
     border-radius: 50%;
     background: #ea580c;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
     pointer-events: auto;
     padding: 0;
+    z-index: 2;
+}
+
+.indoor-pin::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
 }
 
 .indoor-pin.booth {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 16px;
-    height: 16px;
-    border-radius: 3px;
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
     padding: 0;
 }
 
@@ -4557,7 +4569,7 @@ body.ops-modal-open {
 }
 
 .indoor-pin-label {
-    font-size: 9px;
+    font-size: 13px;
     font-weight: 700;
     color: #fff;
     line-height: 1;
@@ -4565,8 +4577,9 @@ body.ops-modal-open {
 }
 
 .indoor-pin.selected {
-    outline: 2px solid #facc15;
-    outline-offset: 1px;
+    outline: 3px solid #facc15;
+    outline-offset: 2px;
+    z-index: 3;
 }
 
 .indoor-map-empty {

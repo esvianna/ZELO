@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.23.1] - 2026-06-24
+
+### Alterado
+- **Mapa evento pinos (#61):** admin — pinos maiores no modo Posicionar (2×), highlight na linha e contorno no canvas; pinos base ligeiramente maiores na visualização.
+
 ## [2.23.0] - 2026-06-23
 
 ### Adicionado / alterado

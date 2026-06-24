@@ -257,22 +257,28 @@ function zelo_render_indoor_map_admin_tab( $indoor_map, $locations = array(), $a
 		$locations
 	);
 	?>
+	<style>
+	#zelo-map-places-body tr.zelo-map-place-row.zelo-map-row-positioning { background: #fef9c3; }
+	#zelo-map-canvas.zelo-map-positioning { outline: 2px solid #facc15; outline-offset: 2px; }
+	</style>
 	<script>
 	var ZELO_MAP_PLACE_TPL = <?php echo wp_json_encode( $tpl_place ); ?>;
 	var zeloMapSelectedPlaceId = '';
 
-	function zeloMapBoothPinStyle(kind, tr) {
+	function zeloMapBoothPinStyle(kind, tr, positioning) {
+		var mult = positioning ? 2 : 1;
 		if (kind !== 'booth') {
-			return { bg: '#ea580c', w: 12, h: 12, br: '50%', label: '' };
+			return { bg: '#ea580c', w: 20 * mult, h: 20 * mult, br: '50%', label: '', fs: (positioning ? 11 : 10) };
 		}
 		var slot = tr ? parseInt(tr.getAttribute('data-booth-slot') || '1', 10) : 1;
 		if (slot !== 2) slot = 1;
 		return {
 			bg: slot === 2 ? '#0d9488' : '#1e40af',
-			w: 16,
-			h: 16,
-			br: '2px',
-			label: String(slot)
+			w: 26 * mult,
+			h: 26 * mult,
+			br: '3px',
+			label: String(slot),
+			fs: (positioning ? 13 : 11)
 		};
 	}
 
@@ -280,18 +286,19 @@ function zelo_render_indoor_map_admin_tab( $indoor_map, $locations = array(), $a
 		var overlay = document.getElementById('zelo-map-pins-overlay');
 		if (!overlay) return;
 		overlay.innerHTML = '';
+		var positioning = !!zeloMapSelectedPlaceId;
 		document.querySelectorAll('#zelo-map-places-body tr.zelo-map-place-row').forEach(function(tr) {
 			var id = tr.getAttribute('data-place-id');
 			var kind = tr.querySelector('.map-place-kind') ? tr.querySelector('.map-place-kind').value : 'amenity';
 			var x = parseFloat(tr.querySelector('.map-place-x').value || '0');
 			var y = parseFloat(tr.querySelector('.map-place-y').value || '0');
 			var name = tr.querySelector('input[name="map_place_name_pt[]"]') ? tr.querySelector('input[name="map_place_name_pt[]"]').value : '';
-			var pin = zeloMapBoothPinStyle(kind, tr);
+			var pin = zeloMapBoothPinStyle(kind, tr, positioning);
 			var dot = document.createElement('span');
 			dot.title = name || id;
-			dot.style.cssText = 'position:absolute;left:' + (x * 100) + '%;top:' + (y * 100) + '%;transform:translate(-50%,-50%);width:' + pin.w + 'px;height:' + pin.h + 'px;border-radius:' + pin.br + ';background:' + pin.bg + ';border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.35);pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:9px;font-weight:700;line-height:1;';
+			dot.style.cssText = 'position:absolute;left:' + (x * 100) + '%;top:' + (y * 100) + '%;transform:translate(-50%,-50%);width:' + pin.w + 'px;height:' + pin.h + 'px;border-radius:' + pin.br + ';background:' + pin.bg + ';border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:' + pin.fs + 'px;font-weight:700;line-height:1;';
 			if (pin.label) dot.textContent = pin.label;
-			if (id === zeloMapSelectedPlaceId) dot.style.outline = '2px solid #facc15';
+			if (id === zeloMapSelectedPlaceId) dot.style.outline = '3px solid #facc15';
 			overlay.appendChild(dot);
 		});
 	}
@@ -303,6 +310,11 @@ function zelo_render_indoor_map_admin_tab( $indoor_map, $locations = array(), $a
 		var name = tr.querySelector('input[name="map_place_name_pt[]"]') ? tr.querySelector('input[name="map_place_name_pt[]"]').value : '';
 		var el = document.getElementById('zelo-map-selected-label');
 		if (el) el.textContent = name || zeloMapSelectedPlaceId || '—';
+		document.querySelectorAll('#zelo-map-places-body tr.zelo-map-place-row').forEach(function(row) {
+			row.classList.toggle('zelo-map-row-positioning', row.getAttribute('data-place-id') === zeloMapSelectedPlaceId);
+		});
+		var canvas = document.getElementById('zelo-map-canvas');
+		if (canvas) canvas.classList.toggle('zelo-map-positioning', !!zeloMapSelectedPlaceId);
 		zeloMapRefreshPins();
 	}
 

@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-23** — #60 fase 2 plugin **2.23.0** / PWA **174** **In review**.
+> Última atualização: **2026-06-24** — #61 Fase A plugin **2.23.1** / PWA **175** **In review**.
 
 ---
 
@@ -167,6 +167,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Issue | Estado | Notas |
 |-------|--------|-------|
+| [#61](https://github.com/esvianna/ZELO/issues/61) | **In review** | Mapa evento pinos legíveis Fase A — plugin 2.23.1 / PWA 175; smoke 2z2 |
 | [#60](https://github.com/esvianna/ZELO/issues/60) | **In review** | Voluntários extras Pool B fase 2 — plugin 2.23.0 / PWA 174; smoke 60a–60h |
 
 ### Validadas no Project (Done) — sync 2026-06-23

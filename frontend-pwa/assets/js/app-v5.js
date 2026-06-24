@@ -3889,11 +3889,13 @@ const app = {
             const isBooth = p.kind === 'booth';
             const isSel = p.id === ui.destId || p.id === ui.boothId;
             const lab = this.indoorPlaceLabel(p);
-            const pinCls = isBooth ? this.indoorBoothPinClasses(p, booths) : 'indoor-pin dest';
             const boothSlot = isBooth ? this.indoorBoothSlot(p, booths) : 0;
+            const visualCls = isBooth
+                ? (boothSlot === 2 ? 'indoor-pin-visual booth booth-2' : 'indoor-pin-visual booth booth-1')
+                : 'indoor-pin-visual dest';
             const pinLabel = isBooth && boothSlot ? `<span class="indoor-pin-label" aria-hidden="true">${boothSlot}</span>` : '';
             const ariaLabel = isBooth && boothSlot ? `${lab} (${i18n.t('indoor_legend_booth_' + boothSlot)})` : lab;
-            pinsHtml += `<button type="button" class="${pinCls}${isSel ? ' selected' : ''}" style="left:${x * 100}%;top:${y * 100}%;" title="${this.escapeAttr(lab)}" aria-label="${this.escapeAttr(ariaLabel)}" onclick="app.onIndoorPinClick('${this.escapeAttr(p.id)}','${isBooth ? 'booth' : 'dest'}')">${pinLabel}</button>`;
+            pinsHtml += `<button type="button" class="indoor-pin${isSel ? ' selected' : ''}" style="left:${x * 100}%;top:${y * 100}%;" title="${this.escapeAttr(lab)}" aria-label="${this.escapeAttr(ariaLabel)}" onclick="app.onIndoorPinClick('${this.escapeAttr(p.id)}','${isBooth ? 'booth' : 'dest'}')"><span class="${visualCls}">${pinLabel}</span></button>`;
         });
         return pinsHtml;
     },
@@ -4192,6 +4194,14 @@ const app = {
         const layer = document.getElementById('indoor-map-transform');
         if (!layer || !zoom) return;
         layer.style.transform = `translate(${zoom.tx}px, ${zoom.ty}px) scale(${zoom.scale})`;
+        layer.style.setProperty('--indoor-zoom', String(zoom.scale > 0 ? zoom.scale : 1));
+    },
+
+    _indoorLegibleFocusScale(viewport, layer) {
+        const metrics = this._getIndoorLayerMetrics(viewport, layer);
+        const floor = this.isIndoorMobileLayout() ? 2.5 : 2;
+        const byFit = metrics.fitScale * 3;
+        return Math.max(floor, Math.min(metrics.maxScale, byFit));
     },
 
     _focusIndoorDiagramOnPlace(viewport, layer, place, zoom, targetScale) {
@@ -4253,7 +4263,7 @@ const app = {
             } else if (focusMode === 'place') {
                 const focusId = ui.destId || ui.boothId;
                 const place = (places || []).find((p) => p.id === focusId);
-                const targetScale = this.isIndoorMobileLayout() ? 2.5 : 2;
+                const targetScale = this._indoorLegibleFocusScale(viewport, layer);
                 if (place) {
                     this._focusIndoorDiagramOnPlace(viewport, layer, place, zoom, targetScale);
                     applied = true;
@@ -4482,7 +4492,7 @@ const app = {
             } else if (focusMode === 'place') {
                 const focusId = ui.destId || ui.boothId;
                 const place = places.find((p) => p.id === focusId);
-                const targetScale = this.isIndoorMobileLayout() ? 2.5 : 2;
+                const targetScale = this._indoorLegibleFocusScale(viewport, layer);
                 if (place) {
                     this._focusIndoorDiagramOnPlace(viewport, layer, place, ui.zoom, targetScale);
                     ok = true;
@@ -4545,7 +4555,7 @@ const app = {
                 if (ui._diagramLayoutApplied && ui.zoom) {
                     if (diagramPanel) diagramPanel.classList.remove('is-preparing');
                 } else if (!ui._focusDiagram) {
-                    ui._focusDiagram = 'fit';
+                    ui._focusDiagram = (ui.destId || ui.boothId) ? 'place' : 'fit';
                 }
                 if (!this._indoorGestureAbort) {
                     this.initIndoorDiagramGestures(cfg, places);
@@ -4591,8 +4601,12 @@ const app = {
     setIndoorBooth(boothId) {
         if (!this.data.indoorMapUi) this.data.indoorMapUi = {};
         this.data.indoorMapUi.boothId = boothId;
+        this.data.indoorMapUi._focusDiagram = 'place';
         if (this._patchIndoorMapSelection()) {
             this.refreshIndoorDirectionsPanel();
+            if (this.data.indoorMapUi.tab === 'map') {
+                this._applyIndoorDiagramFocusInPlace();
+            }
             return;
         }
         this.renderIndoorEventMap();
@@ -4604,12 +4618,16 @@ const app = {
         const places = Array.isArray(cfg?.places) ? cfg.places : [];
         const dests = places.filter((p) => p.kind !== 'booth');
         this.data.indoorMapUi.destId = destId;
+        this.data.indoorMapUi._focusDiagram = 'place';
         this.data.indoorMapUi.query = '';
         this.data.indoorMapUi.comboboxOpen = false;
         this.data.indoorMapUi.comboboxEditing = false;
         this.closeIndoorDestCombobox(dests);
         if (this._patchIndoorMapSelection()) {
             this.refreshIndoorDirectionsPanel();
+            if (this.data.indoorMapUi.tab === 'map') {
+                this._applyIndoorDiagramFocusInPlace();
+            }
             requestAnimationFrame(() => {
                 const panel = document.getElementById('indoor-directions-panel');
                 if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
