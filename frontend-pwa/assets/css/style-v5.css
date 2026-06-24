@@ -4481,7 +4481,7 @@ body.ops-modal-open {
 .indoor-map-transform {
     transform-origin: 0 0;
     will-change: transform;
-    --indoor-zoom: 1;
+    --indoor-pin-counter: 1;
 }
 
 .indoor-map-wrap {
@@ -4498,6 +4498,7 @@ body.ops-modal-open {
     border-radius: 8px;
     user-select: none;
     -webkit-user-drag: none;
+    backface-visibility: hidden;
 }
 
 @media (max-width: 768px) {
@@ -4528,57 +4529,67 @@ body.ops-modal-open {
 
 .indoor-pin {
     position: absolute;
-    transform: translate(-50%, -50%) scale(calc(1 / var(--indoor-zoom, 1)));
-    width: 22px;
-    height: 22px;
-    border: 2px solid #fff;
-    border-radius: 50%;
-    background: #ea580c;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
-    pointer-events: auto;
+    transform: translate(-50%, -50%);
+    border: none;
+    background: transparent;
     padding: 0;
-    z-index: 2;
-}
-
-.indoor-pin::before {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 50%;
     width: 44px;
     height: 44px;
-    transform: translate(-50%, -50%);
-}
-
-.indoor-pin.booth {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 4px;
-    padding: 0;
+    pointer-events: auto;
+    z-index: 2;
+    cursor: pointer;
 }
 
-.indoor-pin.booth-1 {
+.indoor-pin-visual {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transform: scale(var(--indoor-pin-counter, 1));
+    transform-origin: center center;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+    pointer-events: none;
+}
+
+.indoor-pin-visual.dest {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #ea580c;
+}
+
+.indoor-pin-visual.booth {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+}
+
+.indoor-pin-visual.booth-1 {
     background: #1e40af;
 }
 
-.indoor-pin.booth-2 {
+.indoor-pin-visual.booth-2 {
     background: #0d9488;
 }
 
 .indoor-pin-label {
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 700;
     color: #fff;
     line-height: 1;
     pointer-events: none;
 }
 
-.indoor-pin.selected {
+.indoor-pin.selected .indoor-pin-visual {
     outline: 3px solid #facc15;
     outline-offset: 2px;
+}
+
+.indoor-pin.selected {
     z-index: 3;
 }
 

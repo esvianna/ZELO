@@ -4190,11 +4190,28 @@ const app = {
         };
     },
 
+    _indoorPinCounterScale(viewport, layer, mapScale) {
+        const metrics = this._getIndoorLayerMetrics(viewport, layer);
+        const refBase = 18;
+        const minScreen = 8;
+        const maxScreen = 26;
+        const natural = refBase * mapScale;
+        if (natural <= 0 || !isFinite(natural)) return 1;
+        if (mapScale <= metrics.fitScale * 1.08) return 1;
+        if (natural < minScreen) return minScreen / natural;
+        if (natural > maxScreen) return maxScreen / natural;
+        return 1;
+    },
+
     _applyIndoorDiagramTransform(zoom) {
         const layer = document.getElementById('indoor-map-transform');
         if (!layer || !zoom) return;
-        layer.style.transform = `translate(${zoom.tx}px, ${zoom.ty}px) scale(${zoom.scale})`;
-        layer.style.setProperty('--indoor-zoom', String(zoom.scale > 0 ? zoom.scale : 1));
+        layer.style.transform = `translate3d(${zoom.tx}px, ${zoom.ty}px, 0) scale(${zoom.scale})`;
+        const viewport = document.getElementById('indoor-map-viewport');
+        const counter = (viewport && layer)
+            ? this._indoorPinCounterScale(viewport, layer, zoom.scale)
+            : 1;
+        layer.style.setProperty('--indoor-pin-counter', String(counter));
     },
 
     _indoorLegibleFocusScale(viewport, layer) {
