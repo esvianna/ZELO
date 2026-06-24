@@ -309,16 +309,50 @@ function zelo_dept_request_count_assignments( $request_id ) {
  * @param array<string, mixed> $request Request row (by ref).
  */
 function zelo_dept_request_refresh_status( &$request ) {
-	$qty   = isset( $request['quantity'] ) ? max( 1, (int) $request['quantity'] ) : 1;
-	$count = zelo_dept_request_count_assignments( $request['id'] );
+	$status = isset( $request['status'] ) ? (string) $request['status'] : 'open';
+	if ( in_array( $status, array( 'encaminado', 'atendido' ), true ) ) {
+		$request['assigned_count'] = zelo_dept_request_count_assignments( $request['id'] );
+		return;
+	}
+	if ( $status === 'closed' ) {
+		$request['status'] = 'partial';
+		$status            = 'partial';
+	}
+	$count                     = zelo_dept_request_count_assignments( $request['id'] );
 	$request['assigned_count'] = $count;
 	if ( $count <= 0 ) {
 		$request['status'] = 'open';
-	} elseif ( $count < $qty ) {
-		$request['status'] = 'partial';
 	} else {
-		$request['status'] = 'closed';
+		$request['status'] = 'partial';
 	}
+}
+
+/**
+ * @param array<string, mixed>|null $request Request row.
+ * @return bool
+ */
+function zelo_dept_request_can_assign( $request ) {
+	if ( ! is_array( $request ) ) {
+		return false;
+	}
+	$status = isset( $request['status'] ) ? (string) $request['status'] : 'open';
+	return in_array( $status, array( 'open', 'partial', 'closed' ), true );
+}
+
+/**
+ * @param string $request_id Request id.
+ * @param string $extra_id   Extra id.
+ * @return bool
+ */
+function zelo_dept_assignment_exists( $request_id, $extra_id ) {
+	foreach ( zelo_dept_assignments_get_all() as $row ) {
+		if ( isset( $row['request_id'], $row['extra_id'] )
+			&& (string) $row['request_id'] === (string) $request_id
+			&& (string) $row['extra_id'] === (string) $extra_id ) {
+			return true;
+		}
+	}
+	return false;
 }
 
 /**
@@ -417,6 +451,136 @@ function zelo_extra_ops_send_assignment_sms( &$assignment, $request, $extra, $fo
 	}
 	$assignment['sms_sent_at'] = current_time( 'mysql' );
 	return true;
+}
+
+/**
+ * @param array<string, mixed>               $request     Request.
+ * @param array<int, array<string, mixed>>   $assignments New assignments in batch.
+ * @param array<string, array<string,mixed>> $extras_by_id Extra rows keyed by id.
+ * @return string
+ */
+function zelo_extra_ops_build_contact_sms_message( $request, $assignments, $extras_by_id ) {
+	$dept = isset( $request['department'] ) ? trim( (string) $request['department'] ) : '';
+	$day  = isset( $request['day'] ) ? zelo_ops_day_label( (string) $request['day'], null, false ) : '';
+	$time = isset( $request['time_slot'] ) ? trim( (string) $request['time_slot'] ) : '';
+	$bits = array();
+	foreach ( $assignments as $assignment ) {
+		$eid   = isset( $assignment['extra_id'] ) ? (string) $assignment['extra_id'] : '';
+		$extra = isset( $extras_by_id[ $eid ] ) ? $extras_by_id[ $eid ] : null;
+		if ( ! $extra ) {
+			continue;
+		}
+		$name  = isset( $extra['name'] ) ? trim( (string) $extra['name'] ) : '';
+		$phone = isset( $extra['phone'] ) ? trim( (string) $extra['phone'] ) : '';
+		if ( $name === '' ) {
+			continue;
+		}
+		$bits[] = $phone !== '' ? $name . ' ' . $phone : $name;
+	}
+	if ( empty( $bits ) ) {
+		return '';
+	}
+	$list = implode( '; ', $bits );
+	$msg  = sprintf(
+		'ZELO: encaminados para %s %s %s: %s',
+		$dept,
+		$day,
+		$time,
+		$list
+	);
+	if ( strlen( $msg ) > 160 ) {
+		$msg = sprintf(
+			'ZELO: %d voluntario(s) encaminados para %s %s %s. Detalhe no WhatsApp/PDF.',
+			count( $bits ),
+			$dept,
+			$day,
+			$time
+		);
+	}
+	if ( strlen( $msg ) > 160 ) {
+		$msg = substr( $msg, 0, 157 ) . '...';
+	}
+	return $msg;
+}
+
+/**
+ * @param array<string, mixed>               $request     Request (by ref).
+ * @param array<int, array<string, mixed>>   $assignments New assignments.
+ * @param array<string, array<string,mixed>> $extras_by_id Extras keyed by id.
+ * @return bool
+ */
+function zelo_extra_ops_send_contact_batch_sms( &$request, $assignments, $extras_by_id ) {
+	if ( empty( $assignments ) ) {
+		return false;
+	}
+	if ( ! function_exists( 'zelo_comtele_is_enabled' ) || ! zelo_comtele_is_enabled() ) {
+		return false;
+	}
+	$phone_raw = isset( $request['contact_phone'] ) ? (string) $request['contact_phone'] : '';
+	if ( $phone_raw === '' ) {
+		return false;
+	}
+	$phone = zelo_extra_ops_validate_phone( $phone_raw );
+	if ( is_wp_error( $phone ) ) {
+		return false;
+	}
+	$msg = zelo_extra_ops_build_contact_sms_message( $request, $assignments, $extras_by_id );
+	if ( $msg === '' ) {
+		return false;
+	}
+	$custom = 'extra_contact|' . ( isset( $request['id'] ) ? $request['id'] : '' ) . '|' . current_time( 'timestamp' );
+	$res    = zelo_comtele_send_sms( array( $phone ), $msg, $custom );
+	if ( is_wp_error( $res ) ) {
+		if ( function_exists( 'zelo_notify_sms_queue_add' ) ) {
+			zelo_notify_sms_queue_add( 0, $phone, $msg, $custom );
+			$request['contact_sms_sent_at'] = current_time( 'mysql' ) . ' (queued)';
+			return true;
+		}
+		return false;
+	}
+	if ( function_exists( 'zelo_notify_sms_stats_record' ) ) {
+		zelo_notify_sms_stats_record( 1 );
+	}
+	$request['contact_sms_sent_at'] = current_time( 'mysql' );
+	return true;
+}
+
+/**
+ * @param array<string, mixed> $request Request.
+ * @param array<string, mixed> $extra   Extra.
+ * @param bool                 $confirmed Confirmed flag.
+ * @param bool                 $allow_served Allow when pedido atendido (substituto).
+ * @return array<string, mixed>|WP_Error
+ */
+function zelo_dept_assignment_create_row( $request, $extra, $confirmed = false, $notes = '', $allow_served = false ) {
+	$request_id = isset( $request['id'] ) ? (string) $request['id'] : '';
+	$extra_id   = isset( $extra['id'] ) ? (string) $extra['id'] : '';
+	if ( $request_id === '' || $extra_id === '' ) {
+		return new WP_Error( 'zelo_assignment_required', __( 'Informe pedido e voluntário extra.', 'zelo-assistente' ), array( 'status' => 400 ) );
+	}
+	if ( ! $allow_served && ! zelo_dept_request_can_assign( $request ) ) {
+		return new WP_Error( 'zelo_assignment_closed', __( 'Pedido encerrado ou atendido — não é possível encaminhar.', 'zelo-assistente' ), array( 'status' => 409 ) );
+	}
+	if ( zelo_dept_assignment_exists( $request_id, $extra_id ) ) {
+		return new WP_Error( 'zelo_assignment_duplicate', __( 'Voluntário já encaminhado neste pedido.', 'zelo-assistente' ), array( 'status' => 409 ) );
+	}
+	$user = get_userdata( get_current_user_id() );
+	$row  = array(
+		'id'                   => zelo_extra_ops_new_id( 'as_' ),
+		'request_id'           => $request_id,
+		'extra_id'             => $extra_id,
+		'confirmed'            => (bool) $confirmed,
+		'attended'             => null,
+		'substitute_extra_id'  => '',
+		'substitute_extra_name'=> '',
+		'notes'                => sanitize_textarea_field( $notes ),
+		'sms_sent_at'          => '',
+		'registered_by_id'     => get_current_user_id(),
+		'registered_by_name'   => $user ? sanitize_text_field( $user->display_name ) : '',
+		'registered_at'        => current_time( 'mysql' ),
+	);
+	zelo_extra_ops_send_assignment_sms( $row, $request, $extra );
+	return $row;
 }
 
 /**
@@ -635,7 +799,36 @@ function zelo_dept_request_rest_update( $request ) {
 	if ( $idx === null ) {
 		return new WP_Error( 'zelo_dept_request_not_found', __( 'Pedido não encontrado.', 'zelo-assistente' ), array( 'status' => 404 ) );
 	}
-	$validated = zelo_dept_request_validate_body( $request->get_json_params() );
+	$body = $request->get_json_params();
+	if ( ! is_array( $body ) ) {
+		$body = array();
+	}
+	if ( ! empty( $body['action'] ) ) {
+		$action = sanitize_key( $body['action'] );
+		if ( $action === 'close_forward' ) {
+			$cur = isset( $rows[ $idx ]['status'] ) ? (string) $rows[ $idx ]['status'] : 'open';
+			if ( ! in_array( $cur, array( 'open', 'partial', 'closed' ), true ) ) {
+				return new WP_Error( 'zelo_dept_request_state', __( 'Só pedidos abertos ou parciais podem ser encerrados.', 'zelo-assistente' ), array( 'status' => 409 ) );
+			}
+			$rows[ $idx ]['status']             = 'encaminado';
+			$rows[ $idx ]['forward_closed_at']  = current_time( 'mysql' );
+			$rows[ $idx ]['assigned_count']     = zelo_dept_request_count_assignments( $id );
+			zelo_dept_requests_save_all( $rows );
+			return rest_ensure_response( array( 'success' => true, 'item' => zelo_dept_request_public_row( $rows[ $idx ] ) ) );
+		}
+		if ( $action === 'mark_served' ) {
+			$cur = isset( $rows[ $idx ]['status'] ) ? (string) $rows[ $idx ]['status'] : '';
+			if ( $cur !== 'encaminado' ) {
+				return new WP_Error( 'zelo_dept_request_state', __( 'Marque como atendido só após encerrar o pedido.', 'zelo-assistente' ), array( 'status' => 409 ) );
+			}
+			$rows[ $idx ]['status']    = 'atendido';
+			$rows[ $idx ]['served_at'] = current_time( 'mysql' );
+			zelo_dept_requests_save_all( $rows );
+			return rest_ensure_response( array( 'success' => true, 'item' => zelo_dept_request_public_row( $rows[ $idx ] ) ) );
+		}
+		return new WP_Error( 'zelo_dept_request_action', __( 'Acção inválida.', 'zelo-assistente' ), array( 'status' => 400 ) );
+	}
+	$validated = zelo_dept_request_validate_body( $body );
 	if ( is_wp_error( $validated ) ) {
 		return $validated;
 	}
@@ -673,65 +866,86 @@ function zelo_dept_request_rest_delete( $request ) {
  * @return WP_REST_Response|WP_Error
  */
 function zelo_dept_assignment_rest_create( $request ) {
-	$body      = $request->get_json_params();
+	$body       = $request->get_json_params();
 	$request_id = sanitize_text_field( isset( $body['request_id'] ) ? $body['request_id'] : '' );
 	$extra_id   = sanitize_text_field( isset( $body['extra_id'] ) ? $body['extra_id'] : '' );
-	if ( $request_id === '' || $extra_id === '' ) {
-		return new WP_Error( 'zelo_assignment_required', __( 'Informe pedido e voluntário extra.', 'zelo-assistente' ), array( 'status' => 400 ) );
+	$extra_ids  = array();
+	if ( isset( $body['extra_ids'] ) && is_array( $body['extra_ids'] ) ) {
+		foreach ( $body['extra_ids'] as $eid ) {
+			$eid = sanitize_text_field( (string) $eid );
+			if ( $eid !== '' ) {
+				$extra_ids[] = $eid;
+			}
+		}
+	}
+	if ( $extra_id !== '' ) {
+		$extra_ids[] = $extra_id;
+	}
+	$extra_ids = array_values( array_unique( $extra_ids ) );
+	if ( $request_id === '' || empty( $extra_ids ) ) {
+		return new WP_Error( 'zelo_assignment_required', __( 'Informe pedido e pelo menos um voluntário extra.', 'zelo-assistente' ), array( 'status' => 400 ) );
 	}
 	$req_row = zelo_dept_request_find( $request_id );
 	if ( ! $req_row ) {
 		return new WP_Error( 'zelo_dept_request_not_found', __( 'Pedido não encontrado.', 'zelo-assistente' ), array( 'status' => 404 ) );
 	}
-	$extra = zelo_extra_volunteer_find( $extra_id );
-	if ( ! $extra ) {
-		return new WP_Error( 'zelo_extra_not_found', __( 'Voluntário extra não encontrado.', 'zelo-assistente' ), array( 'status' => 404 ) );
+	if ( ! zelo_dept_request_can_assign( $req_row ) ) {
+		return new WP_Error( 'zelo_assignment_closed', __( 'Pedido encerrado ou atendido — não é possível encaminhar.', 'zelo-assistente' ), array( 'status' => 409 ) );
 	}
-	$count = zelo_dept_request_count_assignments( $request_id );
-	$qty   = isset( $req_row['quantity'] ) ? max( 1, (int) $req_row['quantity'] ) : 1;
-	if ( $count >= $qty ) {
-		return new WP_Error( 'zelo_assignment_full', __( 'Pedido já atendeu a quantidade solicitada.', 'zelo-assistente' ), array( 'status' => 409 ) );
+	$confirmed   = ! empty( $body['confirmed'] );
+	$new_rows    = array();
+	$extras_by_id = array();
+	$extras_all  = zelo_extra_volunteers_get_all();
+	foreach ( $extra_ids as $eid ) {
+		$extra = zelo_extra_volunteer_find( $eid );
+		if ( ! $extra ) {
+			return new WP_Error(
+				'zelo_extra_not_found',
+				sprintf( __( 'Voluntário extra não encontrado: %s', 'zelo-assistente' ), $eid ),
+				array( 'status' => 404 )
+			);
+		}
+		$row = zelo_dept_assignment_create_row( $req_row, $extra, $confirmed );
+		if ( is_wp_error( $row ) ) {
+			return $row;
+		}
+		$new_rows[]                    = $row;
+		$extras_by_id[ (string) $eid ] = $extra;
+		$ei                            = zelo_extra_ops_find_index( $extras_all, $eid );
+		if ( $ei !== null ) {
+			$extras_all[ $ei ]['status'] = 'assigned';
+		}
 	}
-	$user = get_userdata( get_current_user_id() );
-	$row  = array(
-		'id'                 => zelo_extra_ops_new_id( 'as_' ),
-		'request_id'         => $request_id,
-		'extra_id'           => $extra_id,
-		'confirmed'          => ! empty( $body['confirmed'] ),
-		'attended'           => null,
-		'substitute_extra_id'  => '',
-		'substitute_extra_name'=> '',
-		'notes'              => sanitize_textarea_field( isset( $body['notes'] ) ? $body['notes'] : '' ),
-		'sms_sent_at'        => '',
-		'registered_by_id'   => get_current_user_id(),
-		'registered_by_name' => $user ? sanitize_text_field( $user->display_name ) : '',
-		'registered_at'      => current_time( 'mysql' ),
-	);
-	zelo_extra_ops_send_assignment_sms( $row, $req_row, $extra );
+	zelo_extra_volunteers_save_all( $extras_all );
 
-	$extra['status'] = 'assigned';
-	$extras = zelo_extra_volunteers_get_all();
-	$ei     = zelo_extra_ops_find_index( $extras, $extra_id );
-	if ( $ei !== null ) {
-		$extras[ $ei ]['status'] = 'assigned';
-		zelo_extra_volunteers_save_all( $extras );
+	$assignments = zelo_dept_assignments_get_all();
+	foreach ( $new_rows as $row ) {
+		$assignments[] = $row;
 	}
-
-	$assignments   = zelo_dept_assignments_get_all();
-	$assignments[] = $row;
 	zelo_dept_assignments_save_all( $assignments );
 
 	$requests = zelo_dept_requests_get_all();
 	$ri       = zelo_extra_ops_find_index( $requests, $request_id );
 	if ( $ri !== null ) {
 		zelo_dept_request_refresh_status( $requests[ $ri ] );
+		zelo_extra_ops_send_contact_batch_sms( $requests[ $ri ], $new_rows, $extras_by_id );
 		zelo_dept_requests_save_all( $requests );
+		$req_row = $requests[ $ri ];
+	}
+
+	$items = array();
+	foreach ( $new_rows as $row ) {
+		$extra = isset( $extras_by_id[ $row['extra_id'] ] ) ? $extras_by_id[ $row['extra_id'] ] : null;
+		$items[] = zelo_dept_assignment_public_row( $row, $extra, $req_row );
 	}
 
 	return rest_ensure_response(
 		array(
-			'success' => true,
-			'item'    => zelo_dept_assignment_public_row( $row, $extra, $req_row ),
+			'success'           => true,
+			'items'             => $items,
+			'item'              => count( $items ) === 1 ? $items[0] : null,
+			'contact_sms_sent'  => ! empty( $req_row['contact_sms_sent_at'] ),
+			'request'           => zelo_dept_request_public_row( $req_row ),
 		)
 	);
 }
@@ -747,9 +961,20 @@ function zelo_dept_assignment_rest_update( $request ) {
 	if ( $idx === null ) {
 		return new WP_Error( 'zelo_assignment_not_found', __( 'Encaminhamento não encontrado.', 'zelo-assistente' ), array( 'status' => 404 ) );
 	}
+	$req_row = zelo_dept_request_find( $rows[ $idx ]['request_id'] );
 	$body = $request->get_json_params();
 	if ( ! is_array( $body ) ) {
 		$body = array();
+	}
+	$needs_served = array_key_exists( 'attended', $body ) || ! empty( $body['substitute_extra_id'] );
+	if ( $needs_served ) {
+		if ( ! $req_row || ( isset( $req_row['status'] ) && (string) $req_row['status'] !== 'atendido' ) ) {
+			return new WP_Error(
+				'zelo_attendance_not_served',
+				__( 'Comparecimento só após marcar o pedido como atendido.', 'zelo-assistente' ),
+				array( 'status' => 409 )
+			);
+		}
 	}
 	if ( array_key_exists( 'confirmed', $body ) ) {
 		$rows[ $idx ]['confirmed'] = ! empty( $body['confirmed'] );
@@ -768,23 +993,11 @@ function zelo_dept_assignment_rest_update( $request ) {
 		}
 		$rows[ $idx ]['substitute_extra_id']   = $sub_id;
 		$rows[ $idx ]['substitute_extra_name'] = isset( $sub['name'] ) ? (string) $sub['name'] : '';
-		$req_row = zelo_dept_request_find( $rows[ $idx ]['request_id'] );
 		if ( $req_row ) {
-			$new_row = array(
-				'id'                 => zelo_extra_ops_new_id( 'as_' ),
-				'request_id'         => $rows[ $idx ]['request_id'],
-				'extra_id'           => $sub_id,
-				'confirmed'          => false,
-				'attended'           => null,
-				'substitute_extra_id'  => '',
-				'substitute_extra_name'=> '',
-				'notes'              => __( 'Substituto', 'zelo-assistente' ),
-				'sms_sent_at'        => '',
-				'registered_by_id'   => get_current_user_id(),
-				'registered_by_name' => '',
-				'registered_at'      => current_time( 'mysql' ),
-			);
-			zelo_extra_ops_send_assignment_sms( $new_row, $req_row, $sub );
+			$new_row = zelo_dept_assignment_create_row( $req_row, $sub, false, __( 'Substituto', 'zelo-assistente' ), true );
+			if ( is_wp_error( $new_row ) ) {
+				return $new_row;
+			}
 			$assignments = zelo_dept_assignments_get_all();
 			$assignments[] = $new_row;
 			zelo_dept_assignments_save_all( $assignments );
@@ -793,6 +1006,12 @@ function zelo_dept_assignment_rest_update( $request ) {
 			if ( $si !== null ) {
 				$extras[ $si ]['status'] = 'assigned';
 				zelo_extra_volunteers_save_all( $extras );
+			}
+			$requests = zelo_dept_requests_get_all();
+			$ri       = zelo_extra_ops_find_index( $requests, $rows[ $idx ]['request_id'] );
+			if ( $ri !== null ) {
+				zelo_extra_ops_send_contact_batch_sms( $requests[ $ri ], array( $new_row ), array( $sub_id => $sub ) );
+				zelo_dept_requests_save_all( $requests );
 			}
 		}
 	}
@@ -840,6 +1059,71 @@ function zelo_extra_ops_rest_export( $request ) {
 		return zelo_extra_ops_export_pdf( $data, $scope );
 	}
 	return new WP_Error( 'zelo_extra_export_format', __( 'Formato inválido.', 'zelo-assistente' ), array( 'status' => 400 ) );
+}
+
+/**
+ * @param WP_REST_Request $request Request.
+ * @return WP_REST_Response|WP_Error
+ */
+function zelo_dept_request_rest_export_pdf( $request ) {
+	$id = sanitize_text_field( (string) $request->get_param( 'id' ) );
+	return zelo_dept_request_build_pdf_response( $id );
+}
+
+/**
+ * @param string $request_id Request id.
+ * @return WP_REST_Response|WP_Error
+ */
+function zelo_dept_request_build_pdf_response( $request_id ) {
+	$req_row = zelo_dept_request_find( $request_id );
+	if ( ! $req_row ) {
+		return new WP_Error( 'zelo_dept_request_not_found', __( 'Pedido não encontrado.', 'zelo-assistente' ), array( 'status' => 404 ) );
+	}
+	if ( ! function_exists( 'zelo_ops_require_fpdf' ) || ! zelo_ops_require_fpdf() ) {
+		return new WP_Error( 'zelo_extra_pdf_unavailable', __( 'Exportação PDF indisponível.', 'zelo-assistente' ), array( 'status' => 500 ) );
+	}
+	$assignments = array();
+	foreach ( zelo_dept_assignments_get_all() as $row ) {
+		if ( isset( $row['request_id'] ) && (string) $row['request_id'] === (string) $request_id ) {
+			$extra       = zelo_extra_volunteer_find( isset( $row['extra_id'] ) ? $row['extra_id'] : '' );
+			$assignments[] = zelo_dept_assignment_public_row( $row, $extra, $req_row );
+		}
+	}
+	$day_label = isset( $req_row['day'] ) ? zelo_ops_day_label( (string) $req_row['day'], null, true ) : '';
+	$pdf       = new FPDF( 'P', 'mm', 'A4' );
+	$pdf->AddPage();
+	$pdf->SetFont( 'Arial', 'B', 14 );
+	$pdf->Cell( 0, 8, zelo_pdf_encode( 'Voluntários encaminhados — ZELO Curitiba' ), 0, 1 );
+	$pdf->SetFont( 'Arial', '', 10 );
+	$pdf->Cell( 0, 6, zelo_pdf_encode( sprintf( 'Departamento: %s', $req_row['department'] ?? '' ) ), 0, 1 );
+	$pdf->Cell( 0, 6, zelo_pdf_encode( sprintf( 'Dia: %s  Horário: %s', $day_label, $req_row['time_slot'] ?? '' ) ), 0, 1 );
+	$pdf->Cell( 0, 6, zelo_pdf_encode( sprintf( 'Responsável: %s  Tel: %s', $req_row['contact_name'] ?? '', $req_row['contact_phone'] ?? '' ) ), 0, 1 );
+	$pdf->Cell( 0, 6, zelo_pdf_encode( sprintf( 'Pedido: %d  Encaminhados: %d', (int) ( $req_row['quantity'] ?? 0 ), count( $assignments ) ) ), 0, 1 );
+	$pdf->Ln( 3 );
+	$pdf->SetFont( 'Arial', 'B', 9 );
+	$pdf->Cell( 55, 6, zelo_pdf_encode( 'Nome' ), 1 );
+	$pdf->Cell( 35, 6, zelo_pdf_encode( 'Telefone' ), 1 );
+	$pdf->Cell( 55, 6, zelo_pdf_encode( 'Congregação' ), 1 );
+	$pdf->Cell( 20, 6, zelo_pdf_encode( 'Conf.' ), 1, 1 );
+	$pdf->SetFont( 'Arial', '', 8 );
+	foreach ( $assignments as $row ) {
+		$pdf->Cell( 55, 6, zelo_pdf_encode( zelo_pdf_truncate( (string) $row['extra_name'], 28 ) ), 1 );
+		$pdf->Cell( 35, 6, zelo_pdf_encode( zelo_pdf_truncate( (string) $row['extra_phone'], 18 ) ), 1 );
+		$pdf->Cell( 55, 6, zelo_pdf_encode( zelo_pdf_truncate( (string) $row['extra_congregation'], 28 ) ), 1 );
+		$pdf->Cell( 20, 6, zelo_pdf_encode( $row['confirmed'] ? 'Sim' : 'Não' ), 1, 1 );
+	}
+	if ( empty( $assignments ) ) {
+		$pdf->Cell( 165, 6, zelo_pdf_encode( 'Nenhum voluntário encaminhado ainda.' ), 1, 1 );
+	}
+	$filename = 'zelo-pedido-' . sanitize_file_name( substr( $request_id, 0, 12 ) ) . '.pdf';
+	return new WP_REST_Response(
+		$pdf->Output( 'S' ),
+		200,
+		array(
+			'Content-Type'        => 'application/pdf',
+			'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+		)
+	);
 }
 
 /**
@@ -953,7 +1237,8 @@ function zelo_extra_ops_serve_binary( $served, $result, $request ) {
 		return $served;
 	}
 	$route = (string) $request->get_route();
-	if ( strpos( $route, '/zelo/v1/ops/extra-volunteers-ops/export' ) === false ) {
+	if ( strpos( $route, '/zelo/v1/ops/extra-volunteers-ops/export' ) === false
+		&& strpos( $route, '/zelo/v1/ops/dept-volunteer-requests/' ) === false ) {
 		return $served;
 	}
 	$headers = $result->get_headers();
@@ -1057,6 +1342,16 @@ function zelo_extra_volunteers_register_routes() {
 				'callback'            => 'zelo_dept_request_rest_delete',
 				'permission_callback' => 'zelo_extra_ops_can_view',
 			),
+		)
+	);
+
+	register_rest_route(
+		'zelo/v1',
+		'/ops/dept-volunteer-requests/(?P<id>[a-zA-Z0-9._-]+)/pdf',
+		array(
+			'methods'             => WP_REST_Server::READABLE,
+			'callback'            => 'zelo_dept_request_rest_export_pdf',
+			'permission_callback' => 'zelo_extra_ops_can_view',
 		)
 	);
 

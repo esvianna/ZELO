@@ -1137,6 +1137,29 @@ const API = {
         return data;
     },
 
+    async deptVolunteerRequestAction(id, action) {
+        return this.updateDeptVolunteerRequest(id, { action: action });
+    },
+
+    async downloadDeptRequestPdf(requestId) {
+        const url = `${this.baseUrl}/ops/dept-volunteer-requests/${encodeURIComponent(requestId)}/pdf?_t=${Date.now()}`;
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: this.getAuthHeaders(),
+            credentials: 'include'
+        });
+        if (!response.ok) {
+            const ct = response.headers.get('content-type') || '';
+            let msg = 'Falha ao gerar PDF';
+            if (ct.indexOf('application/json') !== -1) {
+                const data = await response.json().catch(() => ({}));
+                msg = data.message || msg;
+            }
+            throw new Error(msg);
+        }
+        return response.blob();
+    },
+
     async updateDeptVolunteerAssignment(id, payload) {
         const url = `${this.baseUrl}/ops/dept-volunteer-assignments/${encodeURIComponent(id)}`;
         const response = await fetch(url, {

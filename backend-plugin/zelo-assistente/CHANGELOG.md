@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.23.0] - 2026-06-23
+
+### Adicionado / alterado
+- **Voluntários extras fase 2 (#60):** encaminhamento em lote (`extra_ids[]`); SMS resumo ao responsável após lote; estados manuais `encaminado`/`atendido` (`close_forward`, `mark_served`); comparecimento só em pedidos atendidos; PDF por pedido `GET /ops/dept-volunteer-requests/{id}/pdf`; qty pedida deixa de bloquear encaminhamentos.
+
 ## [2.22.0] - 2026-06-23
 
 ### Adicionado

@@ -426,18 +426,21 @@ Pré-requisitos: HTTPS; Chrome/Android ou Safari 16.4+ (iOS com limitações). A
 
 ---
 
-## 17. Voluntários extras Pool B (#60, plugin 2.22.0+, PWA 172+)
+## 17. Voluntários extras Pool B (#60, plugin 2.23.0+, PWA 174+)
 
-Pré-requisitos: Comtele activo (#54); voluntário logado `zelo_view_ops`; gestor para export.
+Pré-requisitos: Comtele activo (#54); voluntário logado `zelo_view_ops`; gestor para export global.
 
 | # | Passo | Esperado |
 |---|-------|----------|
 | 60a | Home Operação → Voluntários extras → cadastrar extra (telefone obrigatório) | `POST /ops/extra-volunteers` **200**; lista actualiza |
 | 60b | Aba Pedidos → novo pedido (dept., dia, hora, responsável + fone) | `POST /ops/dept-volunteer-requests` **200**; status `open` |
-| 60c | Aba Encaminhamentos → escolher pedido + extra → Encaminhar | Assignment criado; extra `assigned`; **SMS** ao telefone (ou fila se Comtele falhar) |
-| 60d | Comparecimento → Não + substituto (número da lista) | Novo assignment; SMS ao substituto |
-| 60e | Gestor → export CSV/PDF com filtro | Download OK; dados filtrados |
-| 60f | Regressão Pool A | Escala/swap/selectors **não** listam extras |
+| 60c | Aba Encaminhamentos → pedido aberto/parcial → marcar **2+ extras** → Encaminhar selecionados | `POST /ops/dept-volunteer-assignments` com `extra_ids[]`; SMS a **cada extra** + **1 SMS resumo** ao responsável |
+| 60c2 | Após lote → confirmar partilha PDF | Share nativo com PDF ou download + WhatsApp fallback |
+| 60d | Aba Pedidos → Encerrar pedido (qty acima/abaixo OK) | status `encaminado`; encaminhar bloqueado |
+| 60e | Marcar atendido → aba Comparecimento | status `atendido`; lista comparecimento visível |
+| 60f | Comparecimento → Não + substituto | Só com pedido atendido; novo assignment + SMS substituto/responsável |
+| 60g | Gestor → export CSV/PDF global | Download OK |
+| 60h | Regressão Pool A | Escala/swap/selectors **não** listam extras |
 
 ---
 

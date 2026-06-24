@@ -7578,9 +7578,35 @@ const app = {
             attended: 'extra_ops_status_attended',
             open: 'extra_ops_status_open',
             partial: 'extra_ops_status_partial',
-            closed: 'extra_ops_status_closed'
+            closed: 'extra_ops_status_partial',
+            encaminado: 'extra_ops_status_encaminado',
+            atendido: 'extra_ops_status_atendido'
         };
         return i18n.t(map[status] || status || '');
+    },
+
+    extraOpsRequestAssignable(req) {
+        const s = req && req.status ? String(req.status) : '';
+        return s === 'open' || s === 'partial' || s === 'closed';
+    },
+
+    extraOpsAssignedExtraIds(requestId) {
+        const ids = new Set();
+        (this._extraOpsData?.assignments || []).forEach((a) => {
+            if (a.request_id === requestId && a.extra_id) ids.add(a.extra_id);
+        });
+        return ids;
+    },
+
+    extraOpsRequestById(requestId) {
+        return (this._extraOpsData?.requests || []).find((r) => r.id === requestId) || null;
+    },
+
+    extraOpsWhatsAppUrl(phone, text) {
+        let digits = String(phone || '').replace(/\D/g, '');
+        if (digits.length > 0 && digits.length <= 11) digits = '55' + digits;
+        if (!digits) return '';
+        return 'https://wa.me/' + digits + '?text=' + encodeURIComponent(text || '');
     },
 
     extraOpsDayOptions(selected) {
@@ -7704,14 +7730,29 @@ const app = {
 
     renderExtraOpsRequestsTab(data) {
         const rows = Array.isArray(data.requests) ? data.requests : [];
-        const list = rows.length ? rows.map((row) => `
+        const list = rows.length ? rows.map((row) => {
+            const qtyLine = `${row.assigned_count || 0} / ${row.quantity}`;
+            const actions = [];
+            if (this.extraOpsRequestAssignable(row)) {
+                actions.push(`<button type="button" class="btn-block outline extra-ops-row-btn" onclick="app.closeExtraOpsRequest('${this.escapeHtml(row.id)}')">${this.escapeHtml(i18n.t('extra_ops_close_request'))}</button>`);
+            }
+            if (row.status === 'encaminado') {
+                actions.push(`<button type="button" class="btn-block outline extra-ops-row-btn" onclick="app.markExtraOpsRequestServed('${this.escapeHtml(row.id)}')">${this.escapeHtml(i18n.t('extra_ops_mark_served'))}</button>`);
+            }
+            if ((row.assigned_count || 0) > 0) {
+                actions.push(`<button type="button" class="btn-block outline extra-ops-row-btn" onclick="app.shareExtraOpsRequestPdf('${this.escapeHtml(row.id)}')">${this.escapeHtml(i18n.t('extra_ops_share_pdf'))}</button>`);
+            }
+            const actCell = actions.length ? actions.join(' ') : '—';
+            return `
             <tr>
                 <td>${this.escapeHtml(row.department)}</td>
                 <td>${this.escapeHtml(row.day)} ${this.escapeHtml(row.time_slot)}</td>
-                <td>${this.escapeHtml(String(row.quantity))}</td>
+                <td>${this.escapeHtml(qtyLine)}</td>
                 <td>${this.escapeHtml(row.contact_name)} / ${this.escapeHtml(row.contact_phone)}</td>
                 <td>${this.escapeHtml(this.extraOpsStatusLabel(row.status))}</td>
-            </tr>`).join('') : `<tr><td colspan="5">${this.escapeHtml(i18n.t('extra_ops_list_empty'))}</td></tr>`;
+                <td class="extra-ops-actions-cell">${actCell}</td>
+            </tr>`;
+        }).join('') : `<tr><td colspan="6">${this.escapeHtml(i18n.t('extra_ops_list_empty'))}</td></tr>`;
         return `
             <form class="profile-form" onsubmit="app.submitDeptRequestForm(event)">
                 <h3 class="profile-section-title">${this.escapeHtml(i18n.t('extra_ops_request_new'))}</h3>
@@ -7728,19 +7769,33 @@ const app = {
             <table class="ops-table delegate-support-table"><thead><tr>
                 <th>${this.escapeHtml(i18n.t('extra_ops_department'))}</th>
                 <th>${this.escapeHtml(i18n.t('extra_ops_day'))}</th>
-                <th>${this.escapeHtml(i18n.t('extra_ops_quantity'))}</th>
+                <th>${this.escapeHtml(i18n.t('extra_ops_qty_progress'))}</th>
                 <th>${this.escapeHtml(i18n.t('extra_ops_contact_name'))}</th>
                 <th>Status</th>
+                <th></th>
             </tr></thead><tbody>${list}</tbody></table>`;
     },
 
     renderExtraOpsAssignmentsTab(data) {
         const extras = Array.isArray(data.extras) ? data.extras : [];
-        const requests = Array.isArray(data.requests) ? data.requests.filter((r) => r.status !== 'closed') : [];
+        const requests = Array.isArray(data.requests) ? data.requests.filter((r) => this.extraOpsRequestAssignable(r)) : [];
         const assignments = Array.isArray(data.assignments) ? data.assignments : [];
-        const extraOpts = extras.map((e) => `<option value="${this.escapeHtml(e.id)}">${this.escapeHtml(e.name)} — ${this.escapeHtml(e.phone)}</option>`).join('');
-        const reqOpts = requests.map((r) => `<option value="${this.escapeHtml(r.id)}">${this.escapeHtml(r.department)} / ${this.escapeHtml(r.day)} ${this.escapeHtml(r.time_slot)}</option>`).join('');
-        const list = assignments.length ? assignments.map((row) => {
+        const batchRequestId = this._extraOpsBatchRequestId || (requests[0] && requests[0].id) || '';
+        const assignedIds = batchRequestId ? this.extraOpsAssignedExtraIds(batchRequestId) : new Set();
+        const candidates = extras.filter((e) => !assignedIds.has(e.id));
+        const reqOpts = requests.map((r) => {
+            const sel = r.id === batchRequestId ? ' selected' : '';
+            return `<option value="${this.escapeHtml(r.id)}"${sel}>${this.escapeHtml(r.department)} / ${this.escapeHtml(r.day)} ${this.escapeHtml(r.time_slot)} (${r.assigned_count || 0}/${r.quantity})</option>`;
+        }).join('');
+        const batchList = candidates.length ? candidates.map((e) => `
+            <label class="extra-ops-batch-item">
+                <input type="checkbox" class="extra-ops-batch-cb" value="${this.escapeHtml(e.id)}">
+                <span>${this.escapeHtml(e.name)} — ${this.escapeHtml(e.phone)}${e.congregation ? ' · ' + this.escapeHtml(e.congregation) : ''}</span>
+            </label>`).join('') : `<p class="description">${this.escapeHtml(i18n.t('extra_ops_batch_empty'))}</p>`;
+        const attendRequests = (data.requests || []).filter((r) => r.status === 'atendido');
+        const attendRequestIds = new Set(attendRequests.map((r) => r.id));
+        const attendRows = assignments.filter((a) => attendRequestIds.has(a.request_id));
+        const attendList = attendRows.length ? attendRows.map((row) => {
             const att = row.attended === null ? '-' : (row.attended ? i18n.t('extra_ops_attended') + ': Sim' : i18n.t('extra_ops_attended') + ': Não');
             return `<tr>
                 <td>${this.escapeHtml(row.extra_name)}</td>
@@ -7749,21 +7804,33 @@ const app = {
                 <td>${this.escapeHtml(att)}</td>
                 <td><button type="button" class="btn-block outline" onclick="app.openExtraOpsAttendance('${this.escapeHtml(row.id)}')">${this.escapeHtml(i18n.t('extra_ops_apply_attendance'))}</button></td>
             </tr>`;
-        }).join('') : `<tr><td colspan="5">${this.escapeHtml(i18n.t('extra_ops_list_empty'))}</td></tr>`;
+        }).join('') : `<tr><td colspan="5">${this.escapeHtml(i18n.t('extra_ops_attendance_empty'))}</td></tr>`;
         return `
-            <form class="profile-form" onsubmit="app.submitDeptAssignmentForm(event)">
-                <div class="form-group"><label>${this.escapeHtml(i18n.t('extra_ops_select_request'))}</label><select id="dept-asg-request" class="form-input" required><option value="">—</option>${reqOpts}</select></div>
-                <div class="form-group"><label>${this.escapeHtml(i18n.t('extra_ops_select_extra'))}</label><select id="dept-asg-extra" class="form-input" required><option value="">—</option>${extraOpts}</select></div>
-                <div class="form-group"><label><input type="checkbox" id="dept-asg-confirmed"> ${this.escapeHtml(i18n.t('extra_ops_confirmed'))}</label></div>
-                <button type="submit" class="btn-block">${this.escapeHtml(i18n.t('extra_ops_assign'))}</button>
-            </form>
-            <table class="ops-table delegate-support-table"><thead><tr>
-                <th>${this.escapeHtml(i18n.t('extra_ops_select_extra'))}</th>
-                <th>${this.escapeHtml(i18n.t('extra_ops_department'))}</th>
-                <th>${this.escapeHtml(i18n.t('extra_ops_confirmed'))}</th>
-                <th>${this.escapeHtml(i18n.t('extra_ops_attended'))}</th>
-                <th></th>
-            </tr></thead><tbody>${list}</tbody></table>`;
+            <section class="extra-ops-section">
+                <h3 class="profile-section-title">${this.escapeHtml(i18n.t('extra_ops_batch_title'))}</h3>
+                <form class="profile-form" onsubmit="app.submitDeptAssignmentBatch(event)">
+                    <div class="form-group"><label>${this.escapeHtml(i18n.t('extra_ops_select_request'))}</label><select id="dept-asg-request" class="form-input" required onchange="app.onExtraOpsBatchRequestChange(this.value)"><option value="">—</option>${reqOpts}</select></div>
+                    <div class="form-group extra-ops-batch-list" id="extra-ops-batch-list">${batchList}</div>
+                    <div class="form-group"><label><input type="checkbox" id="dept-asg-confirmed"> ${this.escapeHtml(i18n.t('extra_ops_confirmed'))}</label></div>
+                    <button type="submit" class="btn-block">${this.escapeHtml(i18n.t('extra_ops_assign_batch'))}</button>
+                </form>
+            </section>
+            <section class="extra-ops-section">
+                <h3 class="profile-section-title">${this.escapeHtml(i18n.t('extra_ops_attendance_title'))}</h3>
+                <p class="description">${this.escapeHtml(i18n.t('extra_ops_attendance_hint'))}</p>
+                <table class="ops-table delegate-support-table"><thead><tr>
+                    <th>${this.escapeHtml(i18n.t('extra_ops_select_extra'))}</th>
+                    <th>${this.escapeHtml(i18n.t('extra_ops_department'))}</th>
+                    <th>${this.escapeHtml(i18n.t('extra_ops_confirmed'))}</th>
+                    <th>${this.escapeHtml(i18n.t('extra_ops_attended'))}</th>
+                    <th></th>
+                </tr></thead><tbody>${attendList}</tbody></table>
+            </section>`;
+    },
+
+    onExtraOpsBatchRequestChange(requestId) {
+        this._extraOpsBatchRequestId = requestId || '';
+        this.renderExtraVolunteersOps({ keepData: true });
     },
 
     async submitExtraVolunteerForm(event) {
@@ -7811,20 +7878,94 @@ const app = {
         }
     },
 
-    async submitDeptAssignmentForm(event) {
+    async submitDeptAssignmentBatch(event) {
         event.preventDefault();
         if (!navigator.onLine) { alert(i18n.t('extra_ops_offline')); return; }
+        const requestId = document.getElementById('dept-asg-request')?.value;
+        const extraIds = Array.from(document.querySelectorAll('.extra-ops-batch-cb:checked')).map((el) => el.value).filter(Boolean);
+        if (!requestId) { alert(i18n.t('extra_ops_select_request')); return; }
+        if (!extraIds.length) { alert(i18n.t('extra_ops_batch_none')); return; }
         try {
-            await API.createDeptVolunteerAssignment({
-                request_id: document.getElementById('dept-asg-request')?.value,
-                extra_id: document.getElementById('dept-asg-extra')?.value,
+            const result = await API.createDeptVolunteerAssignment({
+                request_id: requestId,
+                extra_ids: extraIds,
                 confirmed: !!document.getElementById('dept-asg-confirmed')?.checked
             });
+            alert(i18n.t('extra_ops_saved'));
+            await this.renderExtraVolunteersOps();
+            if (result && (result.items || []).length && confirm(i18n.t('extra_ops_share_prompt'))) {
+                await this.shareExtraOpsRequestPdf(requestId);
+            }
+        } catch (e) {
+            alert(e.message || i18n.t('extra_ops_fail'));
+        }
+    },
+
+    async closeExtraOpsRequest(requestId) {
+        if (!navigator.onLine) { alert(i18n.t('extra_ops_offline')); return; }
+        if (!confirm(i18n.t('extra_ops_close_confirm'))) return;
+        try {
+            await API.deptVolunteerRequestAction(requestId, 'close_forward');
             alert(i18n.t('extra_ops_saved'));
             await this.renderExtraVolunteersOps();
         } catch (e) {
             alert(e.message || i18n.t('extra_ops_fail'));
         }
+    },
+
+    async markExtraOpsRequestServed(requestId) {
+        if (!navigator.onLine) { alert(i18n.t('extra_ops_offline')); return; }
+        if (!confirm(i18n.t('extra_ops_served_confirm'))) return;
+        try {
+            await API.deptVolunteerRequestAction(requestId, 'mark_served');
+            alert(i18n.t('extra_ops_saved'));
+            await this.renderExtraVolunteersOps();
+        } catch (e) {
+            alert(e.message || i18n.t('extra_ops_fail'));
+        }
+    },
+
+    async shareExtraOpsRequestPdf(requestId) {
+        if (!navigator.onLine) { alert(i18n.t('extra_ops_offline')); return; }
+        const req = this.extraOpsRequestById(requestId);
+        if (!req) {
+            await this.loadExtraVolunteersOpsData();
+        }
+        const row = this.extraOpsRequestById(requestId);
+        if (!row) { alert(i18n.t('extra_ops_fail')); return; }
+        try {
+            const blob = await API.downloadDeptRequestPdf(requestId);
+            const filename = 'zelo-pedido-' + String(requestId).slice(0, 12) + '.pdf';
+            const file = new File([blob], filename, { type: 'application/pdf' });
+            const shareText = i18n.t('extra_ops_share_text')
+                .replace('{dept}', row.department || '')
+                .replace('{day}', row.day || '')
+                .replace('{time}', row.time_slot || '');
+            if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
+                await navigator.share({ files: [file], title: i18n.t('extra_ops_share_title'), text: shareText });
+                return;
+            }
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            const wa = this.extraOpsWhatsAppUrl(row.contact_phone, shareText);
+            if (wa && confirm(i18n.t('extra_ops_whatsapp_fallback'))) {
+                window.open(wa, '_blank', 'noopener,noreferrer');
+            }
+        } catch (e) {
+            if (e && e.name === 'AbortError') return;
+            alert(e.message || i18n.t('extra_ops_fail'));
+        }
+    },
+
+    async submitDeptAssignmentForm(event) {
+        event.preventDefault();
+        await this.submitDeptAssignmentBatch(event);
     },
 
     openExtraOpsAttendance(assignmentId) {

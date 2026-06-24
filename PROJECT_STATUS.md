@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-23** — #60 voluntários extras plugin **2.22.0** / PWA **172** **In review**.
+> Última atualização: **2026-06-23** — #60 fase 2 plugin **2.23.0** / PWA **174** **In review**.
 
 ---
 
@@ -167,7 +167,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Issue | Estado | Notas |
 |-------|--------|-------|
-| [#60](https://github.com/esvianna/ZELO/issues/60) | **In review** | Voluntários extras Pool B — plugin 2.22.0 / PWA 172; smoke 60a–60e |
+| [#60](https://github.com/esvianna/ZELO/issues/60) | **In review** | Voluntários extras Pool B fase 2 — plugin 2.23.0 / PWA 174; smoke 60a–60h |
 
 ### Validadas no Project (Done) — sync 2026-06-23
 
@@ -190,7 +190,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## Próximos passos lógicos
 
-1. Smoke **#60** (extras, pedidos, encaminhamento, SMS, export) após deploy plugin **2.22.0** + PWA **172**.
+1. Smoke **#60** fase 2 (lote, SMS responsável, encerrar/atendido, PDF Share) após deploy plugin **2.23.0** + PWA **174**.
 2. **Deploy:** alinhar produção com plugin **2.21.5** + PWA **171** se ainda não publicados.
 3. Nova demanda → issue no Project 3 (Backlog) antes de codificar.
 

@@ -5303,3 +5303,39 @@ body.ops-modal-open {
 .extra-ops-toolbar {
     margin-bottom: 0.5rem;
 }
+
+.extra-ops-section {
+    margin-bottom: 1.25rem;
+}
+
+.extra-ops-batch-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 8px;
+    background: #fafafa;
+}
+
+.extra-ops-batch-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.extra-ops-actions-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 8rem;
+}
+
+.extra-ops-row-btn {
+    font-size: 0.78rem;
+    padding: 0.35rem 0.5rem;
+}

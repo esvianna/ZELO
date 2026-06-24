@@ -14,6 +14,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 |--------|---------|
 | Plugin **2.22.0** / PWA **172** | Pool B separado: cadastro extras (form. 01–02), pedidos dept. (03), encaminhamentos + comparecimento (04–05); pesquisa/filtros; export CSV/PDF (gestor); SMS Comtele no encaminhamento; telefone obrigatório |
 | PWA **173** | Fix abas extras ops no mobile (grid 3 colunas + rótulo curto «Encamin.») |
+| Plugin **2.23.0** / PWA **174** | Fase 2: encaminhar lote (multi-selecção); SMS resumo ao responsável após lote; estados `encaminado`/`atendido` (encerrar/marcar atendido); comparecimento só em atendidos; PDF por pedido + Share nativo / fallback WhatsApp |
 
 ### Adicionado — swap notificações (#56, ADR-041)
 
