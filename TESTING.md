@@ -98,6 +98,7 @@ Orientação de testes **manual** (prioritário hoje) e caminho para automação
 | 2z4 | **Mapa evento** mobile diagrama completo (#61, PWA **177+**) | iPhone / ≤768px | Aba Diagrama: imagem inteira visível (não faixa no topo); pinos sobre o mapa; pinch OK; rotação/reflow recentra |
 | 2z5 | **Mapa evento** tooltip no pino (#61, PWA **178+**) | view_ops / Diagrama | Tocar pino destino/balcão → rótulo com nome ~3,5 s; selecciona destino; «Mapa completo» esconde tooltip |
 | 2z6 | **Mapa evento** cor por pavimento (#61, PWA **179+** / plugin **2.23.2+**) | view_ops / admin | Destinos: cor distinta por Pav. (P1, P2, Camarote…); legenda lista pavimentos; sem Pav. = cinza; balcões inalterados |
+| 2z6b | **Admin mapa evento** pinos visíveis (#61, plugin **2.23.3+**) | manage_options | Aba Mapa evento: pinos sobre o diagrama; Posicionar + clique grava coords; consola sem SyntaxError |
 | 2aa | **Novidades / blog** (#26, 2.13.0 / PWA 116+) | **view_ops** (#41) | Admin: post com «Publicar na PWA» → `GET /news` OK; card/menu → lista + detalhe PT; subscriber **403** |
 | 2ac | **Carrossel novidades** (#15, 2.13.3 / PWA 126+) | **view_ops** (#41) | Admin: post carrossel → home com swipe; subscriber/anónimo sem carrossel |
 | 2ad | **Emergência — hierarquia visual** (#17, PWA 127+) | Visitante | Home: card Emergência full-width rosa vs Hospitais/Farmácias; view emergência com hero + tel. destaque admin; lista/pesquisa destaca categoria `emergencia`; S.O.S. bottom nav OK; regressão mapa/nav |

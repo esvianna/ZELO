@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.23.3] - 2026-06-24
+
+### Corrigido
+- **Admin mapa evento (#61):** pinos não apareciam — erro de sintaxe JS (`DOMContentLoaded` sem `});`) impedia `zeloMapRefreshPins()`.
+
 ## [2.23.2] - 2026-06-24
 
 ### Alterado

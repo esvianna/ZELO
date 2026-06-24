@@ -473,6 +473,7 @@ function zelo_render_indoor_map_admin_tab( $indoor_map, $locations = array(), $a
 			});
 		}
 		zeloMapRefreshPins();
+	});
 	</script>
 	<?php
 }

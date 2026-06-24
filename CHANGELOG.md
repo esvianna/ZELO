@@ -17,6 +17,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | PWA **177** | Fix #61 mobile: remove `min-width:720px`; dimensiona imagem via `naturalWidth` + largura viewport; decode antes do fit; pinos ~11–13 px no mapa completo |
 | PWA **178** | #61: tooltip com nome do local ao tocar pino na aba Diagrama (3,5 s; mobile + desktop) |
 | Plugin **2.23.2** / PWA **179** | #61: pinos de destino coloridos por pavimento (coluna Pav.); legenda dinâmica admin + PWA |
+| Plugin **2.23.3** | Fix #61 admin: pinos no diagrama (syntax error JS) |
 
 ### Adicionado — voluntários extras / encaminhamento (#60)
 
