@@ -2,6 +2,16 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.24.7] - 2026-06-25
+
+### Corrigido
+- **Export PDF mapa (#64):** escala do mapa limitada a ~253 mm (centrado na página) + inset vertical 3 mm — evita corte de nomes de ruas e pinos nas margens; legenda overlay mantida.
+
+## [2.24.6] - 2026-06-25
+
+### Alterado
+- **Export PDF mapa (#64):** legenda sobreposta à margem direita da imagem (fundo branco, ~44 mm); mapa usa largura útil completa (~281 mm).
+
 ## [2.24.5] - 2026-06-25
 
 ### Alterado

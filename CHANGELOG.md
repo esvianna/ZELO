@@ -16,6 +16,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | Plugin **2.24.3** | PDF: mapa ~227 mm largura + altura máxima; legenda 2 colunas compacta; pinos 2× + TTF nos números (#64) |
 | Plugin **2.24.4** | PDF: legenda 1 coluna (~26 mm) → mapa ~253 mm; números auto-fit dentro do pino (#64) |
 | Plugin **2.24.5** | PDF: números vetor FPDF (Helvetica Bold, preto + contorno branco) sobre o mapa (#64) |
+| Plugin **2.24.6** | PDF: legenda overlay na margem direita do mapa (fundo branco, ~44 mm); mapa largura útil (#64) |
+| Plugin **2.24.7** | PDF: mapa ~253 mm centrado + inset 3 mm — sem corte de ruas/pinos; overlay legenda mantido (#64) |
 
 ### Alterado — export PDF mapa numerado (#63)
 

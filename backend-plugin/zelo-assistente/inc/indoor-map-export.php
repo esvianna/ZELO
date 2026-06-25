@@ -505,20 +505,39 @@ function zelo_indoor_map_pdf_layout_metrics( $content_y ) {
 	$margin_bottom = 5.0;
 	$page_usable_w = 281.0;
 	$map_x         = 8.0;
-	$leg_w         = 26.0;
-	$gap           = 2.0;
-	$map_w         = $page_usable_w - $leg_w - $gap;
-	$map_h         = max( 165.0, $page_h - $margin_top - $content_y - $margin_bottom );
+	$leg_w         = 44.0;
+	$map_inset_y   = 3.0;
+	$map_fit_w     = 253.0;
+	$map_h         = max( 165.0, $page_h - $margin_top - $content_y - $margin_bottom ) - ( 2 * $map_inset_y );
+	$map_block_h   = $map_h + ( 2 * $map_inset_y );
 
 	return array(
-		'map_x'  => $map_x,
-		'map_w'  => $map_w,
-		'map_h'  => $map_h,
-		'gap'    => $gap,
-		'leg_x'  => $map_x + $map_w + $gap,
-		'leg_w'  => $leg_w,
-		'page_w' => $page_usable_w,
+		'map_x'       => $map_x,
+		'map_w'       => $map_fit_w,
+		'map_zone_w'  => $page_usable_w,
+		'map_h'       => $map_h,
+		'map_inset_y' => $map_inset_y,
+		'map_block_h' => $map_block_h,
+		'leg_w'       => $leg_w,
 	);
+}
+
+/**
+ * Fundo branco da legenda sobreposta à margem direita do mapa.
+ *
+ * @param FPDF $pdf PDF.
+ * @param float $x   X da faixa (canto esquerdo).
+ * @param float $y   Y superior.
+ * @param float $w   Largura da faixa.
+ * @param float $h   Altura da faixa.
+ * @return void
+ */
+function zelo_indoor_map_pdf_legend_overlay_background( $pdf, $x, $y, $w, $h ) {
+	$pdf->SetFillColor( 255, 255, 255 );
+	$pdf->SetDrawColor( 220, 220, 220 );
+	$pdf->SetLineWidth( 0.2 );
+	$pdf->Rect( $x - 1.0, $y, $w + 1.0, $h, 'DF' );
+	$pdf->SetDrawColor( 0, 0, 0 );
 }
 
 /**
@@ -572,17 +591,18 @@ function zelo_indoor_map_pdf_estimate_sidebar_entry_height( $pdf, $col_w, $numbe
 }
 
 /**
- * Legenda numerada na lateral direita; overflow continua na página 2.
+ * Legenda numerada sobreposta à margem direita do mapa; overflow na página 2.
  *
  * @param FPDF                             $pdf      PDF.
  * @param array<int, array<string, mixed>> $items    Itens numerados.
  * @param float                            $start_y  Y do bloco mapa/legenda.
+ * @param array<string, float>             $layout   Métricas de layout.
+ * @param array{x:float,y:float,w:float,h:float}|null $frame Frame da imagem (página 1).
  * @return void
  */
-function zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $items, $start_y, $layout ) {
-	$leg_x     = $layout['leg_x'];
+function zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $items, $start_y, $layout, $frame = null ) {
 	$leg_w     = $layout['leg_w'];
-	$max_y     = $start_y + $layout['map_h'];
+	$max_y     = $start_y + ( $layout['map_block_h'] ?? $layout['map_h'] );
 	$remaining = $items;
 	$page_num  = 0;
 
@@ -593,12 +613,22 @@ function zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $items, $start_y, $lay
 			$max_y   = 202;
 		}
 
+		if ( 0 === $page_num && is_array( $frame ) ) {
+			$leg_x = $frame['x'] + $frame['w'] - $leg_w;
+			$block_h = $layout['map_block_h'] ?? ( $layout['map_h'] + 6.0 );
+			zelo_indoor_map_pdf_legend_overlay_background( $pdf, $leg_x, $start_y, $leg_w, $block_h );
+		} else {
+			$leg_x = 8.0;
+		}
+
+		$col_w = ( 0 === $page_num && is_array( $frame ) ) ? $leg_w : 120.0;
+
 		$pdf->SetFont( 'Helvetica', 'B', 7.5 );
 		$pdf->SetXY( $leg_x, $start_y );
 		$title = $page_num > 0
 			? __( 'Legenda (continuação):', 'zelo-assistente' )
 			: __( 'Legenda:', 'zelo-assistente' );
-		$pdf->Cell( $leg_w, 3.5, zelo_pdf_encode( $title ), 0, 1 );
+		$pdf->Cell( $col_w, 3.5, zelo_pdf_encode( $title ), 0, 1 );
 
 		$y0     = $start_y + 4.5;
 		$y      = $y0;
@@ -608,7 +638,7 @@ function zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $items, $start_y, $lay
 		foreach ( $remaining as $idx => $item ) {
 			$est = zelo_indoor_map_pdf_estimate_sidebar_entry_height(
 				$pdf,
-				$leg_w,
+				$col_w,
 				(int) $item['number'],
 				$item['label']
 			);
@@ -634,7 +664,7 @@ function zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $items, $start_y, $lay
 				$pdf,
 				$leg_x,
 				$y,
-				$leg_w,
+				$col_w,
 				$item['hex'],
 				(int) $item['number'],
 				$item['label']
@@ -650,7 +680,7 @@ function zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $items, $start_y, $lay
 }
 
 /**
- * Encaixa imagem do mapa na zona esquerda (largura/altura máximas fixas).
+ * Encaixa imagem do mapa na largura útil (legenda sobrepõe a margem direita).
  *
  * @param FPDF   $pdf      PDF.
  * @param string $png_path Caminho PNG.
@@ -661,7 +691,9 @@ function zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $items, $start_y, $lay
 function zelo_indoor_map_pdf_place_map_image( $pdf, $png_path, $y, $layout ) {
 	$max_w    = $layout['map_w'];
 	$max_h    = $layout['map_h'];
+	$zone_w   = $layout['map_zone_w'] ?? $max_w;
 	$map_x    = $layout['map_x'];
+	$inset_y  = $layout['map_inset_y'] ?? 0.0;
 	$info     = @getimagesize( $png_path );
 	$img_w_px = $info ? (int) $info[0] : 1;
 	$img_h_px = $info ? (int) $info[1] : 1;
@@ -672,12 +704,13 @@ function zelo_indoor_map_pdf_place_map_image( $pdf, $png_path, $y, $layout ) {
 		$scale_h = $max_h;
 		$scale_w = $scale_h / $ratio;
 	}
-	$x_off = $map_x + ( $max_w - $scale_w ) / 2;
-	$pdf->Image( $png_path, $x_off, $y, $scale_w, $scale_h );
+	$x_off = $map_x + ( $zone_w - $scale_w ) / 2;
+	$y_off = $y + $inset_y + ( $max_h - $scale_h ) / 2;
+	$pdf->Image( $png_path, $x_off, $y_off, $scale_w, $scale_h );
 
 	return array(
 		'x'     => $x_off,
-		'y'     => $y,
+		'y'     => $y_off,
 		'w'     => $scale_w,
 		'h'     => $scale_h,
 		'img_w' => $img_w_px,
@@ -810,7 +843,7 @@ function zelo_indoor_map_export_pdf_binary( $map ) {
 			(int) ( $png_data['booth_half'] ?? 44 ),
 			(int) ( $png_data['dest_r'] ?? 36 )
 		);
-		zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $numbered, $content_y, $layout );
+		zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $numbered, $content_y, $layout, $frame );
 
 		$slug = sanitize_title( zelo_indoor_map_export_event_name() );
 		if ( $slug === '' ) {
