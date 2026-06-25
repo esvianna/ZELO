@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-24** — #63 PDF pinos numerados plugin **2.24.1** **In review**.
+> Última atualização: **2026-06-25** — #64 PDF legenda lateral plugin **2.24.2** **In review**.
 
 ---
 
@@ -12,7 +12,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Referência no repo | Versão |
 |--------------------|--------|
-| Plugin WordPress (`zelo-assistente.php`) | **2.24.1** |
+| Plugin WordPress (`zelo-assistente.php`) | **2.24.2** |
 | PWA (`zelo-build.js` / `sw.js`) | **build 179** |
 
 **Produção (repo):** PWA **151** validada (#45–#50, #46); plugin **2.18.0** + **2.19.0** / PWA **152** aguardam deploy/smoke (#44, #51).
@@ -167,7 +167,8 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Issue | Estado | Notas |
 |-------|--------|-------|
-| [#63](https://github.com/esvianna/ZELO/issues/63) | **In review** | PDF pinos numerados + legenda por local — plugin **2.24.1**; smoke **2z7b** |
+| [#64](https://github.com/esvianna/ZELO/issues/64) | **In review** | PDF legenda lateral + pinos impressão — plugin **2.24.2**; smoke **2z7c** |
+| [#63](https://github.com/esvianna/ZELO/issues/63) | **In review** | PDF pinos numerados — plugin **2.24.1**; smoke **2z7b** |
 | [#62](https://github.com/esvianna/ZELO/issues/62) | **In review** | Export PDF mapa evento — plugin **2.24.0**; smoke **2z7** |
 | [#61](https://github.com/esvianna/ZELO/issues/61) | **In review** | Mapa evento pinos legíveis — plugin 2.23.3 / PWA 179; smoke 2z2–2z6b |
 | [#60](https://github.com/esvianna/ZELO/issues/60) | **In review** | Voluntários extras Pool B fase 2 — plugin 2.23.0 / PWA 174; smoke 60a–60h |
@@ -193,19 +194,21 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## Próximos passos lógicos
 
-1. Smoke **#63** PDF numerado (`TESTING.md` **2z7b**) após deploy plugin **2.24.1**.
-2. Smoke **#62** export PDF mapa (`TESTING.md` **2z7**) após deploy plugin **2.24.0**.
+1. Smoke **#64** PDF legenda lateral (`TESTING.md` **2z7c**) após deploy plugin **2.24.2**.
+2. Smoke **#63** PDF numerado (`TESTING.md` **2z7b**) após deploy plugin **2.24.1**.
 3. Smoke **#61** pinos/legenda PWA + admin (`TESTING.md` **2z2–2z6b**) após deploy plugin **2.23.3** + PWA **179**.
 4. Smoke **#60** fase 2 (lote, SMS responsável, encerrar/atendido, PDF Share) após deploy plugin **2.23.0** + PWA **174**.
 5. Nova demanda → issue no Project 3 (Backlog) antes de codificar.
 
 ---
 
-## Última sessão (2026-06-24)
+## Última sessão (2026-06-25)
 
-- **#63:** PDF pinos numerados na ordem de cadastro + legenda «N — Nome» — só `indoor-map-export.php`; plugin **2.24.1** — **In review**; smoke **2z7b**.
-- **#62:** export PDF mapa evento — plugin **2.24.0** — **In review**; smoke **2z7**.
-- **#61:** pinos legíveis + legenda pavimentos — plugin **2.23.1–2.23.3** / PWA **175–179** — **In review**; smoke **2z2–2z6b**.
+- **#64:** PDF legenda lateral + mapa altura fixa 175 mm + pinos/números maiores — plugin **2.24.2** — **In review**; smoke **2z7c**.
+
+## Sessão anterior (2026-06-24)
+
+- **#63:** PDF pinos numerados — plugin **2.24.1** — **In review**; smoke **2z7b**.
 
 ## Sessão anterior (2026-06-22)
 

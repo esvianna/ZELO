@@ -8,6 +8,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Alterado — export PDF legenda lateral + pinos impressão (#64)
+
+| Versão | Entrega |
+|--------|---------|
+| Plugin **2.24.2** | PDF: legenda numerada na lateral direita; mapa altura fixa 175 mm; pinos e números maiores (GD) |
+
 ### Alterado — export PDF mapa numerado (#63)
 
 | Versão | Entrega |

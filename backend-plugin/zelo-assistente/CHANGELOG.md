@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.24.2] - 2026-06-25
+
+### Alterado
+- **Export PDF mapa (#64):** legenda lateral; mapa com altura fixa; pinos e dígitos maiores para impressão.
+
 ## [2.24.1] - 2026-06-24
 
 ### Alterado

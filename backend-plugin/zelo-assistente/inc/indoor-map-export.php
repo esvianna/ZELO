@@ -209,6 +209,23 @@ function zelo_indoor_map_export_gd_resize( $src, $new_w, $new_h ) {
 }
 
 /**
+ * Fonte GD built-in para número no pino (impressão).
+ *
+ * @param string $label Dígitos.
+ * @return int 1–5.
+ */
+function zelo_indoor_map_export_gd_pin_font( $label ) {
+	$len = strlen( (string) $label );
+	if ( $len > 2 ) {
+		return 3;
+	}
+	if ( $len > 1 ) {
+		return 4;
+	}
+	return 5;
+}
+
+/**
  * Desenha pino destino (círculo).
  *
  * @param GdImage|resource $img      Canvas.
@@ -222,12 +239,13 @@ function zelo_indoor_map_export_gd_pin_dest( $img, $cx, $cy, $radius, $hex, $lab
 	$rgb   = zelo_indoor_map_hex_rgb( $hex );
 	$white = imagecolorallocate( $img, 255, 255, 255 );
 	$fill  = imagecolorallocate( $img, $rgb['r'], $rgb['g'], $rgb['b'] );
-	$d     = max( 4, $radius * 2 );
-	imagefilledellipse( $img, $cx, $cy, $d + 6, $d + 6, $white );
+	$d      = max( 6, $radius * 2 );
+	$border = max( 10, (int) round( $d * 0.35 ) );
+	imagefilledellipse( $img, $cx, $cy, $d + $border, $d + $border, $white );
 	imagefilledellipse( $img, $cx, $cy, $d, $d, $fill );
 	if ( $label !== '' ) {
 		$text = imagecolorallocate( $img, 255, 255, 255 );
-		$font = strlen( $label ) > 1 ? 2 : 3;
+		$font = zelo_indoor_map_export_gd_pin_font( $label );
 		$tw   = imagefontwidth( $font ) * strlen( $label );
 		$th   = imagefontheight( $font );
 		imagestring( $img, $font, (int) ( $cx - $tw / 2 ), (int) ( $cy - $th / 2 ), $label, $text );
@@ -249,13 +267,14 @@ function zelo_indoor_map_export_gd_pin_booth( $img, $cx, $cy, $half, $hex, $labe
 	$white = imagecolorallocate( $img, 255, 255, 255 );
 	$fill  = imagecolorallocate( $img, $rgb['r'], $rgb['g'], $rgb['b'] );
 	$text  = imagecolorallocate( $img, 255, 255, 255 );
-	$x1    = $cx - $half - 2;
-	$y1    = $cy - $half - 2;
-	$x2    = $cx + $half + 2;
-	$y2    = $cy + $half + 2;
+	$pad   = 4;
+	$x1    = $cx - $half - $pad;
+	$y1    = $cy - $half - $pad;
+	$x2    = $cx + $half + $pad;
+	$y2    = $cy + $half + $pad;
 	imagefilledrectangle( $img, $x1, $y1, $x2, $y2, $white );
 	imagefilledrectangle( $img, $cx - $half, $cy - $half, $cx + $half, $cy + $half, $fill );
-	$font  = 3;
+	$font  = zelo_indoor_map_export_gd_pin_font( $label );
 	$tw    = imagefontwidth( $font ) * strlen( $label );
 	$th    = imagefontheight( $font );
 	imagestring( $img, $font, (int) ( $cx - $tw / 2 ), (int) ( $cy - $th / 2 ), $label, $text );
@@ -311,8 +330,8 @@ function zelo_indoor_map_export_build_png( $map ) {
 		return $img;
 	}
 
-	$booth_half = max( 14, (int) round( $target_w * 0.0075 ) );
-	$dest_r     = max( 10, (int) round( $target_w * 0.0055 ) );
+	$booth_half = max( 22, (int) round( $target_w * 0.0105 ) );
+	$dest_r     = max( 18, (int) round( $target_w * 0.008 ) );
 
 	foreach ( $numbered as $item ) {
 		$place = $item['place'];
@@ -366,68 +385,176 @@ function zelo_indoor_map_export_event_name() {
 }
 
 /**
- * Desenha linha da legenda numerada no PDF.
+ * Métricas de layout do PDF (A4 paisagem, margens 10 mm).
  *
- * @param FPDF   $pdf    PDF.
- * @param float  $x      X.
- * @param float  $y      Y.
- * @param string $hex    Cor do pino.
- * @param int    $number Número do pino.
- * @param string $label  Nome do local.
+ * @return array<string, float>
  */
-function zelo_indoor_map_pdf_legend_numbered_row( $pdf, $x, $y, $hex, $number, $label ) {
-	$rgb = zelo_indoor_map_hex_rgb( $hex );
-	$pdf->SetFillColor( $rgb['r'], $rgb['g'], $rgb['b'] );
-	$pdf->SetDrawColor( 255, 255, 255 );
-	$pdf->SetLineWidth( 0.35 );
-	$pdf->Rect( $x, $y, 3.5, 3.5, 'DF' );
-	$pdf->SetDrawColor( 0, 0, 0 );
-	$pdf->SetFont( 'Helvetica', '', 7.5 );
-	$text = (string) $number . ' — ' . $label;
-	$pdf->SetXY( $x + 4.5, $y - 0.3 );
-	$pdf->Cell( 85, 4, zelo_pdf_encode( $text ), 0, 0, 'L' );
+function zelo_indoor_map_pdf_layout_metrics() {
+	return array(
+		'map_x'     => 10.0,
+		'map_w'     => 200.0,
+		'map_h'     => 175.0,
+		'gap'       => 4.0,
+		'leg_x'     => 214.0,
+		'leg_w'     => 73.0,
+		'page_w'    => 277.0,
+	);
 }
 
 /**
- * Renderiza legenda numerada em colunas e devolve Y após o bloco.
+ * Desenha entrada da legenda lateral (swatch + texto com quebra).
  *
- * @param FPDF                                          $pdf   PDF.
- * @param array<int, array<string, mixed>>              $items Itens numerados.
- * @param float                                         $start_y Y inicial.
+ * @param FPDF   $pdf     PDF.
+ * @param float  $x       X da coluna.
+ * @param float  $y       Y corrente.
+ * @param float  $w       Largura útil da coluna.
+ * @param string $hex     Cor do pino.
+ * @param int    $number  Número.
+ * @param string $label   Nome.
+ * @return float Y após a entrada.
+ */
+function zelo_indoor_map_pdf_legend_sidebar_entry( $pdf, $x, $y, $w, $hex, $number, $label ) {
+	$swatch = 4.0;
+	$rgb    = zelo_indoor_map_hex_rgb( $hex );
+	$pdf->SetFillColor( $rgb['r'], $rgb['g'], $rgb['b'] );
+	$pdf->SetDrawColor( 255, 255, 255 );
+	$pdf->SetLineWidth( 0.35 );
+	$pdf->Rect( $x, $y + 0.4, $swatch, $swatch, 'DF' );
+	$pdf->SetDrawColor( 0, 0, 0 );
+
+	$text_x = $x + $swatch + 1.5;
+	$text_w = max( 8.0, $w - $swatch - 2.0 );
+	$line   = (string) $number . ' — ' . $label;
+	$pdf->SetFont( 'Helvetica', '', 7 );
+	$pdf->SetXY( $text_x, $y );
+	$pdf->MultiCell( $text_w, 3.4, zelo_pdf_encode( $line ), 0, 'L' );
+
+	return $pdf->GetY() + 1.2;
+}
+
+/**
+ * Estima altura de uma entrada da legenda lateral (mm).
+ *
+ * @param FPDF   $pdf    PDF.
+ * @param float  $col_w  Largura da coluna.
+ * @param int    $number Número.
+ * @param string $label  Nome.
  * @return float
  */
-function zelo_indoor_map_pdf_render_numbered_legend( $pdf, $items, $start_y ) {
-	$pdf->SetFont( 'Helvetica', 'B', 8 );
-	$pdf->SetXY( 10, $start_y );
-	$pdf->Cell( 0, 4, zelo_pdf_encode( __( 'Legenda:', 'zelo-assistente' ) ), 0, 1 );
+function zelo_indoor_map_pdf_estimate_sidebar_entry_height( $pdf, $col_w, $number, $label ) {
+	$text_w = max( 8.0, $col_w - 7.5 );
+	$line   = (string) $number . ' — ' . $label;
+	$pdf->SetFont( 'Helvetica', '', 7 );
+	$char_w = max( 0.5, $pdf->GetStringWidth( 'M' ) );
+	$chars  = max( 8, (int) floor( $text_w / $char_w ) );
+	$lines  = max( 1, (int) ceil( strlen( $line ) / $chars ) );
+	return 1.2 + ( $lines * 3.4 );
+}
 
-	$count = count( $items );
-	if ( $count < 1 ) {
-		return $pdf->GetY() + 2;
+/**
+ * Legenda numerada na lateral direita; overflow continua na página 2.
+ *
+ * @param FPDF                             $pdf      PDF.
+ * @param array<int, array<string, mixed>> $items    Itens numerados.
+ * @param float                            $start_y  Y do bloco mapa/legenda.
+ * @return void
+ */
+function zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $items, $start_y ) {
+	$layout    = zelo_indoor_map_pdf_layout_metrics();
+	$leg_x     = $layout['leg_x'];
+	$leg_w     = $layout['leg_w'];
+	$remaining = $items;
+	$page_num  = 0;
+
+	while ( ! empty( $remaining ) ) {
+		if ( $page_num > 0 ) {
+			$pdf->AddPage();
+			$start_y = 10;
+			$max_y   = 200;
+		} else {
+			$max_y = $start_y + $layout['map_h'];
+		}
+
+		$pdf->SetFont( 'Helvetica', 'B', 8 );
+		$pdf->SetXY( $leg_x, $start_y );
+		$title = $page_num > 0
+			? __( 'Legenda (continuação):', 'zelo-assistente' )
+			: __( 'Legenda:', 'zelo-assistente' );
+		$pdf->Cell( $leg_w, 4, zelo_pdf_encode( $title ), 0, 1 );
+
+		$y      = $start_y + 5;
+		$fitted = array();
+		$left   = array();
+
+		foreach ( $remaining as $idx => $item ) {
+			$est = zelo_indoor_map_pdf_estimate_sidebar_entry_height(
+				$pdf,
+				$leg_w,
+				(int) $item['number'],
+				$item['label']
+			);
+			if ( $y + $est > $max_y && ! empty( $fitted ) ) {
+				$left = array_slice( $remaining, $idx );
+				break;
+			}
+			$fitted[] = $item;
+			$y       += $est;
+			if ( $idx === count( $remaining ) - 1 ) {
+				$left = array();
+			}
+		}
+
+		if ( empty( $fitted ) && ! empty( $remaining ) ) {
+			$fitted[] = $remaining[0];
+			$left     = array_slice( $remaining, 1 );
+		}
+
+		$y = $start_y + 5;
+		foreach ( $fitted as $item ) {
+			$y = zelo_indoor_map_pdf_legend_sidebar_entry(
+				$pdf,
+				$leg_x,
+				$y,
+				$leg_w,
+				$item['hex'],
+				(int) $item['number'],
+				$item['label']
+			);
+		}
+
+		$remaining = $left;
+		++$page_num;
+		if ( $page_num > 5 ) {
+			break;
+		}
 	}
+}
 
-	$cols         = $count > 18 ? 3 : ( $count > 9 ? 2 : 1 );
-	$col_w        = 277 / $cols;
-	$rows_per_col = (int) ceil( $count / $cols );
-	$row_h        = 4.2;
-	$y0           = $pdf->GetY() + 1;
-
-	foreach ( $items as $i => $item ) {
-		$col = (int) floor( $i / $rows_per_col );
-		$row = $i % $rows_per_col;
-		$x   = 10 + $col * $col_w;
-		$y   = $y0 + $row * $row_h;
-		zelo_indoor_map_pdf_legend_numbered_row(
-			$pdf,
-			$x,
-			$y,
-			$item['hex'],
-			(int) $item['number'],
-			$item['label']
-		);
+/**
+ * Encaixa imagem do mapa na zona esquerda (largura/altura máximas fixas).
+ *
+ * @param FPDF   $pdf      PDF.
+ * @param string $png_path Caminho PNG.
+ * @param float  $y        Y superior.
+ * @return void
+ */
+function zelo_indoor_map_pdf_place_map_image( $pdf, $png_path, $y ) {
+	$layout   = zelo_indoor_map_pdf_layout_metrics();
+	$max_w    = $layout['map_w'];
+	$max_h    = $layout['map_h'];
+	$map_x    = $layout['map_x'];
+	$info     = @getimagesize( $png_path );
+	$img_w_px = $info ? $info[0] : 1;
+	$img_h_px = $info ? $info[1] : 1;
+	$ratio    = $img_h_px / max( 1, $img_w_px );
+	$disp_w   = $max_w;
+	$disp_h   = $disp_w * $ratio;
+	if ( $disp_h > $max_h ) {
+		$disp_h = $max_h;
+		$disp_w = $disp_h / $ratio;
 	}
-
-	return $y0 + $rows_per_col * $row_h + 3;
+	$x_off = $map_x + ( $max_w - $disp_w ) / 2;
+	$pdf->Image( $png_path, $x_off, $y, $disp_w, $disp_h );
 }
 
 /**
@@ -463,26 +590,9 @@ function zelo_indoor_map_export_pdf_binary( $map ) {
 		$pdf->Cell( 0, 5, zelo_pdf_encode( __( 'Mapa do evento', 'zelo-assistente' ) . ' — ' . wp_date( 'd/m/Y H:i' ) ), 0, 1 );
 		$pdf->Ln( 2 );
 
-		$leg_end_y = zelo_indoor_map_pdf_render_numbered_legend( $pdf, $numbered, $pdf->GetY() );
-		$pdf->SetY( $leg_end_y );
-		$pdf->Ln( 2 );
-
-		$page_w   = 277;
-		$page_h   = 190;
-		$max_h    = max( 80, $page_h - $leg_end_y );
-		$info     = @getimagesize( $png_path );
-		$img_w_px = $info ? $info[0] : 1;
-		$img_h_px = $info ? $info[1] : 1;
-		$ratio    = $img_h_px / max( 1, $img_w_px );
-		$disp_w   = $page_w;
-		$disp_h   = $disp_w * $ratio;
-		if ( $disp_h > $max_h ) {
-			$disp_h = $max_h;
-			$disp_w = $disp_h / $ratio;
-		}
-		$x_off = 10 + ( $page_w - $disp_w ) / 2;
-		$y_off = $pdf->GetY();
-		$pdf->Image( $png_path, $x_off, $y_off, $disp_w, $disp_h );
+		$content_y = $pdf->GetY();
+		zelo_indoor_map_pdf_place_map_image( $pdf, $png_path, $content_y );
+		zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $numbered, $content_y );
 
 		$slug = sanitize_title( zelo_indoor_map_export_event_name() );
 		if ( $slug === '' ) {
