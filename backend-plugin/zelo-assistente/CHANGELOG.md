@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.24.1] - 2026-06-24
+
+### Alterado
+- **Export PDF mapa evento (#63):** pinos numerados na ordem de cadastro; legenda com «N — Nome» de cada local; PWA/admin inalterados.
+
 ## [2.24.0] - 2026-06-24
 
 ### Adicionado

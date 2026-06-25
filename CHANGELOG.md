@@ -8,6 +8,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Alterado — export PDF mapa numerado (#63)
+
+| Versão | Entrega |
+|--------|---------|
+| Plugin **2.24.1** | PDF: pinos numerados 1…N (ordem cadastro) + legenda «N — Nome»; cores por pavimento mantidas; só export |
+
 ### Adicionado — export PDF mapa evento (#62)
 
 | Versão | Entrega |

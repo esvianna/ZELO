@@ -64,6 +64,56 @@ function zelo_indoor_map_export_places( $map ) {
 }
 
 /**
+ * Locais exportáveis com numeração sequencial (ordem de cadastro).
+ *
+ * @param array<string, mixed> $map Mapa.
+ * @return array<int, array{number:int,place:array<string,mixed>,label:string,hex:string,booth:bool}>
+ */
+function zelo_indoor_map_export_numbered_items( $map ) {
+	$places       = zelo_indoor_map_export_places( $map );
+	$booths       = zelo_indoor_map_get_booths( $map );
+	$floor_legend = zelo_indoor_map_build_floor_legend( $places );
+	$items        = array();
+	$number       = 1;
+
+	foreach ( $places as $place ) {
+		$is_booth = ( $place['kind'] ?? '' ) === 'booth';
+		if ( $is_booth ) {
+			$slot = zelo_indoor_map_export_booth_slot( $place, $booths );
+			$hex  = $slot === 2 ? '#0d9488' : '#1e40af';
+		} else {
+			$hex = zelo_indoor_map_floor_color_for( $place['floor'] ?? '', $floor_legend );
+		}
+
+		$label = zelo_indoor_map_place_label( $place, 'pt_br' );
+		if ( $label === '' ) {
+			$label = $is_booth
+				? sprintf(
+					/* translators: %d: pin number */
+					__( 'Balcão %d', 'zelo-assistente' ),
+					$number
+				)
+				: sprintf(
+					/* translators: %d: pin number */
+					__( 'Local %d', 'zelo-assistente' ),
+					$number
+				);
+		}
+
+		$items[] = array(
+			'number' => $number,
+			'place'  => $place,
+			'label'  => $label,
+			'hex'    => $hex,
+			'booth'  => $is_booth,
+		);
+		++$number;
+	}
+
+	return $items;
+}
+
+/**
  * Slot do balcão (1 ou 2).
  *
  * @param array<string, mixed>             $place  Local.
@@ -166,14 +216,22 @@ function zelo_indoor_map_export_gd_resize( $src, $new_w, $new_h ) {
  * @param int              $cy       Centro Y.
  * @param int              $radius   Raio.
  * @param string           $hex      Cor.
+ * @param string           $label    Número no pino.
  */
-function zelo_indoor_map_export_gd_pin_dest( $img, $cx, $cy, $radius, $hex ) {
+function zelo_indoor_map_export_gd_pin_dest( $img, $cx, $cy, $radius, $hex, $label = '' ) {
 	$rgb   = zelo_indoor_map_hex_rgb( $hex );
 	$white = imagecolorallocate( $img, 255, 255, 255 );
 	$fill  = imagecolorallocate( $img, $rgb['r'], $rgb['g'], $rgb['b'] );
 	$d     = max( 4, $radius * 2 );
 	imagefilledellipse( $img, $cx, $cy, $d + 6, $d + 6, $white );
 	imagefilledellipse( $img, $cx, $cy, $d, $d, $fill );
+	if ( $label !== '' ) {
+		$text = imagecolorallocate( $img, 255, 255, 255 );
+		$font = strlen( $label ) > 1 ? 2 : 3;
+		$tw   = imagefontwidth( $font ) * strlen( $label );
+		$th   = imagefontheight( $font );
+		imagestring( $img, $font, (int) ( $cx - $tw / 2 ), (int) ( $cy - $th / 2 ), $label, $text );
+	}
 }
 
 /**
@@ -210,16 +268,14 @@ function zelo_indoor_map_export_gd_pin_booth( $img, $cx, $cy, $half, $hex, $labe
  * @return array{path:string,cleanup:bool}|WP_Error
  */
 function zelo_indoor_map_export_build_png( $map ) {
-	$map     = zelo_normalize_indoor_map( $map );
-	$places  = zelo_indoor_map_export_places( $map );
-	$booths  = zelo_indoor_map_get_booths( $map );
-	$legend  = zelo_indoor_map_build_floor_legend( $places );
-	$img_url = $map['image_url'] ?? '';
+	$map           = zelo_normalize_indoor_map( $map );
+	$numbered      = zelo_indoor_map_export_numbered_items( $map );
+	$img_url       = $map['image_url'] ?? '';
 
 	if ( $img_url === '' ) {
 		return new WP_Error( 'zelo_indoor_no_image', __( 'Diagrama sem imagem configurada.', 'zelo-assistente' ) );
 	}
-	if ( empty( $places ) ) {
+	if ( empty( $numbered ) ) {
 		return new WP_Error( 'zelo_indoor_no_places', __( 'Nenhum local activo para exportar.', 'zelo-assistente' ) );
 	}
 
@@ -258,18 +314,17 @@ function zelo_indoor_map_export_build_png( $map ) {
 	$booth_half = max( 14, (int) round( $target_w * 0.0075 ) );
 	$dest_r     = max( 10, (int) round( $target_w * 0.0055 ) );
 
-	foreach ( $places as $place ) {
-		$x = (float) ( $place['x'] ?? 0 );
-		$y = (float) ( $place['y'] ?? 0 );
-		$cx = (int) round( $x * $target_w );
-		$cy = (int) round( $y * $target_h );
-		if ( ( $place['kind'] ?? '' ) === 'booth' ) {
-			$slot = zelo_indoor_map_export_booth_slot( $place, $booths );
-			$hex  = $slot === 2 ? '#0d9488' : '#1e40af';
-			zelo_indoor_map_export_gd_pin_booth( $img, $cx, $cy, $booth_half, $hex, (string) $slot );
+	foreach ( $numbered as $item ) {
+		$place = $item['place'];
+		$x     = (float) ( $place['x'] ?? 0 );
+		$y     = (float) ( $place['y'] ?? 0 );
+		$cx    = (int) round( $x * $target_w );
+		$cy    = (int) round( $y * $target_h );
+		$num   = (string) $item['number'];
+		if ( $item['booth'] ) {
+			zelo_indoor_map_export_gd_pin_booth( $img, $cx, $cy, $booth_half, $item['hex'], $num );
 		} else {
-			$hex = zelo_indoor_map_floor_color_for( $place['floor'] ?? '', $legend );
-			zelo_indoor_map_export_gd_pin_dest( $img, $cx, $cy, $dest_r, $hex );
+			zelo_indoor_map_export_gd_pin_dest( $img, $cx, $cy, $dest_r, $item['hex'], $num );
 		}
 	}
 
@@ -286,11 +341,9 @@ function zelo_indoor_map_export_build_png( $map ) {
 	imagedestroy( $img );
 
 	return array(
-		'path'    => $tmp_png,
-		'cleanup' => true,
-		'booths'  => $booths,
-		'legend'  => $legend,
-		'places'  => $places,
+		'path'     => $tmp_png,
+		'cleanup'  => true,
+		'numbered' => $numbered,
 	);
 }
 
@@ -313,31 +366,68 @@ function zelo_indoor_map_export_event_name() {
 }
 
 /**
- * Desenha item de legenda no PDF.
+ * Desenha linha da legenda numerada no PDF.
  *
- * @param FPDF  $pdf   PDF.
- * @param float $x     X.
- * @param float $y     Y.
- * @param string $hex  Cor.
- * @param bool  $round Círculo vs quadrado.
- * @param string $label Texto.
- * @return float Próximo X.
+ * @param FPDF   $pdf    PDF.
+ * @param float  $x      X.
+ * @param float  $y      Y.
+ * @param string $hex    Cor do pino.
+ * @param int    $number Número do pino.
+ * @param string $label  Nome do local.
  */
-function zelo_indoor_map_pdf_legend_item( $pdf, $x, $y, $hex, $round, $label ) {
+function zelo_indoor_map_pdf_legend_numbered_row( $pdf, $x, $y, $hex, $number, $label ) {
 	$rgb = zelo_indoor_map_hex_rgb( $hex );
 	$pdf->SetFillColor( $rgb['r'], $rgb['g'], $rgb['b'] );
 	$pdf->SetDrawColor( 255, 255, 255 );
-	$pdf->SetLineWidth( 0.4 );
-	if ( $round ) {
-		$pdf->Rect( $x, $y, 4, 4, 'DF' );
-	} else {
-		$pdf->Rect( $x, $y, 4, 4, 'DF' );
-	}
+	$pdf->SetLineWidth( 0.35 );
+	$pdf->Rect( $x, $y, 3.5, 3.5, 'DF' );
 	$pdf->SetDrawColor( 0, 0, 0 );
-	$pdf->SetXY( $x + 5, $y - 0.5 );
-	$pdf->SetFont( 'Helvetica', '', 8 );
-	$pdf->Cell( 40, 5, zelo_pdf_encode( $label ), 0, 0, 'L' );
-	return $x + 5 + $pdf->GetStringWidth( zelo_pdf_encode( $label ) ) + 6;
+	$pdf->SetFont( 'Helvetica', '', 7.5 );
+	$text = (string) $number . ' — ' . $label;
+	$pdf->SetXY( $x + 4.5, $y - 0.3 );
+	$pdf->Cell( 85, 4, zelo_pdf_encode( $text ), 0, 0, 'L' );
+}
+
+/**
+ * Renderiza legenda numerada em colunas e devolve Y após o bloco.
+ *
+ * @param FPDF                                          $pdf   PDF.
+ * @param array<int, array<string, mixed>>              $items Itens numerados.
+ * @param float                                         $start_y Y inicial.
+ * @return float
+ */
+function zelo_indoor_map_pdf_render_numbered_legend( $pdf, $items, $start_y ) {
+	$pdf->SetFont( 'Helvetica', 'B', 8 );
+	$pdf->SetXY( 10, $start_y );
+	$pdf->Cell( 0, 4, zelo_pdf_encode( __( 'Legenda:', 'zelo-assistente' ) ), 0, 1 );
+
+	$count = count( $items );
+	if ( $count < 1 ) {
+		return $pdf->GetY() + 2;
+	}
+
+	$cols         = $count > 18 ? 3 : ( $count > 9 ? 2 : 1 );
+	$col_w        = 277 / $cols;
+	$rows_per_col = (int) ceil( $count / $cols );
+	$row_h        = 4.2;
+	$y0           = $pdf->GetY() + 1;
+
+	foreach ( $items as $i => $item ) {
+		$col = (int) floor( $i / $rows_per_col );
+		$row = $i % $rows_per_col;
+		$x   = 10 + $col * $col_w;
+		$y   = $y0 + $row * $row_h;
+		zelo_indoor_map_pdf_legend_numbered_row(
+			$pdf,
+			$x,
+			$y,
+			$item['hex'],
+			(int) $item['number'],
+			$item['label']
+		);
+	}
+
+	return $y0 + $rows_per_col * $row_h + 3;
 }
 
 /**
@@ -357,8 +447,7 @@ function zelo_indoor_map_export_pdf_binary( $map ) {
 	}
 
 	$png_path = $png_data['path'];
-	$booths   = $png_data['booths'];
-	$legend   = $png_data['legend'];
+	$numbered = $png_data['numbered'];
 
 	$prev_handler = set_error_handler( 'zelo_ops_export_pdf_error_handler' );
 
@@ -374,39 +463,13 @@ function zelo_indoor_map_export_pdf_binary( $map ) {
 		$pdf->Cell( 0, 5, zelo_pdf_encode( __( 'Mapa do evento', 'zelo-assistente' ) . ' — ' . wp_date( 'd/m/Y H:i' ) ), 0, 1 );
 		$pdf->Ln( 2 );
 
-		$leg_y = $pdf->GetY();
-		$leg_x = 10;
-		$pdf->SetFont( 'Helvetica', 'B', 8 );
-		$pdf->SetXY( 10, $leg_y );
-		$pdf->Cell( 20, 4, zelo_pdf_encode( __( 'Legenda:', 'zelo-assistente' ) ), 0, 0 );
-		$leg_x = 32;
-
-		if ( ! empty( $booths[0] ) ) {
-			$lab = zelo_indoor_map_place_label( $booths[0], 'pt_br' );
-			$leg_x = zelo_indoor_map_pdf_legend_item( $pdf, $leg_x, $leg_y, '#1e40af', false, $lab !== '' ? $lab : '1' );
-		}
-		if ( ! empty( $booths[1] ) ) {
-			$lab = zelo_indoor_map_place_label( $booths[1], 'pt_br' );
-			$leg_x = zelo_indoor_map_pdf_legend_item( $pdf, $leg_x, $leg_y, '#0d9488', false, $lab !== '' ? $lab : '2' );
-		}
-		foreach ( $legend as $fl ) {
-			$leg_x = zelo_indoor_map_pdf_legend_item( $pdf, $leg_x, $leg_y, $fl['color'], true, $fl['label'] );
-		}
-		$has_no_floor = false;
-		foreach ( $png_data['places'] as $place ) {
-			if ( ( $place['kind'] ?? '' ) !== 'booth' && trim( (string) ( $place['floor'] ?? '' ) ) === '' ) {
-				$has_no_floor = true;
-				break;
-			}
-		}
-		if ( $has_no_floor ) {
-			$leg_x = zelo_indoor_map_pdf_legend_item( $pdf, $leg_x, $leg_y, '#94a3b8', true, __( 'Sem pavimento', 'zelo-assistente' ) );
-		}
-
-		$pdf->Ln( 8 );
+		$leg_end_y = zelo_indoor_map_pdf_render_numbered_legend( $pdf, $numbered, $pdf->GetY() );
+		$pdf->SetY( $leg_end_y );
+		$pdf->Ln( 2 );
 
 		$page_w   = 277;
-		$max_h    = 175;
+		$page_h   = 190;
+		$max_h    = max( 80, $page_h - $leg_end_y );
 		$info     = @getimagesize( $png_path );
 		$img_w_px = $info ? $info[0] : 1;
 		$img_h_px = $info ? $info[1] : 1;
