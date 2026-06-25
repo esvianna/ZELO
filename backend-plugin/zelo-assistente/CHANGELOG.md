@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.24.5] - 2026-06-25
+
+### Alterado
+- **Export PDF mapa (#64):** números dos pinos em texto vetorial FPDF (bold, preto com contorno branco); PNG só desenha formas coloridas.
+
 ## [2.24.4] - 2026-06-25
 
 ### Alterado

@@ -104,6 +104,7 @@ Orientação de testes **manual** (prioritário hoje) e caminho para automação
 | 2z7c | **Export PDF legenda lateral** (#64, plugin **2.24.2+**) | manage_options / `zelo_manage_ops` | Mapa ~175 mm altura à esquerda; legenda à direita; pinos/números legíveis em impressão; overflow legenda → pág. 2 |
 | 2z7d | **Export PDF mapa maior + pinos 2×** (#64, plugin **2.24.3+**) | manage_options / `zelo_manage_ops` | Mapa preenche área útil (~227 mm larg.); legenda 2 colunas estreita; pinos/números ~2× legíveis em A4 impresso |
 | 2z7e | **Export PDF legenda 1 col + números no pino** (#64, plugin **2.24.4+**) | manage_options / `zelo_manage_ops` | Legenda 1 coluna (~26 mm); mapa ~253 mm; pinos mesmo tamanho; dígitos legíveis preenchendo o pino |
+| 2z7f | **Export PDF números vetor** (#64, plugin **2.24.5+**) | manage_options / `zelo_manage_ops` | Dígitos pretos bold com contorno branco sobre pinos; legíveis em impressão A4 |
 | 2aa | **Novidades / blog** (#26, 2.13.0 / PWA 116+) | **view_ops** (#41) | Admin: post com «Publicar na PWA» → `GET /news` OK; card/menu → lista + detalhe PT; subscriber **403** |
 | 2ac | **Carrossel novidades** (#15, 2.13.3 / PWA 126+) | **view_ops** (#41) | Admin: post carrossel → home com swipe; subscriber/anónimo sem carrossel |
 | 2ad | **Emergência — hierarquia visual** (#17, PWA 127+) | Visitante | Home: card Emergência full-width rosa vs Hospitais/Farmácias; view emergência com hero + tel. destaque admin; lista/pesquisa destaca categoria `emergencia`; S.O.S. bottom nav OK; regressão mapa/nav |

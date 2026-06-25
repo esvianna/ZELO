@@ -362,10 +362,6 @@ function zelo_indoor_map_export_gd_pin_dest( $img, $cx, $cy, $radius, $hex, $lab
 	$border = max( 10, (int) round( $d * 0.35 ) );
 	imagefilledellipse( $img, $cx, $cy, $d + $border, $d + $border, $white );
 	imagefilledellipse( $img, $cx, $cy, $d, $d, $fill );
-	if ( $label !== '' ) {
-		$inner = (int) round( $d * 0.84 );
-		zelo_indoor_map_export_gd_draw_pin_text( $img, $cx, $cy, $label, $inner, $inner );
-	}
 }
 
 /**
@@ -389,10 +385,6 @@ function zelo_indoor_map_export_gd_pin_booth( $img, $cx, $cy, $half, $hex, $labe
 	$y2    = $cy + $half + $pad;
 	imagefilledrectangle( $img, $x1, $y1, $x2, $y2, $white );
 	imagefilledrectangle( $img, $cx - $half, $cy - $half, $cx + $half, $cy + $half, $fill );
-	if ( $label !== '' ) {
-		$side = (int) round( $half * 2 * 0.84 );
-		zelo_indoor_map_export_gd_draw_pin_text( $img, $cx, $cy, $label, $side, $side );
-	}
 }
 
 /**
@@ -454,11 +446,10 @@ function zelo_indoor_map_export_build_png( $map ) {
 		$y     = (float) ( $place['y'] ?? 0 );
 		$cx    = (int) round( $x * $target_w );
 		$cy    = (int) round( $y * $target_h );
-		$num   = (string) $item['number'];
 		if ( $item['booth'] ) {
-			zelo_indoor_map_export_gd_pin_booth( $img, $cx, $cy, $booth_half, $item['hex'], $num );
+			zelo_indoor_map_export_gd_pin_booth( $img, $cx, $cy, $booth_half, $item['hex'], '' );
 		} else {
-			zelo_indoor_map_export_gd_pin_dest( $img, $cx, $cy, $dest_r, $item['hex'], $num );
+			zelo_indoor_map_export_gd_pin_dest( $img, $cx, $cy, $dest_r, $item['hex'], '' );
 		}
 	}
 
@@ -475,9 +466,12 @@ function zelo_indoor_map_export_build_png( $map ) {
 	imagedestroy( $img );
 
 	return array(
-		'path'     => $tmp_png,
-		'cleanup'  => true,
-		'numbered' => $numbered,
+		'path'       => $tmp_png,
+		'cleanup'    => true,
+		'numbered'   => $numbered,
+		'target_w'   => $target_w,
+		'booth_half' => $booth_half,
+		'dest_r'     => $dest_r,
 	);
 }
 
@@ -661,15 +655,16 @@ function zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $items, $start_y, $lay
  * @param FPDF   $pdf      PDF.
  * @param string $png_path Caminho PNG.
  * @param float  $y        Y superior.
- * @return void
+ * @param array  $layout   Métricas de layout.
+ * @return array{x:float,y:float,w:float,h:float,img_w:int,img_h:int}
  */
 function zelo_indoor_map_pdf_place_map_image( $pdf, $png_path, $y, $layout ) {
 	$max_w    = $layout['map_w'];
 	$max_h    = $layout['map_h'];
 	$map_x    = $layout['map_x'];
 	$info     = @getimagesize( $png_path );
-	$img_w_px = $info ? $info[0] : 1;
-	$img_h_px = $info ? $info[1] : 1;
+	$img_w_px = $info ? (int) $info[0] : 1;
+	$img_h_px = $info ? (int) $info[1] : 1;
 	$ratio    = $img_h_px / max( 1, $img_w_px );
 	$scale_w  = $max_w;
 	$scale_h  = $scale_w * $ratio;
@@ -679,6 +674,98 @@ function zelo_indoor_map_pdf_place_map_image( $pdf, $png_path, $y, $layout ) {
 	}
 	$x_off = $map_x + ( $max_w - $scale_w ) / 2;
 	$pdf->Image( $png_path, $x_off, $y, $scale_w, $scale_h );
+
+	return array(
+		'x'     => $x_off,
+		'y'     => $y,
+		'w'     => $scale_w,
+		'h'     => $scale_h,
+		'img_w' => $img_w_px,
+		'img_h' => $img_h_px,
+	);
+}
+
+/**
+ * Tamanho da fonte PDF (pt) para caber no pino.
+ *
+ * @param float $pin_d_mm Diâmetro/lado do pino em mm no PDF.
+ * @param int   $digits   Quantidade de dígitos.
+ * @return float
+ */
+function zelo_indoor_map_pdf_pin_font_pt( $pin_d_mm, $digits ) {
+	$pt = $pin_d_mm * 2.05;
+	if ( $digits > 1 ) {
+		$pt *= 0.82;
+	}
+	if ( $digits > 2 ) {
+		$pt *= 0.75;
+	}
+	return max( 7.0, min( 16.0, $pt ) );
+}
+
+/**
+ * Desenha dígito centrado no pino (vetor PDF: preto + contorno branco).
+ *
+ * @param FPDF  $pdf      PDF.
+ * @param float $cx       Centro X mm.
+ * @param float $cy       Centro Y mm.
+ * @param string $number  Dígitos.
+ * @param float $font_pt  Tamanho pt.
+ */
+function zelo_indoor_map_pdf_draw_pin_number( $pdf, $cx, $cy, $number, $font_pt ) {
+	$text = zelo_pdf_encode( (string) $number );
+	$pdf->SetFont( 'Helvetica', 'B', $font_pt );
+	$tw       = $pdf->GetStringWidth( $text );
+	$font_mm  = $font_pt * 0.352778;
+	$tx       = $cx - ( $tw / 2 );
+	$ty       = $cy + ( $font_mm * 0.38 );
+	$outline  = 0.22;
+
+	$pdf->SetTextColor( 255, 255, 255 );
+	for ( $ox = -$outline; $ox <= $outline + 0.001; $ox += $outline ) {
+		for ( $oy = -$outline; $oy <= $outline + 0.001; $oy += $outline ) {
+			if ( abs( $ox ) < 0.001 && abs( $oy ) < 0.001 ) {
+				continue;
+			}
+			$pdf->Text( $tx + $ox, $ty + $oy, $text );
+		}
+	}
+
+	$pdf->SetTextColor( 0, 0, 0 );
+	$pdf->Text( $tx, $ty, $text );
+}
+
+/**
+ * Sobrepõe números dos pinos em vetor (após a imagem do mapa).
+ *
+ * @param FPDF                             $pdf      PDF.
+ * @param array<int, array<string, mixed>> $numbered Itens numerados.
+ * @param array{x:float,y:float,w:float,h:float}     $frame    Caixa da imagem no PDF.
+ * @param int                              $target_w Largura px do PNG composto.
+ * @param int                              $booth_half Metade do balcão em px.
+ * @param int                              $dest_r   Raio destino em px.
+ */
+function zelo_indoor_map_pdf_draw_pin_numbers( $pdf, $numbered, $frame, $target_w, $booth_half, $dest_r ) {
+	$target_w = max( 1, (int) $target_w );
+
+	foreach ( $numbered as $item ) {
+		$place = $item['place'];
+		$nx    = (float) ( $place['x'] ?? 0 );
+		$ny    = (float) ( $place['y'] ?? 0 );
+		$cx    = $frame['x'] + ( $nx * $frame['w'] );
+		$cy    = $frame['y'] + ( $ny * $frame['h'] );
+		$num   = (string) $item['number'];
+		$digits = strlen( $num );
+
+		if ( ! empty( $item['booth'] ) ) {
+			$pin_mm = ( ( $booth_half * 2 ) / $target_w ) * $frame['w'];
+		} else {
+			$pin_mm = ( ( $dest_r * 2 ) / $target_w ) * $frame['w'];
+		}
+
+		$font_pt = zelo_indoor_map_pdf_pin_font_pt( $pin_mm, $digits );
+		zelo_indoor_map_pdf_draw_pin_number( $pdf, $cx, $cy, $num, $font_pt );
+	}
 }
 
 /**
@@ -714,7 +801,15 @@ function zelo_indoor_map_export_pdf_binary( $map ) {
 
 		$content_y = $pdf->GetY();
 		$layout    = zelo_indoor_map_pdf_layout_metrics( $content_y );
-		zelo_indoor_map_pdf_place_map_image( $pdf, $png_path, $content_y, $layout );
+		$frame     = zelo_indoor_map_pdf_place_map_image( $pdf, $png_path, $content_y, $layout );
+		zelo_indoor_map_pdf_draw_pin_numbers(
+			$pdf,
+			$numbered,
+			$frame,
+			(int) ( $png_data['target_w'] ?? 1 ),
+			(int) ( $png_data['booth_half'] ?? 44 ),
+			(int) ( $png_data['dest_r'] ?? 36 )
+		);
 		zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $numbered, $content_y, $layout );
 
 		$slug = sanitize_title( zelo_indoor_map_export_event_name() );

@@ -15,6 +15,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | Plugin **2.24.2** | PDF: legenda numerada na lateral direita; mapa altura fixa 175 mm; pinos e números maiores (GD) |
 | Plugin **2.24.3** | PDF: mapa ~227 mm largura + altura máxima; legenda 2 colunas compacta; pinos 2× + TTF nos números (#64) |
 | Plugin **2.24.4** | PDF: legenda 1 coluna (~26 mm) → mapa ~253 mm; números auto-fit dentro do pino (#64) |
+| Plugin **2.24.5** | PDF: números vetor FPDF (Helvetica Bold, preto + contorno branco) sobre o mapa (#64) |
 
 ### Alterado — export PDF mapa numerado (#63)
 
