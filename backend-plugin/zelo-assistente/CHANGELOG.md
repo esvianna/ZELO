@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.24.3] - 2026-06-25
+
+### Alterado
+- **Export PDF mapa (#64):** mapa ocupa ~227×177 mm; margens reduzidas; legenda lateral em 2 colunas; pinos e dígitos ~2× (TTF quando disponível).
+
 ## [2.24.2] - 2026-06-25
 
 ### Alterado

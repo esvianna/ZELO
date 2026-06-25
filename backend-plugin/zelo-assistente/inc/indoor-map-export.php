@@ -209,6 +209,62 @@ function zelo_indoor_map_export_gd_resize( $src, $new_w, $new_h ) {
 }
 
 /**
+ * Caminho TTF bold para números nos pinos (fallback: imagestring).
+ *
+ * @return string Caminho ou vazio.
+ */
+function zelo_indoor_map_export_gd_font_path() {
+	static $cached = null;
+	if ( $cached !== null ) {
+		return $cached;
+	}
+	$candidates = array(
+		'C:\\Windows\\Fonts\\arialbd.ttf',
+		'C:\\Windows\\Fonts\\Arialbd.ttf',
+		'/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
+		'/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf',
+		'/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf',
+	);
+	foreach ( $candidates as $path ) {
+		if ( is_readable( $path ) ) {
+			$cached = $path;
+			return $cached;
+		}
+	}
+	$cached = '';
+	return '';
+}
+
+/**
+ * Desenha texto centrado no pino (TTF se disponível).
+ *
+ * @param GdImage|resource $img     Canvas.
+ * @param int              $cx      Centro X.
+ * @param int              $cy      Centro Y.
+ * @param string           $label   Texto.
+ * @param int              $px_size Tamanho da fonte em px.
+ */
+function zelo_indoor_map_export_gd_draw_pin_text( $img, $cx, $cy, $label, $px_size ) {
+	$white = imagecolorallocate( $img, 255, 255, 255 );
+	$font  = zelo_indoor_map_export_gd_font_path();
+	if ( $font !== '' && function_exists( 'imagettftext' ) ) {
+		$box = imagettfbbox( $px_size, 0, $font, $label );
+		if ( is_array( $box ) ) {
+			$tw = abs( $box[2] - $box[0] );
+			$th = abs( $box[7] - $box[1] );
+			$tx = (int) ( $cx - $tw / 2 );
+			$ty = (int) ( $cy + $th / 2 - 1 );
+			imagettftext( $img, $px_size, 0, $tx, $ty, $white, $font, $label );
+			return;
+		}
+	}
+	$gd_font = zelo_indoor_map_export_gd_pin_font( $label );
+	$tw      = imagefontwidth( $gd_font ) * strlen( $label );
+	$th      = imagefontheight( $gd_font );
+	imagestring( $img, $gd_font, (int) ( $cx - $tw / 2 ), (int) ( $cy - $th / 2 ), $label, $white );
+}
+
+/**
  * Fonte GD built-in para número no pino (impressão).
  *
  * @param string $label Dígitos.
@@ -244,11 +300,8 @@ function zelo_indoor_map_export_gd_pin_dest( $img, $cx, $cy, $radius, $hex, $lab
 	imagefilledellipse( $img, $cx, $cy, $d + $border, $d + $border, $white );
 	imagefilledellipse( $img, $cx, $cy, $d, $d, $fill );
 	if ( $label !== '' ) {
-		$text = imagecolorallocate( $img, 255, 255, 255 );
-		$font = zelo_indoor_map_export_gd_pin_font( $label );
-		$tw   = imagefontwidth( $font ) * strlen( $label );
-		$th   = imagefontheight( $font );
-		imagestring( $img, $font, (int) ( $cx - $tw / 2 ), (int) ( $cy - $th / 2 ), $label, $text );
+		$px = max( 16, (int) round( $radius * 1.15 ) );
+		zelo_indoor_map_export_gd_draw_pin_text( $img, $cx, $cy, $label, $px );
 	}
 }
 
@@ -266,18 +319,17 @@ function zelo_indoor_map_export_gd_pin_booth( $img, $cx, $cy, $half, $hex, $labe
 	$rgb   = zelo_indoor_map_hex_rgb( $hex );
 	$white = imagecolorallocate( $img, 255, 255, 255 );
 	$fill  = imagecolorallocate( $img, $rgb['r'], $rgb['g'], $rgb['b'] );
-	$text  = imagecolorallocate( $img, 255, 255, 255 );
-	$pad   = 4;
+	$pad   = 6;
 	$x1    = $cx - $half - $pad;
 	$y1    = $cy - $half - $pad;
 	$x2    = $cx + $half + $pad;
 	$y2    = $cy + $half + $pad;
 	imagefilledrectangle( $img, $x1, $y1, $x2, $y2, $white );
 	imagefilledrectangle( $img, $cx - $half, $cy - $half, $cx + $half, $cy + $half, $fill );
-	$font  = zelo_indoor_map_export_gd_pin_font( $label );
-	$tw    = imagefontwidth( $font ) * strlen( $label );
-	$th    = imagefontheight( $font );
-	imagestring( $img, $font, (int) ( $cx - $tw / 2 ), (int) ( $cy - $th / 2 ), $label, $text );
+	if ( $label !== '' ) {
+		$px = max( 18, (int) round( $half * 0.95 ) );
+		zelo_indoor_map_export_gd_draw_pin_text( $img, $cx, $cy, $label, $px );
+	}
 }
 
 /**
@@ -320,8 +372,8 @@ function zelo_indoor_map_export_build_png( $map ) {
 
 	$src_w    = imagesx( $src );
 	$src_h    = imagesy( $src );
-	$max_w    = 3000;
-	$target_w = (int) min( $max_w, max( $src_w, $src_w * 2 ) );
+	$max_w    = 4500;
+	$target_w = (int) min( $max_w, max( $src_w * 2, (int) round( $src_w * 1.5 ) ) );
 	$target_h = (int) round( $src_h * ( $target_w / $src_w ) );
 
 	$img = zelo_indoor_map_export_gd_resize( $src, $target_w, $target_h );
@@ -330,8 +382,8 @@ function zelo_indoor_map_export_build_png( $map ) {
 		return $img;
 	}
 
-	$booth_half = max( 22, (int) round( $target_w * 0.0105 ) );
-	$dest_r     = max( 18, (int) round( $target_w * 0.008 ) );
+	$booth_half = max( 44, (int) round( $target_w * 0.021 ) );
+	$dest_r     = max( 36, (int) round( $target_w * 0.016 ) );
 
 	foreach ( $numbered as $item ) {
 		$place = $item['place'];
@@ -385,19 +437,30 @@ function zelo_indoor_map_export_event_name() {
 }
 
 /**
- * Métricas de layout do PDF (A4 paisagem, margens 10 mm).
+ * Métricas de layout do PDF (A4 paisagem).
  *
+ * @param float $content_y Y após cabeçalho compacto.
  * @return array<string, float>
  */
-function zelo_indoor_map_pdf_layout_metrics() {
+function zelo_indoor_map_pdf_layout_metrics( $content_y ) {
+	$page_h        = 210.0;
+	$margin_top    = 8.0;
+	$margin_bottom = 5.0;
+	$page_usable_w = 281.0;
+	$map_x         = 8.0;
+	$leg_w         = 52.0;
+	$gap           = 2.0;
+	$map_w         = $page_usable_w - $leg_w - $gap;
+	$map_h         = max( 165.0, $page_h - $margin_top - $content_y - $margin_bottom );
+
 	return array(
-		'map_x'     => 10.0,
-		'map_w'     => 200.0,
-		'map_h'     => 175.0,
-		'gap'       => 4.0,
-		'leg_x'     => 214.0,
-		'leg_w'     => 73.0,
-		'page_w'    => 277.0,
+		'map_x'  => $map_x,
+		'map_w'  => $map_w,
+		'map_h'  => $map_h,
+		'gap'    => $gap,
+		'leg_x'  => $map_x + $map_w + $gap,
+		'leg_w'  => $leg_w,
+		'page_w' => $page_usable_w,
 	);
 }
 
@@ -414,22 +477,22 @@ function zelo_indoor_map_pdf_layout_metrics() {
  * @return float Y após a entrada.
  */
 function zelo_indoor_map_pdf_legend_sidebar_entry( $pdf, $x, $y, $w, $hex, $number, $label ) {
-	$swatch = 4.0;
+	$swatch = 3.5;
 	$rgb    = zelo_indoor_map_hex_rgb( $hex );
 	$pdf->SetFillColor( $rgb['r'], $rgb['g'], $rgb['b'] );
 	$pdf->SetDrawColor( 255, 255, 255 );
-	$pdf->SetLineWidth( 0.35 );
-	$pdf->Rect( $x, $y + 0.4, $swatch, $swatch, 'DF' );
+	$pdf->SetLineWidth( 0.3 );
+	$pdf->Rect( $x, $y + 0.3, $swatch, $swatch, 'DF' );
 	$pdf->SetDrawColor( 0, 0, 0 );
 
-	$text_x = $x + $swatch + 1.5;
-	$text_w = max( 8.0, $w - $swatch - 2.0 );
+	$text_x = $x + $swatch + 1.0;
+	$text_w = max( 6.0, $w - $swatch - 1.5 );
 	$line   = (string) $number . ' — ' . $label;
-	$pdf->SetFont( 'Helvetica', '', 7 );
+	$pdf->SetFont( 'Helvetica', '', 6.5 );
 	$pdf->SetXY( $text_x, $y );
-	$pdf->MultiCell( $text_w, 3.4, zelo_pdf_encode( $line ), 0, 'L' );
+	$pdf->MultiCell( $text_w, 3.0, zelo_pdf_encode( $line ), 0, 'L' );
 
-	return $pdf->GetY() + 1.2;
+	return $pdf->GetY() + 0.8;
 }
 
 /**
@@ -444,11 +507,11 @@ function zelo_indoor_map_pdf_legend_sidebar_entry( $pdf, $x, $y, $w, $hex, $numb
 function zelo_indoor_map_pdf_estimate_sidebar_entry_height( $pdf, $col_w, $number, $label ) {
 	$text_w = max( 8.0, $col_w - 7.5 );
 	$line   = (string) $number . ' — ' . $label;
-	$pdf->SetFont( 'Helvetica', '', 7 );
-	$char_w = max( 0.5, $pdf->GetStringWidth( 'M' ) );
-	$chars  = max( 8, (int) floor( $text_w / $char_w ) );
+	$pdf->SetFont( 'Helvetica', '', 6.5 );
+	$char_w = max( 0.45, $pdf->GetStringWidth( 'M' ) );
+	$chars  = max( 6, (int) floor( $text_w / $char_w ) );
 	$lines  = max( 1, (int) ceil( strlen( $line ) / $chars ) );
-	return 1.2 + ( $lines * 3.4 );
+	return 0.8 + ( $lines * 3.0 );
 }
 
 /**
@@ -459,70 +522,110 @@ function zelo_indoor_map_pdf_estimate_sidebar_entry_height( $pdf, $col_w, $numbe
  * @param float                            $start_y  Y do bloco mapa/legenda.
  * @return void
  */
-function zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $items, $start_y ) {
-	$layout    = zelo_indoor_map_pdf_layout_metrics();
+function zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $items, $start_y, $layout ) {
 	$leg_x     = $layout['leg_x'];
 	$leg_w     = $layout['leg_w'];
+	$max_y     = $start_y + $layout['map_h'];
 	$remaining = $items;
 	$page_num  = 0;
+	$col_gap   = 1.5;
+	$col_w     = ( $leg_w - $col_gap ) / 2;
+	$use_2col  = count( $items ) > 6;
 
 	while ( ! empty( $remaining ) ) {
 		if ( $page_num > 0 ) {
 			$pdf->AddPage();
-			$start_y = 10;
-			$max_y   = 200;
-		} else {
-			$max_y = $start_y + $layout['map_h'];
+			$start_y = 8;
+			$max_y   = 202;
 		}
 
-		$pdf->SetFont( 'Helvetica', 'B', 8 );
+		$pdf->SetFont( 'Helvetica', 'B', 7.5 );
 		$pdf->SetXY( $leg_x, $start_y );
 		$title = $page_num > 0
 			? __( 'Legenda (continuação):', 'zelo-assistente' )
 			: __( 'Legenda:', 'zelo-assistente' );
-		$pdf->Cell( $leg_w, 4, zelo_pdf_encode( $title ), 0, 1 );
+		$pdf->Cell( $leg_w, 3.5, zelo_pdf_encode( $title ), 0, 1 );
 
-		$y      = $start_y + 5;
-		$fitted = array();
-		$left   = array();
+		$y0 = $start_y + 4.5;
 
-		foreach ( $remaining as $idx => $item ) {
-			$est = zelo_indoor_map_pdf_estimate_sidebar_entry_height(
-				$pdf,
-				$leg_w,
-				(int) $item['number'],
-				$item['label']
-			);
-			if ( $y + $est > $max_y && ! empty( $fitted ) ) {
-				$left = array_slice( $remaining, $idx );
-				break;
+		if ( $use_2col && $page_num === 0 ) {
+			$half   = (int) ceil( count( $remaining ) / 2 );
+			$col1   = array_slice( $remaining, 0, $half );
+			$col2   = array_slice( $remaining, $half );
+			$y_left = $y0;
+			foreach ( $col1 as $item ) {
+				if ( $y_left > $max_y ) {
+					break;
+				}
+				$y_left = zelo_indoor_map_pdf_legend_sidebar_entry(
+					$pdf,
+					$leg_x,
+					$y_left,
+					$col_w,
+					$item['hex'],
+					(int) $item['number'],
+					$item['label']
+				);
 			}
-			$fitted[] = $item;
-			$y       += $est;
-			if ( $idx === count( $remaining ) - 1 ) {
-				$left = array();
+			$y_right = $y0;
+			foreach ( $col2 as $item ) {
+				if ( $y_right > $max_y ) {
+					break;
+				}
+				$y_right = zelo_indoor_map_pdf_legend_sidebar_entry(
+					$pdf,
+					$leg_x + $col_w + $col_gap,
+					$y_right,
+					$col_w,
+					$item['hex'],
+					(int) $item['number'],
+					$item['label']
+				);
 			}
+			$remaining = array();
+		} else {
+			$y      = $y0;
+			$fitted = array();
+			$left   = array();
+
+			foreach ( $remaining as $idx => $item ) {
+				$est = zelo_indoor_map_pdf_estimate_sidebar_entry_height(
+					$pdf,
+					$leg_w,
+					(int) $item['number'],
+					$item['label']
+				);
+				if ( $y + $est > $max_y && ! empty( $fitted ) ) {
+					$left = array_slice( $remaining, $idx );
+					break;
+				}
+				$fitted[] = $item;
+				$y       += $est;
+				if ( $idx === count( $remaining ) - 1 ) {
+					$left = array();
+				}
+			}
+
+			if ( empty( $fitted ) && ! empty( $remaining ) ) {
+				$fitted[] = $remaining[0];
+				$left     = array_slice( $remaining, 1 );
+			}
+
+			$y = $y0;
+			foreach ( $fitted as $item ) {
+				$y = zelo_indoor_map_pdf_legend_sidebar_entry(
+					$pdf,
+					$leg_x,
+					$y,
+					$leg_w,
+					$item['hex'],
+					(int) $item['number'],
+					$item['label']
+				);
+			}
+			$remaining = $left;
 		}
 
-		if ( empty( $fitted ) && ! empty( $remaining ) ) {
-			$fitted[] = $remaining[0];
-			$left     = array_slice( $remaining, 1 );
-		}
-
-		$y = $start_y + 5;
-		foreach ( $fitted as $item ) {
-			$y = zelo_indoor_map_pdf_legend_sidebar_entry(
-				$pdf,
-				$leg_x,
-				$y,
-				$leg_w,
-				$item['hex'],
-				(int) $item['number'],
-				$item['label']
-			);
-		}
-
-		$remaining = $left;
 		++$page_num;
 		if ( $page_num > 5 ) {
 			break;
@@ -538,8 +641,7 @@ function zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $items, $start_y ) {
  * @param float  $y        Y superior.
  * @return void
  */
-function zelo_indoor_map_pdf_place_map_image( $pdf, $png_path, $y ) {
-	$layout   = zelo_indoor_map_pdf_layout_metrics();
+function zelo_indoor_map_pdf_place_map_image( $pdf, $png_path, $y, $layout ) {
 	$max_w    = $layout['map_w'];
 	$max_h    = $layout['map_h'];
 	$map_x    = $layout['map_x'];
@@ -547,14 +649,14 @@ function zelo_indoor_map_pdf_place_map_image( $pdf, $png_path, $y ) {
 	$img_w_px = $info ? $info[0] : 1;
 	$img_h_px = $info ? $info[1] : 1;
 	$ratio    = $img_h_px / max( 1, $img_w_px );
-	$disp_w   = $max_w;
-	$disp_h   = $disp_w * $ratio;
-	if ( $disp_h > $max_h ) {
-		$disp_h = $max_h;
-		$disp_w = $disp_h / $ratio;
+	$scale_w  = $max_w;
+	$scale_h  = $scale_w * $ratio;
+	if ( $scale_h > $max_h ) {
+		$scale_h = $max_h;
+		$scale_w = $scale_h / $ratio;
 	}
-	$x_off = $map_x + ( $max_w - $disp_w ) / 2;
-	$pdf->Image( $png_path, $x_off, $y, $disp_w, $disp_h );
+	$x_off = $map_x + ( $max_w - $scale_w ) / 2;
+	$pdf->Image( $png_path, $x_off, $y, $scale_w, $scale_h );
 }
 
 /**
@@ -580,19 +682,18 @@ function zelo_indoor_map_export_pdf_binary( $map ) {
 
 	try {
 		$pdf = new FPDF( 'L', 'mm', 'A4' );
-		$pdf->SetMargins( 10, 10, 10 );
+		$pdf->SetMargins( 8, 8, 8 );
 		$pdf->SetAutoPageBreak( false );
 		$pdf->AddPage();
 
-		$pdf->SetFont( 'Helvetica', 'B', 14 );
-		$pdf->Cell( 0, 7, zelo_pdf_encode( zelo_indoor_map_export_event_name() ), 0, 1 );
-		$pdf->SetFont( 'Helvetica', '', 10 );
-		$pdf->Cell( 0, 5, zelo_pdf_encode( __( 'Mapa do evento', 'zelo-assistente' ) . ' — ' . wp_date( 'd/m/Y H:i' ) ), 0, 1 );
-		$pdf->Ln( 2 );
+		$pdf->SetFont( 'Helvetica', 'B', 11 );
+		$header = zelo_indoor_map_export_event_name() . ' — ' . __( 'Mapa do evento', 'zelo-assistente' ) . ' — ' . wp_date( 'd/m/Y H:i' );
+		$pdf->Cell( 0, 5, zelo_pdf_encode( $header ), 0, 1 );
 
 		$content_y = $pdf->GetY();
-		zelo_indoor_map_pdf_place_map_image( $pdf, $png_path, $content_y );
-		zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $numbered, $content_y );
+		$layout    = zelo_indoor_map_pdf_layout_metrics( $content_y );
+		zelo_indoor_map_pdf_place_map_image( $pdf, $png_path, $content_y, $layout );
+		zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $numbered, $content_y, $layout );
 
 		$slug = sanitize_title( zelo_indoor_map_export_event_name() );
 		if ( $slug === '' ) {
