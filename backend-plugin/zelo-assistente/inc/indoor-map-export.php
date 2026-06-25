@@ -221,6 +221,8 @@ function zelo_indoor_map_export_gd_font_path() {
 	$candidates = array(
 		'C:\\Windows\\Fonts\\arialbd.ttf',
 		'C:\\Windows\\Fonts\\Arialbd.ttf',
+		'C:\\Windows\\Fonts\\arial.ttf',
+		'C:\\Windows\\Fonts\\Arial.ttf',
 		'/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
 		'/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf',
 		'/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf',
@@ -236,32 +238,93 @@ function zelo_indoor_map_export_gd_font_path() {
 }
 
 /**
- * Desenha texto centrado no pino (TTF se disponível).
+ * Calcula tamanho TTF que cabe na caixa do pino.
  *
- * @param GdImage|resource $img     Canvas.
- * @param int              $cx      Centro X.
- * @param int              $cy      Centro Y.
- * @param string           $label   Texto.
- * @param int              $px_size Tamanho da fonte em px.
+ * @param string $label     Dígitos.
+ * @param int    $inner_w   Largura útil px.
+ * @param int    $inner_h   Altura útil px.
+ * @param string $font_path Caminho TTF.
+ * @return int
  */
-function zelo_indoor_map_export_gd_draw_pin_text( $img, $cx, $cy, $label, $px_size ) {
+function zelo_indoor_map_export_gd_fit_ttf_size( $label, $inner_w, $inner_h, $font_path ) {
+	$max_px = (int) floor( min( $inner_w, $inner_h ) * 0.82 );
+	$max_px = max( 12, $max_px );
+	for ( $px = $max_px; $px >= 10; $px-- ) {
+		$box = imagettfbbox( $px, 0, $font_path, $label );
+		if ( ! is_array( $box ) ) {
+			continue;
+		}
+		$tw = abs( $box[2] - $box[0] );
+		$th = abs( $box[7] - $box[1] );
+		if ( $tw <= $inner_w && $th <= $inner_h ) {
+			return $px;
+		}
+	}
+	return 10;
+}
+
+/**
+ * Fallback: amplia imagestring para preencher o pino.
+ *
+ * @param GdImage|resource $img    Canvas.
+ * @param int              $cx     Centro X.
+ * @param int              $cy     Centro Y.
+ * @param string           $label  Texto.
+ * @param int              $box_w  Largura alvo px.
+ * @param int              $box_h  Altura alvo px.
+ */
+function zelo_indoor_map_export_gd_draw_pin_text_fallback( $img, $cx, $cy, $label, $box_w, $box_h ) {
+	$gd_font = zelo_indoor_map_export_gd_pin_font( $label );
+	$tw      = imagefontwidth( $gd_font ) * strlen( $label );
+	$th      = imagefontheight( $gd_font );
+	$pad     = 2;
+	$src_w   = $tw + $pad * 2;
+	$src_h   = $th + $pad * 2;
+	$tile    = imagecreatetruecolor( $src_w, $src_h );
+	if ( ! $tile ) {
+		return;
+	}
+	imagealphablending( $tile, false );
+	imagesavealpha( $tile, true );
+	$trans = imagecolorallocatealpha( $tile, 0, 0, 0, 127 );
+	imagefilledrectangle( $tile, 0, 0, $src_w, $src_h, $trans );
+	imagealphablending( $tile, true );
+	$white = imagecolorallocate( $tile, 255, 255, 255 );
+	imagestring( $tile, $gd_font, $pad, $pad, $label, $white );
+	$dst_w = max( 8, (int) $box_w );
+	$dst_h = max( 8, (int) $box_h );
+	$dx    = (int) ( $cx - $dst_w / 2 );
+	$dy    = (int) ( $cy - $dst_h / 2 );
+	imagecopyresampled( $img, $tile, $dx, $dy, 0, 0, $dst_w, $dst_h, $src_w, $src_h );
+	imagedestroy( $tile );
+}
+
+/**
+ * Desenha texto centrado no pino (TTF auto-fit ou fallback ampliado).
+ *
+ * @param GdImage|resource $img   Canvas.
+ * @param int              $cx    Centro X.
+ * @param int              $cy    Centro Y.
+ * @param string           $label Texto.
+ * @param int              $box_w Largura útil px.
+ * @param int              $box_h Altura útil px.
+ */
+function zelo_indoor_map_export_gd_draw_pin_text( $img, $cx, $cy, $label, $box_w, $box_h ) {
 	$white = imagecolorallocate( $img, 255, 255, 255 );
 	$font  = zelo_indoor_map_export_gd_font_path();
 	if ( $font !== '' && function_exists( 'imagettftext' ) ) {
-		$box = imagettfbbox( $px_size, 0, $font, $label );
+		$px  = zelo_indoor_map_export_gd_fit_ttf_size( $label, $box_w, $box_h, $font );
+		$box = imagettfbbox( $px, 0, $font, $label );
 		if ( is_array( $box ) ) {
 			$tw = abs( $box[2] - $box[0] );
 			$th = abs( $box[7] - $box[1] );
 			$tx = (int) ( $cx - $tw / 2 );
-			$ty = (int) ( $cy + $th / 2 - 1 );
-			imagettftext( $img, $px_size, 0, $tx, $ty, $white, $font, $label );
+			$ty = (int) ( $cy + $th / 2 - max( 1, (int) round( $px * 0.08 ) ) );
+			imagettftext( $img, $px, 0, $tx, $ty, $white, $font, $label );
 			return;
 		}
 	}
-	$gd_font = zelo_indoor_map_export_gd_pin_font( $label );
-	$tw      = imagefontwidth( $gd_font ) * strlen( $label );
-	$th      = imagefontheight( $gd_font );
-	imagestring( $img, $gd_font, (int) ( $cx - $tw / 2 ), (int) ( $cy - $th / 2 ), $label, $white );
+	zelo_indoor_map_export_gd_draw_pin_text_fallback( $img, $cx, $cy, $label, $box_w, $box_h );
 }
 
 /**
@@ -300,8 +363,8 @@ function zelo_indoor_map_export_gd_pin_dest( $img, $cx, $cy, $radius, $hex, $lab
 	imagefilledellipse( $img, $cx, $cy, $d + $border, $d + $border, $white );
 	imagefilledellipse( $img, $cx, $cy, $d, $d, $fill );
 	if ( $label !== '' ) {
-		$px = max( 16, (int) round( $radius * 1.15 ) );
-		zelo_indoor_map_export_gd_draw_pin_text( $img, $cx, $cy, $label, $px );
+		$inner = (int) round( $d * 0.84 );
+		zelo_indoor_map_export_gd_draw_pin_text( $img, $cx, $cy, $label, $inner, $inner );
 	}
 }
 
@@ -327,8 +390,8 @@ function zelo_indoor_map_export_gd_pin_booth( $img, $cx, $cy, $half, $hex, $labe
 	imagefilledrectangle( $img, $x1, $y1, $x2, $y2, $white );
 	imagefilledrectangle( $img, $cx - $half, $cy - $half, $cx + $half, $cy + $half, $fill );
 	if ( $label !== '' ) {
-		$px = max( 18, (int) round( $half * 0.95 ) );
-		zelo_indoor_map_export_gd_draw_pin_text( $img, $cx, $cy, $label, $px );
+		$side = (int) round( $half * 2 * 0.84 );
+		zelo_indoor_map_export_gd_draw_pin_text( $img, $cx, $cy, $label, $side, $side );
 	}
 }
 
@@ -448,7 +511,7 @@ function zelo_indoor_map_pdf_layout_metrics( $content_y ) {
 	$margin_bottom = 5.0;
 	$page_usable_w = 281.0;
 	$map_x         = 8.0;
-	$leg_w         = 52.0;
+	$leg_w         = 26.0;
 	$gap           = 2.0;
 	$map_w         = $page_usable_w - $leg_w - $gap;
 	$map_h         = max( 165.0, $page_h - $margin_top - $content_y - $margin_bottom );
@@ -528,9 +591,6 @@ function zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $items, $start_y, $lay
 	$max_y     = $start_y + $layout['map_h'];
 	$remaining = $items;
 	$page_num  = 0;
-	$col_gap   = 1.5;
-	$col_w     = ( $leg_w - $col_gap ) / 2;
-	$use_2col  = count( $items ) > 6;
 
 	while ( ! empty( $remaining ) ) {
 		if ( $page_num > 0 ) {
@@ -546,86 +606,48 @@ function zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $items, $start_y, $lay
 			: __( 'Legenda:', 'zelo-assistente' );
 		$pdf->Cell( $leg_w, 3.5, zelo_pdf_encode( $title ), 0, 1 );
 
-		$y0 = $start_y + 4.5;
+		$y0     = $start_y + 4.5;
+		$y      = $y0;
+		$fitted = array();
+		$left   = array();
 
-		if ( $use_2col && $page_num === 0 ) {
-			$half   = (int) ceil( count( $remaining ) / 2 );
-			$col1   = array_slice( $remaining, 0, $half );
-			$col2   = array_slice( $remaining, $half );
-			$y_left = $y0;
-			foreach ( $col1 as $item ) {
-				if ( $y_left > $max_y ) {
-					break;
-				}
-				$y_left = zelo_indoor_map_pdf_legend_sidebar_entry(
-					$pdf,
-					$leg_x,
-					$y_left,
-					$col_w,
-					$item['hex'],
-					(int) $item['number'],
-					$item['label']
-				);
+		foreach ( $remaining as $idx => $item ) {
+			$est = zelo_indoor_map_pdf_estimate_sidebar_entry_height(
+				$pdf,
+				$leg_w,
+				(int) $item['number'],
+				$item['label']
+			);
+			if ( $y + $est > $max_y && ! empty( $fitted ) ) {
+				$left = array_slice( $remaining, $idx );
+				break;
 			}
-			$y_right = $y0;
-			foreach ( $col2 as $item ) {
-				if ( $y_right > $max_y ) {
-					break;
-				}
-				$y_right = zelo_indoor_map_pdf_legend_sidebar_entry(
-					$pdf,
-					$leg_x + $col_w + $col_gap,
-					$y_right,
-					$col_w,
-					$item['hex'],
-					(int) $item['number'],
-					$item['label']
-				);
+			$fitted[] = $item;
+			$y       += $est;
+			if ( $idx === count( $remaining ) - 1 ) {
+				$left = array();
 			}
-			$remaining = array();
-		} else {
-			$y      = $y0;
-			$fitted = array();
-			$left   = array();
-
-			foreach ( $remaining as $idx => $item ) {
-				$est = zelo_indoor_map_pdf_estimate_sidebar_entry_height(
-					$pdf,
-					$leg_w,
-					(int) $item['number'],
-					$item['label']
-				);
-				if ( $y + $est > $max_y && ! empty( $fitted ) ) {
-					$left = array_slice( $remaining, $idx );
-					break;
-				}
-				$fitted[] = $item;
-				$y       += $est;
-				if ( $idx === count( $remaining ) - 1 ) {
-					$left = array();
-				}
-			}
-
-			if ( empty( $fitted ) && ! empty( $remaining ) ) {
-				$fitted[] = $remaining[0];
-				$left     = array_slice( $remaining, 1 );
-			}
-
-			$y = $y0;
-			foreach ( $fitted as $item ) {
-				$y = zelo_indoor_map_pdf_legend_sidebar_entry(
-					$pdf,
-					$leg_x,
-					$y,
-					$leg_w,
-					$item['hex'],
-					(int) $item['number'],
-					$item['label']
-				);
-			}
-			$remaining = $left;
 		}
 
+		if ( empty( $fitted ) && ! empty( $remaining ) ) {
+			$fitted[] = $remaining[0];
+			$left     = array_slice( $remaining, 1 );
+		}
+
+		$y = $y0;
+		foreach ( $fitted as $item ) {
+			$y = zelo_indoor_map_pdf_legend_sidebar_entry(
+				$pdf,
+				$leg_x,
+				$y,
+				$leg_w,
+				$item['hex'],
+				(int) $item['number'],
+				$item['label']
+			);
+		}
+
+		$remaining = $left;
 		++$page_num;
 		if ( $page_num > 5 ) {
 			break;
