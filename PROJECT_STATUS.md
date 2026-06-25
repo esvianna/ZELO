@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-24** — #61 fix admin pinos plugin **2.23.3** **In review**.
+> Última atualização: **2026-06-24** — #62 export PDF mapa plugin **2.24.0** **In review**.
 
 ---
 
@@ -12,8 +12,8 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Referência no repo | Versão |
 |--------------------|--------|
-| Plugin WordPress (`zelo-assistente.php`) | **2.21.5** |
-| PWA (`zelo-build.js` / `sw.js`) | **build 171** |
+| Plugin WordPress (`zelo-assistente.php`) | **2.24.0** |
+| PWA (`zelo-build.js` / `sw.js`) | **build 179** |
 
 **Produção (repo):** PWA **151** validada (#45–#50, #46); plugin **2.18.0** + **2.19.0** / PWA **152** aguardam deploy/smoke (#44, #51).
 
@@ -167,7 +167,8 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Issue | Estado | Notas |
 |-------|--------|-------|
-| [#61](https://github.com/esvianna/ZELO/issues/61) | **In review** | Mapa evento pinos legíveis Fase A — plugin 2.23.1 / PWA 175; smoke 2z2 |
+| [#62](https://github.com/esvianna/ZELO/issues/62) | **In review** | Export PDF mapa evento — plugin **2.24.0**; smoke **2z7** |
+| [#61](https://github.com/esvianna/ZELO/issues/61) | **In review** | Mapa evento pinos legíveis — plugin 2.23.3 / PWA 179; smoke 2z2–2z6b |
 | [#60](https://github.com/esvianna/ZELO/issues/60) | **In review** | Voluntários extras Pool B fase 2 — plugin 2.23.0 / PWA 174; smoke 60a–60h |
 
 ### Validadas no Project (Done) — sync 2026-06-23
@@ -191,13 +192,19 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## Próximos passos lógicos
 
-1. Smoke **#60** fase 2 (lote, SMS responsável, encerrar/atendido, PDF Share) após deploy plugin **2.23.0** + PWA **174**.
-2. **Deploy:** alinhar produção com plugin **2.21.5** + PWA **171** se ainda não publicados.
-3. Nova demanda → issue no Project 3 (Backlog) antes de codificar.
+1. Smoke **#62** export PDF mapa (`TESTING.md` **2z7**) após deploy plugin **2.24.0**.
+2. Smoke **#61** pinos/legenda PWA + admin (`TESTING.md` **2z2–2z6b**) após deploy plugin **2.23.3** + PWA **179**.
+3. Smoke **#60** fase 2 (lote, SMS responsável, encerrar/atendido, PDF Share) após deploy plugin **2.23.0** + PWA **174**.
+4. Nova demanda → issue no Project 3 (Backlog) antes de codificar.
 
 ---
 
-## Última sessão (2026-06-22)
+## Última sessão (2026-06-24)
+
+- **#62:** export PDF mapa evento — `inc/indoor-map-export.php`; botão «Exportar mapa (PDF)» na aba Mapa evento; GD composite até 3000 px + pinos + legenda FPDF A4 paisagem; `admin-post` + nonce; plugin **2.24.0** — **In review**; smoke `TESTING.md` **2z7**.
+- **#61:** pinos legíveis + legenda pavimentos + tooltip + fixes mobile/admin — plugin **2.23.1–2.23.3** / PWA **175–179** — **In review**; smoke **2z2–2z6b**.
+
+## Sessão anterior (2026-06-22)
 
 - **#59:** lembrete manual a pendentes + aviso responsável sobre recusas — `zelo-ops-shift-notify.php`; REST `remind-pending` / `notify-declines`; botões no card do turno (PWA 171); plugin **2.21.5** — **In review**; smoke `TESTING.md` 59a–59e.
 

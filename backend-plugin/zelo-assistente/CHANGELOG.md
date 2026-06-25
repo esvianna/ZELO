@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.24.0] - 2026-06-24
+
+### Adicionado
+- **Export PDF mapa evento (#62):** botão na aba Mapa evento; composite GD alta resolução com pinos e legenda; download via `admin-post`.
+
 ## [2.23.3] - 2026-06-24
 
 ### Corrigido

@@ -8,6 +8,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Adicionado — export PDF mapa evento (#62)
+
+| Versão | Entrega |
+|--------|---------|
+| Plugin **2.24.0** | Botão admin «Exportar mapa (PDF)» — diagrama GD até 3000 px + pinos + legenda (balcões + pavimentos); `admin-post` + permissão `zelo_manage_ops` |
+
 ### Alterado — mapa evento pinos legíveis (#61)
 
 | Versão | Entrega |

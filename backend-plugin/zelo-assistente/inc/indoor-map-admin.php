@@ -188,6 +188,21 @@ function zelo_render_indoor_map_admin_tab( $indoor_map, $locations = array(), $a
 		</table>
 
 		<div id="zelo-map-editor-wrap" style="margin:1rem 0;max-width:100%;<?php echo $map['image_url'] ? '' : 'display:none;'; ?>">
+			<?php
+			$export_places = zelo_indoor_map_export_places( $map );
+			if ( ! empty( $map['image_url'] ) && ! empty( $export_places ) ) {
+				$export_pdf_url = wp_nonce_url(
+					admin_url( 'admin-post.php?action=zelo_indoor_map_export_pdf' ),
+					'zelo_indoor_map_export_pdf'
+				);
+				?>
+			<p>
+				<a href="<?php echo esc_url( $export_pdf_url ); ?>" class="button button-secondary"><?php esc_html_e( 'Exportar mapa (PDF)', 'zelo-assistente' ); ?></a>
+				<span class="description" style="margin-left:0.5rem;"><?php esc_html_e( 'Diagrama em alta resolução com pinos e legenda.', 'zelo-assistente' ); ?></span>
+			</p>
+				<?php
+			}
+			?>
 			<p class="description"><?php esc_html_e( 'Selecione «Posicionar» num local e clique no diagrama. Balcões = quadrados azul/teal; destinos = círculos coloridos por pavimento (coluna Pav.).', 'zelo-assistente' ); ?></p>
 			<div id="zelo-map-legend" class="zelo-map-legend" style="display:flex;flex-wrap:wrap;gap:0.65rem 1rem;margin:0.5rem 0;font-size:12px;color:#50575e;">
 				<?php
