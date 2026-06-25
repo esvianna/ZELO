@@ -18,6 +18,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 | Plugin **2.24.5** | PDF: números vetor FPDF (Helvetica Bold, preto + contorno branco) sobre o mapa (#64) |
 | Plugin **2.24.6** | PDF: legenda overlay na margem direita do mapa (fundo branco, ~44 mm); mapa largura útil (#64) |
 | Plugin **2.24.7** | PDF: mapa ~253 mm centrado + inset 3 mm — sem corte de ruas/pinos; overlay legenda mantido (#64) |
+| Plugin **2.24.8** | PDF: revert layout 2.24.5 + legenda 32 mm (X=257); mapa 253 mm; números vetor; sem overlay (#64) |
 
 ### Alterado — export PDF mapa numerado (#63)
 

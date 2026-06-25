@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-25** — #64 correção escala PDF plugin **2.24.7** **In review**.
+> Última atualização: **2026-06-25** — #64 revert layout 2.24.5 + legenda plugin **2.24.8** **In review**.
 
 ---
 
@@ -12,7 +12,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Referência no repo | Versão |
 |--------------------|--------|
-| Plugin WordPress (`zelo-assistente.php`) | **2.24.7** |
+| Plugin WordPress (`zelo-assistente.php`) | **2.24.8** |
 | PWA (`zelo-build.js` / `sw.js`) | **build 179** |
 
 **Produção (repo):** PWA **151** validada (#45–#50, #46); plugin **2.18.0** + **2.19.0** / PWA **152** aguardam deploy/smoke (#44, #51).
@@ -167,7 +167,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Issue | Estado | Notas |
 |-------|--------|-------|
-| [#64](https://github.com/esvianna/ZELO/issues/64) | **In review** | PDF legenda overlay + escala sem corte — plugin **2.24.7**; smoke **2z7h** |
+| [#64](https://github.com/esvianna/ZELO/issues/64) | **In review** | PDF layout 2.24.5 + legenda 32 mm — plugin **2.24.8**; smoke **2z7i** |
 | [#63](https://github.com/esvianna/ZELO/issues/63) | **In review** | PDF pinos numerados — plugin **2.24.1**; smoke **2z7b** |
 | [#62](https://github.com/esvianna/ZELO/issues/62) | **In review** | Export PDF mapa evento — plugin **2.24.0**; smoke **2z7** |
 | [#61](https://github.com/esvianna/ZELO/issues/61) | **In review** | Mapa evento pinos legíveis — plugin 2.23.3 / PWA 179; smoke 2z2–2z6b |
@@ -194,7 +194,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## Próximos passos lógicos
 
-1. Smoke **#64** escala PDF sem corte (`TESTING.md` **2z7h**) após deploy plugin **2.24.7**.
+1. Smoke **#64** layout 2.24.5 + legenda (`TESTING.md` **2z7i**) após deploy plugin **2.24.8**.
 2. Smoke **#63** PDF numerado (`TESTING.md` **2z7b**) após deploy plugin **2.24.1**.
 3. Smoke **#61** pinos/legenda PWA + admin (`TESTING.md` **2z2–2z6b**) após deploy plugin **2.23.3** + PWA **179**.
 4. Smoke **#60** fase 2 (lote, SMS responsável, encerrar/atendido, PDF Share) após deploy plugin **2.23.0** + PWA **174**.
@@ -204,7 +204,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## Última sessão (2026-06-25)
 
-- **#64:** correção escala mapa PDF (~253 mm centrado + inset 3 mm) — sem corte de ruas/pinos; overlay legenda mantido — plugin **2.24.7** — **In review**; smoke **2z7h**.
+- **#64:** revert layout 2.24.5 (mapa ~253 mm, números vetor) + legenda coluna ~32 mm em X=257 — plugin **2.24.8** — **In review**; smoke **2z7i**.
 
 ## Sessão anterior (2026-06-24)
 

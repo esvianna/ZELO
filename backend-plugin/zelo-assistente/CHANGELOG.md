@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.24.8] - 2026-06-25
+
+### Alterado
+- **Export PDF mapa (#64):** revert ao layout 2.24.5 (mapa ~253 mm + coluna lateral); legenda ~32 mm em X=257 mm (6 mm à esquerda vs 2.24.5) para evitar quebra em «Ambulatório 2/3»; números vetor mantidos. Removido overlay 2.24.6–2.24.7.
+
 ## [2.24.7] - 2026-06-25
 
 ### Corrigido
