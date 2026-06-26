@@ -11,6 +11,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 define( 'ZELO_NEWS_META_IN_APP', '_zelo_in_app' );
 define( 'ZELO_NEWS_META_NOTIFY', '_zelo_as_notification' );
+define( 'ZELO_NEWS_META_SMS', '_zelo_sms_notify' );
+define( 'ZELO_NEWS_META_SMS_SENT', '_zelo_sms_sent' );
 define( 'ZELO_NEWS_META_PRIORITY', '_zelo_notification_priority' );
 define( 'ZELO_NEWS_META_CAROUSEL', '_zelo_carousel' );
 
@@ -310,11 +312,15 @@ function zelo_news_render_meta_box( $post ) {
 
 	$in_app    = get_post_meta( $post->ID, ZELO_NEWS_META_IN_APP, true ) === '1';
 	$notify    = get_post_meta( $post->ID, ZELO_NEWS_META_NOTIFY, true ) === '1';
+	$sms       = get_post_meta( $post->ID, ZELO_NEWS_META_SMS, true ) === '1';
+	$sms_sent  = get_post_meta( $post->ID, ZELO_NEWS_META_SMS_SENT, true ) === '1';
 	$carousel  = get_post_meta( $post->ID, ZELO_NEWS_META_CAROUSEL, true ) === '1';
 	$priority = get_post_meta( $post->ID, ZELO_NEWS_META_PRIORITY, true );
 	if ( $priority !== 'important' ) {
 		$priority = 'normal';
 	}
+	$sms_enabled = function_exists( 'zelo_comtele_is_enabled' ) && zelo_comtele_is_enabled();
+	$sms_stats   = function_exists( 'zelo_news_sms_recipient_stats' ) ? zelo_news_sms_recipient_stats() : array( 'with_phone' => 0 );
 	?>
 	<p>
 		<label>
@@ -328,6 +334,27 @@ function zelo_news_render_meta_box( $post ) {
 			<?php esc_html_e( 'Mostrar como notificação (sino)', 'zelo-assistente' ); ?>
 		</label>
 	</p>
+	<p>
+		<label>
+			<input type="checkbox" name="zelo_sms_notify" value="1" <?php checked( $sms ); ?> <?php disabled( ! $in_app || ! $sms_enabled || $sms_sent ); ?> id="zelo_sms_notify" <?php echo $sms_sent ? 'data-sent="1"' : ''; ?> />
+			<?php esc_html_e( 'Enviar SMS aos voluntários', 'zelo-assistente' ); ?>
+		</label>
+	</p>
+	<?php if ( $sms_sent ) : ?>
+	<p class="description"><?php esc_html_e( 'SMS já enviado para este post (uma vez por publicação).', 'zelo-assistente' ); ?></p>
+	<?php elseif ( ! $sms_enabled ) : ?>
+	<p class="description"><?php esc_html_e( 'SMS indisponível — active Comtele em Operação Voluntários → Config.', 'zelo-assistente' ); ?></p>
+	<?php elseif ( $in_app ) : ?>
+	<p class="description">
+		<?php
+		printf(
+			/* translators: %d: number of volunteers with phone */
+			esc_html__( 'Estimativa: ~%d destinatários com telefone (view_ops). Consome créditos Comtele.', 'zelo-assistente' ),
+			(int) ( $sms_stats['with_phone'] ?? 0 )
+		);
+		?>
+	</p>
+	<?php endif; ?>
 	<p>
 		<label>
 			<input type="checkbox" name="zelo_carousel" value="1" <?php checked( $carousel ); ?> <?php disabled( ! $in_app ); ?> id="zelo_carousel" />
@@ -349,6 +376,7 @@ function zelo_news_render_meta_box( $post ) {
 		var inApp = document.querySelector('input[name="zelo_in_app"]');
 		var notify = document.getElementById('zelo_as_notification');
 		var carousel = document.getElementById('zelo_carousel');
+		var sms = document.getElementById('zelo_sms_notify');
 		if (!inApp) return;
 		function syncInAppDeps() {
 			var on = inApp.checked;
@@ -359,6 +387,10 @@ function zelo_news_render_meta_box( $post ) {
 			if (carousel) {
 				carousel.disabled = !on;
 				if (!on) carousel.checked = false;
+			}
+			if (sms) {
+				sms.disabled = !on || sms.hasAttribute('data-sent');
+				if (!on) sms.checked = false;
 			}
 		}
 		inApp.addEventListener('change', syncInAppDeps);
@@ -391,6 +423,10 @@ function zelo_news_save_meta_box( $post_id ) {
 
 	$notify = $in_app && ! empty( $_POST['zelo_as_notification'] );
 	update_post_meta( $post_id, ZELO_NEWS_META_NOTIFY, $notify ? '1' : '0' );
+
+	$sms_allowed = $in_app && get_post_meta( $post_id, ZELO_NEWS_META_SMS_SENT, true ) !== '1';
+	$sms         = $sms_allowed && ! empty( $_POST['zelo_sms_notify'] );
+	update_post_meta( $post_id, ZELO_NEWS_META_SMS, $sms ? '1' : '0' );
 
 	$carousel = $in_app && ! empty( $_POST['zelo_carousel'] );
 	update_post_meta( $post_id, ZELO_NEWS_META_CAROUSEL, $carousel ? '1' : '0' );

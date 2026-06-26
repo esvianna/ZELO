@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.25.0] - 2026-06-25
+
+### Adicionado
+- **SMS novidades (#65, ADR-043):** checkbox «Enviar SMS aos voluntários» no post; envio Comtele em lotes a `view_ops` com telefone; dedup 1× por post; log admin.
+
 ## [2.24.8] - 2026-06-25
 
 ### Alterado

@@ -97,6 +97,14 @@ Matriz completa (roles, endpoints, IDOR): **[docs/OPS-PERMISSIONS.md](docs/OPS-P
 
 ---
 
+## SMS novidades (#65, plugin 2.25.0+)
+
+- Envio em massa só com checkbox explícito no editor de Posts (utilizadores com `edit_post`).
+- Monitorizar créditos Comtele (~N voluntários × posts); log em `zelo_news_sms_log`.
+- Telefones mascarados no log Comtele existente; sem PII extra no log de novidades.
+
+---
+
 ## Reportar vulnerabilidades
 
 Registrar em `DECISIONS.md` ou issue privada com o mantenedor do projeto; não divulgar detalhes de exploit em commits públicos até correção.

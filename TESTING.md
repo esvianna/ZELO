@@ -178,6 +178,9 @@ Orientação de testes **manual** (prioritário hoje) e caminho para automação
 | S54c | Digest SMS | voluntário | 1 SMS resumido por user+dia (não 1 por linha) |
 | S54d | Sem telefone | voluntário | Só push/e-mail; sem erro |
 | S54e | CLI normalize | dev | `php backend-plugin/zelo-assistente/scripts/test-sms-normalize.php` → OK |
+| S65a | **SMS novidade activado** (#65, plugin **2.25.0+**) | `manage_options` + Comtele on | Post: PWA + «Enviar SMS»; publicar; voluntários `view_ops`+telefone recebem 1 SMS; meta «SMS já enviado»; dedup re-save |
+| S65b | **SMS novidade desligado** (#65, plugin **2.25.0+**) | editor | Post só PWA/sino → zero SMS |
+| S65c | **SMS sem telefone** (#65, plugin **2.25.0+**) | voluntário sem `zelo_phone` | Não recebe SMS; outros com telefone sim |
 | 6 | Pedido de substituição | conforme regra | Criado; gestor aprova/rejeita |
 | 6a | Painel «Pedidos de substituição» (PWA **132+**) | gestor / homem-chave | Nome do solicitante, dia·turno·local, motivo e data — **sem** IDs `sw_*` / `asg_*` |
 | 6b | Sino — aviso swap pendente | gestor | Resumo legível («Nome — Sábado · A1 — Balcão 3») |

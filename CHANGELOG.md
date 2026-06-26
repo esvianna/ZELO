@@ -8,6 +8,19 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Planejado — SMS novidades (#65)
+
+| Issue | Entrega prevista |
+|-------|------------------|
+| [#65](https://github.com/esvianna/ZELO/issues/65) | Checkbox «Enviar SMS» no post; 1 SMS/voluntário `view_ops`+telefone; Comtele; dedup; plano `docs/ISSUE-65-SMS-NOVIDADES.md` |
+
+### Adicionado — SMS novidades (#65)
+
+| Versão | Entrega |
+|--------|---------|
+| Plugin **2.25.0** | Checkbox «Enviar SMS aos voluntários» no post; lotes Comtele; dedup 1× por post; log `zelo_news_sms_log` |
+| PWA **180** | Hint telefone: avisos operacionais **e novidades** por SMS |
+
 ### Alterado — export PDF legenda lateral + pinos impressão (#64)
 
 | Versão | Entrega |

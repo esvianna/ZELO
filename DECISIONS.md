@@ -510,6 +510,24 @@ Teto Titan (**1.000/dia**) fica confortável com ADR-037; **actual** aproxima-se
 
 ---
 
+## ADR-043 — SMS novidades (Posts WP) (#65, 2026-06-25)
+
+**Contexto:** Novidades (#26) usam push broadcast quando `_zelo_as_notification`; SMS Comtele (#54, ADR-040) cobre só ops. Pedido: SMS opcional ao publicar post na PWA.
+
+**Decisões:**
+
+1. **Gatilho:** meta `_zelo_sms_notify` (checkbox explícito no editor); requer `_zelo_in_app` + Comtele activo + post `publish`.
+2. **Destinatários:** utilizadores com `zelo_view_ops` + `zelo_phone` válido (E.164 BR).
+3. **Conteúdo:** título + link curto PWA, ≤140 chars; tag Comtele `zelo-news`.
+4. **Envio:** lotes de 25 via `zelo_comtele_send_sms`; falha → fila `zelo_notify_sms_queue`.
+5. **Dedup:** 1 envio por post (`_zelo_sms_sent`); transient por `post_modified_gmt` no save.
+6. **LGPD:** texto cadastro/perfil inclui «novidades do evento»; opt-in separado = fase 2.
+7. **Paralelo:** não substitui push/sino; falha SMS não bloqueia publicação.
+
+**Consequências:** Plugin **2.25.0**; `inc/zelo-news-sms.php`; `TESTING.md` S65a–c; PWA **180** (hint telefone).
+
+---
+
 ## ADR-042 — Voluntários extras Pool B (#60, 2026-06-23)
 
 **Contexto:** Formulários papel Curitiba 2026; extras de outros departamentos não devem misturar-se com contas WP do dept. Informações.
