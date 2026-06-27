@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.26.5] - 2026-06-27
+
+### Corrigido
+- **Export PDF mapa (#66):** fundo branco da legenda overlay só atrás do texto (não altura máxima); reserva inferior 22 mm — evita faixa branca vazia e cobertura parcial de «LEGENDA (FACILIDADES)».
+
 ## [2.26.4] - 2026-06-27
 
 ### Corrigido
