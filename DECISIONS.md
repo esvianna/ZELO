@@ -12,7 +12,7 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 **Decisão:** Mapa ~230 mm + legenda lateral ~50 mm agrupada por `place['floor']` (vazio → «Outros»); cabeçalho logo PWA + «Mapa» + `zelo_event_data`; data 8 pt canto superior direito; **sem** numeração de páginas; overflow legenda → pág. 2 (120 mm). Preservar pinos GD, números vetor FPDF, coluna lateral (sem overlay).
 
-**Emenda 2026-06-27:** logo **16 mm**; título **uma linha** «Mapa {evento}» (normaliza `-`/`/` do admin); mapa **~281 mm** com legenda **overlay** ~50 mm (fundo branco) — plugin **2.26.1**.
+**Emenda 2026-06-27 (b):** título **fixo** «Mapa Congresso Internacional Curitiba 2026»; legenda overlay com **30 mm** reservados no canto inferior direito (legenda do diagrama) — plugin **2.26.3**.
 
 **Consequências:** Plugin **2.26.0** → **2.26.1**; smoke **2z7j**; PWA/admin inalterados.
 

@@ -494,31 +494,12 @@ function zelo_indoor_map_export_event_name() {
 }
 
 /**
- * Normaliza nome do evento para título PDF (uma linha legível).
- *
- * @param string $name Nome bruto.
- * @return string
- */
-function zelo_indoor_map_pdf_format_event_display_name( $name ) {
-	$name = trim( (string) $name );
-	$name = preg_replace( '/\s*-\s*/u', ' ', $name );
-	$name = str_replace( '/', ' ', $name );
-	$name = preg_replace( '/\s+/u', ' ', $name );
-	return trim( $name );
-}
-
-/**
- * Linha de título do PDF: «Mapa {evento}».
+ * Linha de título do PDF (fixo para o congresso Curitiba 2026).
  *
  * @return string
  */
 function zelo_indoor_map_pdf_header_title() {
-	$name = zelo_indoor_map_pdf_format_event_display_name( zelo_indoor_map_export_event_name() );
-	return sprintf(
-		/* translators: %s: event name */
-		__( 'Mapa %s', 'zelo-assistente' ),
-		$name
-	);
+	return 'Mapa Congresso Internacional Curitiba 2026';
 }
 
 /**
@@ -676,12 +657,13 @@ function zelo_indoor_map_pdf_layout_metrics( $content_y ) {
 	$map_h         = max( 158.0, $page_h - $margin_top - $content_y - $margin_bottom );
 
 	return array(
-		'map_x'          => $map_x,
-		'map_w'          => $map_w,
-		'map_h'          => $map_h,
-		'leg_x'          => $leg_x,
-		'leg_w'          => $leg_w,
-		'legend_overlay' => true,
+		'map_x'                           => $map_x,
+		'map_w'                           => $map_w,
+		'map_h'                           => $map_h,
+		'leg_x'                           => $leg_x,
+		'leg_w'                           => $leg_w,
+		'legend_overlay'                  => true,
+		'legend_overlay_reserve_bottom'   => 30.0,
 	);
 }
 
@@ -825,7 +807,10 @@ function zelo_indoor_map_pdf_draw_legend_overlay_bg( $pdf, $leg_x, $start_y, $le
 function zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $items, $start_y, $layout ) {
 	$leg_x     = $layout['leg_x'];
 	$leg_w     = $layout['leg_w'];
-	$max_y     = $start_y + $layout['map_h'];
+	$reserve   = ! empty( $layout['legend_overlay'] )
+		? (float) ( $layout['legend_overlay_reserve_bottom'] ?? 0 )
+		: 0.0;
+	$overlay_h = max( 50.0, $layout['map_h'] - $reserve );
 	$rows      = zelo_indoor_map_pdf_build_legend_rows( $items );
 	$remaining = $rows;
 	$page_num  = 0;
@@ -837,14 +822,17 @@ function zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $items, $start_y, $lay
 			$max_y   = 202;
 			$leg_x   = 8.0;
 			$leg_w   = 120.0;
-		} elseif ( ! empty( $layout['legend_overlay'] ) ) {
-			zelo_indoor_map_pdf_draw_legend_overlay_bg(
-				$pdf,
-				$leg_x,
-				$start_y,
-				$leg_w,
-				$layout['map_h']
-			);
+		} else {
+			$max_y = $start_y + ( ! empty( $layout['legend_overlay'] ) ? $overlay_h : $layout['map_h'] );
+			if ( ! empty( $layout['legend_overlay'] ) ) {
+				zelo_indoor_map_pdf_draw_legend_overlay_bg(
+					$pdf,
+					$leg_x,
+					$start_y,
+					$leg_w,
+					$overlay_h
+				);
+			}
 		}
 
 		$pdf->SetFont( 'Helvetica', 'B', 7.5 );

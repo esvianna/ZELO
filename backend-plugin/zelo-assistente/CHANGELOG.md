@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.26.3] - 2026-06-27
+
+### Alterado
+- **Export PDF mapa (#66):** título fixo «Mapa Congresso Internacional Curitiba 2026»; legenda overlay limitada em altura (~30 mm livres no canto inferior direito para legenda do diagrama).
+
 ## [2.26.2] - 2026-06-27
 
 ### Corrigido
