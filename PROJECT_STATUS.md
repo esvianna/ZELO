@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-27** — #66 PDF mapa ajustes plugin **2.26.1** **In review**; smoke **2z7j**.
+> Última atualização: **2026-06-27** — #66 PDF mapa alinhamento esquerda plugin **2.26.2** **In review**.
 
 ---
 
@@ -12,7 +12,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Referência no repo | Versão |
 |--------------------|--------|
-| Plugin WordPress (`zelo-assistente.php`) | **2.26.1** |
+| Plugin WordPress (`zelo-assistente.php`) | **2.26.2** |
 | PWA (`zelo-build.js` / `sw.js`) | **build 180** |
 
 **Produção (repo):** PWA **151** validada (#45–#50, #46); plugin **2.18.0** + **2.19.0** / PWA **152** aguardam deploy/smoke (#44, #51).
@@ -167,7 +167,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Issue | Estado | Notas |
 |-------|--------|-------|
-| [#66](https://github.com/esvianna/ZELO/issues/66) | **In review** | PDF legenda overlay + título 1 linha + logo 16 mm — plugin **2.26.1**; smoke **2z7j** |
+| [#66](https://github.com/esvianna/ZELO/issues/66) | **In review** | PDF mapa alinhado à esquerda + legenda overlay — plugin **2.26.2**; smoke **2z7j** |
 | [#65](https://github.com/esvianna/ZELO/issues/65) | **In review** | SMS novidades posts — plugin **2.25.0** / PWA **180**; smoke **S65a–c** |
 | [#64](https://github.com/esvianna/ZELO/issues/64) | **In review** | PDF layout 2.24.5 + legenda 32 mm — plugin **2.24.8**; smoke **2z7i** |
 | [#63](https://github.com/esvianna/ZELO/issues/63) | **In review** | PDF pinos numerados — plugin **2.24.1**; smoke **2z7b** |

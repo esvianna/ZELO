@@ -891,7 +891,7 @@ function zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $items, $start_y, $lay
 }
 
 /**
- * Encaixa imagem do mapa na largura útil (legenda sobrepõe a margem direita).
+ * Encaixa imagem do mapa alinhada à margem esquerda (legenda overlay à direita).
  *
  * @param FPDF   $pdf      PDF.
  * @param string $png_path Caminho PNG.
@@ -913,7 +913,7 @@ function zelo_indoor_map_pdf_place_map_image( $pdf, $png_path, $y, $layout ) {
 		$scale_h = $max_h;
 		$scale_w = $scale_h / $ratio;
 	}
-	$x_off = $map_x + ( $max_w - $scale_w ) / 2;
+	$x_off = $map_x;
 	$pdf->Image( $png_path, $x_off, $y, $scale_w, $scale_h );
 
 	return array(

@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.26.2] - 2026-06-27
+
+### Corrigido
+- **Export PDF mapa (#66):** diagrama alinhado à margem esquerda (não centrado) — legenda overlay deixa «Rua Buenos Aires» visível.
+
 ## [2.26.1] - 2026-06-27
 
 ### Alterado
