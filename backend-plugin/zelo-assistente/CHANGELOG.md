@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.27.0] - 2026-06-24
+
+### Adicionado
+- **Mapa indoor — portões (#67, ADR-045):** tipo `gate` («Portão (rótulo)») no admin; posição x/y; texto PT no preview; sem rotas desde balcão; excluído da legenda numerada e do export PDF numerado; rótulos vetoriais FPDF no PDF.
+
 ## [2.26.6] - 2026-06-27
 
 ### Corrigido

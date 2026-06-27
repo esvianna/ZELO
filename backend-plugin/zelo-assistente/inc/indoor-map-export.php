@@ -77,6 +77,9 @@ function zelo_indoor_map_export_numbered_items( $map ) {
 	$number       = 1;
 
 	foreach ( $places as $place ) {
+		if ( zelo_indoor_map_place_is_gate( $place ) ) {
+			continue;
+		}
 		$is_booth = ( $place['kind'] ?? '' ) === 'booth';
 		if ( $is_booth ) {
 			$slot = zelo_indoor_map_export_booth_slot( $place, $booths );
@@ -388,7 +391,58 @@ function zelo_indoor_map_export_gd_pin_booth( $img, $cx, $cy, $half, $hex, $labe
 }
 
 /**
- * Gera PNG composto (diagrama + pinos).
+ * Locais tipo portão (rótulo no mapa, sem legenda numerada).
+ *
+ * @param array<string, mixed> $map Mapa.
+ * @return array<int, array<string, mixed>>
+ */
+function zelo_indoor_map_export_gate_places( $map ) {
+	$gates = array();
+	foreach ( zelo_indoor_map_export_places( $map ) as $place ) {
+		if ( zelo_indoor_map_place_is_gate( $place ) ) {
+			$gates[] = $place;
+		}
+	}
+	return $gates;
+}
+
+/**
+ * Desenha rótulo de portão no PNG (GD).
+ *
+ * @param GdImage|resource $img       Canvas.
+ * @param int              $cx        Centro X px.
+ * @param int              $cy        Centro Y px.
+ * @param string           $label     Texto.
+ */
+function zelo_indoor_map_export_gd_draw_gate_label( $img, $cx, $cy, $label ) {
+	$label = trim( (string) $label );
+	if ( $label === '' ) {
+		return;
+	}
+	$font = zelo_indoor_map_export_gd_font_path();
+	$dark = imagecolorallocate( $img, 15, 23, 42 );
+	$white = imagecolorallocate( $img, 255, 255, 255 );
+	if ( $font !== '' && function_exists( 'imagettftext' ) ) {
+		$px  = 28;
+		$box = imagettfbbox( $px, 0, $font, $label );
+		if ( is_array( $box ) ) {
+			$tw = abs( $box[2] - $box[0] );
+			$th = abs( $box[7] - $box[1] );
+			$pad = 8;
+			$x1  = (int) ( $cx - $tw / 2 - $pad );
+			$y1  = (int) ( $cy - $th / 2 - $pad );
+			$x2  = (int) ( $cx + $tw / 2 + $pad );
+			$y2  = (int) ( $cy + $th / 2 + $pad );
+			imagefilledrectangle( $img, $x1, $y1, $x2, $y2, $white );
+			imagettftext( $img, $px, 0, (int) ( $cx - $tw / 2 ), (int) ( $cy + $th / 2 - 4 ), $dark, $font, $label );
+			return;
+		}
+	}
+	imagestring( $img, 5, max( 0, $cx - 20 ), max( 0, $cy - 6 ), $label, $dark );
+}
+
+/**
+ * Gera PNG composto (diagrama + pinos + rótulos de portão).
  *
  * @param array<string, mixed> $map Mapa normalizado.
  * @return array{path:string,cleanup:bool}|WP_Error
@@ -401,7 +455,7 @@ function zelo_indoor_map_export_build_png( $map ) {
 	if ( $img_url === '' ) {
 		return new WP_Error( 'zelo_indoor_no_image', __( 'Diagrama sem imagem configurada.', 'zelo-assistente' ) );
 	}
-	if ( empty( $numbered ) ) {
+	if ( empty( $numbered ) && empty( zelo_indoor_map_export_gate_places( $map ) ) ) {
 		return new WP_Error( 'zelo_indoor_no_places', __( 'Nenhum local activo para exportar.', 'zelo-assistente' ) );
 	}
 
@@ -1046,6 +1100,45 @@ function zelo_indoor_map_pdf_draw_pin_numbers( $pdf, $numbered, $frame, $target_
 }
 
 /**
+ * Desenha rótulos de portão no PDF (vetor).
+ *
+ * @param FPDF                             $pdf   PDF.
+ * @param array<string, mixed>             $map   Mapa.
+ * @param array{x:float,y:float,w:float,h:float} $frame Caixa da imagem.
+ */
+function zelo_indoor_map_pdf_draw_gate_labels( $pdf, $map, $frame ) {
+	$gates = zelo_indoor_map_export_gate_places( $map );
+	if ( empty( $gates ) ) {
+		return;
+	}
+	foreach ( $gates as $gate ) {
+		$nx    = (float) ( $gate['x'] ?? 0 );
+		$ny    = (float) ( $gate['y'] ?? 0 );
+		$cx    = $frame['x'] + ( $nx * $frame['w'] );
+		$cy    = $frame['y'] + ( $ny * $frame['h'] );
+		$text  = zelo_pdf_encode( zelo_indoor_map_place_label( $gate, 'pt_br' ) );
+		if ( $text === '' ) {
+			continue;
+		}
+		$font_pt = 7.5;
+		$pdf->SetFont( 'Helvetica', 'B', $font_pt );
+		$tw      = $pdf->GetStringWidth( $text );
+		$pad_x   = 1.2;
+		$pad_y   = 0.6;
+		$line_mm = $font_pt * 0.352778;
+		$h       = $line_mm + ( $pad_y * 2 );
+		$w       = $tw + ( $pad_x * 2 );
+		$x       = $cx - ( $w / 2 );
+		$y       = $cy - ( $h / 2 );
+		$pdf->SetFillColor( 255, 255, 255 );
+		$pdf->Rect( $x, $y, $w, $h, 'F' );
+		$pdf->SetTextColor( 15, 23, 42 );
+		$pdf->SetXY( $x + $pad_x, $y + $pad_y );
+		$pdf->Cell( $tw, $line_mm, $text, 0, 0, 'L' );
+	}
+}
+
+/**
  * Gera PDF binário.
  *
  * @param array<string, mixed> $map Mapa.
@@ -1083,6 +1176,7 @@ function zelo_indoor_map_export_pdf_binary( $map ) {
 			(int) ( $png_data['booth_half'] ?? 44 ),
 			(int) ( $png_data['dest_r'] ?? 36 )
 		);
+		zelo_indoor_map_pdf_draw_gate_labels( $pdf, $map, $frame );
 		zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $numbered, $content_y, $layout, $frame );
 
 		$slug = sanitize_title( zelo_indoor_map_export_event_name() );

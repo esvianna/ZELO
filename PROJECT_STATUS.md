@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-27** — #66 PDF legenda medida + limite frame plugin **2.26.6** **In review**.
+> Última atualização: **2026-06-24** — #67 rótulos portões (`kind gate`) plugin **2.27.0** / PWA **181** **In review**.
 
 ---
 
@@ -12,8 +12,8 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Referência no repo | Versão |
 |--------------------|--------|
-| Plugin WordPress (`zelo-assistente.php`) | **2.26.6** |
-| PWA (`zelo-build.js` / `sw.js`) | **build 180** |
+| Plugin WordPress (`zelo-assistente.php`) | **2.27.0** |
+| PWA (`zelo-build.js` / `sw.js`) | **build 181** |
 
 **Produção (repo):** PWA **151** validada (#45–#50, #46); plugin **2.18.0** + **2.19.0** / PWA **152** aguardam deploy/smoke (#44, #51).
 
@@ -167,6 +167,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Issue | Estado | Notas |
 |-------|--------|-------|
+| [#67](https://github.com/esvianna/ZELO/issues/67) | **In review** | Rótulos portões `kind gate` — plugin **2.27.0** / PWA **181**; smoke **2z8** |
 | [#66](https://github.com/esvianna/ZELO/issues/66) | **In review** | PDF legenda medida + limite frame — plugin **2.26.6**; smoke **2z7j** |
 | [#65](https://github.com/esvianna/ZELO/issues/65) | **In review** | SMS novidades posts — plugin **2.25.0** / PWA **180**; smoke **S65a–c** |
 | [#64](https://github.com/esvianna/ZELO/issues/64) | **In review** | PDF layout 2.24.5 + legenda 32 mm — plugin **2.24.8**; smoke **2z7i** |
@@ -196,16 +197,25 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## Próximos passos lógicos
 
-1. Smoke **#66** PDF (`TESTING.md` **2z7j**) após deploy plugin **2.26.4**.
-2. Smoke **#65** SMS novidades (`TESTING.md` **S65a–c**) após deploy plugin **2.25.0**.
-3. Smoke **#63** PDF numerado (`TESTING.md` **2z7b**) após deploy plugin **2.24.1**.
-4. Smoke **#61** pinos/legenda PWA + admin (`TESTING.md` **2z2–2z6b**) após deploy plugin **2.23.3** + PWA **179**.
-5. Smoke **#60** fase 2 (lote, SMS responsável, encerrar/atendido, PDF Share) após deploy plugin **2.23.0** + PWA **174**.
-6. Nova demanda → issue no Project 3 (Backlog) antes de codificar.
+1. Smoke **#67** portões mapa (`TESTING.md` **2z8**) após deploy plugin **2.27.0** + PWA **181**.
+2. Smoke **#66** PDF (`TESTING.md` **2z7j**) após deploy plugin **2.26.6**.
+3. Smoke **#65** SMS novidades (`TESTING.md` **S65a–c**) após deploy plugin **2.25.0**.
+4. Smoke **#63** PDF numerado (`TESTING.md` **2z7b**) após deploy plugin **2.24.1**.
+5. Smoke **#61** pinos/legenda PWA + admin (`TESTING.md` **2z2–2z6b**) após deploy plugin **2.23.3** + PWA **179**.
+6. Smoke **#60** fase 2 (lote, SMS responsável, encerrar/atendido, PDF Share) após deploy plugin **2.23.0** + PWA **174**.
+7. Nova demanda → issue no Project 3 (Backlog) antes de codificar.
 
 ---
 
-## Última sessão (2026-06-25)
+## Última sessão (2026-06-24)
+
+- **#67:** Tipo `gate` — rótulos de portões no mapa (admin + PWA + PDF); fora de legenda numerada, combobox Guia e rotas — plugin **2.27.0** / PWA **181** — **In review**; smoke **2z8**.
+
+## Sessão anterior (2026-06-27)
+
+- **#66:** Legenda overlay medida + limite vertical `frame['h']` — plugin **2.26.6** — **In review**; smoke **2z7j**.
+
+## Sessão anterior (2026-06-25)
 
 - **#66:** Título fixo + legenda overlay sem cobrir «LEGENDA (FACILIDADES)» — plugin **2.26.3** — **In review**; smoke **2z7j**.
 - **#65:** SMS novidades — checkbox «Enviar SMS» + Comtele em lotes — plugin **2.25.0** / PWA **180** — **In review**; smoke **S65a–c**.

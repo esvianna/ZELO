@@ -35,7 +35,35 @@ function zelo_indoor_map_default() {
  * @return string[]
  */
 function zelo_indoor_map_place_kinds() {
-	return array( 'booth', 'department', 'facility', 'amenity', 'restricted' );
+	return array( 'booth', 'gate', 'department', 'facility', 'amenity', 'restricted' );
+}
+
+/**
+ * Rótulo admin do tipo de local.
+ *
+ * @param string $kind Kind.
+ * @return string
+ */
+function zelo_indoor_map_kind_label( $kind ) {
+	$labels = array(
+		'booth'      => __( 'Balcão', 'zelo-assistente' ),
+		'gate'       => __( 'Portão (rótulo)', 'zelo-assistente' ),
+		'department' => __( 'Departamento', 'zelo-assistente' ),
+		'facility'   => __( 'Instalação', 'zelo-assistente' ),
+		'amenity'    => __( 'Serviço', 'zelo-assistente' ),
+		'restricted' => __( 'Restrito', 'zelo-assistente' ),
+	);
+	return isset( $labels[ $kind ] ) ? $labels[ $kind ] : $kind;
+}
+
+/**
+ * Local é rótulo de portão (texto no mapa, sem legenda numerada).
+ *
+ * @param array<string, mixed> $place Place.
+ * @return bool
+ */
+function zelo_indoor_map_place_is_gate( $place ) {
+	return ( $place['kind'] ?? '' ) === 'gate';
 }
 
 /**
@@ -176,7 +204,7 @@ function zelo_indoor_map_sanitize_place( $raw ) {
 
 	$place['visibility'] = zelo_indoor_map_place_visibility( $place );
 
-	if ( $kind !== 'booth' && isset( $raw['directions_from_booths'] ) && is_array( $raw['directions_from_booths'] ) ) {
+	if ( $kind !== 'booth' && $kind !== 'gate' && isset( $raw['directions_from_booths'] ) && is_array( $raw['directions_from_booths'] ) ) {
 		$place['directions_from_booths'] = array();
 		foreach ( $raw['directions_from_booths'] as $row ) {
 			if ( ! is_array( $row ) || empty( $row['booth_id'] ) ) {
@@ -232,6 +260,9 @@ function zelo_indoor_map_build_routes( $places ) {
 	$routes = array();
 	foreach ( $places as $place ) {
 		if ( ( $place['kind'] ?? '' ) === 'booth' ) {
+			continue;
+		}
+		if ( zelo_indoor_map_place_is_gate( $place ) ) {
 			continue;
 		}
 		if ( zelo_indoor_map_place_visibility( $place ) === 'restricted' ) {
@@ -366,7 +397,7 @@ function zelo_indoor_map_get_booths( $map ) {
  * @return int
  */
 function zelo_indoor_map_routes_ok_count( $place, $booths ) {
-	if ( ( $place['kind'] ?? '' ) === 'booth' ) {
+	if ( ( $place['kind'] ?? '' ) === 'booth' || zelo_indoor_map_place_is_gate( $place ) ) {
 		return 0;
 	}
 	$filled = 0;
@@ -406,7 +437,7 @@ function zelo_indoor_map_build_floor_legend( $places ) {
 	$seen    = array();
 	$items   = array();
 	foreach ( $places as $place ) {
-		if ( ( $place['kind'] ?? '' ) === 'booth' ) {
+		if ( ( $place['kind'] ?? '' ) === 'booth' || zelo_indoor_map_place_is_gate( $place ) ) {
 			continue;
 		}
 		$label = trim( (string) ( $place['floor'] ?? '' ) );

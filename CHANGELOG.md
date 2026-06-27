@@ -8,11 +8,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
-### Planejado — export PDF mapa layout (#66)
+### Adicionado — rótulos de portões mapa (#67)
 
-| Issue | Entrega prevista |
-|-------|------------------|
-| [#66](https://github.com/esvianna/ZELO/issues/66) | Legenda por pavimento + cabeçalho logo — plugin **2.26.0**; smoke **2z7j** |
+| Versão | Entrega |
+|--------|---------|
+| Plugin **2.27.0** | Tipo `gate` (Portão): posicionamento admin; excluído de rotas, legenda numerada e combobox destinos |
+| PWA **181** | Rótulo texto no diagrama (sem pin); portões fora da legenda e do combobox Guia |
 
 ### Entregue — export PDF mapa layout (#66)
 

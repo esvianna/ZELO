@@ -6,6 +6,16 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 ---
 
+## ADR-045 — Mapa indoor: tipo `gate` para rótulos de portões (#67, 2026-06-24)
+
+**Contexto:** Portões (A, B, C…) devem aparecer como texto no diagrama, não como destinos navegáveis nem na legenda numerada.
+
+**Decisão:** Novo `kind: gate` — posicionamento x/y no admin; rótulo PT no PWA (pill) e PDF (vetor FPDF); excluído de `build_routes`, `directions_from_booths`, legenda PWA/PDF numerada e combobox de destinos (aba Guia).
+
+**Consequências:** Plugin **2.27.0**, PWA **181**; smoke **2z8**.
+
+---
+
 ## ADR-044 — Export PDF mapa: legenda por pavimento + cabeçalho logo (#66, 2026-06-25)
 
 **Contexto:** Com mais locais no mapa, legenda plana 32 mm (#64.8) quebra demais; cabeçalho genérico sem identidade visual.

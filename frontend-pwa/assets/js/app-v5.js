@@ -3765,7 +3765,7 @@ const app = {
         if (ui.comboboxEditing === undefined) ui.comboboxEditing = false;
         const places = Array.isArray(cfg.places) ? cfg.places : [];
         const booths = places.filter((p) => p.kind === 'booth');
-        const dests = places.filter((p) => p.kind !== 'booth');
+        const dests = places.filter((p) => p.kind !== 'booth' && p.kind !== 'gate');
         if (!ui.boothId && booths.length) ui.boothId = booths[0].id;
         if (ui.destId && !dests.find((d) => d.id === ui.destId)) ui.destId = '';
 
@@ -3889,7 +3889,7 @@ const app = {
         const palette = this.indoorFloorPalette();
         const seen = new Map();
         (places || []).forEach((p) => {
-            if (p.kind === 'booth') return;
+            if (p.kind === 'booth' || p.kind === 'gate') return;
             const label = String(p.floor || '').trim();
             if (!label) return;
             const key = label.toLowerCase();
@@ -3913,15 +3913,49 @@ const app = {
         return item ? item.color : '#94a3b8';
     },
 
+    _indoorPlaceXY(place) {
+        if (!place) return { x: 0, y: 0 };
+        const x = typeof place.x === 'number' ? place.x : parseFloat(place.x) || 0;
+        const y = typeof place.y === 'number' ? place.y : parseFloat(place.y) || 0;
+        return { x, y };
+    },
+
+    _buildIndoorRouteArrowHtml(places, ui) {
+        if (!ui || !ui.boothId || !ui.destId) return '';
+        const list = places || [];
+        const booth = list.find((p) => p.id === ui.boothId && p.kind === 'booth');
+        const dest = list.find((p) => p.id === ui.destId && p.kind !== 'booth' && p.kind !== 'gate');
+        if (!booth || !dest) return '';
+        const b = this._indoorPlaceXY(booth);
+        const d = this._indoorPlaceXY(dest);
+        const x1 = b.x * 100;
+        const y1 = b.y * 100;
+        const x2 = d.x * 100;
+        const y2 = d.y * 100;
+        return `<svg class="indoor-route-arrow" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+                <marker id="indoor-route-arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="2.8" markerHeight="2.8" orient="auto">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#dc2626"/>
+                </marker>
+            </defs>
+            <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#dc2626" stroke-width="0.45" marker-end="url(#indoor-route-arrowhead)"/>
+        </svg>`;
+    },
+
     _buildIndoorPinsHtml(places, booths, ui) {
-        let pinsHtml = '';
+        let pinsHtml = this._buildIndoorRouteArrowHtml(places, ui);
         const floorLegend = this.indoorBuildFloorLegend(places);
         (places || []).forEach((p) => {
             const x = typeof p.x === 'number' ? p.x : parseFloat(p.x) || 0;
             const y = typeof p.y === 'number' ? p.y : parseFloat(p.y) || 0;
             const isBooth = p.kind === 'booth';
+            const isGate = p.kind === 'gate';
             const isSel = p.id === ui.destId || p.id === ui.boothId;
             const lab = this.indoorPlaceLabel(p);
+            if (isGate) {
+                pinsHtml += `<span class="indoor-gate-label${isSel ? ' selected' : ''}" style="left:${x * 100}%;top:${y * 100}%;" title="${this.escapeAttr(lab)}" aria-label="${this.escapeAttr(lab)}">${this.escapeHtml(lab)}</span>`;
+                return;
+            }
             const boothSlot = isBooth ? this.indoorBoothSlot(p, booths) : 0;
             const visualCls = isBooth
                 ? (boothSlot === 2 ? 'indoor-pin-visual booth booth-2' : 'indoor-pin-visual booth booth-1')
@@ -3949,7 +3983,7 @@ const app = {
         const ui = this.data.indoorMapUi || {};
         const places = Array.isArray(cfg.places) ? cfg.places : [];
         const booths = places.filter((p) => p.kind === 'booth');
-        const dests = places.filter((p) => p.kind !== 'booth');
+        const dests = places.filter((p) => p.kind !== 'booth' && p.kind !== 'gate');
         const boothSel = document.querySelector('.indoor-booth-select');
         if (boothSel && ui.boothId) boothSel.value = ui.boothId;
         const destInput = document.getElementById('indoor-dest-input');
@@ -4664,7 +4698,7 @@ const app = {
             });
         } else {
             if (diagramPanel) diagramPanel.classList.remove('is-preparing');
-            const dests = places.filter((p) => p.kind !== 'booth');
+            const dests = places.filter((p) => p.kind !== 'booth' && p.kind !== 'gate');
             this.initIndoorDestCombobox(dests);
             this.refreshIndoorDirectionsPanel();
         }
@@ -4716,7 +4750,7 @@ const app = {
         if (!this.data.indoorMapUi) this.data.indoorMapUi = {};
         const cfg = this.data.indoorMap;
         const places = Array.isArray(cfg?.places) ? cfg.places : [];
-        const dests = places.filter((p) => p.kind !== 'booth');
+        const dests = places.filter((p) => p.kind !== 'booth' && p.kind !== 'gate');
         this.data.indoorMapUi.destId = destId;
         this.data.indoorMapUi._focusDiagram = 'place';
         this.data.indoorMapUi.query = '';
@@ -8207,48 +8241,4 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         app.data.installPrompt = e;
-        app.updateInstallMenuItem();
-    });
-
-    window.addEventListener('appinstalled', () => {
-        console.log('a2hs installed');
-        app.data.installPrompt = null;
-        app.updateInstallMenuItem();
-    });
-
-    // Network Status Logic
-    const updateNetworkStatus = () => {
-        const statusEl = document.getElementById('network-status');
-        if (navigator.onLine) {
-            statusEl.textContent = i18n.t('network_online');
-            statusEl.classList.remove('offline');
-            statusEl.classList.add('online');
-        } else {
-            statusEl.textContent = i18n.t('network_offline');
-            statusEl.classList.add('offline');
-            statusEl.classList.remove('online');
-        }
-    };
-
-    window.addEventListener('online', () => {
-        updateNetworkStatus();
-        if (typeof app !== 'undefined' && app.retryStaleCriticalData) {
-            app.retryStaleCriticalData();
-        }
-    });
-    window.addEventListener('offline', () => {
-        updateNetworkStatus();
-        if (typeof app !== 'undefined' && app.updateNetworkDegradedBanner) {
-            app.updateNetworkDegradedBanner();
-        }
-    });
-
-    // Initial check
-    updateNetworkStatus();
-
-    // Update External Links
-    const linkLostPwd = document.getElementById('link-lost-password');
-    if (linkLostPwd && API.siteUrl) {
-        linkLostPwd.href = `${API.siteUrl}/wp-login.php?action=lostpassword`;
-    }
-});
+        app.up
