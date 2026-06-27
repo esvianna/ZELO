@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.26.6] - 2026-06-27
+
+### Corrigido
+- **Export PDF mapa (#66):** limite vertical da legenda overlay alinhado ao **fundo real do mapa** (`frame['h']` − ~11,5%); altura das linhas medida via MultiCell (fim da subestimação que cortava Piso 3).
+
 ## [2.26.5] - 2026-06-27
 
 ### Corrigido

@@ -663,7 +663,7 @@ function zelo_indoor_map_pdf_layout_metrics( $content_y ) {
 		'leg_x'                           => $leg_x,
 		'leg_w'                           => $leg_w,
 		'legend_overlay'                  => true,
-		'legend_overlay_reserve_bottom'   => 22.0,
+		'legend_overlay_reserve_bottom'   => 0.0,
 	);
 }
 
@@ -699,7 +699,35 @@ function zelo_indoor_map_pdf_legend_sidebar_entry( $pdf, $x, $y, $w, $hex, $numb
 }
 
 /**
- * Estima altura de uma entrada da legenda lateral (mm).
+ * Reserva inferior (mm) para a legenda «FACILIDADES» do diagrama.
+ *
+ * @param float $frame_h Altura renderizada do mapa no PDF (mm).
+ * @return float
+ */
+function zelo_indoor_map_pdf_legend_facilities_reserve( $frame_h ) {
+	$frame_h = max( 1.0, (float) $frame_h );
+	return max( 16.0, min( 28.0, $frame_h * 0.115 ) );
+}
+
+/**
+ * Mede altura real de MultiCell (fora da página visível).
+ *
+ * @param FPDF   $pdf     PDF.
+ * @param float  $width   Largura mm.
+ * @param float  $line_h  Altura da linha mm.
+ * @param string $text    Texto.
+ * @return float
+ */
+function zelo_indoor_map_pdf_measure_multiline_height( $pdf, $width, $line_h, $text ) {
+	$probe_y = 500.0;
+	$pdf->SetFont( 'Helvetica', '', 6.5 );
+	$pdf->SetXY( 400.0, $probe_y );
+	$pdf->MultiCell( $width, $line_h, $text, 0, 'L' );
+	return max( $line_h, $pdf->GetY() - $probe_y );
+}
+
+/**
+ * Altura medida de uma entrada da legenda lateral (mm).
  *
  * @param FPDF   $pdf    PDF.
  * @param float  $col_w  Largura da coluna.
@@ -707,30 +735,27 @@ function zelo_indoor_map_pdf_legend_sidebar_entry( $pdf, $x, $y, $w, $hex, $numb
  * @param string $label  Nome.
  * @return float
  */
-function zelo_indoor_map_pdf_estimate_sidebar_entry_height( $pdf, $col_w, $number, $label ) {
-	$text_w = max( 8.0, $col_w - 7.5 );
-	$line   = (string) $number . ' — ' . $label;
-	$pdf->SetFont( 'Helvetica', '', 6.5 );
-	$char_w = max( 0.45, $pdf->GetStringWidth( 'M' ) );
-	$chars  = max( 6, (int) floor( $text_w / $char_w ) );
-	$lines  = max( 1, (int) ceil( strlen( $line ) / $chars ) );
-	return 0.8 + ( $lines * 3.0 );
+function zelo_indoor_map_pdf_measure_sidebar_entry_height( $pdf, $col_w, $number, $label ) {
+	$text_w = max( 6.0, $col_w - 4.5 );
+	$line   = zelo_pdf_encode( (string) $number . ' — ' . $label );
+	$body_h = zelo_indoor_map_pdf_measure_multiline_height( $pdf, $text_w, 3.0, $line );
+	return 0.8 + $body_h;
 }
 
 /**
- * Estima altura de uma linha da legenda (cabeçalho de pavimento ou entrada).
+ * Altura medida de uma linha da legenda (cabeçalho ou entrada).
  *
- * @param FPDF                             $pdf   PDF.
- * @param array<string, mixed>             $row   Linha da legenda.
- * @param float                            $col_w Largura da coluna.
+ * @param FPDF                 $pdf   PDF.
+ * @param array<string, mixed> $row   Linha.
+ * @param float                $col_w Largura.
  * @return float
  */
-function zelo_indoor_map_pdf_estimate_legend_row_height( $pdf, $row, $col_w ) {
+function zelo_indoor_map_pdf_measure_legend_row_height( $pdf, $row, $col_w ) {
 	if ( ( $row['type'] ?? '' ) === 'header' ) {
 		return 3.8;
 	}
 	$item = $row['item'] ?? array();
-	return zelo_indoor_map_pdf_estimate_sidebar_entry_height(
+	return zelo_indoor_map_pdf_measure_sidebar_entry_height(
 		$pdf,
 		$col_w,
 		(int) ( $item['number'] ?? 0 ),
@@ -811,7 +836,7 @@ function zelo_indoor_map_pdf_fit_legend_rows( $pdf, $remaining, $y0, $max_y, $le
 	$left   = array();
 
 	foreach ( $remaining as $idx => $row ) {
-		$est = zelo_indoor_map_pdf_estimate_legend_row_height( $pdf, $row, $leg_w );
+		$est = zelo_indoor_map_pdf_measure_legend_row_height( $pdf, $row, $leg_w );
 		if ( $y + $est > $max_y && ! empty( $fitted ) ) {
 			$left = array_slice( $remaining, $idx );
 			break;
@@ -826,7 +851,7 @@ function zelo_indoor_map_pdf_fit_legend_rows( $pdf, $remaining, $y0, $max_y, $le
 	if ( empty( $fitted ) && ! empty( $remaining ) ) {
 		$fitted[] = $remaining[0];
 		$left     = array_slice( $remaining, 1 );
-		$y        = $y0 + zelo_indoor_map_pdf_estimate_legend_row_height( $pdf, $remaining[0], $leg_w );
+		$y        = $y0 + zelo_indoor_map_pdf_measure_legend_row_height( $pdf, $remaining[0], $leg_w );
 	}
 
 	return array(
@@ -843,15 +868,17 @@ function zelo_indoor_map_pdf_fit_legend_rows( $pdf, $remaining, $y0, $max_y, $le
  * @param array<int, array<string, mixed>> $items    Itens numerados.
  * @param float                            $start_y  Y do bloco mapa/legenda.
  * @param array<string, float>             $layout   Métricas de layout.
+ * @param array{x:float,y:float,w:float,h:float}|null $frame Caixa do mapa no PDF.
  * @return void
  */
-function zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $items, $start_y, $layout ) {
+function zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $items, $start_y, $layout, $frame = null ) {
 	$leg_x     = $layout['leg_x'];
 	$leg_w     = $layout['leg_w'];
-	$reserve   = ! empty( $layout['legend_overlay'] )
-		? (float) ( $layout['legend_overlay_reserve_bottom'] ?? 0 )
-		: 0.0;
-	$overlay_h = max( 50.0, $layout['map_h'] - $reserve );
+	$map_top   = is_array( $frame ) ? (float) $frame['y'] : $start_y;
+	$map_h_px  = is_array( $frame ) ? (float) $frame['h'] : (float) $layout['map_h'];
+	$reserve   = zelo_indoor_map_pdf_legend_facilities_reserve( $map_h_px );
+	$overlay_h = max( 50.0, $map_h_px - $reserve );
+	$legend_top = $map_top;
 	$rows      = zelo_indoor_map_pdf_build_legend_rows( $items );
 	$remaining = $rows;
 	$page_num  = 0;
@@ -859,12 +886,14 @@ function zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $items, $start_y, $lay
 	while ( ! empty( $remaining ) ) {
 		if ( $page_num > 0 ) {
 			$pdf->AddPage();
-			$start_y = 8;
-			$max_y   = 202;
-			$leg_x   = 8.0;
-			$leg_w   = 120.0;
+			$legend_top = 8;
+			$start_y    = 8;
+			$max_y      = 202;
+			$leg_x      = 8.0;
+			$leg_w      = 120.0;
 		} else {
-			$max_y = $start_y + ( ! empty( $layout['legend_overlay'] ) ? $overlay_h : $layout['map_h'] );
+			$start_y = $legend_top;
+			$max_y   = $legend_top + ( ! empty( $layout['legend_overlay'] ) ? $overlay_h : $map_h_px );
 		}
 
 		$y0   = $start_y + 4.5;
@@ -1054,7 +1083,7 @@ function zelo_indoor_map_export_pdf_binary( $map ) {
 			(int) ( $png_data['booth_half'] ?? 44 ),
 			(int) ( $png_data['dest_r'] ?? 36 )
 		);
-		zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $numbered, $content_y, $layout );
+		zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $numbered, $content_y, $layout, $frame );
 
 		$slug = sanitize_title( zelo_indoor_map_export_event_name() );
 		if ( $slug === '' ) {
