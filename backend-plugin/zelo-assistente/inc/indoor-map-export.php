@@ -663,7 +663,7 @@ function zelo_indoor_map_pdf_layout_metrics( $content_y ) {
 		'leg_x'                           => $leg_x,
 		'leg_w'                           => $leg_w,
 		'legend_overlay'                  => true,
-		'legend_overlay_reserve_bottom'   => 30.0,
+		'legend_overlay_reserve_bottom'   => 20.0,
 	);
 }
 

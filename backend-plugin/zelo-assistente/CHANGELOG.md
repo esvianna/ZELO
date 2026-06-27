@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.26.4] - 2026-06-27
+
+### Corrigido
+- **Export PDF mapa (#66):** reserva inferior da legenda overlay 30 → **20 mm** — mais itens na pág. 1 (Piso 3, Sub-solo) sem cobrir «LEGENDA (FACILIDADES)».
+
 ## [2.26.3] - 2026-06-27
 
 ### Alterado

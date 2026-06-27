@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-27** — #66 PDF título fixo + legenda overlay limitada plugin **2.26.3** **In review**.
+> Última atualização: **2026-06-27** — #66 legenda overlay reserva 20 mm plugin **2.26.4** **In review**.
 
 ---
 
@@ -12,7 +12,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Referência no repo | Versão |
 |--------------------|--------|
-| Plugin WordPress (`zelo-assistente.php`) | **2.26.3** |
+| Plugin WordPress (`zelo-assistente.php`) | **2.26.4** |
 | PWA (`zelo-build.js` / `sw.js`) | **build 180** |
 
 **Produção (repo):** PWA **151** validada (#45–#50, #46); plugin **2.18.0** + **2.19.0** / PWA **152** aguardam deploy/smoke (#44, #51).
@@ -167,7 +167,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Issue | Estado | Notas |
 |-------|--------|-------|
-| [#66](https://github.com/esvianna/ZELO/issues/66) | **In review** | PDF título fixo + legenda sem cobrir diagrama — plugin **2.26.3**; smoke **2z7j** |
+| [#66](https://github.com/esvianna/ZELO/issues/66) | **In review** | PDF legenda overlay reserva 20 mm — plugin **2.26.4**; smoke **2z7j** |
 | [#65](https://github.com/esvianna/ZELO/issues/65) | **In review** | SMS novidades posts — plugin **2.25.0** / PWA **180**; smoke **S65a–c** |
 | [#64](https://github.com/esvianna/ZELO/issues/64) | **In review** | PDF layout 2.24.5 + legenda 32 mm — plugin **2.24.8**; smoke **2z7i** |
 | [#63](https://github.com/esvianna/ZELO/issues/63) | **In review** | PDF pinos numerados — plugin **2.24.1**; smoke **2z7b** |
@@ -196,7 +196,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## Próximos passos lógicos
 
-1. Smoke **#66** PDF legenda por pavimento (`TESTING.md` **2z7j**) após deploy plugin **2.26.3**.
+1. Smoke **#66** PDF (`TESTING.md` **2z7j**) após deploy plugin **2.26.4**.
 2. Smoke **#65** SMS novidades (`TESTING.md` **S65a–c**) após deploy plugin **2.25.0**.
 3. Smoke **#63** PDF numerado (`TESTING.md` **2z7b**) após deploy plugin **2.24.1**.
 4. Smoke **#61** pinos/legenda PWA + admin (`TESTING.md` **2z2–2z6b**) após deploy plugin **2.23.3** + PWA **179**.
