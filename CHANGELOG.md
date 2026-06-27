@@ -8,6 +8,18 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Planejado — export PDF mapa layout (#66)
+
+| Issue | Entrega prevista |
+|-------|------------------|
+| [#66](https://github.com/esvianna/ZELO/issues/66) | Legenda por pavimento + cabeçalho logo — plugin **2.26.0**; smoke **2z7j** |
+
+### Entregue — export PDF mapa layout (#66)
+
+| Issue | Entrega |
+|-------|---------|
+| [#66](https://github.com/esvianna/ZELO/issues/66) | Cabeçalho logo + legenda por pavimento — plugin **2.26.0**; smoke **2z7j** |
+
 ### Planejado — SMS novidades (#65)
 
 | Issue | Entrega prevista |

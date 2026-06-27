@@ -6,6 +6,16 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 ---
 
+## ADR-044 — Export PDF mapa: legenda por pavimento + cabeçalho logo (#66, 2026-06-25)
+
+**Contexto:** Com mais locais no mapa, legenda plana 32 mm (#64.8) quebra demais; cabeçalho genérico sem identidade visual.
+
+**Decisão:** Mapa ~230 mm + legenda lateral ~50 mm agrupada por `place['floor']` (vazio → «Outros»); cabeçalho logo PWA + «Mapa» + `zelo_event_data`; data 8 pt canto superior direito; **sem** numeração de páginas; overflow legenda → pág. 2 (120 mm). Preservar pinos GD, números vetor FPDF, coluna lateral (sem overlay).
+
+**Consequências:** Plugin **2.26.0**; smoke **2z7j**; PWA/admin inalterados.
+
+---
+
 ## ADR-041 — Swap: modais, substituto roster WP e notificações imediatas (#56) (2026-06-22)
 
 **Contexto:** Aprovar/recusar pedido de substituição usava `prompt()` na PWA, sem notificar solicitante/substituto. Issue [#56](https://github.com/esvianna/ZELO/issues/56).

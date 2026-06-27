@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.26.0] - 2026-06-25
+
+### Alterado
+- **Export PDF mapa (#66, ADR-044):** cabeçalho com logo Zelo + «Mapa» + nome do evento; legenda agrupada por pavimento (~50 mm); mapa ~230 mm; data no canto superior direito; sem numeração de páginas.
+
 ## [2.25.0] - 2026-06-25
 
 ### Adicionado

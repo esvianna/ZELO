@@ -494,9 +494,121 @@ function zelo_indoor_map_export_event_name() {
 }
 
 /**
+ * Caminho do logo Zelo para cabeçalho PDF.
+ *
+ * @return string
+ */
+function zelo_indoor_map_pdf_logo_path() {
+	static $cached = null;
+	if ( $cached !== null ) {
+		return $cached;
+	}
+	$path = ZELO_PLUGIN_DIR . 'assets/img/zelo-logo-pdf.png';
+	if ( is_readable( $path ) ) {
+		$cached = $path;
+		return $cached;
+	}
+	$cached = '';
+	return '';
+}
+
+/**
+ * Cabeçalho PDF: logo + «Mapa» + nome do evento; data no canto superior direito.
+ *
+ * @param FPDF $pdf PDF.
+ * @return float Y onde começa mapa/legenda.
+ */
+function zelo_indoor_map_pdf_render_header( $pdf ) {
+	$margin    = 8.0;
+	$logo_size = 10.0;
+	$y         = $margin;
+	$text_x    = $margin;
+
+	$logo_path = zelo_indoor_map_pdf_logo_path();
+	if ( $logo_path !== '' ) {
+		$pdf->Image( $logo_path, $margin, $y, $logo_size, $logo_size );
+		$text_x = $margin + $logo_size + 3.0;
+	} else {
+		$pdf->SetFont( 'Helvetica', 'B', 10 );
+		$pdf->SetXY( $margin, $y + 1.5 );
+		$pdf->Cell( 18.0, 5.0, zelo_pdf_encode( 'Zelo' ), 0, 0 );
+		$text_x = $margin + 20.0;
+	}
+
+	$pdf->SetFont( 'Helvetica', 'B', 12 );
+	$pdf->SetXY( $text_x, $y );
+	$pdf->Cell( 0, 5.0, zelo_pdf_encode( __( 'Mapa', 'zelo-assistente' ) ), 0, 1 );
+
+	$pdf->SetFont( 'Helvetica', '', 9 );
+	$pdf->SetX( $text_x );
+	$pdf->Cell( 0, 4.5, zelo_pdf_encode( zelo_indoor_map_export_event_name() ), 0, 1 );
+
+	$date_str = wp_date( 'd/m/Y H:i' );
+	$pdf->SetFont( 'Helvetica', '', 8 );
+	$date_w = $pdf->GetStringWidth( zelo_pdf_encode( $date_str ) );
+	$pdf->SetXY( 297.0 - $margin - $date_w, $y + 0.5 );
+	$pdf->Cell( $date_w, 4.0, zelo_pdf_encode( $date_str ), 0, 0, 'R' );
+
+	return max( $y + $logo_size, $pdf->GetY() ) + 1.5;
+}
+
+/**
+ * Agrupa itens numerados por pavimento (campo floor).
+ *
+ * @param array<int, array<string, mixed>> $items Itens numerados.
+ * @return array<string, array<int, array<string, mixed>>>
+ */
+function zelo_indoor_map_pdf_group_by_floor( $items ) {
+	$groups     = array();
+	$others_key = __( 'Outros', 'zelo-assistente' );
+
+	foreach ( $items as $item ) {
+		$floor = trim( (string) ( $item['place']['floor'] ?? '' ) );
+		$key   = $floor !== '' ? $floor : $others_key;
+		if ( ! isset( $groups[ $key ] ) ) {
+			$groups[ $key ] = array();
+		}
+		$groups[ $key ][] = $item;
+	}
+
+	uksort( $groups, 'strnatcasecmp' );
+	if ( isset( $groups[ $others_key ] ) ) {
+		$others = $groups[ $others_key ];
+		unset( $groups[ $others_key ] );
+		$groups[ $others_key ] = $others;
+	}
+
+	return $groups;
+}
+
+/**
+ * Linhas da legenda (cabeçalho de pavimento + entradas).
+ *
+ * @param array<int, array<string, mixed>> $items Itens numerados.
+ * @return array<int, array<string, mixed>>
+ */
+function zelo_indoor_map_pdf_build_legend_rows( $items ) {
+	$rows   = array();
+	$groups = zelo_indoor_map_pdf_group_by_floor( $items );
+	foreach ( $groups as $floor => $group_items ) {
+		$rows[] = array(
+			'type'  => 'header',
+			'label' => $floor,
+		);
+		foreach ( $group_items as $item ) {
+			$rows[] = array(
+				'type' => 'entry',
+				'item' => $item,
+			);
+		}
+	}
+	return $rows;
+}
+
+/**
  * Métricas de layout do PDF (A4 paisagem).
  *
- * @param float $content_y Y após cabeçalho compacto.
+ * @param float $content_y Y após cabeçalho.
  * @return array<string, float>
  */
 function zelo_indoor_map_pdf_layout_metrics( $content_y ) {
@@ -505,10 +617,10 @@ function zelo_indoor_map_pdf_layout_metrics( $content_y ) {
 	$margin_bottom = 5.0;
 	$page_usable_w = 281.0;
 	$map_x         = 8.0;
-	$map_w         = 253.0;
-	$leg_w         = 32.0;
+	$map_w         = 230.0;
+	$leg_w         = 50.0;
 	$leg_x         = $map_x + $page_usable_w - $leg_w;
-	$map_h         = max( 165.0, $page_h - $margin_top - $content_y - $margin_bottom );
+	$map_h         = max( 160.0, $page_h - $margin_top - $content_y - $margin_bottom );
 
 	return array(
 		'map_x' => $map_x,
@@ -570,6 +682,70 @@ function zelo_indoor_map_pdf_estimate_sidebar_entry_height( $pdf, $col_w, $numbe
 }
 
 /**
+ * Estima altura de uma linha da legenda (cabeçalho de pavimento ou entrada).
+ *
+ * @param FPDF                             $pdf   PDF.
+ * @param array<string, mixed>             $row   Linha da legenda.
+ * @param float                            $col_w Largura da coluna.
+ * @return float
+ */
+function zelo_indoor_map_pdf_estimate_legend_row_height( $pdf, $row, $col_w ) {
+	if ( ( $row['type'] ?? '' ) === 'header' ) {
+		return 3.8;
+	}
+	$item = $row['item'] ?? array();
+	return zelo_indoor_map_pdf_estimate_sidebar_entry_height(
+		$pdf,
+		$col_w,
+		(int) ( $item['number'] ?? 0 ),
+		(string) ( $item['label'] ?? '' )
+	);
+}
+
+/**
+ * Desenha cabeçalho de pavimento na legenda.
+ *
+ * @param FPDF   $pdf   PDF.
+ * @param float  $x     X.
+ * @param float  $y     Y.
+ * @param float  $w     Largura.
+ * @param string $label Pavimento.
+ * @return float Y após o cabeçalho.
+ */
+function zelo_indoor_map_pdf_legend_floor_header( $pdf, $x, $y, $w, $label ) {
+	$pdf->SetFont( 'Helvetica', 'B', 7 );
+	$pdf->SetXY( $x, $y );
+	$pdf->Cell( $w, 3.2, zelo_pdf_encode( $label ), 0, 1 );
+	return $y + 3.8;
+}
+
+/**
+ * Desenha uma linha da legenda lateral.
+ *
+ * @param FPDF                 $pdf   PDF.
+ * @param array<string, mixed> $row   Linha.
+ * @param float                $x     X.
+ * @param float                $y     Y.
+ * @param float                $w     Largura.
+ * @return float Y após a linha.
+ */
+function zelo_indoor_map_pdf_render_legend_row( $pdf, $row, $x, $y, $w ) {
+	if ( ( $row['type'] ?? '' ) === 'header' ) {
+		return zelo_indoor_map_pdf_legend_floor_header( $pdf, $x, $y, $w, (string) ( $row['label'] ?? '' ) );
+	}
+	$item = $row['item'] ?? array();
+	return zelo_indoor_map_pdf_legend_sidebar_entry(
+		$pdf,
+		$x,
+		$y,
+		$w,
+		(string) ( $item['hex'] ?? '#94a3b8' ),
+		(int) ( $item['number'] ?? 0 ),
+		(string) ( $item['label'] ?? '' )
+	);
+}
+
+/**
  * Legenda numerada na coluna direita; overflow na página 2.
  *
  * @param FPDF                             $pdf      PDF.
@@ -582,7 +758,8 @@ function zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $items, $start_y, $lay
 	$leg_x     = $layout['leg_x'];
 	$leg_w     = $layout['leg_w'];
 	$max_y     = $start_y + $layout['map_h'];
-	$remaining = $items;
+	$rows      = zelo_indoor_map_pdf_build_legend_rows( $items );
+	$remaining = $rows;
 	$page_num  = 0;
 
 	while ( ! empty( $remaining ) ) {
@@ -606,18 +783,13 @@ function zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $items, $start_y, $lay
 		$fitted = array();
 		$left   = array();
 
-		foreach ( $remaining as $idx => $item ) {
-			$est = zelo_indoor_map_pdf_estimate_sidebar_entry_height(
-				$pdf,
-				$leg_w,
-				(int) $item['number'],
-				$item['label']
-			);
+		foreach ( $remaining as $idx => $row ) {
+			$est = zelo_indoor_map_pdf_estimate_legend_row_height( $pdf, $row, $leg_w );
 			if ( $y + $est > $max_y && ! empty( $fitted ) ) {
 				$left = array_slice( $remaining, $idx );
 				break;
 			}
-			$fitted[] = $item;
+			$fitted[] = $row;
 			$y       += $est;
 			if ( $idx === count( $remaining ) - 1 ) {
 				$left = array();
@@ -630,16 +802,8 @@ function zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $items, $start_y, $lay
 		}
 
 		$y = $y0;
-		foreach ( $fitted as $item ) {
-			$y = zelo_indoor_map_pdf_legend_sidebar_entry(
-				$pdf,
-				$leg_x,
-				$y,
-				$leg_w,
-				$item['hex'],
-				(int) $item['number'],
-				$item['label']
-			);
+		foreach ( $fitted as $row ) {
+			$y = zelo_indoor_map_pdf_render_legend_row( $pdf, $row, $leg_x, $y, $leg_w );
 		}
 
 		$remaining = $left;
@@ -796,11 +960,7 @@ function zelo_indoor_map_export_pdf_binary( $map ) {
 		$pdf->SetAutoPageBreak( false );
 		$pdf->AddPage();
 
-		$pdf->SetFont( 'Helvetica', 'B', 11 );
-		$header = zelo_indoor_map_export_event_name() . ' — ' . __( 'Mapa do evento', 'zelo-assistente' ) . ' — ' . wp_date( 'd/m/Y H:i' );
-		$pdf->Cell( 0, 5, zelo_pdf_encode( $header ), 0, 1 );
-
-		$content_y = $pdf->GetY();
+		$content_y = zelo_indoor_map_pdf_render_header( $pdf );
 		$layout    = zelo_indoor_map_pdf_layout_metrics( $content_y );
 		$frame     = zelo_indoor_map_pdf_place_map_image( $pdf, $png_path, $content_y, $layout );
 		zelo_indoor_map_pdf_draw_pin_numbers(

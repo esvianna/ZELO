@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-25** — #65 SMS novidades plugin **2.25.0** / PWA **180** **In review**.
+> Última atualização: **2026-06-25** — #66 export PDF mapa plugin **2.26.0** **In review**; smoke **2z7j**.
 
 ---
 
@@ -12,7 +12,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Referência no repo | Versão |
 |--------------------|--------|
-| Plugin WordPress (`zelo-assistente.php`) | **2.25.0** |
+| Plugin WordPress (`zelo-assistente.php`) | **2.26.0** |
 | PWA (`zelo-build.js` / `sw.js`) | **build 180** |
 
 **Produção (repo):** PWA **151** validada (#45–#50, #46); plugin **2.18.0** + **2.19.0** / PWA **152** aguardam deploy/smoke (#44, #51).
@@ -167,6 +167,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Issue | Estado | Notas |
 |-------|--------|-------|
+| [#66](https://github.com/esvianna/ZELO/issues/66) | **In review** | PDF legenda por pavimento + cabeçalho logo — plugin **2.26.0**; smoke **2z7j** |
 | [#65](https://github.com/esvianna/ZELO/issues/65) | **In review** | SMS novidades posts — plugin **2.25.0** / PWA **180**; smoke **S65a–c** |
 | [#64](https://github.com/esvianna/ZELO/issues/64) | **In review** | PDF layout 2.24.5 + legenda 32 mm — plugin **2.24.8**; smoke **2z7i** |
 | [#63](https://github.com/esvianna/ZELO/issues/63) | **In review** | PDF pinos numerados — plugin **2.24.1**; smoke **2z7b** |
@@ -195,16 +196,18 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## Próximos passos lógicos
 
-1. Smoke **#65** SMS novidades (`TESTING.md` **S65a–c**) após deploy plugin **2.25.0**.
-2. Smoke **#63** PDF numerado (`TESTING.md` **2z7b**) após deploy plugin **2.24.1**.
-3. Smoke **#61** pinos/legenda PWA + admin (`TESTING.md` **2z2–2z6b**) após deploy plugin **2.23.3** + PWA **179**.
-4. Smoke **#60** fase 2 (lote, SMS responsável, encerrar/atendido, PDF Share) após deploy plugin **2.23.0** + PWA **174**.
-5. Nova demanda → issue no Project 3 (Backlog) antes de codificar.
+1. Smoke **#66** PDF legenda por pavimento (`TESTING.md` **2z7j**) após deploy plugin **2.26.0**.
+2. Smoke **#65** SMS novidades (`TESTING.md` **S65a–c**) após deploy plugin **2.25.0**.
+3. Smoke **#63** PDF numerado (`TESTING.md` **2z7b**) após deploy plugin **2.24.1**.
+4. Smoke **#61** pinos/legenda PWA + admin (`TESTING.md` **2z2–2z6b**) após deploy plugin **2.23.3** + PWA **179**.
+5. Smoke **#60** fase 2 (lote, SMS responsável, encerrar/atendido, PDF Share) após deploy plugin **2.23.0** + PWA **174**.
+6. Nova demanda → issue no Project 3 (Backlog) antes de codificar.
 
 ---
 
 ## Última sessão (2026-06-25)
 
+- **#66:** Export PDF mapa — cabeçalho logo + «Mapa» + evento; legenda agrupada por pavimento; mapa ~230 mm / legenda ~50 mm — plugin **2.26.0** — **In review**; smoke **2z7j**; ADR-044.
 - **#65:** SMS novidades — checkbox «Enviar SMS» + Comtele em lotes — plugin **2.25.0** / PWA **180** — **In review**; smoke **S65a–c**.
 
 ## Sessão anterior (2026-06-25)
