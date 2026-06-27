@@ -18,7 +18,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 | Issue | Entrega |
 |-------|---------|
-| [#66](https://github.com/esvianna/ZELO/issues/66) | Cabeçalho logo + legenda por pavimento — plugin **2.26.0**; smoke **2z7j** |
+| [#66](https://github.com/esvianna/ZELO/issues/66) | Cabeçalho logo + legenda por pavimento — plugin **2.26.1**; smoke **2z7j** |
 
 ### Planejado — SMS novidades (#65)
 

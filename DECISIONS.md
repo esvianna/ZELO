@@ -12,7 +12,9 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 **Decisão:** Mapa ~230 mm + legenda lateral ~50 mm agrupada por `place['floor']` (vazio → «Outros»); cabeçalho logo PWA + «Mapa» + `zelo_event_data`; data 8 pt canto superior direito; **sem** numeração de páginas; overflow legenda → pág. 2 (120 mm). Preservar pinos GD, números vetor FPDF, coluna lateral (sem overlay).
 
-**Consequências:** Plugin **2.26.0**; smoke **2z7j**; PWA/admin inalterados.
+**Emenda 2026-06-27:** logo **16 mm**; título **uma linha** «Mapa {evento}» (normaliza `-`/`/` do admin); mapa **~281 mm** com legenda **overlay** ~50 mm (fundo branco) — plugin **2.26.1**.
+
+**Consequências:** Plugin **2.26.0** → **2.26.1**; smoke **2z7j**; PWA/admin inalterados.
 
 ---
 

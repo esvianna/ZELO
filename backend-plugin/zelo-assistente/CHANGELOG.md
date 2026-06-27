@@ -2,6 +2,11 @@
 
 Todas as alterações relevantes ao plugin backend do Zelo são documentadas aqui.
 
+## [2.26.1] - 2026-06-27
+
+### Alterado
+- **Export PDF mapa (#66):** logo 16 mm; título numa linha «Mapa {evento}» (normaliza hífen/barra do admin); mapa largura útil ~281 mm com legenda overlay (~50 mm) sobre margem direita.
+
 ## [2.26.0] - 2026-06-25
 
 ### Alterado

@@ -76,9 +76,9 @@ Com **aumento do número de locais** no mapa do evento, o PDF exportado (plugin 
 
 | Parâmetro | Actual | Proposto |
 |-----------|--------|----------|
-| `map_w` | 253 mm | **~230 mm** |
-| `leg_w` | 32 mm | **~50 mm** |
-| Cabeçalho | 5 mm (1 linha) | **~12–14 mm** (logo + 2 linhas texto) |
+| `map_w` | 253 mm | **~230 mm** → **~281 mm** (2.26.1 overlay) |
+| `leg_w` | 32 mm | **~50 mm** (overlay sobre mapa) |
+| Cabeçalho | 5 mm (1 linha) | logo **16 mm** + título **1 linha** «Mapa {evento}» |
 | `map_h` | derivado | reduz ~4 mm vs hoje (cabeçalho maior) |
 
 ### 3.3 Página 2 (se legenda não couber)

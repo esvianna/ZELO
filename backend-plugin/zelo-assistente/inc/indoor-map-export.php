@@ -494,6 +494,56 @@ function zelo_indoor_map_export_event_name() {
 }
 
 /**
+ * Normaliza nome do evento para título PDF (uma linha legível).
+ *
+ * @param string $name Nome bruto.
+ * @return string
+ */
+function zelo_indoor_map_pdf_format_event_display_name( $name ) {
+	$name = trim( (string) $name );
+	$name = preg_replace( '/\s*-\s*/u', ' ', $name );
+	$name = str_replace( '/', ' ', $name );
+	$name = preg_replace( '/\s+/u', ' ', $name );
+	return trim( $name );
+}
+
+/**
+ * Linha de título do PDF: «Mapa {evento}».
+ *
+ * @return string
+ */
+function zelo_indoor_map_pdf_header_title() {
+	$name = zelo_indoor_map_pdf_format_event_display_name( zelo_indoor_map_export_event_name() );
+	return sprintf(
+		/* translators: %s: event name */
+		__( 'Mapa %s', 'zelo-assistente' ),
+		$name
+	);
+}
+
+/**
+ * Tamanho de fonte (pt) para caber o título numa linha.
+ *
+ * @param FPDF   $pdf    PDF.
+ * @param string $title  Texto.
+ * @param float  $max_w  Largura máxima mm.
+ * @param float  $min_pt Mínimo pt.
+ * @param float  $max_pt Máximo pt.
+ * @return float
+ */
+function zelo_indoor_map_pdf_fit_title_font_pt( $pdf, $title, $max_w, $min_pt, $max_pt ) {
+	$encoded = zelo_pdf_encode( $title );
+	for ( $pt = $max_pt; $pt >= $min_pt; $pt -= 0.5 ) {
+		$pdf->SetFont( 'Helvetica', 'B', $pt );
+		if ( $pdf->GetStringWidth( $encoded ) <= $max_w ) {
+			return $pt;
+		}
+	}
+	$pdf->SetFont( 'Helvetica', 'B', $min_pt );
+	return $min_pt;
+}
+
+/**
  * Caminho do logo Zelo para cabeçalho PDF.
  *
  * @return string
@@ -513,43 +563,46 @@ function zelo_indoor_map_pdf_logo_path() {
 }
 
 /**
- * Cabeçalho PDF: logo + «Mapa» + nome do evento; data no canto superior direito.
+ * Cabeçalho PDF: logo maior + título «Mapa {evento}» numa linha; data canto superior direito.
  *
  * @param FPDF $pdf PDF.
  * @return float Y onde começa mapa/legenda.
  */
 function zelo_indoor_map_pdf_render_header( $pdf ) {
 	$margin    = 8.0;
-	$logo_size = 10.0;
+	$logo_size = 16.0;
 	$y         = $margin;
 	$text_x    = $margin;
-
-	$logo_path = zelo_indoor_map_pdf_logo_path();
-	if ( $logo_path !== '' ) {
-		$pdf->Image( $logo_path, $margin, $y, $logo_size, $logo_size );
-		$text_x = $margin + $logo_size + 3.0;
-	} else {
-		$pdf->SetFont( 'Helvetica', 'B', 10 );
-		$pdf->SetXY( $margin, $y + 1.5 );
-		$pdf->Cell( 18.0, 5.0, zelo_pdf_encode( 'Zelo' ), 0, 0 );
-		$text_x = $margin + 20.0;
-	}
-
-	$pdf->SetFont( 'Helvetica', 'B', 12 );
-	$pdf->SetXY( $text_x, $y );
-	$pdf->Cell( 0, 5.0, zelo_pdf_encode( __( 'Mapa', 'zelo-assistente' ) ), 0, 1 );
-
-	$pdf->SetFont( 'Helvetica', '', 9 );
-	$pdf->SetX( $text_x );
-	$pdf->Cell( 0, 4.5, zelo_pdf_encode( zelo_indoor_map_export_event_name() ), 0, 1 );
 
 	$date_str = wp_date( 'd/m/Y H:i' );
 	$pdf->SetFont( 'Helvetica', '', 8 );
 	$date_w = $pdf->GetStringWidth( zelo_pdf_encode( $date_str ) );
+
+	$logo_path = zelo_indoor_map_pdf_logo_path();
+	if ( $logo_path !== '' ) {
+		$pdf->Image( $logo_path, $margin, $y, $logo_size, $logo_size );
+		$text_x = $margin + $logo_size + 4.0;
+	} else {
+		$pdf->SetFont( 'Helvetica', 'B', 12 );
+		$pdf->SetXY( $margin, $y + 2.0 );
+		$pdf->Cell( 20.0, 6.0, zelo_pdf_encode( 'Zelo' ), 0, 0 );
+		$text_x = $margin + 22.0;
+	}
+
+	$title     = zelo_indoor_map_pdf_header_title();
+	$title_max = 297.0 - $text_x - $date_w - 6.0;
+	$title_pt  = zelo_indoor_map_pdf_fit_title_font_pt( $pdf, $title, $title_max, 9.0, 12.0 );
+	$line_h    = $title_pt * 0.352778;
+	$title_y   = $y + max( 0.0, ( $logo_size - $line_h ) / 2.0 );
+	$pdf->SetFont( 'Helvetica', 'B', $title_pt );
+	$pdf->SetXY( $text_x, $title_y );
+	$pdf->Cell( $title_max, $line_h + 0.5, zelo_pdf_encode( $title ), 0, 0, 'L' );
+
+	$pdf->SetFont( 'Helvetica', '', 8 );
 	$pdf->SetXY( 297.0 - $margin - $date_w, $y + 0.5 );
 	$pdf->Cell( $date_w, 4.0, zelo_pdf_encode( $date_str ), 0, 0, 'R' );
 
-	return max( $y + $logo_size, $pdf->GetY() ) + 1.5;
+	return $y + $logo_size + 1.5;
 }
 
 /**
@@ -617,17 +670,18 @@ function zelo_indoor_map_pdf_layout_metrics( $content_y ) {
 	$margin_bottom = 5.0;
 	$page_usable_w = 281.0;
 	$map_x         = 8.0;
-	$map_w         = 230.0;
+	$map_w         = $page_usable_w;
 	$leg_w         = 50.0;
 	$leg_x         = $map_x + $page_usable_w - $leg_w;
-	$map_h         = max( 160.0, $page_h - $margin_top - $content_y - $margin_bottom );
+	$map_h         = max( 158.0, $page_h - $margin_top - $content_y - $margin_bottom );
 
 	return array(
-		'map_x' => $map_x,
-		'map_w' => $map_w,
-		'map_h' => $map_h,
-		'leg_x' => $leg_x,
-		'leg_w' => $leg_w,
+		'map_x'          => $map_x,
+		'map_w'          => $map_w,
+		'map_h'          => $map_h,
+		'leg_x'          => $leg_x,
+		'leg_w'          => $leg_w,
+		'legend_overlay' => true,
 	);
 }
 
@@ -746,6 +800,20 @@ function zelo_indoor_map_pdf_render_legend_row( $pdf, $row, $x, $y, $w ) {
 }
 
 /**
+ * Fundo branco da legenda sobreposta ao mapa (página 1).
+ *
+ * @param FPDF  $pdf     PDF.
+ * @param float $leg_x   X da coluna.
+ * @param float $start_y Y superior.
+ * @param float $leg_w   Largura.
+ * @param float $height  Altura.
+ */
+function zelo_indoor_map_pdf_draw_legend_overlay_bg( $pdf, $leg_x, $start_y, $leg_w, $height ) {
+	$pdf->SetFillColor( 255, 255, 255 );
+	$pdf->Rect( $leg_x - 1.0, $start_y - 0.5, $leg_w + 2.0, $height + 0.5, 'F' );
+}
+
+/**
  * Legenda numerada na coluna direita; overflow na página 2.
  *
  * @param FPDF                             $pdf      PDF.
@@ -769,6 +837,14 @@ function zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $items, $start_y, $lay
 			$max_y   = 202;
 			$leg_x   = 8.0;
 			$leg_w   = 120.0;
+		} elseif ( ! empty( $layout['legend_overlay'] ) ) {
+			zelo_indoor_map_pdf_draw_legend_overlay_bg(
+				$pdf,
+				$leg_x,
+				$start_y,
+				$leg_w,
+				$layout['map_h']
+			);
 		}
 
 		$pdf->SetFont( 'Helvetica', 'B', 7.5 );
@@ -815,7 +891,7 @@ function zelo_indoor_map_pdf_render_sidebar_legend( $pdf, $items, $start_y, $lay
 }
 
 /**
- * Encaixa imagem do mapa na zona esquerda (legenda na coluna direita).
+ * Encaixa imagem do mapa na largura útil (legenda sobrepõe a margem direita).
  *
  * @param FPDF   $pdf      PDF.
  * @param string $png_path Caminho PNG.
