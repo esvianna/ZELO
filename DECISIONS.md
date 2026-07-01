@@ -6,6 +6,16 @@ Novas decisões: adicione no topo com data `YYYY-MM-DD`.
 
 ---
 
+## ADR-046 — Mapa PWA: seta recta balcão→destino (#68, 2026-06-24)
+
+**Contexto:** Voluntário selecciona balcão e destino na Guia; o diagrama destacava pinos mas não mostrava ligação visual.
+
+**Decisão:** Overlay SVG na camada de pinos — linha recta vermelha com ponta de seta no destino; visível quando `boothId` e `destId` definidos; independente de texto de rota no admin; sem alteração backend/PDF.
+
+**Consequências:** PWA **182**; smoke **2z9**.
+
+---
+
 ## ADR-045 — Mapa indoor: tipo `gate` para rótulos de portões (#67, 2026-06-24)
 
 **Contexto:** Portões (A, B, C…) devem aparecer como texto no diagrama, não como destinos navegáveis nem na legenda numerada.

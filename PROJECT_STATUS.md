@@ -2,7 +2,7 @@
 
 > **Arquivo principal de continuidade.** Atualize ao fim de cada sessão significativa de desenvolvimento.
 >
-> Última atualização: **2026-06-24** — #67 rótulos portões (`kind gate`) plugin **2.27.0** / PWA **181** **In review**.
+> Última atualização: **2026-06-24** — #68 seta balcão→destino PWA **182** **In review**.
 
 ---
 
@@ -13,7 +13,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 | Referência no repo | Versão |
 |--------------------|--------|
 | Plugin WordPress (`zelo-assistente.php`) | **2.27.0** |
-| PWA (`zelo-build.js` / `sw.js`) | **build 181** |
+| PWA (`zelo-build.js` / `sw.js`) | **build 182** |
 
 **Produção (repo):** PWA **151** validada (#45–#50, #46); plugin **2.18.0** + **2.19.0** / PWA **152** aguardam deploy/smoke (#44, #51).
 
@@ -167,6 +167,7 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 | Issue | Estado | Notas |
 |-------|--------|-------|
+| [#68](https://github.com/esvianna/ZELO/issues/68) | **In review** | Seta balcão→destino no diagrama — PWA **182**; smoke **2z9** |
 | [#67](https://github.com/esvianna/ZELO/issues/67) | **In review** | Rótulos portões `kind gate` — plugin **2.27.0** / PWA **181**; smoke **2z8** |
 | [#66](https://github.com/esvianna/ZELO/issues/66) | **In review** | PDF legenda medida + limite frame — plugin **2.26.6**; smoke **2z7j** |
 | [#65](https://github.com/esvianna/ZELO/issues/65) | **In review** | SMS novidades posts — plugin **2.25.0** / PWA **180**; smoke **S65a–c** |
@@ -197,8 +198,8 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## Próximos passos lógicos
 
-1. Smoke **#67** portões mapa (`TESTING.md` **2z8**) após deploy plugin **2.27.0** + PWA **181**.
-2. Smoke **#66** PDF (`TESTING.md` **2z7j**) após deploy plugin **2.26.6**.
+1. Smoke **#68** seta diagrama (`TESTING.md` **2z9**) após deploy PWA **182**.
+2. Smoke **#67** portões mapa (`TESTING.md` **2z8**) após deploy plugin **2.27.0** + PWA **181**.
 3. Smoke **#65** SMS novidades (`TESTING.md` **S65a–c**) após deploy plugin **2.25.0**.
 4. Smoke **#63** PDF numerado (`TESTING.md` **2z7b**) após deploy plugin **2.24.1**.
 5. Smoke **#61** pinos/legenda PWA + admin (`TESTING.md` **2z2–2z6b**) após deploy plugin **2.23.3** + PWA **179**.
@@ -209,7 +210,12 @@ O projeto está em **produção funcional** com foco operacional para o **depart
 
 ## Última sessão (2026-06-24)
 
-- **#67:** Tipo `gate` — rótulos de portões no mapa (admin + PWA + PDF); fora de legenda numerada, combobox Guia e rotas — plugin **2.27.0** / PWA **181** — **In review**; smoke **2z8**.
+- **#68:** Seta SVG vermelha balcão→destino na aba Diagrama (quando ambos seleccionados) — PWA **182** — **In review**; smoke **2z9**.
+- **#67:** Tipo `gate` — rótulos de portões no mapa — plugin **2.27.0** / PWA **181** — **In review**; smoke **2z8**.
+
+## Sessão anterior (2026-06-24)
+
+- **#67:** (início) Tipo `gate` no backend/admin/PDF.
 
 ## Sessão anterior (2026-06-27)
 

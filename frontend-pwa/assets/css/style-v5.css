@@ -5413,3 +5413,13 @@ body.ops-modal-open {
 }
 
 .extra-ops-actions-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 8rem;
+}
+
+.extra-ops-row-btn {
+    font-size: 0.78rem;
+    padding: 0.35rem 0.5rem;
+}

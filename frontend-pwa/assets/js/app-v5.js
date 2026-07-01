@@ -8241,4 +8241,48 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         app.data.installPrompt = e;
-        app.up
+        app.updateInstallMenuItem();
+    });
+
+    window.addEventListener('appinstalled', () => {
+        console.log('a2hs installed');
+        app.data.installPrompt = null;
+        app.updateInstallMenuItem();
+    });
+
+    // Network Status Logic
+    const updateNetworkStatus = () => {
+        const statusEl = document.getElementById('network-status');
+        if (navigator.onLine) {
+            statusEl.textContent = i18n.t('network_online');
+            statusEl.classList.remove('offline');
+            statusEl.classList.add('online');
+        } else {
+            statusEl.textContent = i18n.t('network_offline');
+            statusEl.classList.add('offline');
+            statusEl.classList.remove('online');
+        }
+    };
+
+    window.addEventListener('online', () => {
+        updateNetworkStatus();
+        if (typeof app !== 'undefined' && app.retryStaleCriticalData) {
+            app.retryStaleCriticalData();
+        }
+    });
+    window.addEventListener('offline', () => {
+        updateNetworkStatus();
+        if (typeof app !== 'undefined' && app.updateNetworkDegradedBanner) {
+            app.updateNetworkDegradedBanner();
+        }
+    });
+
+    // Initial check
+    updateNetworkStatus();
+
+    // Update External Links
+    const linkLostPwd = document.getElementById('link-lost-password');
+    if (linkLostPwd && API.siteUrl) {
+        linkLostPwd.href = `${API.siteUrl}/wp-login.php?action=lostpassword`;
+    }
+});

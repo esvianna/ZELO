@@ -8,6 +8,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Adicionado — seta origem→destino no diagrama (#68)
+
+| Versão | Entrega |
+|--------|---------|
+| PWA **182** | Seta SVG vermelha balcão→destino na aba Diagrama quando ambos seleccionados |
+
 ### Adicionado — rótulos de portões mapa (#67)
 
 | Versão | Entrega |
